@@ -1,0 +1,304 @@
+% problemlab.sty
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{problemlab}[2024/06/28 Custom problem environment package]
+
+% 加载所有必需的包
+\RequirePackage[paperwidth=21cm,paperheight=29.7cm,top=2.4cm,bottom=2.6cm,right=2cm,left=2cm]{geometry}
+\RequirePackage{amsmath}
+\RequirePackage{setspace}
+\RequirePackage{ctex}
+\RequirePackage{xeCJK}
+\RequirePackage{zhnumber}
+\RequirePackage{graphicx}
+\RequirePackage[hidelinks]{hyperref}
+\RequirePackage{booktabs}
+\RequirePackage{enumitem}
+\RequirePackage{soul}
+\RequirePackage{ulem}
+\RequirePackage{amssymb}
+\RequirePackage{tikz}
+\RequirePackage{xcolor}
+\RequirePackage{pgfplots}
+\RequirePackage{float}
+\RequirePackage{subfigure}
+\RequirePackage{fancyhdr}
+\RequirePackage{lastpage}
+\RequirePackage{framed}
+\RequirePackage[thicklines]{cancel}
+\RequirePackage{tasks}
+\RequirePackage{underscore}
+\RequirePackage{multicol}
+\RequirePackage{environ} % 新增：用于高级环境控制
+
+% 设置段落格式
+\setlength{\parindent}{4em}
+\addtolength{\parskip}{5pt}
+
+% 加载TikZ库
+\usetikzlibrary{arrows}
+\usetikzlibrary{calc}
+\usetikzlibrary{positioning} % 新增：用于答案框定位
+
+% 自定义颜色
+\definecolor{myyellow}{RGB}{232, 193, 28}
+\definecolor{myblue}{RGB}{87, 169, 203}
+\definecolor{myred}{RGB}{193, 73, 73}
+\definecolor{main}{rgb}{0.011765, 0.37647, 0.4470588}
+\definecolor{exercisecolor}{named}{main} % 使用main颜色作为习题颜色
+
+% ================ 精炼配色方案 ================
+% 主色调（精致蓝绿色系）
+\definecolor{main}{RGB}{0, 96, 110} % 更柔和的深蓝绿
+\definecolor{lightmain}{RGB}{220, 240, 240} % 极浅蓝绿 - 接近白色
+\definecolor{mediummain}{RGB}{160, 215, 215} % 中等蓝绿 - 更柔和
+\definecolor{darkmain}{RGB}{0, 70, 80} % 深蓝绿 - 降低饱和度
+
+% 辅助色（低饱和度协调色）
+\definecolor{accent1}{RGB}{240, 190, 80} % 柔金色（用于基础）
+\definecolor{accent2}{RGB}{170, 140, 200} % 灰紫色（用于中等）
+\definecolor{accent3}{RGB}{210, 100, 90} % 陶土红（用于困难）
+
+% 答案相关颜色
+\definecolor{answerbg}{RGB}{245, 255, 250} % 答案背景色（浅绿）
+\definecolor{answerborder}{RGB}{100, 200, 150} % 答案边框色（柔绿）
+\definecolor{answertext}{RGB}{20, 80, 60} % 答案文字色（深绿）
+
+% 环境颜色定义
+\definecolor{exercisecolor}{named}{main}
+
+% ================ 极简难度标记设计 ================
+% 基础 - 无边框柔金背景
+\newcommand{\bs}[1][]{%
+  \tikz[baseline=(X.base)]\node[fill=accent1!15, 
+    inner xsep=6pt, inner ysep=2pt, rounded corners=3pt, 
+    font=\bfseries\small\sffamily\color{darkmain}] (X) {基础%
+    \if\relax\detokenize{#1}\relax\else~{\color{main!80}\textbullet}~#1\fi};%
+}
+
+% 中等 - 无边框灰紫背景
+\newcommand{\mi}[1][]{%
+  \tikz[baseline=(X.base)]\node[fill=accent2!15, 
+    inner xsep=6pt, inner ysep=2pt, rounded corners=3pt, 
+    font=\bfseries\small\sffamily\color{darkmain}] (X) {中等%
+    \if\relax\detokenize{#1}\relax\else~{\color{main!80}\textbullet}~#1\fi};%
+}
+
+% 困难 - 无边框陶土红背景
+\newcommand{\di}[1][]{%
+  \tikz[baseline=(X.base)]\node[fill=accent3!15, 
+    inner xsep=6pt, inner ysep=2pt, rounded corners=3pt, 
+    font=\bfseries\small\sffamily\color{darkmain}] (X) {困难%
+    \if\relax\detokenize{#1}\relax\else~{\color{main!80}\textbullet}~#1\fi};%
+}
+
+% ================ 答案显示控制 ================
+\newif\ifshowanswers
+\showanswersfalse % 默认隐藏答案
+
+% 用户命令：显示答案
+\newcommand{\showanswers}{\showanswerstrue}
+% 用户命令：隐藏答案
+\newcommand{\hideanswers}{\showanswersfalse}
+
+% ================ 协调配色答案环境设计 ================
+\RequirePackage{mdframed} % 支持跨页的分割框
+\RequirePackage{fontawesome5} % 使用图标
+
+% 重新定义答案相关颜色（与主蓝绿色调协调）
+\definecolor{answerbg}{RGB}{240, 248, 255} % 极浅蓝背景
+\definecolor{answerborder}{RGB}{70, 140, 180} % 蓝灰色边框
+\definecolor{answertitlebg}{RGB}{0, 96, 110} % 主色调深蓝绿
+\definecolor{answertext}{RGB}{30, 60, 70} % 深蓝灰文字
+
+% 答案框样式
+\mdfdefinestyle{answerstyle}{%
+    linewidth=0.5pt,
+    linecolor=answerborder,
+    backgroundcolor=answerbg,
+    roundcorner=8pt,
+    innerleftmargin=12pt,
+    innerrightmargin=12pt,
+    innertopmargin=8pt,
+    innerbottommargin=12pt,
+    skipabove=10pt,
+    skipbelow=10pt,
+    frametitle={},
+    frametitleaboveskip=0pt,
+    frametitlebelowskip=0pt,
+    frametitlerule=true,
+    frametitlerulewidth=1.2pt,
+    frametitlerulecolor=answertitlebg,
+    frametitlebackgroundcolor=answertitlebg,
+    frametitlefont=\bfseries\color{white}\small\sffamily,
+    frametitlealignment=\raggedright,
+    shadow=false,
+    shadowcolor=gray!10,
+    leftmargin=0pt,
+    rightmargin=0pt
+}
+
+% 答案环境
+\NewEnviron{answer}[1][]{%
+  \ifshowanswers%
+    \begin{mdframed}[style=answerstyle, frametitle={\faLightbulb\  解答}]
+      \if\relax\detokenize{#1}\relax\else%
+        \quad\textcolor{answertitlebg!80!white}{\textbf{【#1】}}%
+      \fi%
+      \par\vspace{5pt}
+      \BODY
+      \par\vspace{3pt}
+      \hfill\small\color{answerborder}\faCheckCircle\ 解答完成
+    \end{mdframed}
+  \fi%
+}
+
+% 行距设置
+\setstretch{1.5}
+
+% 题目计数器
+\newcounter{questionnum}
+\setcounter{questionnum}{0}
+\newcommand{\chinesequestionnum}{\chinese{questionnum}}
+
+% 问题环境计数器
+\newcounter{problemcounter}
+\newcounter{subproblemcounter}[problemcounter]
+\newcounter{subsubproblemcounter}[subproblemcounter]
+
+% 自动分栏判断变量
+\newlength{\itemwd}
+\newif\ifmulticol
+
+% 下划线命令
+\newcommand{\underlines}{{\color{mediummain}\underline{\hspace{7em}}}}
+
+% 设置tasks环境样式
+\settasks{label={\Alph*. }}
+
+% ================== 主要环境定义 ==================
+% Problem 环境 - 增加左边距和序号缩进
+\newenvironment{problem}[1][]{%
+  \refstepcounter{problemcounter}%
+  {\bfseries\Large\color{exercisecolor}%
+  题目~\theproblemcounter%
+  \if\relax\detokenize{#1}\relax\else~：#1\fi}%
+  \quad%
+  \vspace{2mm}%
+  \begin{enumerate}[leftmargin=65pt,
+    label={\colorbox{exercisecolor!15}{\makebox[2.2em][c]{\color{exercisecolor}\textbf{\arabic*.}}}},
+    itemsep=0.8ex,
+    parsep=0pt,
+    labelsep=0.8em,
+    topsep=0.5ex
+  ]
+}{%
+  \end{enumerate}%
+  \par\vspace{3mm}%
+}
+
+% Subproblem 环境（自动分栏）
+\newenvironment{subproblem}{%
+  \refstepcounter{subproblemcounter}%
+  \vspace{0.8ex}%
+  \setbox0=\vbox\bgroup
+  \begin{enumerate}[
+    label={\colorbox{exercisecolor!8}{\makebox[1.8em][c]{\color{exercisecolor}\textbf{(\alph*)}}}},
+    itemsep=0.6ex,
+    parsep=0pt,
+    labelsep=0.8em
+  ]
+}{%
+  \end{enumerate}%
+  \egroup
+  \setlength{\itemwd}{\wd0}%
+  \ifdim\itemwd<0.3\linewidth
+    \begin{multicols}{3}%
+    \unvbox0
+    \end{multicols}%
+  \else
+    \unvbox0
+  \fi
+  \vspace{0.8ex}%
+}
+
+% Subsubproblem 环境（三级问题）
+\newenvironment{subsubproblem}{%
+  \refstepcounter{subsubproblemcounter}%
+  \vspace{0.5ex}%
+  \begin{enumerate}[
+    label={\colorbox{exercisecolor!5}{\makebox[1.5em][c]{\color{exercisecolor!80}\textbf{\roman*.}}}},
+    leftmargin=3.5em,   % 更大的左边距
+    itemsep=0.4ex,
+    parsep=0pt,
+    labelsep=0.8em
+  ]
+}{%
+  \end{enumerate}%
+  \vspace{0.5ex}%
+}
+
+% 保留原有的question环境
+\newenvironment{question}[1]{%
+  \stepcounter{questionnum}%
+  \par\bigskip%
+  {\Large \textbf{\color{orange} 题目\chinesequestionnum：#1}}\par%
+  \medskip%
+}{\par\bigskip}
+
+% ================ 答题区域命令 ================
+% 答题框样式
+\mdfdefinestyle{answerboxstyle}{%
+    linewidth=0.7pt,
+    linecolor=gray!60,
+    backgroundcolor=white,
+    roundcorner=4pt,
+    innerleftmargin=10pt,
+    innerrightmargin=10pt,
+    innertopmargin=12pt,    % 顶部额外空间
+    innerbottommargin=8pt,
+    skipabove=8pt,
+    skipbelow=8pt,
+    frametitle={},
+    frametitleaboveskip=0pt,
+    frametitlebelowskip=0pt,
+    frametitlerule=false,
+    shadow=false,
+    leftmargin=0pt,
+    rightmargin=0pt,
+    splitbottomskip=0pt,    % 防止跨页时底部留白
+    splittopskip=0pt,       % 防止跨页时顶部留白
+    nobreak=true,           % 禁止跨页
+    needspace=2\baselineskip % 确保有足够空间，否则换页
+}
+
+% 答题区域命令
+\newcommand{\answerarea}[1]{%
+  \ifshowanswers\else%
+    \par\vspace{1em}% 与上方内容增加垂直间距
+    \begin{mdframed}[style=answerboxstyle]
+      \setlength{\parindent}{0pt}%
+      % 第一行有额外空间
+      \vspace*{1.5em}%
+      \textcolor{gray!40}{\rule{\linewidth}{0.5pt}}%
+      \par\vspace{1.2em}% 行间间距
+      
+      % 其余行
+      \ifnum#1>1
+        \foreach \n in {2,...,#1} {%
+          \textcolor{gray!40}{\rule{\linewidth}{0.5pt}}%
+          \par\vspace{1.2em}%
+        }%
+      \fi
+    \end{mdframed}%
+    \par\vspace{1em}% 与下方内容增加垂直间距
+  \fi%
+}
+
+% 页眉页脚设置
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\small 2025 Viquard}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\endinput

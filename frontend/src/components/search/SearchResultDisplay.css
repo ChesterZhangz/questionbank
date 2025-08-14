@@ -1,0 +1,25 @@
+/* 搜索结果显示样式 */
+.search-result-content {
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* 自定义标签样式 */
+.search-result-content .inline-block {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* 文本截断 */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 错误提示样式 */
+.search-result-content .text-red-500 {
+  font-size: 0.75em;
+  font-style: italic;
+}

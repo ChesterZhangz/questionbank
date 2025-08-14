@@ -1,0 +1,157 @@
+/* 移动端优化样式 */
+
+/* 触摸优化 */
+@media (max-width: 767px) {
+  /* 增加触摸目标大小 */
+  button, 
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* 优化滚动体验 */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 防止缩放 */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  /* 优化卡片间距 */
+  .card {
+    margin-bottom: 1rem;
+  }
+
+  /* 优化表格显示 */
+  table {
+    font-size: 0.875rem;
+  }
+
+  /* 优化按钮组 */
+  .btn-group {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* 优化模态框 */
+  .modal {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+
+  /* 优化下拉菜单 */
+  .dropdown-menu {
+    max-width: calc(100vw - 2rem);
+    left: 1rem !important;
+    right: 1rem !important;
+  }
+
+  /* 优化表单布局 */
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  /* 优化网格布局 */
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  /* 优化文本大小 */
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1.125rem; }
+  h4 { font-size: 1rem; }
+  h5 { font-size: 0.875rem; }
+  h6 { font-size: 0.75rem; }
+
+  /* 优化间距 */
+  .p-6 { padding: 1rem; }
+  .px-8 { padding-left: 1rem; padding-right: 1rem; }
+  .py-8 { padding-top: 1rem; padding-bottom: 1rem; }
+  .m-6 { margin: 1rem; }
+  .mx-8 { margin-left: 1rem; margin-right: 1rem; }
+  .my-8 { margin-top: 1rem; margin-bottom: 1rem; }
+
+  /* 优化容器最大宽度 */
+  .max-w-7xl {
+    max-width: 100%;
+  }
+
+  /* 优化侧边栏在移动端的显示 */
+  .sidebar-mobile {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .sidebar-mobile.open {
+    transform: translateX(0);
+  }
+
+  /* 优化头部在移动端的显示 */
+  .header-mobile {
+    height: 4rem;
+    padding: 0 1rem;
+  }
+
+  /* 优化底部导航 */
+  .mobile-nav {
+    height: 4rem;
+    padding: 0.5rem;
+  }
+
+  /* 优化内容区域 */
+  .content-mobile {
+    padding: 1rem;
+    padding-bottom: 5rem; /* 为底部导航留出空间 */
+  }
+}
+
+/* 平板端优化 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* 平板端特定样式 */
+  .max-w-7xl {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+
+  /* 优化网格布局 */
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+/* 横屏模式优化 */
+@media (max-width: 767px) and (orientation: landscape) {
+  /* 横屏时的特殊处理 */
+  .header-mobile {
+    height: 3rem;
+  }
+
+  .mobile-nav {
+    height: 3rem;
+  }
+
+  .content-mobile {
+    padding-bottom: 4rem;
+  }
+} 

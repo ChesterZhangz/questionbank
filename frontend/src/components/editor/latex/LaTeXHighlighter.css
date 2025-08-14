@@ -1,0 +1,339 @@
+/* 
+ * LaTeX语法高亮样式 - 编辑器专用
+ * 
+ * 分层管理说明：
+ * 1. renderPreview.css - LaTeX渲染和预览样式
+ * 2. LaTeXHighlighter.css - 编辑器语法高亮样式（本文件）
+ * 3. 其他文件 - 不包含LaTeX相关样式
+ * 
+ * 本文件包含：
+ * - 编辑器语法高亮规则
+ * - 不同语法类别的颜色定义
+ * - Dark Mode适配
+ * - 编辑器专用样式
+ */
+
+.latex-highlighter {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  color: #374151;
+  box-sizing: border-box;
+}
+
+/* 确保普通文本（没有高亮类的文本）有正确的颜色 */
+.latex-highlighter span:not([class*="latex-"]) {
+  color: #374151 !important;
+}
+
+/* 普通文本样式 */
+.latex-text {
+  color: #374151;
+}
+
+/* 确保所有span不影响布局 */
+.latex-highlighter span {
+  display: inline;
+  white-space: inherit;
+  word-break: inherit;
+  overflow-wrap: inherit;
+  word-wrap: inherit;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-weight: normal;
+  font-style: normal;
+  background: none;
+}
+
+/* 1. 注释 - 灰色 */
+.latex-comment {
+  color: #6a737d;
+}
+
+/* 2. 数学环境分隔符 */
+.latex-math-delimiter-block {
+  color: #d73a49;
+}
+
+.latex-math-delimiter-inline {
+  color: #e36209;
+}
+
+/* 3. 环境命令 - 深蓝色 */
+.latex-environment-begin {
+  color: #005cc5;
+}
+
+.latex-environment-end {
+  color: #005cc5;
+}
+
+/* 4. 题目语法命令 - 特殊颜色 */
+.latex-question-choice {
+  color: #28a745;
+}
+
+.latex-question-fill {
+  color: #856404;
+}
+
+.latex-question-subp {
+  color: #17a2b8;
+}
+
+.latex-question-subsubp {
+  color: #6f42c1;
+}
+
+/* 5. 数学函数 - 深绿色 */
+.latex-math-function {
+  color: #22863a;
+}
+
+/* 6. 特殊数学符号 - 紫红色 */
+.latex-math-symbol-special {
+  color: #d73a49;
+}
+
+/* 7. 希腊字母 - 深紫色 */
+.latex-greek-letter {
+  color: #6f42c1;
+}
+
+/* 8. 大运算符 - 蓝色 */
+.latex-math-operator-big {
+  color: #005cc5;
+}
+
+/* 9. 分数和根式 - 红色 */
+.latex-math-fraction {
+  color: #d73a49;
+}
+
+/* 10. 字体命令 - 浅蓝色 */
+.latex-font-command {
+  color: #005cc5;
+}
+
+/* 11. 装饰命令 - 橙色 */
+.latex-decoration {
+  color: #e36209;
+}
+
+/* 12. 分隔符 - 灰色 */
+.latex-delimiter {
+  color: #6a737d;
+}
+
+/* 13. 关系符号 - 蓝色 */
+.latex-relation {
+  color: #005cc5;
+}
+
+/* 14. 运算符 - 橙色 */
+.latex-operator {
+  color: #e36209;
+}
+
+/* 15. 箭头 - 蓝色 */
+.latex-arrow {
+  color: #005cc5;
+}
+
+/* 16. 逻辑符号 - 紫色 */
+.latex-logic {
+  color: #6f42c1;
+}
+
+/* 17. 一般命令 - 蓝色 */
+.latex-command {
+  color: #005cc5;
+}
+
+/* 18. 大括号内容 - 绿色 */
+.latex-braces-content {
+  color: #22863a;
+}
+
+/* 19. 可选参数 - 灰色 */
+.latex-optional-param {
+  color: #6a737d;
+}
+
+/* 20. 数字 - 红色 */
+.latex-number {
+  color: #d73a49;
+}
+
+/* 21. 数学变量 - 蓝色 */
+.latex-math-variable {
+  color: #005cc5;
+}
+
+/* 22. 中文 - 绿色 */
+.latex-math-chinese {
+  color: #22863a;
+}
+
+/* 23. 数学数字 - 红色 */
+.latex-math-number {
+  color: #d73a49;
+}
+
+/* 24. 基本运算符 - 灰色 */
+.latex-basic-operator {
+  color: #6a737d;
+}
+
+/* 25. 特殊字符 - 橙色 */
+.latex-special-char {
+  color: #e36209;
+}
+
+/* 悬停效果 */
+.latex-highlighter span:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-radius: 2px;
+}
+
+/* 选择文本样式 */
+.latex-highlighter ::selection {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: inherit;
+}
+
+/* Dark Mode支持 - 使用.dark选择器 */
+.dark .latex-highlighter {
+  color: #f6f8fa;
+}
+
+.dark .latex-highlighter span:not([class*="latex-"]) {
+  color: #f6f8fa !important;
+}
+
+.dark .latex-text {
+  color: #f6f8fa;
+}
+
+.dark .latex-comment {
+  color: #8b949e;
+}
+
+.dark .latex-math-delimiter-block {
+  color: #ff7b72;
+}
+
+.dark .latex-math-delimiter-inline {
+  color: #ffa657;
+}
+
+.dark .latex-environment-begin,
+.dark .latex-environment-end {
+  color: #79c0ff;
+}
+
+.dark .latex-question-choice {
+  color: #7ee787;
+}
+
+.dark .latex-question-fill {
+  color: #f2cc60;
+}
+
+.dark .latex-question-subp {
+  color: #56d4dd;
+}
+
+.dark .latex-question-subsubp {
+  color: #d2a8ff;
+}
+
+.dark .latex-math-function {
+  color: #7ee787;
+}
+
+.dark .latex-math-symbol-special {
+  color: #ffa198;
+}
+
+.dark .latex-greek-letter {
+  color: #d2a8ff;
+}
+
+.dark .latex-math-operator-big {
+  color: #79c0ff;
+}
+
+.dark .latex-math-fraction {
+  color: #ff7b72;
+}
+
+.dark .latex-font-command {
+  color: #a5d6ff;
+}
+
+.dark .latex-decoration {
+  color: #ffa657;
+}
+
+.dark .latex-delimiter {
+  color: #8b949e;
+}
+
+.dark .latex-relation {
+  color: #79c0ff;
+}
+
+.dark .latex-operator {
+  color: #ffa657;
+}
+
+.dark .latex-arrow {
+  color: #79c0ff;
+}
+
+.dark .latex-logic {
+  color: #d2a8ff;
+}
+
+.dark .latex-command {
+  color: #79c0ff;
+}
+
+.dark .latex-braces-content {
+  color: #7ee787;
+}
+
+.dark .latex-optional-param {
+  color: #8b949e;
+}
+
+.dark .latex-number {
+  color: #ff7b72;
+}
+
+.dark .latex-math-variable {
+  color: #79c0ff;
+}
+
+.dark .latex-math-chinese {
+  color: #7ee787;
+}
+
+.dark .latex-math-number {
+  color: #ff7b72;
+}
+
+.dark .latex-basic-operator {
+  color: #8b949e;
+}
+
+.dark .latex-special-char {
+  color: #ffa657;
+}

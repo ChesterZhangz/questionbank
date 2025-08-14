@@ -1,0 +1,310 @@
+/* QuestionCard LaTeX内容样式 - 与编辑区保持一致 */
+
+/* 导入LaTeX编辑区的样式 */
+@import '../../lib/latex/styles/renderPreview.css';
+
+/* QuestionCard特定的LaTeX内容样式 */
+.question-card-latex-content {
+  /* 继承编辑区的字体设置 */
+  font-family: 'WenYuan', 'SimSun', 'STSong', 'Times New Roman', 'Times', serif !important;
+  font-size: 1.3em !important; /* 增加字体大小从1.1em到1.3em */
+  line-height: 1.7 !important; /* 增加行高从1.6到1.7 */
+  color: inherit !important;
+  
+  /* 确保内容正确显示 */
+  max-width: 100% !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+}
+
+/* 网格模式下的LaTeX内容样式 */
+.question-card-latex-content:not(.list-mode) {
+  /* 网格模式下的特殊样式 */
+  max-height: 200px !important; /* 设置最大高度 */
+  overflow-y: auto !important; /* 添加垂直滚动 */
+  overflow-x: hidden !important; /* 隐藏水平滚动 */
+  padding-right: 8px !important; /* 为滚动条留出空间 */
+}
+
+/* 列表模式下的LaTeX内容样式 */
+.question-card-latex-content.list-mode {
+  /* 列表模式下的特殊样式 */
+  font-size: 1.2em !important; /* 增加字体大小从1em到1.2em */
+  line-height: 1.5 !important; /* 增加行高从1.4到1.5 */
+  max-height: 150px !important; /* 设置最大高度 */
+  overflow-y: auto !important; /* 添加垂直滚动 */
+  overflow-x: hidden !important; /* 隐藏水平滚动 */
+  padding-right: 8px !important; /* 为滚动条留出空间 */
+}
+
+/* 选项文本的LaTeX内容样式 */
+.question-card-latex-content.option-text {
+  /* 选项文本的特殊样式 */
+  font-size: 1.1em !important; /* 增加字体大小从1em到1.1em */
+  line-height: 1.6 !important; /* 增加行高从1.5到1.6 */
+  max-height: 100px !important; /* 设置最大高度 */
+  overflow-y: auto !important; /* 添加垂直滚动 */
+  overflow-x: hidden !important; /* 隐藏水平滚动 */
+  padding-right: 8px !important; /* 为滚动条留出空间 */
+}
+
+/* 自定义滚动条样式 */
+.question-card-latex-content::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+.question-card-latex-content::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-radius: 3px !important;
+}
+
+.question-card-latex-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 3px !important;
+}
+
+.question-card-latex-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
+}
+
+/* Dark Mode下的滚动条样式 */
+.dark .question-card-latex-content::-webkit-scrollbar-track {
+  background: #374151 !important;
+}
+
+.dark .question-card-latex-content::-webkit-scrollbar-thumb {
+  background: #6b7280 !important;
+}
+
+.dark .question-card-latex-content::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af !important;
+}
+
+/* 确保KaTeX公式在QuestionCard中正确显示 */
+.question-card-latex-content .katex {
+  font-size: 1em !important;
+  line-height: 1.2 !important;
+  color: inherit !important;
+}
+
+.question-card-latex-content .katex-display {
+  margin: 0.5em 0 !important;
+  text-align: center !important;
+}
+
+.question-card-latex-content .katex-html {
+  color: inherit !important;
+}
+
+/* 题目语法样式 - 与编辑区保持一致 */
+.question-card-latex-content .choice-bracket {
+  display: inline-block !important;
+  min-width: 4em !important;
+  color: #4b5563 !important;
+  font-family: 'WenYuan', 'SimSun', 'STSong', serif !important;
+  font-size: 1.1em !important;
+  font-weight: normal !important;
+  margin: 0 0.2em !important;
+  line-height: 1.5 !important;
+}
+
+.question-card-latex-content .fill-blank {
+  display: inline-block !important;
+  min-width: 4em !important;
+  border-bottom: 2px solid #4b5563 !important;
+  color: transparent !important;
+  font-family: 'WenYuan', 'SimSun', 'STSong', serif !important;
+  font-size: 1.1em !important;
+  margin: 0 0.2em !important;
+  line-height: 1.5 !important;
+  vertical-align: baseline !important;
+}
+
+.question-card-latex-content .subproblem {
+  font-weight: 500 !important;
+  color: inherit !important; /* 改为inherit，继承父元素的颜色 */
+  margin: 0.2em 0 !important;
+  padding: 0.3em 0 !important;
+  display: block !important;
+  font-family: 'WenYuan', 'SimSun', 'STSong', serif !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  text-indent: 0 !important;
+}
+
+.question-card-latex-content .subproblem-number {
+  display: inline-block !important;
+  min-width: 2em !important;
+  font-weight: bold !important;
+  color: #1f2937 !important; /* 改为深色，确保清晰可见 */
+  margin-right: 0.5em !important;
+}
+
+.question-card-latex-content .subproblem-sub {
+  margin: 0.1em 0 !important;
+  padding: 0.1em 0 !important;
+  color: inherit !important; /* 改为inherit，继承父元素的颜色 */
+}
+
+.question-card-latex-content .subproblem-sub .subproblem-number {
+  display: inline-block !important;
+  min-width: 1.5em !important;
+  font-weight: bold !important;
+  color: #1f2937 !important; /* 改为深色，确保清晰可见 */
+  margin-right: 0.5em !important;
+}
+
+/* Dark Mode支持 */
+.dark .question-card-latex-content {
+  color: #f6f8fa !important;
+}
+
+.dark .question-card-latex-content .katex {
+  color: #f6f8fa !important;
+}
+
+.dark .question-card-latex-content .katex-display {
+  color: #f6f8fa !important;
+}
+
+.dark .question-card-latex-content .katex-html {
+  color: #f6f8fa !important;
+}
+
+.dark .question-card-latex-content .choice-bracket {
+  color: #9ca3af !important;
+}
+
+.dark .question-card-latex-content .fill-blank {
+  border-bottom-color: #9ca3af !important;
+}
+
+.dark .question-card-latex-content .subproblem {
+  color: #f6f8fa !important; /* 在暗色主题下使用浅色 */
+}
+
+.dark .question-card-latex-content .subproblem-number {
+  color: #fbbf24 !important; /* 在暗色主题下使用黄色，确保清晰可见 */
+}
+
+.dark .question-card-latex-content .subproblem-sub {
+  color: #f6f8fa !important; /* 在暗色主题下使用浅色 */
+}
+
+.dark .question-card-latex-content .subproblem-sub .subproblem-number {
+  color: #fbbf24 !important; /* 在暗色主题下使用黄色，确保清晰可见 */
+}
+
+/* 斜体和粗体样式 */
+.question-card-latex-content .latex-italic {
+  font-style: italic !important;
+  color: inherit !important;
+}
+
+.question-card-latex-content .latex-bold {
+  font-weight: bold !important;
+  color: inherit !important;
+}
+
+/* 确保内容在卡片中正确显示 */
+.question-card-latex-content .latex-preview-container {
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.question-card-latex-content .latex-preview-content {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.question-card-latex-content .latex-content {
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* 移除LaTeXPreview的默认边框和背景 */
+.question-card-latex-content .latex-preview {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 选项样式优化 */
+.question-card-options {
+  margin-top: 1rem;
+}
+
+.question-card-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background-color: #ffffff;
+  transition: all 0.2s ease-in-out;
+  margin-bottom: 0.5rem;
+}
+
+.question-card-option:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.dark .question-card-option {
+  border-color: #4b5563;
+  background-color: #1f2937;
+}
+
+.dark .question-card-option:hover {
+  background-color: #374151;
+  border-color: #6b7280;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.question-card-option-number {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #f3f4f6;
+  color: #374151;
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.dark .question-card-option-number {
+  background-color: #4b5563;
+  color: #f9fafb;
+}
+
+.question-card-option-content {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.6;
+}
+
+/* 选项标签样式 */
+.question-card-options-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dark .question-card-options-label {
+  color: #9ca3af;
+  border-bottom-color: #4b5563;
+}

@@ -1,0 +1,343 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap');
+
+/* 导入错误页面样式 */
+@import './styles/errorPages.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 自定义样式 */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* 语法高亮样式 - 已迁移到专门的LaTeX样式文件 */
+  
+  /* 题目内容样式 */
+  .question-content {
+    @apply text-gray-900 dark:text-gray-100 leading-relaxed;
+  }
+  
+  .question-content strong {
+    @apply font-semibold text-gray-900 dark:text-gray-100;
+  }
+  
+  .question-content em {
+    @apply italic text-gray-700 dark:text-gray-300;
+  }
+  
+  .question-content code {
+    @apply bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-gray-800 dark:text-gray-200;
+  }
+  
+  .question-content del {
+    @apply line-through text-gray-500 dark:text-gray-400;
+  }
+  
+  /* LaTeX渲染样式 - 已迁移到专门的LaTeX样式文件 */
+  
+
+  
+  /* 按钮样式 */
+  .btn {
+    @apply inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-900;
+  }
+  
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-400;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 dark:focus:ring-gray-400;
+  }
+  
+  .btn-outline {
+  @apply border border-border-primary bg-bg-elevated text-text-primary hover:bg-bg-secondary focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus:ring-blue-400;
+}
+  
+  .btn-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+  
+  .btn-md {
+    @apply px-4 py-2 text-sm;
+  }
+  
+  .btn-lg {
+    @apply px-6 py-3 text-base;
+  }
+  
+  /* 输入框样式 */
+  .input {
+    @apply w-full px-3 py-2 border border-border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:ring-blue-400 dark:focus:border-blue-400;
+  }
+  
+  /* 卡片样式 */
+  .card {
+    @apply bg-bg-elevated rounded-lg border border-border-primary shadow-theme-sm dark:bg-gray-800 dark:border-gray-700 dark:shadow-gray-900/20;
+  }
+  
+  /* 动画样式 */
+  .fade-in {
+    @apply transition-opacity duration-200;
+  }
+  
+  .slide-up {
+    @apply transition-transform duration-200;
+  }
+  
+  /* 响应式设计 */
+  @media (max-width: 768px) {
+    /* LaTeX相关响应式样式已迁移到专门的LaTeX样式文件 */
+  }
+}
+
+/* 滚动条样式 */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: var(--color-bg-secondary);
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: var(--color-border-primary);
+    border-radius: 3px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-border-secondary);
+  }
+}
+
+/* 模态框动画 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* 模态框背景动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-backdrop {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* 模态框内容动画 */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-content {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* 滑块组件样式 */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-track {
+  background: #e5e7eb;
+  height: 8px;
+  border-radius: 4px;
+}
+
+.slider::-webkit-slider-track:dark {
+  background: #374151;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.slider::-moz-range-track {
+  background: var(--color-border-primary);
+  height: 8px;
+  border-radius: 4px;
+  border: none;
+}
+
+.slider::-moz-range-thumb {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.slider::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 游戏卡片悬停效果 */
+.game-card {
+  transition: all 0.3s ease;
+}
+
+.game-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* 分数统计卡片动画 */
+.score-card {
+  transition: all 0.3s ease;
+}
+
+.score-card:hover {
+  transform: scale(1.05);
+}
+
+/* 游戏按钮动画 */
+.game-button {
+  transition: all 0.2s ease;
+}
+
+.game-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.game-button:active {
+  transform: translateY(0);
+}
+
+/* 进度条动画 */
+.progress-bar {
+  transition: width 0.5s ease-out;
+}
+
+/* 游戏统计卡片渐变背景 */
+.stat-card-blue {
+  background: linear-gradient(135deg, var(--color-primary-100), var(--color-primary-200));
+}
+
+.stat-card-green {
+  background: linear-gradient(135deg, var(--color-accent-success), #22c55e);
+}
+
+.stat-card-purple {
+  background: linear-gradient(135deg, #a855f7, #c084fc);
+}
+
+.stat-card-orange {
+  background: linear-gradient(135deg, var(--color-accent-warning), #f59e0b);
+}
+
+.stat-card-pink {
+  background: linear-gradient(135deg, #ec4899, #f472b6);
+}
+
+/* Dark Mode 滑块轨道样式 */
+.dark .slider::-webkit-slider-track {
+  background: #374151;
+}
+
+.dark .slider::-moz-range-track {
+  background: #374151;
+}
+
+/* Dark Mode 游戏卡片样式 */
+.dark .game-card {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.dark .game-card:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* Dark Mode 游戏按钮样式 */
+.dark .game-button {
+  background: #374151;
+  border-color: #4b5563;
+  color: #d1d5db;
+}
+
+.dark .game-button:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+/* Dark Mode 统计卡片样式 */
+.dark .stat-card-blue {
+  background: linear-gradient(135deg, #1e3a8a, #1e40af);
+  color: #dbeafe;
+}
+
+.dark .stat-card-green {
+  background: linear-gradient(135deg, #065f46, #047857);
+  color: #d1fae5;
+}
+
+.dark .stat-card-purple {
+  background: linear-gradient(135deg, #581c87, #7c3aed);
+  color: #e9d5ff;
+}
+
+.dark .stat-card-orange {
+  background: linear-gradient(135deg, #92400e, #b45309);
+  color: #fed7aa;
+}
+
+.dark .stat-card-pink {
+  background: linear-gradient(135deg, #831843, #be185d);
+  color: #fce7f3;
+}

@@ -1,0 +1,524 @@
+/* 错误页面样式 */
+
+/* 基础错误页面容器 */
+.error-page-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* 错误内容区域 */
+.error-content {
+  max-width: 800px;
+  width: 100%;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 3rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 错误图标动画 */
+.error-icon {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.error-icon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* 错误代码样式 */
+.error-code {
+  font-size: 6rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1rem;
+  line-height: 1;
+}
+
+/* 错误标题 */
+.error-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+/* 错误描述 */
+.error-description {
+  font-size: 1.125rem;
+  color: #718096;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 操作按钮组 */
+.error-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 3rem;
+}
+
+/* 游戏区域样式 */
+.game-section {
+  background: #f7fafc;
+  border-radius: 16px;
+  padding: 2rem;
+  border: 1px solid #e2e8f0;
+}
+
+.game-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+.game-subtitle {
+  color: #718096;
+  margin-bottom: 2rem;
+}
+
+/* 游戏选择卡片 */
+.game-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.game-card {
+  padding: 1.5rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.game-card:hover {
+  border-color: #4299e1;
+  background: #ebf8ff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(66, 153, 225, 0.15);
+}
+
+.game-card-icon {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #ebf8ff;
+  color: #4299e1;
+  transition: all 0.3s ease;
+}
+
+.game-card:hover .game-card-icon {
+  background: #4299e1;
+  color: white;
+  transform: scale(1.1);
+}
+
+.game-card-title {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+.game-card-description {
+  font-size: 0.875rem;
+  color: #718096;
+}
+
+/* 游戏状态栏 */
+.game-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.game-stats {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.game-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* 数学游戏样式 */
+.math-game {
+  text-align: center;
+}
+
+.math-problem {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 2rem;
+  font-family: 'Fira Code', monospace;
+}
+
+.math-input {
+  width: 120px;
+  padding: 1rem;
+  font-size: 1.5rem;
+  text-align: center;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  margin-right: 1rem;
+  font-weight: 600;
+  transition: border-color 0.3s ease;
+}
+
+.math-input:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.math-result {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  animation: fadeIn 0.3s ease;
+}
+
+.math-result.correct {
+  background: #c6f6d5;
+  color: #22543d;
+  border: 1px solid #9ae6b4;
+}
+
+.math-result.incorrect {
+  background: #fed7d7;
+  color: #742a2a;
+  border: 1px solid #feb2b2;
+}
+
+/* 记忆游戏样式 */
+.memory-game {
+  display: flex;
+  justify-content: center;
+}
+
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  max-width: 320px;
+}
+
+.memory-card {
+  width: 4rem;
+  height: 4rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #f7fafc;
+  color: #4a5568;
+}
+
+.memory-card:hover {
+  border-color: #4299e1;
+  background: #ebf8ff;
+}
+
+.memory-card.flipped,
+.memory-card.matched {
+  background: #4299e1;
+  color: white;
+  border-color: #4299e1;
+  transform: scale(1.05);
+}
+
+/* 拼图游戏样式 */
+.puzzle-game {
+  display: flex;
+  justify-content: center;
+}
+
+.puzzle-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+  background: #cbd5e0;
+  padding: 0.5rem;
+  border-radius: 8px;
+  max-width: 240px;
+}
+
+.puzzle-piece {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #4299e1;
+  color: white;
+}
+
+.puzzle-piece:hover {
+  background: #3182ce;
+  transform: scale(1.05);
+}
+
+.puzzle-piece.empty {
+  background: transparent;
+  border: 2px dashed #a0aec0;
+  color: transparent;
+  cursor: default;
+}
+
+.puzzle-piece.empty:hover {
+  transform: none;
+}
+
+/* 游戏结束提示 */
+.game-complete {
+  text-align: center;
+  padding: 1.5rem;
+  background: #c6f6d5;
+  border: 1px solid #9ae6b4;
+  border-radius: 12px;
+  color: #22543d;
+  animation: fadeIn 0.5s ease;
+}
+
+.game-complete-icon {
+  width: 2rem;
+  height: 2rem;
+  margin: 0 auto 0.5rem;
+  color: #38a169;
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .error-content {
+    padding: 2rem 1.5rem;
+    margin: 1rem;
+  }
+  
+  .error-code {
+    font-size: 4rem;
+  }
+  
+  .error-title {
+    font-size: 1.5rem;
+  }
+  
+  .error-description {
+    font-size: 1rem;
+  }
+  
+  .error-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .game-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .game-status {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .game-stats {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .math-problem {
+    font-size: 2rem;
+  }
+  
+  .memory-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.25rem;
+  }
+  
+  .memory-card {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1rem;
+  }
+  
+  .puzzle-grid {
+    max-width: 180px;
+  }
+  
+  .puzzle-piece {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1rem;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .error-content {
+    background: rgba(26, 32, 44, 0.95);
+    color: #e2e8f0;
+  }
+  
+  .error-title {
+    color: #e2e8f0;
+  }
+  
+  .error-description {
+    color: #a0aec0;
+  }
+  
+  .game-section {
+    background: #2d3748;
+    border-color: #4a5568;
+  }
+  
+  .game-title {
+    color: #e2e8f0;
+  }
+  
+  .game-subtitle {
+    color: #a0aec0;
+  }
+  
+  .game-card {
+    background: #4a5568;
+    border-color: #718096;
+    color: #e2e8f0;
+  }
+  
+  .game-card:hover {
+    background: #2c5282;
+    border-color: #4299e1;
+  }
+  
+  .game-card-title {
+    color: #e2e8f0;
+  }
+  
+  .game-card-description {
+    color: #a0aec0;
+  }
+  
+  .game-status {
+    background: #4a5568;
+    border-color: #718096;
+  }
+  
+  .game-stat {
+    color: #e2e8f0;
+  }
+  
+  .math-problem {
+    color: #e2e8f0;
+  }
+  
+  .math-input {
+    background: #4a5568;
+    border-color: #718096;
+    color: #e2e8f0;
+  }
+  
+  .math-input:focus {
+    border-color: #4299e1;
+  }
+  
+  .memory-card {
+    background: #4a5568;
+    border-color: #718096;
+    color: #e2e8f0;
+  }
+  
+  .memory-card:hover {
+    background: #2c5282;
+    border-color: #4299e1;
+  }
+} 

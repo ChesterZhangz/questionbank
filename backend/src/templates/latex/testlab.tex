@@ -1,0 +1,87 @@
+\documentclass[UTF8,11pt]{ctexart}
+\usepackage[paperwidth=21cm,paperheight=29.7cm,top=2.5cm,bottom=2.5cm,right=1.8cm,left=1.8cm]{geometry} % 单页
+\usepackage{amsmath}
+\usepackage{setspace}
+
+\usepackage{zhnumber} 
+\usepackage{graphicx} 
+\usepackage{hyperref}
+\usepackage{wrapfig}
+\usepackage{amsmath}
+\usepackage{fancyhdr} 
+\usepackage{enumitem}
+\usepackage{soul}
+\usepackage{ulem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{pgfplots}
+\usepackage{float}          
+\usepackage{subfigure}
+\usepackage{fancyhdr}      
+\usepackage{lastpage}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{lastpage}
+\usepackage{natbib}
+\usepackage{framed} 
+\usepackage[thicklines]{cancel}
+\setlength{\parindent}{4em}
+\addtolength{\parskip}{5pt}
+
+\hypersetup{hidelinks}
+
+\usepackage{underscore}
+\newcommand{\underlines}{\underline{\hspace{5em}}}  % 调整空间以适应8个下划线长度
+
+\usepackage{tasks}
+\settasks{label={\Alph*.}, label-width=15pt}
+
+\pagestyle{fancy}
+
+\usepackage{setspace}
+\setstretch{1.5}
+
+\title{\textbf{%%PAPER_TITLE%%}}
+\author{\huge{%%PAPER_SUBJECT%%}}
+\date{}
+\begin{document}
+
+\thispagestyle{empty}
+\renewcommand{\headrulewidth}{0pt}
+
+\begin{center}
+    {\Large \textbf{%%PAPER_TITLE%%}}
+
+    \textbf{\huge{%%PAPER_SUBJECT%%}}
+\end{center}
+
+\begin{framed}
+    
+    考生注意：
+
+    \begin{enumerate}[leftmargin=50pt,label=\arabic*. ]
+    	\item 试卷为\textbf{维启象限（Viquard）} Mareate 部门原创，专为MMS计划提供，请勿以任何不正当理由，以商业的形式传播，试卷严禁外传；
+    	
+        \item 本场考试时间%%EXAM_DURATION%%分钟，试卷共有%%TOTAL_QUESTIONS%%道试题，满分%%TOTAL_SCORE%%分;
+        
+        %%CUSTOM_INSTRUCTIONS%%
+    \end{enumerate}
+\end{framed}
+
+\vspace{1cm} 
+
+$\boxed{\text{Turn over}}$
+
+\newpage 
+
+\maketitle
+
+\thispagestyle{fancy}
+\setcounter{page}{1}
+\cfoot{Mareate 组卷 \ 第 \thepage 页(共 \pageref{LastPage} 页)} 
+
+%%DYNAMIC_SECTIONS%%
+
+\end{document}

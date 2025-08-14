@@ -1,0 +1,53 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@tanstack/react-query": "^5.83.0",
+    "@types/html2canvas": "^0.5.35",
+    "@types/node": "^24.1.0",
+    "@types/prismjs": "^1.26.5",
+    "axios": "^1.11.0",
+    "framer-motion": "^12.23.11",
+    "html2canvas": "^1.4.1",
+    "katex": "^0.16.22",
+    "lucide-react": "^0.528.0",
+    "mammoth": "^1.9.1",
+    "outline": "^0.1.1",
+    "pdfjs-dist": "^5.4.54",
+    "prismjs": "^1.30.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-katex": "^3.1.0",
+    "react-router-dom": "^7.7.1",
+    "zustand": "^5.0.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.30.1",
+    "@types/katex": "^0.16.7",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@types/react-katex": "^3.0.4",
+    "@vitejs/plugin-react": "^4.6.0",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9.30.1",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.35.1",
+    "vite": "^7.0.4"
+  }
+}

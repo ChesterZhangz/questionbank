@@ -1,0 +1,241 @@
+### **CursorRule 网页开发规范**  
+**版本**：1.0  
+**目标**：高性能、低内存、可维护性强的响应式网站  
+
+---
+
+### **一. 核心原则**
+1. **性能优先**  
+   - 首屏加载 < 1.5s (Lighthouse评分 > 90)
+   - 内存占用：单页JS堆内存 < 50MB
+   - 使用Web Worker处理计算密集型任务（如PDF生成）
+
+2. **组件化开发**  
+   ```mermaid
+   graph LR
+   A[原子组件] --> B[功能组件]
+   B --> C[页面模块]
+   C --> D[完整页面]
+   ```
+
+3. **内存管理三定律**  
+   - **即时销毁**：离开页面时卸载所有事件监听器
+   - **懒加载**：图片/组件按需加载（IntersectionObserver）
+   - **数据分页**：列表类数据每次加载 ≤ 20条
+
+---
+
+### **二. 前端开发规范**
+#### 1. **框架与工具**
+```bash
+# 技术栈
+React 18 (函数组件+Hooks)
+Redux Toolkit (状态管理)
+Vite (构建工具)
+TailwindCSS (样式引擎)
+```
+
+#### 2. **组件规范**
+```jsx
+// 文件名：QuestionCard.jsx
+import React, { memo } from 'react';
+import PropTypes from 'prop-types';
+
+/**
+ * 题目卡片组件 - 展示题目基础信息
+ * @param {object} props - 组件属性
+ * @param {string} props.title - 题目标题
+ * @param {number} props.difficulty - 难度值(1-3)
+ */
+const QuestionCard = memo(({ title, difficulty }) => {
+  // 难度颜色映射
+  const difficultyColor = ['text-green-500', 'text-yellow-500', 'text-red-500'];
+  
+  return (
+    <div className="border rounded-lg p-4 mb-3 shadow-sm hover:shadow-md transition-shadow">
+      <h3 className="font-medium text-lg truncate">{title}</h3>
+      <div className={`mt-2 text-sm ${difficultyColor[difficulty-1]}`}>
+        {['简单', '中等', '困难'][difficulty-1]}
+      </div>
+    </div>
+  );
+});
+
+QuestionCard.propTypes = {
+  title: PropTypes.string.isRequired,
+  difficulty: PropTypes.oneOf([1, 2, 3]).isRequired
+};
+
+export default QuestionCard;
+```
+
+#### 3. **性能优化规则**
+| 场景                | 解决方案                     | 内存收益       |
+|---------------------|------------------------------|---------------|
+| 大型列表渲染        | react-virtualized 虚拟滚动   | 减少80% DOM节点|
+| 公式渲染            | KaTeX + 按需加载             | 节省300KB资源  |
+| 状态管理            | Redux selector 记忆化        | 减少重复计算   |
+| 图片资源            | WebP格式 + CDN压缩           | 体积减少60%   |
+
+#### 4. **样式规范**
+```css
+/* 使用TailwindCSS原子类 */
+.card {
+  @apply bg-white rounded-xl p-4 shadow-md transition-all;
+}
+
+/* 深色模式支持 */
+.dark .card {
+  @apply bg-gray-800;
+}
+
+/* 禁止全局样式污染 */
+:global {
+  body {
+    @apply antialiased;
+  }
+}
+```
+
+---
+
+### **三. 后端交互规范**
+#### 1. API设计
+```javascript
+// API路径：/api/questions
+{
+  method: 'GET',
+  params: {
+    page: 1,       // 当前页码
+    difficulty: 2,  // 可选难度
+    tags: '几何'    // 可选标签
+  },
+  response: {
+    data: [Question], // 题目数组
+    total: 100        // 总数
+  }
+}
+```
+
+#### 2. 请求优化
+```javascript
+// 使用react-query管理请求
+import { useQuery } from 'react-query';
+
+const fetchQuestions = async (params) => {
+  const res = await axios.get('/api/questions', { params });
+  return res.data;
+};
+
+function useQuestions(params) {
+  return useQuery(
+    ['questions', params], // 缓存Key
+    () => fetchQuestions(params),
+    { 
+      staleTime: 5 * 60 * 1000 // 5分钟缓存
+    }
+  );
+}
+```
+
+---
+
+### **四. 内存管理专项**
+#### 1. 组件卸载清理
+```jsx
+useEffect(() => {
+  const resizeObserver = new ResizeObserver(handleResize);
+  resizeObserver.observe(containerRef.current);
+  
+  return () => {
+    resizeObserver.disconnect(); // 必须清理观察者
+    cancelAnimationFrame(animationFrame); // 取消未完成动画
+  };
+}, []);
+```
+
+#### 2. 数据分页策略
+```javascript
+// 滚动加载实现
+const loadMore = useCallback(() => {
+  if (!isFetching && hasMore) {
+    setPage(prev => prev + 1); // 仅追加新数据
+  }
+}, [isFetching, hasMore]);
+
+// 使用防抖优化
+const debouncedLoadMore = useDebounce(loadMore, 300);
+```
+
+#### 3. 资源监控
+```javascript
+// 内存监控组件
+function MemoryWatcher() {
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (window.performance?.memory) {
+        const usedMB = (performance.memory.usedJSHeapSize / 1048576).toFixed(2);
+        if (usedMB > 50) console.warn(`内存警告: ${usedMB}MB`);
+      }
+    }, 10000);
+    
+    return () => clearInterval(interval);
+  }, []);
+}
+```
+
+---
+
+### **五. 设计规范**
+1. **UI 一致性**  
+   - 使用设计系统：间距8px倍数/主色#4361ee/圆角6px
+   - Figma组件库同步开发
+
+2. **动效原则**  
+   - 持续时间 ≤ 300ms
+   - 仅使用transform/opacity属性（避免重排）
+   ```css
+   .fade-in {
+     animation: fadeIn 0.3s ease-out;
+   }
+   
+   @keyframes fadeIn {
+     0% { opacity: 0; transform: translateY(10px); }
+     100% { opacity: 1; transform: translateY(0); }
+   }
+   ```
+
+---
+
+### **六. 质量保障**
+#### 1. 自动化测试
+```mermaid
+graph LR
+A[Jest单元测试] --> B[覆盖率>85%]
+C[Cypress E2E测试] --> D[覆盖核心路径]
+```
+
+#### 2. 性能监控
+```bash
+# 每日自动化检测
+lighthouse --view --output=html --chrome-flags='--headless'
+```
+
+#### 3. 代码审查规则
+| 检查项          | 标准                          |
+|-----------------|-------------------------------|
+| 组件重新渲染    | React.memo + useMemo 必须使用|
+| 内存泄漏        | 严格检查所有useEffect清理函数 |
+| 资源大小        | 单个JS文件 < 100KB           |
+
+---
+
+### **七. 禁止行为**
+1. ❌ 直接操作DOM（除canvas等特殊场景）
+2. ❌ 使用内联样式（除动态计算属性）
+3. ❌ 未优化的递归操作
+4. ❌ 超过3层的props透传
+
+---
+
+本规范作为Cursor开发的强制标准，所有代码必须通过ESLint（配置Airbnb+内存优化规则）和性能自动化测试。每个功能开发前需提交实现方案说明，重点描述内存管理策略。

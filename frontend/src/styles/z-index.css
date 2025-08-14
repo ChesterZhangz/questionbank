@@ -1,0 +1,50 @@
+/* Z-Index 层级管理 */
+
+/* 基础层级 */
+.z-base { z-index: 0; }
+.z-dropdown { z-index: 10; }
+.z-sticky { z-index: 20; }
+.z-fixed { z-index: 30; }
+.z-modal-backdrop { z-index: 40; }
+.z-modal { z-index: 50; }
+.z-popover { z-index: 60; }
+.z-tooltip { z-index: 70; }
+.z-toast { z-index: 80; }
+
+/* 布局组件层级 */
+.z-sidebar { z-index: 90; }
+.z-mobile-nav { z-index: 95; }
+.z-header { z-index: 100; }
+
+/* 特殊层级 */
+.z-max { z-index: 9999; }
+
+/* 确保页面内容不会覆盖固定元素 */
+.page-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* 确保下拉菜单在正确层级 */
+.dropdown-menu {
+  z-index: 60;
+}
+
+/* 确保模态框在最顶层 */
+.modal {
+  z-index: 50;
+}
+
+.modal-backdrop {
+  z-index: 40;
+}
+
+/* 确保工具提示在正确层级 */
+.tooltip {
+  z-index: 70;
+}
+
+/* 确保通知在正确层级 */
+.notification {
+  z-index: 80;
+} 

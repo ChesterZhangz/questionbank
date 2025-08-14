@@ -1,0 +1,73 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: |
+        cd frontend && npm ci
+        cd ../backend && npm ci
+        
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+        
+    - name: Build backend
+      run: |
+        cd backend
+        npm run build
+        
+    - name: Create deployment package
+      run: |
+        mkdir -p deploy-package
+        cp -r frontend/dist deploy-package/frontend/
+        cp -r backend/dist deploy-package/backend/
+        cp -r backend/node_modules deploy-package/backend/
+        cp -r backend/package*.json deploy-package/backend/
+        cp Dockerfile deploy-package/
+        cp docker-compose.yml deploy-package/
+        cp nginx.conf deploy-package/
+        cp deploy.sh deploy-package/
+        cp DEPLOYMENT.md deploy-package/
+        cp server-setup.sh deploy-package/
+        cp .env deploy-package/
+        tar -czf mareate-deploy.tar.gz deploy-package/
+        
+    - name: Deploy to server
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        source: "mareate-deploy.tar.gz"
+        target: "/root/"
+        
+    - name: Execute deployment script
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd /root
+          tar -xzf mareate-deploy.tar.gz
+          cd deploy-package
+          chmod +x deploy.sh
+          ./deploy.sh 

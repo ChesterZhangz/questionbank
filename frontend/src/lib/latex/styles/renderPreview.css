@@ -1,0 +1,460 @@
+/* 导入自定义字体 */
+@font-face {
+  font-family: 'WenYuan';
+  src: url('/font/WenYuanSerifSC-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'WenYuan';
+  src: url('/font/WenYuanSerifSC-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+/* 基础内容样式 - 针对非LaTeX内容（中文、英文等） */
+.latex-content,
+.prose .latex-content,
+.prose-sm .latex-content {
+  font-family: 'WenYuan', 'SimSun', 'STSong', 'Times New Roman', 'Times', serif !important;
+  font-size: 1.3em !important;
+  line-height: 1.6 !important;
+  color: #374151 !important;
+}
+
+/* Dark Mode下的基础文字颜色 */
+.dark .latex-content,
+.dark .prose .latex-content,
+.dark .prose-sm .latex-content {
+  color: #f6f8fa !important;
+}
+
+/* 确保KaTeX渲染的数学公式在DarkMode下可见 */
+.dark .latex-content .katex {
+  color: #f6f8fa !important;
+}
+
+.dark .latex-content .katex-display {
+  color: #f6f8fa !important;
+}
+
+.dark .latex-content .katex-html {
+  color: #f6f8fa !important;
+}
+
+/* 文本内容样式 - 适当调整行间距 */
+.latex-content p {
+  margin: 0.3em 0; /* 缩小行间距，从0.8em减少到0.3em */
+  line-height: 1.6; /* 适当调整行高 */
+  color: inherit; /* 继承父元素的颜色 */
+}
+
+.latex-content p:first-child {
+  margin-top: 0;
+}
+
+.latex-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* 题目语法渲染样式 */
+
+/* 选择题选项样式 - 简化版，只保留括号 */
+.latex-content .choice-option {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0.3em;
+}
+
+/* 选择题样式 - 绝对可靠的括号 */
+.latex-content .choice-bracket,
+.prose .latex-content .choice-bracket,
+.prose-sm .latex-content .choice-bracket {
+  display: inline-block !important;
+  min-width: 4em;
+  color: #4b5563 !important;
+  font-family: 'WenYuan', 'SimSun', 'STSong', serif !important;
+  font-size: 1.1em !important;
+  font-weight: normal !important;
+  margin: 0 0.2em !important;
+  line-height: 1.5 !important;
+}
+
+/* Dark Mode下的选择题样式 */
+.dark .latex-content .choice-bracket,
+.dark .prose .latex-content .choice-bracket,
+.dark .prose-sm .latex-content .choice-bracket {
+  color: #9ca3af !important;
+}
+
+/* 填空题样式 - 绝对可靠的下划线 */
+.latex-content .fill-blank,
+.prose .latex-content .fill-blank,
+.prose-sm .latex-content .fill-blank {
+  display: inline-block !important;
+  min-width: 4em;
+  border-bottom: 2px solid #4b5563 !important; /* 实线下划线 */
+  color: transparent !important; /* 隐藏空格，只显示下划线 */
+  font-family: 'WenYuan', 'SimSun', 'STSong', serif !important;
+  font-size: 1.1em !important;
+  margin: 0 0.2em !important;
+  line-height: 1.5 !important;
+  vertical-align: baseline !important;
+  text-decoration: none !important;
+}
+
+/* Dark Mode下的填空题样式 */
+.dark .latex-content .fill-blank,
+.dark .prose .latex-content .fill-blank,
+.dark .prose-sm .latex-content .fill-blank {
+  border-bottom-color: #9ca3af !important;
+}
+
+/* 小问样式 - 去掉背景框架，内容对齐序号 */
+.latex-content .subproblem,
+.prose .latex-content .subproblem,
+.prose-sm .latex-content .subproblem {
+  font-weight: 500;
+  color: #4b5563;
+  margin: 0.2em 0;
+  padding: 0.3em 0;
+  display: block; /* Changed to block for better layout, then reverted to span in JS */
+  font-family: 'WenYuan', 'SimSun', 'STSong', serif;
+  margin-left: 0; /* Reset for no indentation */
+  padding-left: 0;
+  text-indent: 0;
+  position: relative; /* Added for positioning, then removed */
+}
+
+/* Dark Mode下的小问样式 */
+.dark .latex-content .subproblem,
+.dark .prose .latex-content .subproblem,
+.dark .prose-sm .latex-content .subproblem {
+  color: #9ca3af;
+}
+
+/* 小问序号样式 */
+.latex-content .subproblem-number,
+.prose .latex-content .subproblem-number,
+.prose-sm .latex-content .subproblem-number {
+  display: inline-block !important;
+  min-width: 2em;
+  font-weight: bold;
+  color: #4b5563;
+  margin-right: 0.5em;
+}
+
+/* Dark Mode下的小问序号样式 */
+.dark .latex-content .subproblem-number,
+.dark .prose .latex-content .subproblem-number,
+.dark .prose-sm .latex-content .subproblem-number {
+  color: #9ca3af;
+}
+
+/* 子小题样式 - 去掉背景框架，内容对齐序号 */
+.latex-content .subproblem-sub,
+.prose .latex-content .subproblem-sub,
+.prose-sm .latex-content .subproblem-sub {
+  margin: 0.1em 0 0.1em 0; /* Final state: no left margin for no indentation */
+  padding: 0.1em 0;
+  position: relative; /* Added for positioning, then removed */
+  left: 0; /* Final state: no left offset for no indentation */
+  color: #4b5563;
+}
+
+/* Dark Mode下的子小题样式 */
+.dark .latex-content .subproblem-sub,
+.dark .prose .latex-content .subproblem-sub,
+.dark .prose-sm .latex-content .subproblem-sub {
+  color: #9ca3af;
+}
+
+/* 子小题序号样式 */
+.latex-content .subproblem-sub .subproblem-number,
+.prose .latex-content .subproblem-sub .subproblem-number,
+.prose-sm .latex-content .subproblem-sub .subproblem-number {
+  display: inline-block !important;
+  min-width: 1.5em;
+  font-weight: bold;
+  color: #4b5563;
+  margin-right: 0.5em;
+}
+
+/* Dark Mode下的子小题序号样式 */
+.dark .latex-content .subproblem-sub .subproblem-number,
+.dark .prose .latex-content .subproblem-sub .subproblem-number,
+.dark .prose-sm .latex-content .subproblem-sub .subproblem-number {
+  color: #9ca3af;
+}
+
+/* 斜体和粗体样式 */
+.latex-content .latex-italic {
+  font-style: italic;
+  color: inherit;
+}
+
+.latex-content .latex-bold {
+  font-weight: bold;
+  color: inherit;
+}
+
+/* 新系统渲染样式兼容 */
+
+/* 选择题选项 - 新系统样式 */
+.latex-content .inline-block.px-1.py-0\.5.bg-blue-100 {
+  background-color: #dbeafe;
+  color: #1e40af;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-right: 0.25rem;
+}
+
+.dark .latex-content .inline-block.px-1.py-0\.5.bg-blue-100 {
+  background-color: #1e3a8a;
+  color: #dbeafe;
+}
+
+/* 填空题 - 新系统样式 */
+.latex-content .inline-block.px-2.py-1.bg-yellow-100 {
+  background-color: #fef3c7;
+  color: #92400e;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-bottom: 2px solid #f59e0b;
+  margin-right: 0.25rem;
+}
+
+.dark .latex-content .inline-block.px-2.py-1.bg-yellow-100 {
+  background-color: #451a03;
+  color: #fde68a;
+  border-bottom-color: #fbbf24;
+}
+
+/* 小问 - 新系统样式 */
+.latex-content .text-gray-600.font-medium {
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.dark .latex-content .text-gray-600.font-medium {
+  color: #9ca3af;
+}
+
+/* 子小题 - 新系统样式 */
+.latex-content .text-gray-500.text-sm {
+  color: #6b5563;
+  font-size: 0.875rem;
+}
+
+.dark .latex-content .text-gray-500.text-sm {
+  color: #9ca3af;
+}
+
+/* 轻量级模式样式 */
+.latex-content .text-blue-600 {
+  color: #2563eb;
+}
+
+.dark .latex-content .text-blue-600 {
+  color: #60a5fa;
+}
+
+.latex-content .text-yellow-600 {
+  color: #ca8a04;
+}
+
+.dark .latex-content .text-yellow-600 {
+  color: #eab308;
+}
+
+.latex-content .text-gray-500 {
+  color: #6b7280;
+}
+
+.dark .latex-content .text-gray-500 {
+  color: #9ca3af;
+}
+
+.latex-content .text-gray-400 {
+  color: #9ca3af;
+}
+
+.dark .latex-content .text-gray-400 {
+  color: #d1d5db;
+}
+
+/* 响应式设计 - 仅针对非LaTeX内容 */
+@media (max-width: 768px) {
+  .latex-content .fill-blank {
+    /* 使用KaTeX默认渲染，不添加任何自定义样式 */
+  }
+  
+  .latex-content .choice-bracket {
+    /* 通过KaTeX渲染，不添加自定义样式 */
+  }
+  
+  .latex-content .subproblem {
+    text-indent: 1em;
+  }
+  
+}
+
+/* LaTeX预览容器样式 */
+.latex-preview {
+  width: 100%;
+}
+
+/* 预览面板样式 */
+.preview-panel {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.preview-panel-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.preview-panel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.preview-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.preview-panel-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.preview-panel-toggle:hover {
+  color: #374151;
+  background: #f3f4f6;
+}
+
+.preview-panel-content {
+  padding: 1.5rem;
+  height: 28rem;
+  overflow-y: auto;
+  background: white;
+}
+
+/* Dark Mode 预览面板样式 */
+.dark .preview-panel {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.dark .preview-panel-header {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+.dark .preview-panel-title {
+  color: #9ca3af;
+}
+
+.dark .preview-panel-toggle {
+  color: #9ca3af;
+}
+
+.dark .preview-panel-toggle:hover {
+  color: #d1d5db;
+  background: #4b5563;
+}
+
+.dark .preview-panel-content {
+  background: #1f2937;
+}
+
+.latex-preview-container {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.latex-preview-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  padding: 0.75rem 1rem 0;
+}
+
+.latex-preview-content {
+  color: #374151;
+  padding: 0 1rem 1rem;
+}
+
+/* Dark Mode 预览容器样式 */
+.dark .latex-preview-container {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.dark .latex-preview-title {
+  color: #d1d5db;
+}
+
+.dark .latex-preview-content {
+  color: #d1d5db;
+}
+
+/* 搜索结果专用样式 - 仅针对非LaTeX内容 */
+.search-result-content .katex {
+  /* 使用KaTeX默认样式 */
+}
+
+.search-result-content .katex-display {
+  /* 使用KaTeX默认样式 */
+}
+
+.search-result-content .katex-display .katex {
+  /* 使用KaTeX默认样式 */
+}
+
+.search-result-content .katex:not(.katex-display) {
+  /* 使用KaTeX默认样式 */
+}
+
+.search-result-content .katex-html {
+  /* 使用KaTeX默认样式 */
+}
+
+.search-result-content .katex-display .katex-html {
+  /* 使用KaTeX默认样式 */
+}
+
+/* 打印样式 - 仅针对非LaTeX内容 */
+@media print {
+  .latex-content .subproblem,
+  .latex-content .subproblem-sub {
+    page-break-inside: avoid;
+  }
+}

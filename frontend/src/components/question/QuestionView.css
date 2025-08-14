@@ -1,0 +1,464 @@
+/* QuestionView 优雅动画和设计样式 */
+
+/* 导入QuestionCard的LaTeX样式，确保渲染效果一致 */
+@import './QuestionCard.css';
+
+/* 主容器动画增强 - 确保不被Sidebar遮挡 */
+.question-view-container {
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  z-index: 9999 !important; /* 确保最高层级 */
+}
+
+.dark .question-view-container {
+  background: rgba(17, 24, 39, 0.95);
+  border: 1px solid rgba(75, 85, 99, 0.2);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(75, 85, 99, 0.1);
+}
+
+/* 遮罩层增强 - 确保覆盖所有内容 */
+.question-view-overlay {
+  z-index: 9998 !important; /* 仅次于容器 */
+}
+
+/* QuestionView特定的LaTeX内容样式 - 继承QuestionCard的样式 */
+.question-view-latex-content {
+  /* 继承QuestionCard的字体设置 */
+  font-family: 'WenYuan', 'SimSun', 'STSong', 'Times New Roman', 'Times', serif !important;
+  font-size: 1.3em !important;
+  line-height: 1.7 !important;
+  color: inherit !important;
+  
+  /* 确保内容正确显示 */
+  max-width: 100% !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+}
+
+/* QuestionView中的LaTeX内容不需要滚动限制，因为空间充足 */
+.question-view-latex-content {
+  max-height: none !important;
+  overflow: visible !important;
+  padding-right: 0 !important;
+}
+
+/* 确保KaTeX公式在QuestionView中正确显示 */
+.question-view-latex-content .katex {
+  font-size: 1em !important;
+  line-height: 1.2 !important;
+  color: inherit !important;
+}
+
+.question-view-latex-content .katex-display {
+  margin: 0.5em 0 !important;
+  text-align: center !important;
+}
+
+.question-view-latex-content .katex-html {
+  color: inherit !important;
+}
+
+/* 题目语法样式 - 与QuestionCard保持一致 */
+.question-view-latex-content .choice-bracket {
+  display: inline-block !important;
+  min-width: 4em !important;
+  color: #4b5563 !important;
+  font-family: 'WenYuan', 'SimSun', 'STSong', serif !important;
+  font-size: 1.1em !important;
+  font-weight: normal !important;
+  margin: 0 0.2em !important;
+  line-height: 1.5 !important;
+}
+
+.question-view-latex-content .fill-blank {
+  display: inline-block !important;
+  min-width: 4em !important;
+  border-bottom: 2px solid #4b5563 !important;
+  color: transparent !important;
+  font-family: 'WenYuan', 'SimSun', 'STSong', serif !important;
+  font-size: 1.1em !important;
+  margin: 0 0.2em !important;
+  line-height: 1.5 !important;
+  vertical-align: baseline !important;
+}
+
+.question-view-latex-content .subproblem {
+  font-weight: 500 !important;
+  color: inherit !important;
+  margin: 0.2em 0 !important;
+  padding: 0.3em 0 !important;
+  display: block !important;
+  font-family: 'WenYuan', 'SimSun', 'STSong', serif !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  text-indent: 0 !important;
+}
+
+.question-view-latex-content .subproblem-number {
+  display: inline-block !important;
+  min-width: 2em !important;
+  font-weight: bold !important;
+  color: #1f2937 !important;
+  margin-right: 0.5em !important;
+}
+
+.question-view-latex-content .subproblem-sub {
+  margin: 0.1em 0 !important;
+  padding: 0.1em 0 !important;
+  color: inherit !important;
+}
+
+.question-view-latex-content .subproblem-sub .subproblem-number {
+  display: inline-block !important;
+  min-width: 1.5em !important;
+  font-weight: bold !important;
+  color: #1f2937 !important;
+  margin-right: 0.5em !important;
+}
+
+/* Dark Mode支持 */
+.dark .question-view-latex-content {
+  color: #f6f8fa !important;
+}
+
+.dark .question-view-latex-content .katex {
+  color: #f6f8fa !important;
+}
+
+.dark .question-view-latex-content .katex-display {
+  color: #f6f8fa !important;
+}
+
+.dark .question-view-latex-content .katex-html {
+  color: #f6f8fa !important;
+}
+
+.dark .question-view-latex-content .choice-bracket {
+  color: #9ca3af !important;
+}
+
+.dark .question-view-latex-content .fill-blank {
+  border-bottom-color: #9ca3af !important;
+}
+
+.dark .question-view-latex-content .subproblem {
+  color: #f6f8fa !important;
+}
+
+.dark .question-view-latex-content .subproblem-number {
+  color: #fbbf24 !important;
+}
+
+.dark .question-view-latex-content .subproblem-sub {
+  color: #f6f8fa !important;
+}
+
+.dark .question-view-latex-content .subproblem-sub .subproblem-number {
+  color: #fbbf24 !important;
+}
+
+/* 斜体和粗体样式 */
+.question-view-latex-content .latex-italic {
+  font-style: italic !important;
+  color: inherit !important;
+}
+
+.question-view-latex-content .latex-bold {
+  font-weight: bold !important;
+  color: inherit !important;
+}
+
+/* 确保内容在QuestionView中正确显示 */
+.question-view-latex-content .latex-preview-container {
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.question-view-latex-content .latex-preview-content {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.question-view-latex-content .latex-content {
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* 移除LaTeXPreview的默认边框和背景 */
+.question-view-latex-content .latex-preview {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 卡片优雅悬停效果 */
+.question-card-enhanced {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.question-card-enhanced:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 4px 6px -1px rgba(0, 0, 0, 0.06);
+}
+
+.dark .question-card-enhanced:hover {
+  box-shadow: 
+    0 10px 25px -5px rgba(0, 0, 0, 0.3),
+    0 4px 6px -1px rgba(0, 0, 0, 0.2);
+}
+
+/* 标签页优雅动画 */
+.tab-button-enhanced {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-button-enhanced::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #3b82f6;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-button-enhanced.active::after {
+  width: 100%;
+}
+
+.tab-button-enhanced:hover::after {
+  width: 100%;
+}
+
+/* 选项卡片优雅效果 */
+.option-card-enhanced {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.dark .option-card-enhanced {
+  background: #1f2937;
+  border: 1px solid #4b5563;
+}
+
+.option-card-enhanced::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #3b82f6;
+  transform: scaleX(0);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.option-card-enhanced:hover::before {
+  transform: scaleX(1);
+}
+
+.option-card-enhanced:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dark .option-card-enhanced:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 序号圆圈优雅效果 */
+.option-number-enhanced {
+  background: #3b82f6;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.option-number-enhanced:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* 标签优雅效果 */
+.tag-enhanced {
+  background: #10b981;
+  color: white;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tag-enhanced:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+/* 难度星级优雅效果 */
+.difficulty-stars-enhanced {
+  color: #fbbf24;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.difficulty-stars-enhanced:hover {
+  transform: scale(1.05);
+}
+
+/* 统计卡片优雅效果 */
+.stats-card-enhanced {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-card-enhanced::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.6s ease;
+}
+
+.stats-card-enhanced:hover::before {
+  left: 100%;
+}
+
+/* 相关题目卡片优雅效果 */
+.related-question-enhanced {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.dark .related-question-enhanced {
+  background: #1f2937;
+  border: 1px solid #4b5563;
+}
+
+.related-question-enhanced::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(59, 130, 246, 0.03) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.related-question-enhanced:hover::before {
+  opacity: 1;
+}
+
+.related-question-enhanced:hover {
+  transform: translateY(-2px);
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+
+/* 加载动画优雅效果 */
+.loading-spinner-enhanced {
+  animation: spin 1s linear infinite;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 滚动条美化 */
+.scrollbar-enhanced::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-enhanced::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.scrollbar-enhanced::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.scrollbar-enhanced::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark .scrollbar-enhanced::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .scrollbar-enhanced::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.dark .scrollbar-enhanced::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* 响应式动画 */
+@media (max-width: 768px) {
+  .question-card-enhanced:hover {
+    transform: translateY(-1px);
+  }
+  
+  .option-card-enhanced:hover {
+    transform: none;
+  }
+}
+
+/* 进入动画优雅效果 */
+.fade-in-up {
+  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 脉冲动画优雅效果 */
+.pulse-enhanced {
+  animation: pulseEnhanced 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulseEnhanced {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
