@@ -91,29 +91,6 @@ router.post('/parse', upload.single('image'), async (req, res) => {
   }
 });
 
-/**
- * GET /api/question-split-ocr/test
- * 测试API连接
- */
-router.get('/test', async (req, res) => {
-  try {
-    const isConnected = await questionSplitOCRService.testConnection();
-    
-    return res.json({
-      success: true,
-      data: {
-        connected: isConnected,
-        message: isConnected ? 'API连接正常' : 'API连接失败'
-      }
-    });
 
-  } catch (error: any) {
-    console.error('API连接测试失败:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message || '连接测试失败'
-    });
-  }
-});
 
 export default router; 
