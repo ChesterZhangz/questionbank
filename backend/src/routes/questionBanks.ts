@@ -370,11 +370,32 @@ router.get('/:bid/members', authMiddleware, checkQuestionBankPermission, async (
       return res.status(403).json({ success: false, error: '权限不足' });
     }
 
-    const members = {
+    // 获取显式成员
+    const explicitMembers = {
       creator: await User.findById(questionBank.creator).select('name email'),
       managers: await User.find({ _id: { $in: questionBank.managers } }).select('name email'),
       collaborators: await User.find({ _id: { $in: questionBank.collaborators } }).select('name email'),
       viewers: questionBank.viewers ? await User.find({ _id: { $in: questionBank.viewers } }).select('name email') : []
+    };
+    
+    // 获取企业隐式查看者（同企业用户）
+    const enterpriseViewers = await User.find({
+      emailSuffix: questionBank.emailSuffix,
+      enterpriseId: { $exists: true },
+      _id: { 
+        $nin: [
+          questionBank.creator,
+          ...(questionBank.managers || []),
+          ...(questionBank.collaborators || []),
+          ...(questionBank.viewers || [])
+        ] 
+      }
+    }).select('name email');
+    
+    // 合并成员列表
+    const members = {
+      ...explicitMembers,
+      enterprise_viewers: enterpriseViewers
     };
 
     return res.json({

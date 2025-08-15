@@ -34,7 +34,7 @@ interface MemberInfo {
   _id: string;
   name: string;
   email: string;
-  role: 'creator' | 'manager' | 'collaborator' | 'viewer';
+  role: 'creator' | 'manager' | 'collaborator' | 'viewer' | 'enterprise_viewer';
   joinedAt: string;
 }
 
@@ -157,6 +157,32 @@ const QuestionBankMembersPage: React.FC = () => {
             });
           }
           
+          // 添加查看者
+          if (membersData.viewers && Array.isArray(membersData.viewers)) {
+            membersData.viewers.forEach((viewer: any) => {
+              membersArray.push({
+                _id: viewer._id,
+                name: viewer.name,
+                email: viewer.email,
+                role: 'viewer',
+                joinedAt: new Date().toISOString() // 暂时使用当前时间
+              });
+            });
+          }
+          
+          // 添加企业查看者
+          if (membersData.enterprise_viewers && Array.isArray(membersData.enterprise_viewers)) {
+            membersData.enterprise_viewers.forEach((viewer: any) => {
+              membersArray.push({
+                _id: viewer._id,
+                name: viewer.name,
+                email: viewer.email,
+                role: 'enterprise_viewer',
+                joinedAt: new Date().toISOString() // 暂时使用当前时间
+              });
+            });
+          }
+          
           setMembers(membersArray);
         } else {
           setMembers([]);
@@ -180,8 +206,10 @@ const QuestionBankMembersPage: React.FC = () => {
       setUserRole('manager');
     } else if (bank.collaborators.some(c => c._id?.toString() === userId)) {
       setUserRole('collaborator');
-    } else {
+    } else if (bank.viewers && bank.viewers.some(v => v._id?.toString() === userId)) {
       setUserRole('viewer');
+    } else {
+      setUserRole('viewer'); // 可能是企业查看者或其他情况
     }
   };
 
@@ -346,6 +374,8 @@ const QuestionBankMembersPage: React.FC = () => {
         return <UserIcon className="w-4 h-4 text-green-500" />;
       case 'viewer':
         return <UserIcon className="w-4 h-4 text-gray-500" />;
+      case 'enterprise_viewer':
+        return <Users className="w-4 h-4 text-purple-500" />;
       default:
         return <UserIcon className="w-4 h-4 text-gray-500" />;
     }
@@ -361,6 +391,8 @@ const QuestionBankMembersPage: React.FC = () => {
         return '协作者';
       case 'viewer':
         return '查看者';
+      case 'enterprise_viewer':
+        return '企业查看者';
       default:
         return '未知';
     }
@@ -376,6 +408,8 @@ const QuestionBankMembersPage: React.FC = () => {
         return 'bg-green-100 text-green-800 border-green-200';
       case 'viewer':
         return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'enterprise_viewer':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -383,12 +417,18 @@ const QuestionBankMembersPage: React.FC = () => {
 
   const canManageMembers = userRole === 'creator' || userRole === 'manager';
   const canRemoveMember = (memberRole: string) => {
+    // 企业查看者不能被删除（他们是隐式成员）
+    if (memberRole === 'enterprise_viewer') return false;
+    
     if (userRole === 'creator') return true;
     if (userRole === 'manager') return memberRole !== 'creator' && memberRole !== 'manager';
     return false;
   };
 
   const canChangeRole = (memberRole: string) => {
+    // 企业查看者不能更改角色（他们是隐式成员）
+    if (memberRole === 'enterprise_viewer') return false;
+    
     if (userRole === 'creator') return memberRole !== 'creator';
     if (userRole === 'manager') return memberRole === 'collaborator' || memberRole === 'viewer';
     return false;
@@ -439,7 +479,15 @@ const QuestionBankMembersPage: React.FC = () => {
               </div>
             </div>
             
-
+            {canManageMembers && (
+              <Button
+                onClick={() => setShowAddMember(true)}
+                className="bg-green-500 hover:bg-green-600 text-white"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                添加成员
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -503,7 +551,7 @@ const QuestionBankMembersPage: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    {members.filter(m => m.role === 'viewer').length}
+                    {members.filter(m => m.role === 'viewer' || m.role === 'enterprise_viewer').length}
                   </div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">查看者</div>
                 </div>
@@ -549,12 +597,16 @@ const QuestionBankMembersPage: React.FC = () => {
           </div>
         </Card>
 
-        {/* 批量操作工具栏 */}
-        <Card className="mb-6">
+
+
+        {/* 成员列表 */}
+        <Card>
           <div className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">成员列表</h3>
+              
+              <div className="flex items-center gap-3">
+                {canManageMembers && (
                   <button
                     onClick={handleSelectAll}
                     className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
@@ -566,22 +618,7 @@ const QuestionBankMembersPage: React.FC = () => {
                     )}
                     {selectedMembers.size === filteredMembers.length ? '取消全选' : '全选'}
                   </button>
-                  {selectedMembers.size > 0 && (
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      已选择 {selectedMembers.size} 个成员
-                    </span>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex gap-3">
-                <Button
-                  onClick={() => setShowAddMember(true)}
-                  className="bg-green-500 hover:bg-green-600 text-white"
-                >
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  添加成员
-                </Button>
+                )}
                 
                 {selectedMembers.size > 0 && (
                   <Button
@@ -596,13 +633,6 @@ const QuestionBankMembersPage: React.FC = () => {
                 )}
               </div>
             </div>
-          </div>
-        </Card>
-
-        {/* 成员列表 */}
-        <Card>
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">成员列表</h3>
             
             {filteredMembers.length === 0 ? (
               <div className="text-center py-12">

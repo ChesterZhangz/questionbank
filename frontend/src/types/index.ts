@@ -206,6 +206,7 @@ export interface QuestionBank {
   creator: User;
   managers: User[];
   collaborators: User[];
+  viewers?: User[];
   isPublic: boolean;
   allowCollaboration: boolean;
   maxQuestions: number;
@@ -301,6 +302,16 @@ export interface QuestionBankApiResponse {
       email: string;
     }>;
     collaborators?: Array<{
+      _id: string;
+      name: string;
+      email: string;
+    }>;
+    viewers?: Array<{
+      _id: string;
+      name: string;
+      email: string;
+    }>;
+    enterprise_viewers?: Array<{
       _id: string;
       name: string;
       email: string;
