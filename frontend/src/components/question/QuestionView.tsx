@@ -321,20 +321,23 @@ const QuestionView: React.FC<QuestionViewProps> = ({
     }
   };
 
-  // 处理滚动事件
+  // 处理滚动事件 - 使用主容器的滚动
   const handleScroll = useCallback(() => {
-    if (scrollContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+    // 使用主容器的滚动位置来计算进度
+    const mainContainer = document.querySelector('.main-content-container');
+    if (mainContainer) {
+      const { scrollTop, scrollHeight, clientHeight } = mainContainer as HTMLElement;
       const progress = scrollTop / (scrollHeight - clientHeight);
       setScrollProgress(progress);
     }
   }, []);
 
+  // 添加滚动事件监听器到主容器
   useEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-    if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', handleScroll);
-      return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    const mainContainer = document.querySelector('.main-content-container');
+    if (mainContainer) {
+      mainContainer.addEventListener('scroll', handleScroll);
+      return () => mainContainer.removeEventListener('scroll', handleScroll);
     }
   }, [handleScroll]);
 
@@ -466,14 +469,14 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                 </div>
 
                 {/* 内容区域 */}
-                <div className="flex-1 overflow-y-auto scrollbar-enhanced">
+                <div className="flex-1 overflow-y-auto scrollbar-enhanced main-content-container">
                   <div className="p-6">
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
                       {/* 主要内容 */}
                       <div className="xl:col-span-2">
                         <motion.div
                           key={animationKey}
-                          className="question-card-enhanced h-[calc(90vh-200px)] overflow-hidden"
+                          className="question-card-enhanced h-[calc(90vh-200px)]"
                           initial={{ 
                             opacity: 0, 
                             x: slideDirection === 'left' ? -20 : slideDirection === 'right' ? 20 : 0,
@@ -490,7 +493,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                           }}
                         >
                           <Card className="h-full flex flex-col">
-                            <div className="p-6 flex-1 flex flex-col overflow-hidden">
+                            <div className="p-6 flex-1 flex flex-col">
                               {/* 题目信息头部 */}
                               <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center space-x-3">
@@ -589,7 +592,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                               </div>
 
                               {/* 标签页内容 */}
-                              <div className="flex-1 overflow-y-auto scrollbar-enhanced">
+                              <div className="flex-1">
                                 <AnimatePresence mode="wait">
                                   {activeTab === 'question' && (
                                     <motion.div
@@ -895,10 +898,10 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                 </div>
                               ) : (
                                 <div className="flex-1 flex flex-col min-h-0">
-                                  {/* 滑动容器 */}
+                                  {/* 相关题目列表 */}
                                   <div 
                                     ref={scrollContainerRef}
-                                    className="flex-1 overflow-y-auto scrollbar-enhanced"
+                                    className="flex-1"
                                   >
                                     <div className="space-y-3 pr-3 pb-4">
                                       {relatedQuestions.map((q) => (
