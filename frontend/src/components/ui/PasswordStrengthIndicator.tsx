@@ -110,48 +110,89 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
                   </h4>
                   
                   <div className="space-y-2">
-                    {/* 验证规则 */}
-                    <ValidationRule
-                      passed={password.length >= 8 && password.length <= 20}
-                      text="密码长度8-20位"
-                    />
-                    <ValidationRule
-                      passed={!username || !PasswordValidator.isRelatedToUsername(password, username)}
-                      text="不包含用户名相关内容"
-                    />
-                    <ValidationRule
-                      passed={!email || !PasswordValidator.isRelatedToEmail(password, email)}
-                      text="不包含邮箱相关内容"
-                    />
-                    <ValidationRule
-                      passed={!PasswordValidator.containsBirthDatePattern(password)}
-                      text="不包含生日日期格式"
-                    />
-                    <ValidationRule
-                      passed={!PasswordValidator.hasConsecutiveRepeats(password)}
-                      text="无连续三位相同字符"
-                    />
-                    
-                    {/* 复杂度要求 */}
-                    <div className="border-t border-gray-200 dark:border-gray-600 pt-2 mt-3">
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">建议包含：</p>
-                      <ValidationRule
-                        passed={/[a-z]/.test(password)}
-                        text="小写字母"
-                      />
-                      <ValidationRule
-                        passed={/[A-Z]/.test(password)}
-                        text="大写字母"
-                      />
-                      <ValidationRule
-                        passed={/\d/.test(password)}
-                        text="数字"
-                      />
-                      <ValidationRule
-                        passed={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)}
-                        text="特殊字符"
-                      />
-                    </div>
+                    {/* 计算未满足的要求 */}
+                    {(() => {
+                      const failedRequirements = [];
+                      
+                      // 必需要求
+                      if (password.length < 8 || password.length > 20) {
+                        failedRequirements.push(
+                          <ValidationRule key="length" passed={false} text="密码长度8-20位" />
+                        );
+                      }
+                      
+                      if (username && PasswordValidator.isRelatedToUsername(password, username)) {
+                        failedRequirements.push(
+                          <ValidationRule key="username" passed={false} text="不包含用户名相关内容" />
+                        );
+                      }
+                      
+                      if (email && PasswordValidator.isRelatedToEmail(password, email)) {
+                        failedRequirements.push(
+                          <ValidationRule key="email" passed={false} text="不包含邮箱相关内容" />
+                        );
+                      }
+                      
+                      if (PasswordValidator.containsBirthDatePattern(password)) {
+                        failedRequirements.push(
+                          <ValidationRule key="birthdate" passed={false} text="不包含生日日期格式" />
+                        );
+                      }
+                      
+                      if (PasswordValidator.hasConsecutiveRepeats(password)) {
+                        failedRequirements.push(
+                          <ValidationRule key="repeats" passed={false} text="无连续三位相同字符" />
+                        );
+                      }
+                      
+                      // 复杂度要求
+                      const complexityFailed = [];
+                      if (!/[a-z]/.test(password)) {
+                        complexityFailed.push(
+                          <ValidationRule key="lowercase" passed={false} text="小写字母" />
+                        );
+                      }
+                      if (!/[A-Z]/.test(password)) {
+                        complexityFailed.push(
+                          <ValidationRule key="uppercase" passed={false} text="大写字母" />
+                        );
+                      }
+                      if (!/\d/.test(password)) {
+                        complexityFailed.push(
+                          <ValidationRule key="digit" passed={false} text="数字" />
+                        );
+                      }
+                      if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+                        complexityFailed.push(
+                          <ValidationRule key="special" passed={false} text="特殊字符" />
+                        );
+                      }
+                      
+                      // 如果所有要求都满足，显示成功消息
+                      if (failedRequirements.length === 0 && complexityFailed.length === 0) {
+                        return (
+                          <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                              密码符合所有安全要求！
+                            </p>
+                          </div>
+                        );
+                      }
+                      
+                      // 显示未满足的要求
+                      return (
+                        <>
+                          {failedRequirements}
+                          {complexityFailed.length > 0 && (
+                            <div className="border-t border-gray-200 dark:border-gray-600 pt-2 mt-3">
+                              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">建议包含：</p>
+                              {complexityFailed}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                   
                   {/* 错误提示 */}
