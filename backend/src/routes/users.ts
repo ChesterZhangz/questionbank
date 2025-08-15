@@ -5,6 +5,21 @@ import { AuthRequest, authMiddleware } from '../middleware/auth';
 
 const router = express.Router();
 
+// 辅助函数：更新企业成员数量
+const updateEnterpriseMemberCount = async (enterpriseId: string, increment: number) => {
+  try {
+    const Enterprise = require('../models/Enterprise').default;
+    await Enterprise.findByIdAndUpdate(enterpriseId, {
+      $inc: { currentMembers: increment }
+    });
+    console.log(`企业 ${enterpriseId} 成员数量${increment > 0 ? '增加' : '减少'} ${Math.abs(increment)}`);
+    return true;
+  } catch (error) {
+    console.error('更新企业成员数量失败:', error);
+    return false;
+  }
+};
+
 // 获取所有用户（仅管理员可访问）
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
@@ -157,11 +172,33 @@ router.delete('/:userId', authMiddleware, async (req: AuthRequest, res: Response
       return res.status(400).json({ success: false, error: '不能删除超级管理员账号' });
     }
 
+    // 如果用户属于某个企业，减少企业成员数量
+    if (user.enterpriseId) {
+      await updateEnterpriseMemberCount(user.enterpriseId.toString(), -1);
+    }
+
+    // 删除企业成员记录
+    if (user.enterpriseId) {
+      try {
+        const EnterpriseMember = require('../models/EnterpriseMember').default;
+        await EnterpriseMember.findOneAndDelete({
+          userId: user._id,
+          enterpriseId: user.enterpriseId
+        });
+        console.log(`企业成员记录删除成功: ${user._id}`);
+      } catch (memberError) {
+        console.error('删除企业成员记录失败:', memberError);
+        // 即使成员记录删除失败，也要继续删除用户
+      }
+    }
+
+    // 删除用户
     await User.findByIdAndDelete(req.params.userId);
 
     return res.json({
       success: true,
-      message: '用户删除成功'
+      message: '用户删除成功',
+      enterpriseUpdated: !!user.enterpriseId
     });
   } catch (error) {
     console.error('删除用户失败:', error);
@@ -253,6 +290,36 @@ router.post('/batch', authMiddleware, [
           return res.status(400).json({ success: false, error: '不能删除超级管理员账号' });
         }
 
+        // 获取要删除的用户信息，用于更新企业成员数量
+        const usersToDelete = await User.find({ _id: { $in: userIds } });
+        
+        // 按企业分组，统计每个企业需要减少的成员数量
+        const enterpriseMemberCounts = new Map<string, number>();
+        usersToDelete.forEach(user => {
+          if (user.enterpriseId) {
+            const currentCount = enterpriseMemberCounts.get(user.enterpriseId.toString()) || 0;
+            enterpriseMemberCounts.set(user.enterpriseId.toString(), currentCount + 1);
+          }
+        });
+
+        // 批量更新企业成员数量
+        if (enterpriseMemberCounts.size > 0) {
+          for (const [enterpriseId, count] of enterpriseMemberCounts) {
+            await updateEnterpriseMemberCount(enterpriseId, -count);
+          }
+        }
+
+        // 删除企业成员记录
+        try {
+          const EnterpriseMember = require('../models/EnterpriseMember').default;
+          await EnterpriseMember.deleteMany({ userId: { $in: userIds } });
+          console.log(`批量删除企业成员记录成功: ${userIds.length} 条`);
+        } catch (memberError) {
+          console.error('批量删除企业成员记录失败:', memberError);
+          // 即使成员记录删除失败，也要继续删除用户
+        }
+
+        // 删除用户
         await User.deleteMany({ _id: { $in: userIds } });
         break;
 
