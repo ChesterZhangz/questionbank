@@ -10,6 +10,19 @@ export const config = {
   // 前端URL配置
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
   
+  // 环境变量验证
+  validateConfig() {
+    console.log('🔧 配置验证:');
+    console.log(`  - NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log(`  - PORT: ${process.env.PORT}`);
+    console.log(`  - FRONTEND_URL: ${process.env.FRONTEND_URL}`);
+    console.log(`  - 使用的前端URL: ${this.frontendUrl}`);
+    
+    if (!process.env.FRONTEND_URL) {
+      console.warn('⚠️  FRONTEND_URL 环境变量未设置，使用默认值');
+    }
+  },
+  
   // 腾讯云配置
   tencentCloud: {
     secretId: process.env.TENCENT_CLOUD_SECRET_ID || 'error',

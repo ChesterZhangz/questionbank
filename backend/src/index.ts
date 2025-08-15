@@ -293,6 +293,9 @@ const connectDB = async () => {
 
 // 启动服务器
 const startServer = async () => {
+  // 验证配置
+  config.validateConfig();
+  
   await connectDB();
   
   app.listen(PORT, () => {

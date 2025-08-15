@@ -31,6 +31,7 @@ RUN npm ci
 COPY backend/ ./
 
 # 构建后端
+ENV FRONTEND_URL=http://43.160.253.32
 RUN npm run build
 
 # 生产阶段

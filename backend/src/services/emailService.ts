@@ -48,6 +48,13 @@ export const emailService = {
     try {
       const verificationUrl = `${config.frontendUrl}/auth/verify-email?token=${data.token}`;
       
+      // 调试信息
+      console.log('📧 发送验证邮件:');
+      console.log(`  - 收件人: ${data.email}`);
+      console.log(`  - 验证链接: ${verificationUrl}`);
+      console.log(`  - 配置的frontendUrl: ${config.frontendUrl}`);
+      console.log(`  - 环境变量FRONTEND_URL: ${process.env.FRONTEND_URL}`);
+      
       const mailOptions = {
         from: `"Mareate题库系统" <${process.env.QQ_EMAIL_USER}>`,
         to: data.email,
