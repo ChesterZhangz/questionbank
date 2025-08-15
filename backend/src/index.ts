@@ -61,8 +61,6 @@ app.use(helmet({
 app.use(cors({
   origin: [
     config.frontendUrl,
-    'http://www.mareate.com',
-    'https://www.mareate.com',
     'http://43.160.253.32',
     'https://43.160.253.32'
   ],
@@ -122,8 +120,6 @@ app.use('/temp/images', express.static('temp/images', {
     const origin = res.req.headers.origin;
     const allowedOrigins = [
       config.frontendUrl,
-      'http://www.mareate.com',
-      'https://www.mareate.com',
       'http://43.160.253.32',
       'https://43.160.253.32'
     ];
@@ -257,8 +253,6 @@ app.get('/api/images/:imageId', (req, res) => {
     const origin = req.headers.origin;
     const allowedOrigins = [
       process.env.FRONTEND_URL || 'http://localhost:5173',
-      'http://www.mareate.com',
-      'https://www.mareate.com',
       'http://43.160.253.32',
       'https://43.160.253.32'
     ];
