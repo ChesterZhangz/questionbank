@@ -3,11 +3,11 @@ services:
     build: .
     container_name: mareate-app
     ports:
-      - "3001:3001"
+      - "80:3001"
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - FRONTEND_URL=http://43.160.253.32
+      - FRONTEND_URL=http://mareate.com
     env_file:
       - .env
     volumes:
@@ -21,7 +21,6 @@ services:
     image: nginx:alpine
     container_name: mareate-nginx
     ports:
-      - "80:80"
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
