@@ -17,6 +17,7 @@ import {
   Building2
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
+import Avatar from '../ui/Avatar';
 
 interface NavItem {
   id: string;
@@ -205,16 +206,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
         <div className={`flex items-center gap-4 mb-4 ${
           collapsed ? 'justify-center' : ''
         }`}>
-          <div className="relative">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-              <User className="w-6 h-6 text-white" />
-            </div>
-            {(isSuperAdmin || isAdminEmail) && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-sm">
-                <Shield className="w-3 h-3 text-white" />
-              </div>
-            )}
-          </div>
+          <Avatar
+            src={user?.avatar}
+            name={user?.name}
+            size="lg"
+            showAdminBadge={true}
+            isSuperAdmin={isSuperAdmin}
+            isAdminEmail={isAdminEmail}
+          />
           <AnimatePresence>
             {!collapsed && (
               <motion.div
@@ -346,7 +345,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                   exit={{ opacity: 0 }}
                   className="flex items-center gap-2"
                 >
-                  <span className="text-xs">v0.65</span>
+                  <span className="text-xs">v0.66</span>
                   <span className="text-xs opacity-75">版本信息</span>
                 </motion.div>
               )}

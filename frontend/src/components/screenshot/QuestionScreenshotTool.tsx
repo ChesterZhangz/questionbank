@@ -225,10 +225,12 @@ export const generateScreenshot = async (props: QuestionScreenshotToolProps) => 
     screenshotContainer.style.width = `${config.width}px`;
     screenshotContainer.style.backgroundColor = '#ffffff';
     screenshotContainer.style.padding = `${config.padding}px`;
-    screenshotContainer.style.borderRadius = '16px';
-    screenshotContainer.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
+    screenshotContainer.style.borderRadius = '20px';
+    screenshotContainer.style.boxShadow = '0 20px 50px -12px rgba(0, 0, 0, 0.15), 0 8px 16px -4px rgba(0, 0, 0, 0.08)';
     screenshotContainer.style.fontFamily = config.fontFamily;
-    screenshotContainer.style.border = '2px solid #f3f4f6';
+    screenshotContainer.style.border = '1px solid #e5e7eb';
+    screenshotContainer.style.boxSizing = 'border-box';
+    screenshotContainer.style.overflow = 'hidden';
     
     // 添加KaTeX CSS样式
     const katexCSS = document.createElement('style');
@@ -273,10 +275,11 @@ export const generateScreenshot = async (props: QuestionScreenshotToolProps) => 
     // 创建截图内容
     const screenshotContent = document.createElement('div');
     screenshotContent.style.width = '100%';
-    screenshotContent.style.minHeight = '600px';
+    screenshotContent.style.minHeight = '400px';
     screenshotContent.style.display = 'flex';
     screenshotContent.style.flexDirection = 'column';
-    screenshotContent.style.gap = '24px';
+    screenshotContent.style.gap = '20px';
+    screenshotContent.style.boxSizing = 'border-box';
     
     // 1. 头部信息区域
     if (config.showQuestionNumber || config.showCreateTime) {
@@ -319,44 +322,42 @@ export const generateScreenshot = async (props: QuestionScreenshotToolProps) => 
       
     if (config.showTags) {
             const typeTag = document.createElement('div');
-            typeTag.style.padding = '0';
-            typeTag.style.borderRadius = '6px';
-            typeTag.style.fontSize = '11px';
-            typeTag.style.fontWeight = '700';
+            typeTag.style.padding = '6px 12px';
+            typeTag.style.borderRadius = '8px';
+            typeTag.style.fontSize = '12px';
+            typeTag.style.fontWeight = '600';
             typeTag.style.color = '#ffffff';
             typeTag.style.backgroundColor = getQuestionTypeColor(question.type);
             typeTag.style.fontFamily = config.fontFamily;
             typeTag.style.display = 'inline-flex';
             typeTag.style.alignItems = 'center';
             typeTag.style.justifyContent = 'center';
-            typeTag.style.minWidth = '60px';
-            typeTag.style.height = '24px';
-            typeTag.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-            typeTag.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-            typeTag.style.textTransform = 'uppercase';
-            typeTag.style.letterSpacing = '0.5px';
+            typeTag.style.minWidth = '70px';
+            typeTag.style.height = '28px';
+            typeTag.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+            typeTag.style.border = 'none';
+            typeTag.style.letterSpacing = '0.3px';
             typeTag.textContent = getQuestionTypeText(question.type);
             tagsSection.appendChild(typeTag);
           }
       
       if (config.showDifficulty) {
         const difficultyTag = document.createElement('div');
-        difficultyTag.style.padding = '0';
-        difficultyTag.style.borderRadius = '6px';
-        difficultyTag.style.fontSize = '11px';
-        difficultyTag.style.fontWeight = '700';
+        difficultyTag.style.padding = '6px 12px';
+        difficultyTag.style.borderRadius = '8px';
+        difficultyTag.style.fontSize = '12px';
+        difficultyTag.style.fontWeight = '600';
         difficultyTag.style.color = '#ffffff';
         difficultyTag.style.backgroundColor = getDifficultyColor(question.difficulty);
         difficultyTag.style.fontFamily = config.fontFamily;
         difficultyTag.style.display = 'inline-flex';
         difficultyTag.style.alignItems = 'center';
         difficultyTag.style.justifyContent = 'center';
-        difficultyTag.style.minWidth = '50px';
-        difficultyTag.style.height = '24px';
-        difficultyTag.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-        difficultyTag.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-        difficultyTag.style.textTransform = 'uppercase';
-        difficultyTag.style.letterSpacing = '0.5px';
+        difficultyTag.style.minWidth = '60px';
+        difficultyTag.style.height = '28px';
+        difficultyTag.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+        difficultyTag.style.border = 'none';
+        difficultyTag.style.letterSpacing = '0.3px';
         difficultyTag.textContent = getDifficultyText(question.difficulty);
         tagsSection.appendChild(difficultyTag);
       }
@@ -422,26 +423,28 @@ export const generateScreenshot = async (props: QuestionScreenshotToolProps) => 
     contentSection.style.marginBottom = '24px';
     
     const stemTitle = document.createElement('h3');
-    stemTitle.style.fontSize = '16px';
-    stemTitle.style.fontWeight = '600';
+    stemTitle.style.fontSize = '18px';
+    stemTitle.style.fontWeight = '700';
     stemTitle.style.color = '#111827';
-    stemTitle.style.marginBottom = '12px';
+    stemTitle.style.marginBottom = '16px';
     stemTitle.style.fontFamily = config.fontFamily;
-    stemTitle.textContent = '题目内容:';
+    stemTitle.style.letterSpacing = '0.2px';
+    stemTitle.textContent = '题目内容';
     
     const stemContent = document.createElement('div');
-    stemContent.style.fontSize = '15px';
-    stemContent.style.lineHeight = '1.6';
+    stemContent.style.fontSize = '16px';
+    stemContent.style.lineHeight = '1.8';
     stemContent.style.color = '#374151';
-    stemContent.style.backgroundColor = '#f9fafb';
-    stemContent.style.padding = '16px';
-    stemContent.style.borderRadius = '8px';
+    stemContent.style.backgroundColor = '#fafafa';
+    stemContent.style.padding = '24px';
+    stemContent.style.borderRadius = '12px';
     stemContent.style.border = '1px solid #e5e7eb';
     stemContent.style.overflow = 'hidden';
     stemContent.style.wordWrap = 'break-word';
     stemContent.style.whiteSpace = 'pre-wrap';
     stemContent.style.fontFamily = config.fontFamily;
     stemContent.style.textAlign = 'left';
+    stemContent.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
     stemContent.innerHTML = renderContentWithCache(question.content.stem);
     
     contentSection.appendChild(stemTitle);
@@ -454,44 +457,56 @@ export const generateScreenshot = async (props: QuestionScreenshotToolProps) => 
       optionsSection.style.marginBottom = '24px';
       
       const optionsTitle = document.createElement('h4');
-      optionsTitle.style.fontSize = '15px';
-      optionsTitle.style.fontWeight = '600';
+      optionsTitle.style.fontSize = '17px';
+      optionsTitle.style.fontWeight = '700';
       optionsTitle.style.color = '#111827';
-      optionsTitle.style.marginBottom = '12px';
+      optionsTitle.style.marginBottom = '16px';
       optionsTitle.style.fontFamily = config.fontFamily;
-      optionsTitle.textContent = '选项:';
+      optionsTitle.style.letterSpacing = '0.2px';
+      optionsTitle.textContent = '选项';
       
       const optionsList = document.createElement('div');
       optionsList.style.display = 'flex';
       optionsList.style.flexDirection = 'column';
-      optionsList.style.gap = '8px';
+      optionsList.style.gap = '12px';
       
       question.content.options.forEach((option, optionIndex) => {
         const optionItem = document.createElement('div');
         optionItem.style.display = 'flex';
         optionItem.style.alignItems = 'flex-start';
-        optionItem.style.gap = '8px';
-        optionItem.style.padding = '8px 12px';
+        optionItem.style.gap = '12px';
+        optionItem.style.padding = '16px 20px';
         optionItem.style.backgroundColor = '#ffffff';
-        optionItem.style.border = '1px solid #e5e7eb';
-        optionItem.style.borderRadius = '6px';
+        optionItem.style.border = '2px solid #f1f5f9';
+        optionItem.style.borderRadius = '10px';
+        optionItem.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+        optionItem.style.transition = 'all 0.2s ease';
         
-        const optionLabel = document.createElement('span');
-        optionLabel.style.fontWeight = '600';
-        optionLabel.style.color = '#3b82f6';
-        optionLabel.style.minWidth = '20px';
-        optionLabel.textContent = String.fromCharCode(65 + optionIndex) + '.';
+        const optionLabel = document.createElement('div');
+        optionLabel.style.fontWeight = '700';
+        optionLabel.style.color = '#ffffff';
+        optionLabel.style.backgroundColor = '#3b82f6';
+        optionLabel.style.minWidth = '28px';
+        optionLabel.style.height = '28px';
+        optionLabel.style.borderRadius = '50%';
+        optionLabel.style.display = 'flex';
+        optionLabel.style.alignItems = 'center';
+        optionLabel.style.justifyContent = 'center';
+        optionLabel.style.fontSize = '14px';
+        optionLabel.style.flexShrink = '0';
+        optionLabel.textContent = String.fromCharCode(65 + optionIndex);
         
-        const optionContent = document.createElement('span');
-        optionContent.style.fontSize = '14px';
+        const optionContent = document.createElement('div');
+        optionContent.style.fontSize = '15px';
         optionContent.style.color = '#374151';
-        optionContent.style.lineHeight = '1.5';
+        optionContent.style.lineHeight = '1.7';
         optionContent.style.overflow = 'hidden';
         optionContent.style.wordWrap = 'break-word';
         optionContent.style.whiteSpace = 'pre-wrap';
         optionContent.style.fontFamily = config.fontFamily;
         optionContent.style.textAlign = 'left';
-                  optionContent.innerHTML = renderContentWithCache(option.text);
+        optionContent.style.flex = '1';
+        optionContent.innerHTML = renderContentWithCache(option.text);
         
         optionItem.appendChild(optionLabel);
         optionItem.appendChild(optionContent);

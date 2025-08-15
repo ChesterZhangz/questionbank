@@ -7,6 +7,8 @@ import { authAPI } from '../../services/api';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
+import PasswordStrengthIndicator from '../../components/ui/PasswordStrengthIndicator';
+import { PasswordValidator } from '../../utils/passwordValidator';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -85,8 +87,17 @@ const RegisterPage: React.FC = () => {
     
     if (!formData.password) {
       newErrors.password = '请输入密码';
-    } else if (formData.password.length < 6) {
-      newErrors.password = '密码至少6位';
+    } else {
+      // 使用新的密码验证器
+      const passwordValidation = PasswordValidator.validate(
+        formData.password,
+        formData.name,
+        formData.email
+      );
+      
+      if (!passwordValidation.isValid) {
+        newErrors.password = passwordValidation.errors[0] || '密码不符合安全要求';
+      }
     }
     
     if (!formData.confirmPassword) {
@@ -293,10 +304,22 @@ const RegisterPage: React.FC = () => {
                 value={formData.password}
                 onChange={handleChange}
                 error={errors.password}
-                placeholder="请输入密码（至少6位）"
+                placeholder="请输入安全密码（8-20位）"
                 required
                 icon={<Lock className="w-5 h-5" />}
               />
+              
+              {/* 密码强度指示器 */}
+              {formData.password && (
+                <div className="mt-3">
+                  <PasswordStrengthIndicator
+                    password={formData.password}
+                    username={formData.name}
+                    email={formData.email}
+                    showDetails={true}
+                  />
+                </div>
+              )}
             </motion.div>
 
             <motion.div

@@ -19,9 +19,9 @@ const defaultConfig: ScreenshotConfig = {
   showDifficulty: true,
   showCategory: true,
   showKnowledgeTags: true,
-  width: 700,
-  padding: 50,
-  fontFamily: 'Georgia, "Times New Roman", serif'
+  width: 800,
+  padding: 40,
+  fontFamily: 'WenYuan, "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, system-ui, sans-serif'
 };
 
 export const useScreenshotStore = create<ScreenshotStore>()(

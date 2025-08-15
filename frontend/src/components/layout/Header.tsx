@@ -7,11 +7,11 @@ import {
   LogOut,
   User,
   ChevronDown,
-  Shield,
   BookOpen,
   Building2
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
+import Avatar from '../ui/Avatar';
 
 interface HeaderProps {
   sidebarCollapsed: boolean;
@@ -102,16 +102,14 @@ const Header: React.FC<HeaderProps> = ({
               }`}
               aria-label="用户菜单"
             >
-              <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <User className="w-5 h-5 text-white" />
-                </div>
-                {(isSuperAdmin || isAdminEmail) && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-sm">
-                    <Shield className="w-3 h-3 text-white" />
-                  </div>
-                )}
-              </div>
+              <Avatar
+                src={user?.avatar}
+                name={user?.name}
+                size="md"
+                showAdminBadge={true}
+                isSuperAdmin={isSuperAdmin}
+                isAdminEmail={isAdminEmail}
+              />
               {!isMobile && (
                 <div className="text-left">
                   <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user?.name || '用户'}</div>

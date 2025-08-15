@@ -27,6 +27,7 @@ import FuzzySelect from '../../components/ui/FuzzySelect';
 import MultiSelect from '../../components/ui/MultiSelect';
 import LaTeXHighlightInput from '../../components/editor/latex/LaTeXHighlightInput';
 import HoverTooltip from '../../components/editor/preview/HoverTooltip';
+import Avatar from '../../components/ui/Avatar';
 
 
 // 后端返回的企业信息接口
@@ -609,27 +610,7 @@ const MyEnterprisePage: React.FC = () => {
     setShowEditDepartmentModal(true);
   };
 
-  // 获取用户头像 - 适配新的成员数据类型
-  const getUserAvatar = (user: EnterpriseMemberData | MessageData['sender']) => {
-    if (user.avatar) {
-      if (user.avatar.startsWith('http')) return user.avatar;
-      return `/api${user.avatar}`;
-    }
-    
-    const initials = user.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
-    return `https://ui-avatars.com/api/?name=${initials}&background=667eea&color=fff&size=128`;
-  };
 
-  // 获取企业头像
-  const getEnterpriseAvatar = (enterprise: EnterpriseInfoResponse['enterprise']) => {
-    if (enterprise.avatar) {
-      if (enterprise.avatar.startsWith('http')) return enterprise.avatar;
-      return `/api${enterprise.avatar}`;
-    }
-    
-    const initials = enterprise.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'E';
-    return `https://ui-avatars.com/api/?name=${initials}&background=667eea&color=fff&size=128`;
-  };
 
   // 获取角色图标
   const getRoleIcon = (role: string) => {
@@ -781,13 +762,12 @@ const MyEnterprisePage: React.FC = () => {
           <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl">
             <div className="p-6">
               <div className="flex items-start gap-6">
-                <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg">
-                  <img 
-                    src={getEnterpriseAvatar(enterprise)} 
-                    alt={enterprise?.name || '企业'}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                <Avatar
+                  src={enterprise?.avatar}
+                  name={enterprise?.name}
+                  size="2xl"
+                  shape="rounded"
+                />
                 <div className="flex-1">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -961,13 +941,12 @@ const MyEnterprisePage: React.FC = () => {
                       
                       return (
                         <div key={member._id} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <div className="w-12 h-12 rounded-full overflow-hidden">
-                          <img 
-                            src={getUserAvatar(member)} 
-                            alt={member.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                        <Avatar
+                          src={member.avatar}
+                          name={member.name}
+                          size="lg"
+                          shape="circle"
+                        />
                         <div className="flex-1">
                           <h4 className="font-semibold text-gray-900 dark:text-gray-100">{member.name || '未知用户'}</h4>
                           <p className="text-sm text-gray-600 dark:text-gray-400">{member.email || 'N/A'}</p>
@@ -1158,13 +1137,12 @@ const MyEnterprisePage: React.FC = () => {
                     }).map((msg) => (
                       <div key={msg._id} className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <div className="flex items-start gap-4">
-                          <div className="w-10 h-10 rounded-full overflow-hidden">
-                            <img 
-                              src={getUserAvatar(msg.sender)} 
-                              alt={msg.sender?.name || '用户'}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
+                          <Avatar
+                            src={msg.sender?.avatar}
+                            name={msg.sender?.name}
+                            size="md"
+                            shape="circle"
+                          />
                           <div className="flex-1" onClick={() => handleMessageClick(msg._id, msg.isRead?.some(r => r._id === currentUserId) || false)}>
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
@@ -1249,13 +1227,12 @@ const MyEnterprisePage: React.FC = () => {
                                 {msg.replies.map((reply) => (
                                   <div key={reply._id} className="ml-6 p-3 bg-white dark:bg-gray-600/50 rounded-lg border-l-4 border-blue-400">
                                     <div className="flex items-start gap-3">
-                                      <div className="w-8 h-8 rounded-full overflow-hidden">
-                                        <img 
-                                          src={getUserAvatar(reply.sender)} 
-                                          alt={reply.sender?.name || '用户'}
-                                          className="w-full h-full object-cover"
-                                        />
-                                      </div>
+                                      <Avatar
+                                        src={reply.sender?.avatar}
+                                        name={reply.sender?.name}
+                                        size="sm"
+                                        shape="circle"
+                                      />
                                       <div className="flex-1">
                                         <div className="flex items-center justify-between mb-1">
                                           <div className="flex items-center gap-2">
