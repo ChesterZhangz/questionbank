@@ -99,25 +99,6 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// 静态资源服务 - 生产环境
-if (process.env.NODE_ENV === 'production') {
-  // 服务前端构建文件
-  app.use(express.static(path.join(process.cwd(), '..', 'frontend/dist'), {
-    setHeaders: (res, path) => {
-      // 设置正确的MIME类型
-      if (path.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript');
-      } else if (path.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css');
-      } else if (path.endsWith('.woff') || path.endsWith('.woff2')) {
-        res.setHeader('Content-Type', 'font/woff');
-      } else if (path.endsWith('.ttf')) {
-        res.setHeader('Content-Type', 'font/ttf');
-      }
-    }
-  }));
-}
-
 // 静态文件服务
 app.use('/uploads', express.static('uploads'));
 app.use('/api/avatars', express.static('public/avatars', {
@@ -129,7 +110,7 @@ app.use('/temp/images', express.static('temp/images', {
   setHeaders: (res, path) => {
     const origin = res.req.headers.origin;
     const allowedOrigins = [
-      process.env.FRONTEND_URL || 'http://localhost:5173',
+      config.frontendUrl,
       'http://www.mareate.com',
       'https://www.mareate.com',
       'http://43.160.253.32',
@@ -140,32 +121,44 @@ app.use('/temp/images', express.static('temp/images', {
       res.setHeader('Access-Control-Allow-Origin', origin);
     }
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   }
 }));
 
-// 前端静态文件服务 - 仅在生产环境提供
+// 前端静态资源服务 - 生产环境
 if (process.env.NODE_ENV === 'production') {
-  app.use('/frontend/dist', express.static(path.join(process.cwd(), '..', 'frontend/dist')));
-
-  // SPA 路由处理 - 对于前端路由，返回 index.html
-  const spaRoutes = [
-    '/login', '/dashboard', '/question-banks', '/questions', 
-    '/settings', '/users', '/paper-generation', 
-    '/question-management', '/', '/index.html'
-  ];
-
-  spaRoutes.forEach(route => {
-    app.get(route, (req, res) => {
-      res.sendFile(path.join(process.cwd(), '..', 'frontend/dist/index.html'));
-    });
-  });
-
-  // 静态文件服务 - 放在最后，作为后备
+  console.log('🚀 生产环境：配置前端静态资源服务');
+  
+  // 静态资源服务 - 必须放在API路由之前
   app.use(express.static(path.join(process.cwd(), '..', 'frontend/dist'), {
-    index: 'index.html',
-    fallthrough: true
+    setHeaders: (res, filePath) => {
+      // 设置正确的MIME类型
+      if (filePath.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      } else if (filePath.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css; charset=utf-8');
+      } else if (filePath.endsWith('.woff')) {
+        res.setHeader('Content-Type', 'font/woff');
+      } else if (filePath.endsWith('.woff2')) {
+        res.setHeader('Content-Type', 'font/woff2');
+      } else if (filePath.endsWith('.ttf')) {
+        res.setHeader('Content-Type', 'font/ttf');
+      } else if (filePath.endsWith('.png')) {
+        res.setHeader('Content-Type', 'image/png');
+      } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+        res.setHeader('Content-Type', 'image/jpeg');
+      } else if (filePath.endsWith('.gif')) {
+        res.setHeader('Content-Type', 'image/gif');
+      } else if (filePath.endsWith('.svg')) {
+        res.setHeader('Content-Type', 'image/svg+xml');
+      }
+      
+      // 设置缓存头
+      if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1年缓存
+      }
+    }
   }));
 } else {
   console.log('🔧 开发环境：前端由 Vite 开发服务器提供');
@@ -238,6 +231,23 @@ app.get('/health', (req, res) => {
     status: 'ok', 
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// 调试端点 - 检查静态资源路径
+app.get('/debug/static', (req, res) => {
+  const staticPath = path.join(process.cwd(), '..', 'frontend/dist');
+  const indexPath = path.join(staticPath, 'index.html');
+  const jsPath = path.join(staticPath, 'assets');
+  
+  res.json({
+    staticPath,
+    indexPath: fs.existsSync(indexPath),
+    jsPath: fs.existsSync(jsPath),
+    jsFiles: fs.existsSync(jsPath) ? fs.readdirSync(jsPath).filter(f => f.endsWith('.js')).slice(0, 5) : [],
+    cssFiles: fs.existsSync(jsPath) ? fs.readdirSync(jsPath).filter(f => f.endsWith('.css')).slice(0, 5) : [],
+    cwd: process.cwd(),
+    env: process.env.NODE_ENV
   });
 });
 
