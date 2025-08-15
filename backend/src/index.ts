@@ -34,6 +34,7 @@ import myEnterpriseRoutes from './routes/myEnterprise';
 // 中间件导入
 import { errorHandler } from './middleware/errorHandler';
 import { authMiddleware } from './middleware/auth';
+import { config } from './config';
 
 // 加载环境变量
 dotenv.config();
@@ -59,7 +60,7 @@ app.use(helmet({
 }));
 app.use(cors({
   origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
+    config.frontendUrl,
     'http://www.mareate.com',
     'https://www.mareate.com',
     'http://43.160.253.32',
@@ -253,7 +254,7 @@ const startServer = async () => {
   
   app.listen(PORT, () => {
     const serverURL = process.env.NODE_ENV === 'production' 
-      ? `http://${process.env.FRONTEND_URL?.replace(/^https?:\/\//, '') || '43.160.253.32'}`
+      ? `http://${config.frontendUrl.replace(/^https?:\/\//, '')}`
       : `http://localhost:${PORT}`;
     
     console.log(`🚀 服务器运行在 ${serverURL}`);

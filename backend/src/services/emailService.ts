@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import { config } from '../config';
 
 // 创建邮件传输器函数 - 每次调用时重新创建
 const createTransporter = () => {
@@ -45,7 +46,7 @@ export const emailService = {
   // 发送验证邮件
   async sendVerificationEmail(data: EmailVerificationData): Promise<boolean> {
     try {
-      const verificationUrl = `${process.env.FRONTEND_URL}/api/auth/verify-email?token=${data.token}`;
+      const verificationUrl = `${config.frontendUrl}/auth/verify-email?token=${data.token}`;
       
       const mailOptions = {
         from: `"Mareate题库系统" <${process.env.QQ_EMAIL_USER}>`,

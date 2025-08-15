@@ -7,6 +7,9 @@ export const config = {
   mongoURI: process.env.MONGO_URI || 'mongodb://localhost:27017/mareate',
   jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
   
+  // 前端URL配置
+  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+  
   // 腾讯云配置
   tencentCloud: {
     secretId: process.env.TENCENT_CLOUD_SECRET_ID || 'error',
