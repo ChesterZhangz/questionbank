@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { UserPlus, Mail, Lock, User, ArrowRight, Building2 } from 'lucide-react';
+import { UserPlus, Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { authAPI } from '../../services/api';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
 import PasswordStrengthIndicator from '../../components/ui/PasswordStrengthIndicator';
+import SupportedEmailSuffixes from '../../components/ui/SupportedEmailSuffixes';
 import { PasswordValidator } from '../../utils/passwordValidator';
 
 const RegisterPage: React.FC = () => {
@@ -22,38 +23,9 @@ const RegisterPage: React.FC = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [allowedEnterprises, setAllowedEnterprises] = useState<Array<{
-    name: string;
-    emailSuffix: string;
-    currentMembers: number;
-    maxMembers: number;
-    availableSlots: number;
-  }>>([]);
-  const [loadingEnterprises, setLoadingEnterprises] = useState(true);
 
-  // 获取允许注册的企业
-  useEffect(() => {
-    const fetchAllowedEnterprises = async () => {
-      try {
-        setLoadingEnterprises(true);
-        const response = await authAPI.getAllowedEnterprises();
-        if (response.data.success) {
-          setAllowedEnterprises(response.data.enterprises || []);
-        }
-      } catch (error) {
-        console.error('获取允许注册的企业失败:', error);
-      } finally {
-        setLoadingEnterprises(false);
-      }
-    };
 
-    fetchAllowedEnterprises();
 
-    // 添加定时刷新，每30秒更新一次企业名额信息
-    const interval = setInterval(fetchAllowedEnterprises, 30000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -73,16 +45,8 @@ const RegisterPage: React.FC = () => {
     
     if (!formData.email) {
       newErrors.email = '请输入邮箱地址';
-    } else {
-      // 检查邮箱后缀是否在允许的企业列表中
-      const emailSuffix = '@' + formData.email.split('@')[1];
-      const isAllowedSuffix = allowedEnterprises.some(enterprise => 
-        enterprise.emailSuffix === emailSuffix
-      );
-      
-      if (!isAllowedSuffix) {
-        newErrors.email = '该企业邮箱后缀暂不支持注册，请联系管理员';
-      }
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = '请输入有效的邮箱地址';
     }
     
     if (!formData.password) {
@@ -239,57 +203,10 @@ const RegisterPage: React.FC = () => {
                 icon={<Mail className="w-5 h-5" />}
               />
               
-              {/* 显示支持的企业 */}
-              {!loadingEnterprises && allowedEnterprises.length > 0 && (
-                <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                        支持的企业邮箱后缀
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLoadingEnterprises(true);
-                        const fetchAllowedEnterprises = async () => {
-                          try {
-                            const response = await authAPI.getAllowedEnterprises();
-                            if (response.data.success) {
-                              setAllowedEnterprises(response.data.enterprises || []);
-                            }
-                          } catch (error) {
-                            console.error('获取允许注册的企业失败:', error);
-                          } finally {
-                            setLoadingEnterprises(false);
-                          }
-                        };
-                        fetchAllowedEnterprises();
-                      }}
-                      className="text-xs text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                      disabled={loadingEnterprises}
-                    >
-                      {loadingEnterprises ? '刷新中...' : '刷新'}
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    {allowedEnterprises.map((enterprise, index) => (
-                      <div key={index} className="flex items-center justify-between text-xs">
-                        <span className="text-blue-700 dark:text-blue-300">
-                          {enterprise.name} ({enterprise.emailSuffix})
-                        </span>
-                        <span className="text-blue-600 dark:text-blue-400">
-                          {enterprise.availableSlots > 0 
-                            ? `${enterprise.availableSlots}个名额可用`
-                            : '名额已满'
-                          }
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* 支持的企业邮箱后缀查看组件 */}
+              <div className="mt-2">
+                <SupportedEmailSuffixes />
+              </div>
             </motion.div>
 
             <motion.div
