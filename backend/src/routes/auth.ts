@@ -56,13 +56,18 @@ router.post('/register', [
       return res.status(400).json({ error: '该企业邮箱后缀暂不支持注册，请联系管理员' });
     }
     
+    // 动态计算企业当前成员数量
+    const currentMemberCount = await User.countDocuments({
+      email: { $regex: emailSuffix.replace('@', '@'), $options: 'i' }
+    });
+    
     // 检查企业是否还有注册名额
-    if (enterprise.currentMembers >= enterprise.maxMembers) {
+    if (currentMemberCount >= enterprise.maxMembers) {
       return res.status(400).json({ error: '该企业注册名额已满，请联系企业管理员' });
     }
 
     // 检查是否是该企业的第一个用户（将成为超级管理员）
-    const isFirstUser = enterprise.currentMembers === 0;
+    const isFirstUser = currentMemberCount === 0;
     let userRole = 'student'; // 默认角色
 
     // 生成邮箱验证令牌
@@ -96,10 +101,7 @@ router.post('/register', [
     });
     await enterpriseMember.save();
 
-    // 更新企业成员数量
-    await Enterprise.findByIdAndUpdate(enterprise._id, {
-      $inc: { currentMembers: 1 }
-    });
+    // 不再需要更新企业成员数量，因为现在是动态计算的
 
     // 发送验证邮件
     const emailSent = await emailService.sendVerificationEmail({
@@ -109,11 +111,8 @@ router.post('/register', [
     });
 
     if (!emailSent) {
-      // 如果邮件发送失败，删除用户并减少企业成员数量
+      // 如果邮件发送失败，删除用户
       await User.findByIdAndDelete(user._id);
-      await Enterprise.findByIdAndUpdate(enterprise._id, {
-        $inc: { currentMembers: -1 }
-      });
       return res.status(500).json({ error: '邮件发送失败，请稍后重试' });
     }
 

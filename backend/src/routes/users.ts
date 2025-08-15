@@ -5,20 +5,7 @@ import { AuthRequest, authMiddleware } from '../middleware/auth';
 
 const router = express.Router();
 
-// 辅助函数：更新企业成员数量
-const updateEnterpriseMemberCount = async (enterpriseId: string, increment: number) => {
-  try {
-    const Enterprise = require('../models/Enterprise').default;
-    await Enterprise.findByIdAndUpdate(enterpriseId, {
-      $inc: { currentMembers: increment }
-    });
-    console.log(`企业 ${enterpriseId} 成员数量${increment > 0 ? '增加' : '减少'} ${Math.abs(increment)}`);
-    return true;
-  } catch (error) {
-    console.error('更新企业成员数量失败:', error);
-    return false;
-  }
-};
+// 企业成员数量现在是动态计算的，不再需要手动更新
 
 // 获取所有用户（仅管理员可访问）
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
@@ -172,10 +159,8 @@ router.delete('/:userId', authMiddleware, async (req: AuthRequest, res: Response
       return res.status(400).json({ success: false, error: '不能删除超级管理员账号' });
     }
 
-    // 如果用户属于某个企业，减少企业成员数量
-    if (user.enterpriseId) {
-      await updateEnterpriseMemberCount(user.enterpriseId.toString(), -1);
-    }
+    // 不再需要手动更新企业成员数量，因为现在是动态计算的
+    // 企业成员数量会通过邮箱尾缀实时统计
 
     // 删除企业成员记录
     if (user.enterpriseId) {
@@ -302,12 +287,8 @@ router.post('/batch', authMiddleware, [
           }
         });
 
-        // 批量更新企业成员数量
-        if (enterpriseMemberCounts.size > 0) {
-          for (const [enterpriseId, count] of enterpriseMemberCounts) {
-            await updateEnterpriseMemberCount(enterpriseId, -count);
-          }
-        }
+        // 不再需要手动更新企业成员数量，因为现在是动态计算的
+        // 企业成员数量会通过邮箱尾缀实时统计
 
         // 删除企业成员记录
         try {

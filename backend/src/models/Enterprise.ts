@@ -110,6 +110,20 @@ const enterpriseSchema = new Schema<IEnterprise>({
   timestamps: true
 });
 
+// 虚拟字段：动态计算当前成员数量
+enterpriseSchema.virtual('actualCurrentMembers').get(async function() {
+  try {
+    const User = mongoose.model('User');
+    const count = await User.countDocuments({
+      email: { $regex: this.emailSuffix.replace('@', '@'), $options: 'i' }
+    });
+    return count;
+  } catch (error) {
+    console.error('计算企业成员数量失败:', error);
+    return this.currentMembers || 0;
+  }
+});
+
 // 索引
 enterpriseSchema.index({ status: 1 });
 

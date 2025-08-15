@@ -95,6 +95,9 @@ if (process.env.NODE_ENV === 'production') {
 // 日志中间件
 app.use(morgan('combined'));
 
+// 修复代理信任设置 - 解决X-Forwarded-For警告
+app.set('trust proxy', true);
+
 // 解析JSON
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -160,6 +163,50 @@ if (process.env.NODE_ENV === 'production') {
       }
     }
   }));
+
+  // 修复SPA路由的静态资源问题 - 处理 /auth/assets/ 等路径
+  app.use('/auth/assets', express.static(path.join(process.cwd(), '..', 'frontend/dist/assets'), {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      } else if (filePath.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css; charset=utf-8');
+      }
+    }
+  }));
+
+  // 添加静态资源请求日志
+  app.use('/auth/assets', (req, res, next) => {
+    console.log(`📁 静态资源请求: ${req.method} ${req.path} -> /assets${req.path.replace('/auth', '')}`);
+    next();
+  });
+
+  // 修复其他SPA路由的静态资源问题 - 更智能的路径处理
+  app.use('/:path/assets/:filename', (req, res, next) => {
+    const { path: routePath, filename } = req.params;
+    
+    // 尝试从根assets目录加载文件
+    const assetPath = path.join(process.cwd(), '..', 'frontend/dist/assets', filename);
+    
+    if (fs.existsSync(assetPath)) {
+      // 设置正确的MIME类型
+      if (filename.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      } else if (filename.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css; charset=utf-8');
+      } else if (filename.endsWith('.png')) {
+        res.setHeader('Content-Type', 'image/png');
+      } else if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) {
+        res.setHeader('Content-Type', 'image/jpeg');
+      } else if (filename.endsWith('.svg')) {
+        res.setHeader('Content-Type', 'image/svg+xml');
+      }
+      
+      res.sendFile(assetPath);
+    } else {
+      next();
+    }
+  });
 } else {
   console.log('🔧 开发环境：前端由 Vite 开发服务器提供');
 }

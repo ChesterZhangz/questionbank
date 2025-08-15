@@ -49,20 +49,48 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     const enterprises = await Enterprise.find()
       .sort({ createdAt: -1 });
 
+    // 动态计算每个企业的实际成员数量
+    const enterprisesWithActualMembers = await Promise.all(
+      enterprises.map(async (enterprise) => {
+        try {
+          // 统计邮箱尾缀相同的用户数量
+          const actualMemberCount = await User.countDocuments({
+            email: { $regex: enterprise.emailSuffix.replace('@', '@'), $options: 'i' }
+          });
+
+          return {
+            _id: enterprise._id,
+            name: enterprise.name,
+            emailSuffix: enterprise.emailSuffix,
+            creditCode: enterprise.creditCode,
+            avatar: enterprise.avatar,
+            status: enterprise.status,
+            maxMembers: enterprise.maxMembers,
+            currentMembers: actualMemberCount, // 使用动态计算的成员数量
+            createdAt: enterprise.createdAt,
+            updatedAt: enterprise.updatedAt
+          };
+        } catch (error) {
+          console.error(`计算企业 ${enterprise.name} 成员数量失败:`, error);
+          return {
+            _id: enterprise._id,
+            name: enterprise.name,
+            emailSuffix: enterprise.emailSuffix,
+            creditCode: enterprise.creditCode,
+            avatar: enterprise.avatar,
+            status: enterprise.status,
+            maxMembers: enterprise.maxMembers,
+            currentMembers: enterprise.currentMembers || 0, // 回退到数据库字段
+            createdAt: enterprise.createdAt,
+            updatedAt: enterprise.updatedAt
+          };
+        }
+      })
+    );
+
     return res.json({
       success: true,
-      enterprises: enterprises.map(enterprise => ({
-        _id: enterprise._id,
-        name: enterprise.name,
-        emailSuffix: enterprise.emailSuffix,
-        creditCode: enterprise.creditCode,
-        avatar: enterprise.avatar,
-        status: enterprise.status,
-        maxMembers: enterprise.maxMembers,
-        currentMembers: enterprise.currentMembers,
-        createdAt: enterprise.createdAt,
-        updatedAt: enterprise.updatedAt
-      }))
+      enterprises: enterprisesWithActualMembers
     });
   } catch (error) {
     console.error('获取企业列表失败:', error);
@@ -161,9 +189,21 @@ router.get('/:enterpriseId', authMiddleware, async (req: AuthRequest, res: Respo
       return res.status(404).json({ success: false, error: '企业不存在' });
     }
 
-    // 获取企业成员列表
-    const members = await User.find({ enterpriseId: enterprise._id })
-      .select('name email enterpriseName role lastLogin createdAt');
+    // 动态计算企业实际成员数量
+    let actualMemberCount = 0;
+    try {
+      actualMemberCount = await User.countDocuments({
+        email: { $regex: enterprise.emailSuffix.replace('@', '@'), $options: 'i' }
+      });
+    } catch (error) {
+      console.error(`计算企业 ${enterprise.name} 成员数量失败:`, error);
+      actualMemberCount = enterprise.currentMembers || 0;
+    }
+
+    // 获取企业成员列表（基于邮箱尾缀）
+    const members = await User.find({
+      email: { $regex: enterprise.emailSuffix.replace('@', '@'), $options: 'i' }
+    }).select('name email enterpriseName role lastLogin createdAt');
 
     return res.json({
       success: true,
@@ -181,7 +221,7 @@ router.get('/:enterpriseId', authMiddleware, async (req: AuthRequest, res: Respo
         size: enterprise.size,
         status: enterprise.status,
         maxMembers: enterprise.maxMembers,
-        currentMembers: enterprise.currentMembers,
+        currentMembers: actualMemberCount, // 使用动态计算的成员数量
         departments: enterprise.departments,
         members: members,
         createdAt: enterprise.createdAt,
@@ -237,6 +277,17 @@ router.put('/:enterpriseId', authMiddleware, [
       return res.status(404).json({ success: false, error: '企业不存在' });
     }
 
+    // 动态计算企业实际成员数量
+    let actualMemberCount = 0;
+    try {
+      actualMemberCount = await User.countDocuments({
+        email: { $regex: enterprise.emailSuffix.replace('@', '@'), $options: 'i' }
+      });
+    } catch (error) {
+      console.error(`计算企业 ${enterprise.name} 成员数量失败:`, error);
+      actualMemberCount = enterprise.currentMembers || 0;
+    }
+
     return res.json({
       success: true,
       message: '企业信息更新成功',
@@ -247,8 +298,7 @@ router.put('/:enterpriseId', authMiddleware, [
         creditCode: enterprise.creditCode,
         status: enterprise.status,
         maxMembers: enterprise.maxMembers,
-        currentMembers: enterprise.currentMembers,
-
+        currentMembers: actualMemberCount, // 使用动态计算的成员数量
       }
     });
   } catch (error) {
@@ -311,8 +361,10 @@ router.delete('/:enterpriseId', authMiddleware, async (req: AuthRequest, res: Re
       return res.status(404).json({ success: false, error: '企业不存在' });
     }
 
-    // 检查是否有成员
-    const memberCount = await User.countDocuments({ enterpriseId: enterprise._id });
+    // 检查是否有成员（基于邮箱尾缀）
+    const memberCount = await User.countDocuments({
+      email: { $regex: enterprise.emailSuffix.replace('@', '@'), $options: 'i' }
+    });
     if (memberCount > 0) {
       return res.status(400).json({ success: false, error: '企业还有成员，无法删除' });
     }
