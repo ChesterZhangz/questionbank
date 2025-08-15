@@ -53,12 +53,18 @@ const checkQuestionBankPermission = async (req: QuestionBankRequest, res: any, n
       return next();
     }
 
+    // 查看者拥有查看权限
+    if (questionBank.viewers && questionBank.viewers.includes(userId)) {
+      req.userRole = 'viewer';
+      req.questionBank = questionBank;
+      return next();
+    }
 
-    
+    // 同企业用户默认拥有查看权限（隐式查看者）
     if (user.enterpriseId && 
         questionBank.emailSuffix === user.emailSuffix && 
         questionBank.allowCollaboration) {
-      req.userRole = 'viewer';
+      req.userRole = 'enterprise_viewer';
       req.questionBank = questionBank;
       return next();
     }

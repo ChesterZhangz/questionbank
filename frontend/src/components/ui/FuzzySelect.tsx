@@ -63,25 +63,63 @@ const FuzzySelect: React.FC<FuzzySelectProps> = ({
       if (spaceBelow < 100 && rect.top > dropdownHeight) {
         // 如果下方空间严重不足，但上方空间足够，则向上展开
         setDropdownStyle({
-          position: 'absolute',
-          bottom: '100%',
-          left: 0,
-          right: 0,
-          marginBottom: '8px',
-          zIndex: 999999
+          position: 'fixed',
+          top: rect.top - dropdownHeight - 8,
+          left: rect.left,
+          width: rect.width,
+          zIndex: 99999
         });
       } else {
         // 默认向下展开
         setDropdownStyle({
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          right: 0,
-          marginTop: '8px',
-          zIndex: 999999
+          position: 'fixed',
+          top: rect.bottom + 8,
+          left: rect.left,
+          width: rect.width,
+          zIndex: 99999
         });
       }
     }
+  }, [isOpen]);
+
+  // 监听窗口滚动和resize事件，重新计算位置
+  useEffect(() => {
+    const updatePosition = () => {
+      if (isOpen && containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const dropdownHeight = 240;
+        const spaceBelow = viewportHeight - rect.bottom;
+        
+        if (spaceBelow < 100 && rect.top > dropdownHeight) {
+          setDropdownStyle({
+            position: 'fixed',
+            top: rect.top - dropdownHeight - 8,
+            left: rect.left,
+            width: rect.width,
+            zIndex: 99999
+          });
+        } else {
+          setDropdownStyle({
+            position: 'fixed',
+            top: rect.bottom + 8,
+            left: rect.left,
+            width: rect.width,
+            zIndex: 99999
+          });
+        }
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
+    }
+
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
   }, [isOpen]);
 
   // 点击外部关闭
@@ -176,13 +214,8 @@ const FuzzySelect: React.FC<FuzzySelectProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute w-full bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-gray-200/50 dark:border-gray-600/50 rounded-lg shadow-lg dark:shadow-gray-900/30 max-h-60 overflow-hidden z-[999999]"
-            style={{
-              ...dropdownStyle,
-              minWidth: '100%', // 确保最小宽度占满容器
-              width: 'max-content', // 允许内容自然扩展
-              maxWidth: '100vw', // 最大宽度不超过视口宽度
-            }}
+            className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-hidden z-[99999]"
+            style={dropdownStyle}
           >
             {/* 搜索框 */}
             <div className="p-2.5 border-b border-gray-100/50 dark:border-gray-700/50 w-full">

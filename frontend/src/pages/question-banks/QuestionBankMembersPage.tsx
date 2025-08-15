@@ -79,6 +79,22 @@ const QuestionBankMembersPage: React.FC = () => {
     }
   }, [bid]);
 
+  // 处理模态框滚动锁定
+  useEffect(() => {
+    if (showAddMember) {
+      // 禁用主屏幕滚动
+      document.body.style.overflow = 'hidden';
+    } else {
+      // 恢复主屏幕滚动
+      document.body.style.overflow = 'unset';
+    }
+
+    // 清理函数
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showAddMember]);
+
   const fetchQuestionBank = async () => {
     try {
       const response = await questionBankAPI.getQuestionBank(bid!);
@@ -673,7 +689,7 @@ const QuestionBankMembersPage: React.FC = () => {
 
       {/* 添加成员模态框 */}
       {showAddMember && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
