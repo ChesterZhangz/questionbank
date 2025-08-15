@@ -348,6 +348,24 @@ app.use('*', (req, res) => {
     return res.status(404).json({ error: '接口不存在' });
   }
   
+  // 如果是静态资源请求，返回404
+  if (req.path.startsWith('/assets/') || 
+      req.path.startsWith('/font/') || 
+      req.path.startsWith('/avatar/') ||
+      req.path.endsWith('.js') || 
+      req.path.endsWith('.css') || 
+      req.path.endsWith('.ttf') || 
+      req.path.endsWith('.woff') || 
+      req.path.endsWith('.woff2') ||
+      req.path.endsWith('.png') || 
+      req.path.endsWith('.jpg') || 
+      req.path.endsWith('.jpeg') || 
+      req.path.endsWith('.gif') || 
+      req.path.endsWith('.svg')) {
+    console.log(`❌ 静态资源不存在: ${req.path}`);
+    return res.status(404).json({ error: '静态资源不存在' });
+  }
+  
   // 生产环境：所有非API请求都返回前端index.html
   if (process.env.NODE_ENV === 'production') {
     const indexPath = path.join(process.cwd(), '..', 'frontend/dist/index.html');
