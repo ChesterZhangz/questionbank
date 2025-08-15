@@ -13,10 +13,10 @@ import {
   CheckSquare,
   Square,
   UserX,
-  Send,
-  Upload
+  X,
+  CheckCircle
 } from 'lucide-react';
-import { questionBankAPI } from '../../services/api';
+import { questionBankAPI, authAPI } from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
 import type { QuestionBank } from '../../types';
 import Button from '../../components/ui/Button';
@@ -26,6 +26,9 @@ import LoadingPage from '../../components/ui/LoadingPage';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import { useModal } from '../../hooks/useModal';
+import MultiSelect from '../../components/ui/MultiSelect';
+import FuzzySelect from '../../components/ui/FuzzySelect';
+import Avatar from '../../components/ui/Avatar';
 
 interface MemberInfo {
   _id: string;
@@ -56,18 +59,16 @@ const QuestionBankMembersPage: React.FC = () => {
   const [userRole, setUserRole] = useState<string>('');
   const [showAddMember, setShowAddMember] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterRole, setFilterRole] = useState<string>('all');
+  const [filterRole, setFilterRole] = useState<(string | number)[]>(['all']);
+  
+  // 用户搜索相关
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
-  // 添加成员表单状态
-  const [newMemberEmail, setNewMemberEmail] = useState('');
-  const [newMemberRole, setNewMemberRole] = useState<'manager' | 'collaborator'>('collaborator');
-  const [isAddingMember, setIsAddingMember] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
+  const [selectedRole, setSelectedRole] = useState<'manager' | 'collaborator' | 'viewer'>('collaborator');
 
   // 批量操作状态
   const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
-  const [showBatchAdd, setShowBatchAdd] = useState(false);
-  const [batchEmails, setBatchEmails] = useState('');
-  const [batchRole, setBatchRole] = useState<'manager' | 'collaborator'>('collaborator');
   const [isBatchAdding, setIsBatchAdding] = useState(false);
   const [isBatchRemoving, setIsBatchRemoving] = useState(false);
 
@@ -168,31 +169,7 @@ const QuestionBankMembersPage: React.FC = () => {
     }
   };
 
-  const handleAddMember = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMemberEmail.trim()) return;
 
-    try {
-      setIsAddingMember(true);
-      const response = await questionBankAPI.addMember(bid!, {
-        email: newMemberEmail.trim(),
-        role: newMemberRole
-      });
-
-      if (response.data.success) {
-        setNewMemberEmail('');
-        setNewMemberRole('collaborator');
-        setShowAddMember(false);
-        fetchMembers(); // 重新获取成员列表
-      } else {
-        showErrorRightSlide('添加失败', response.data.error || '添加成员失败');
-      }
-    } catch (error: any) {
-      showErrorRightSlide('添加失败', error.response?.data?.error || '添加成员失败');
-    } finally {
-      setIsAddingMember(false);
-    }
-  };
 
   const handleRemoveMember = async (memberId: string) => {
     showConfirm(
@@ -213,7 +190,7 @@ const QuestionBankMembersPage: React.FC = () => {
     );
   };
 
-  const handleChangeRole = async (memberId: string, newRole: 'manager' | 'collaborator') => {
+  const handleChangeRole = async (memberId: string, newRole: 'manager' | 'collaborator' | 'viewer') => {
     try {
       // 先移除当前角色，再添加新角色
       await questionBankAPI.removeMember(bid!, memberId);
@@ -250,49 +227,7 @@ const QuestionBankMembersPage: React.FC = () => {
     }
   };
 
-  // 批量添加成员
-  const handleBatchAddMembers = async () => {
-    if (!batchEmails.trim()) return;
 
-    try {
-      setIsBatchAdding(true);
-      const emails = batchEmails
-        .split(/[,\n\r]/)
-        .map(email => email.trim())
-        .filter(email => email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
-
-      if (emails.length === 0) {
-        showErrorRightSlide('批量添加失败', '请输入有效的邮箱地址');
-        return;
-      }
-
-      const results = await Promise.allSettled(
-        emails.map(email => 
-          questionBankAPI.addMember(bid!, {
-            email,
-            role: batchRole
-          })
-        )
-      );
-
-      const successCount = results.filter(r => r.status === 'fulfilled').length;
-      const failCount = results.filter(r => r.status === 'rejected').length;
-
-      setBatchEmails('');
-      setShowBatchAdd(false);
-      fetchMembers();
-
-      if (failCount === 0) {
-        showErrorRightSlide('批量添加成功', `成功添加 ${successCount} 个成员`);
-      } else {
-        showErrorRightSlide('批量添加完成', `成功添加 ${successCount} 个成员，${failCount} 个失败`);
-      }
-    } catch (error: any) {
-      showErrorRightSlide('批量添加失败', error.response?.data?.error || '批量添加成员失败');
-    } finally {
-      setIsBatchAdding(false);
-    }
-  };
 
   // 批量删除成员
   const handleBatchRemoveMembers = async () => {
@@ -330,6 +265,59 @@ const QuestionBankMembersPage: React.FC = () => {
         }
       }
     );
+  };
+
+  // 搜索用户
+  const searchUsers = async (query: string) => {
+    if (!query || query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      const response = await authAPI.searchUsers(query, 20);
+      if (response.data.success) {
+        setSearchResults(response.data.users || []);
+      }
+    } catch (error) {
+      console.error('搜索用户失败:', error);
+      setSearchResults([]);
+    }
+  };
+
+  // 添加选中的用户
+  const handleAddSelectedUsers = async () => {
+    if (selectedUsers.length === 0) return;
+
+    try {
+      setIsBatchAdding(true);
+      
+      const results = await Promise.allSettled(
+        selectedUsers.map(user => 
+          questionBankAPI.addMember(bid!, {
+            email: user.email,
+            role: selectedRole
+          })
+        )
+      );
+
+      const successCount = results.filter(r => r.status === 'fulfilled').length;
+      const failCount = results.filter(r => r.status === 'rejected').length;
+
+      setSelectedUsers([]);
+      setShowAddMember(false);
+      fetchMembers();
+
+      if (failCount === 0) {
+        showErrorRightSlide('添加成功', `成功添加 ${successCount} 个成员`);
+      } else {
+        showErrorRightSlide('添加完成', `成功添加 ${successCount} 个成员，${failCount} 个失败`);
+      }
+    } catch (error: any) {
+      showErrorRightSlide('添加失败', error.response?.data?.error || '添加成员失败');
+    } finally {
+      setIsBatchAdding(false);
+    }
   };
 
   const getRoleIcon = (role: string) => {
@@ -386,7 +374,7 @@ const QuestionBankMembersPage: React.FC = () => {
 
   const canChangeRole = (memberRole: string) => {
     if (userRole === 'creator') return memberRole !== 'creator';
-    if (userRole === 'manager') return memberRole === 'collaborator';
+    if (userRole === 'manager') return memberRole === 'collaborator' || memberRole === 'viewer';
     return false;
   };
 
@@ -394,7 +382,7 @@ const QuestionBankMembersPage: React.FC = () => {
   const filteredMembers = members.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          member.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === 'all' || member.role === filterRole;
+    const matchesRole = filterRole.includes('all') || filterRole.includes(member.role as string);
     return matchesSearch && matchesRole;
   });
 
@@ -435,15 +423,7 @@ const QuestionBankMembersPage: React.FC = () => {
               </div>
             </div>
             
-            {canManageMembers && (
-              <Button
-                onClick={() => setShowAddMember(true)}
-                className="flex items-center gap-2"
-              >
-                <UserPlus className="w-4 w-4" />
-                单个添加
-              </Button>
-            )}
+
           </div>
         </div>
       </div>
@@ -532,18 +512,22 @@ const QuestionBankMembersPage: React.FC = () => {
                   />
                 </div>
               </div>
-              <div className="sm:w-48">
-                <select
+              <div className="sm:w-64">
+                <MultiSelect
+                  label=""
+                  options={[
+                    { value: 'all', label: '所有角色' },
+                    { value: 'creator', label: '创建者' },
+                    { value: 'manager', label: '管理者' },
+                    { value: 'collaborator', label: '协作者' },
+                    { value: 'viewer', label: '查看者' }
+                  ]}
                   value={filterRole}
-                  onChange={(e) => setFilterRole(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                >
-                  <option value="all">所有角色</option>
-                  <option value="creator">创建者</option>
-                  <option value="manager">管理者</option>
-                  <option value="collaborator">协作者</option>
-                  <option value="viewer">查看者</option>
-                </select>
+                  onChange={setFilterRole}
+                  placeholder="筛选角色"
+                  maxDisplay={2}
+                  className="w-full"
+                />
               </div>
             </div>
           </div>
@@ -576,11 +560,11 @@ const QuestionBankMembersPage: React.FC = () => {
               
               <div className="flex gap-3">
                 <Button
-                  onClick={() => setShowBatchAdd(true)}
+                  onClick={() => setShowAddMember(true)}
                   className="bg-green-500 hover:bg-green-600 text-white"
                 >
-                  <Upload className="w-4 h-4 mr-2" />
-                  批量添加
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  添加成员
                 </Button>
                 
                 {selectedMembers.size > 0 && (
@@ -657,11 +641,12 @@ const QuestionBankMembersPage: React.FC = () => {
                           {canChangeRole(member.role) && (
                             <select
                               value={member.role}
-                              onChange={(e) => handleChangeRole(member._id, e.target.value as 'manager' | 'collaborator')}
+                              onChange={(e) => handleChangeRole(member._id, e.target.value as 'manager' | 'collaborator' | 'viewer')}
                               className="text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                             >
                               <option value="manager">管理者</option>
                               <option value="collaborator">协作者</option>
+                              <option value="viewer">查看者</option>
                             </select>
                           )}
 
@@ -690,108 +675,127 @@ const QuestionBankMembersPage: React.FC = () => {
       {showAddMember && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">添加成员</h3>
               
-              <form onSubmit={handleAddMember} className="space-y-4">
+              <div className="space-y-6">
+                {/* 搜索用户 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    邮箱地址
+                    搜索用户
                   </label>
                   <Input
-                    type="email"
-                    value={newMemberEmail}
-                    onChange={(e) => setNewMemberEmail(e.target.value)}
-                    placeholder="输入成员邮箱地址"
-                    required
+                    type="text"
+                    placeholder="输入用户姓名或邮箱进行搜索..."
+                    onChange={(e) => searchUsers(e.target.value)}
+                    icon={<Users className="w-4 h-4" />}
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    只能添加 @{questionBank?.emailSuffix} 邮箱的用户
+                    可以搜索所有已注册的用户，不限制邮箱后缀
                   </p>
                 </div>
 
+                {/* 搜索结果 */}
+                {searchResults.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      搜索结果 (点击选择用户)
+                    </label>
+                    <div className="max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg">
+                      {searchResults.map((user) => (
+                        <div
+                          key={user._id}
+                          onClick={() => {
+                            if (!selectedUsers.find(u => u._id === user._id)) {
+                              setSelectedUsers([...selectedUsers, user]);
+                            }
+                          }}
+                          className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-600 last:border-b-0"
+                        >
+                          <Avatar
+                            src={user.avatar}
+                            name={user.name}
+                            size="sm"
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900 dark:text-gray-100">
+                              {user.name}
+                            </div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                              {user.email}
+                            </div>
+                            {user.enterpriseName && (
+                              <div className="text-xs text-gray-400 dark:text-gray-500">
+                                {user.enterpriseName}
+                              </div>
+                            )}
+                          </div>
+                          {selectedUsers.find(u => u._id === user._id) && (
+                            <CheckCircle className="w-5 h-5 text-green-500" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 已选择的用户 */}
+                {selectedUsers.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      已选择的用户 ({selectedUsers.length})
+                    </label>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {selectedUsers.map((user) => (
+                        <div
+                          key={user._id}
+                          className="flex items-center gap-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg"
+                        >
+                          <Avatar
+                            src={user.avatar}
+                            name={user.name}
+                            size="xs"
+                          />
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                              {user.name}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {user.email}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setSelectedUsers(selectedUsers.filter(u => u._id !== user._id))}
+                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 角色选择 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    角色
+                    分配角色
                   </label>
-                  <select
-                    value={newMemberRole}
-                    onChange={(e) => setNewMemberRole(e.target.value as 'manager' | 'collaborator')}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  >
-                    <option value="collaborator">协作者</option>
-                    <option value="manager">管理者</option>
-                  </select>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowAddMember(false)}
-                    className="flex-1"
-                  >
-                    取消
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isAddingMember || !newMemberEmail.trim()}
-                    className="flex-1"
-                  >
-                    {isAddingMember ? '添加中...' : '添加成员'}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {/* 批量添加成员模态框 */}
-      {showBatchAdd && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4"
-          >
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">批量添加成员</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    邮箱地址（每行一个或用逗号分隔）
-                  </label>
-                  <textarea
-                    value={batchEmails}
-                    onChange={(e) => setBatchEmails(e.target.value)}
-                    placeholder="user1@company.com&#10;user2@company.com&#10;user3@company.com"
-                    rows={6}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none"
+                  <FuzzySelect
+                    options={[
+                      { value: 'viewer', label: '查看者', html: '<span>查看者 - 只能查看题库内容</span>' },
+                      { value: 'collaborator', label: '协作者', html: '<span>协作者 - 可以添加和编辑题目</span>' },
+                      { value: 'manager', label: '管理者', html: '<span>管理者 - 可以管理题库和成员</span>' }
+                    ]}
+                    value={selectedRole}
+                    onChange={(value) => setSelectedRole(value as 'manager' | 'collaborator' | 'viewer')}
+                    placeholder="选择角色"
                   />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    只能添加 @{questionBank?.emailSuffix} 邮箱的用户
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    角色
-                  </label>
-                  <select
-                    value={batchRole}
-                    onChange={(e) => setBatchRole(e.target.value as 'manager' | 'collaborator')}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  >
-                    <option value="collaborator">协作者</option>
-                    <option value="manager">管理者</option>
-                  </select>
                 </div>
 
                 <div className="flex gap-3 pt-4">
@@ -799,21 +803,22 @@ const QuestionBankMembersPage: React.FC = () => {
                     type="button"
                     variant="outline"
                     onClick={() => {
-                      setShowBatchAdd(false);
-                      setBatchEmails('');
+                      setShowAddMember(false);
+                      setSelectedUsers([]);
+                      setSearchResults([]);
                     }}
                     className="flex-1"
                   >
                     取消
                   </Button>
                   <Button
-                    onClick={handleBatchAddMembers}
+                    onClick={handleAddSelectedUsers}
                     loading={isBatchAdding}
-                    disabled={isBatchAdding || !batchEmails.trim()}
+                    disabled={isBatchAdding || selectedUsers.length === 0}
                     className="flex-1 bg-green-500 hover:bg-green-600"
                   >
-                    <Send className="w-4 h-4 mr-2" />
-                    {isBatchAdding ? '添加中...' : '批量添加'}
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    添加 {selectedUsers.length > 0 ? `${selectedUsers.length} 个` : ''}成员
                   </Button>
                 </div>
               </div>

@@ -8,6 +8,7 @@ export interface IQuestionBank extends Document {
   creator: mongoose.Types.ObjectId; // 创建者
   managers: mongoose.Types.ObjectId[]; // 管理者列表
   collaborators: mongoose.Types.ObjectId[]; // 协作者列表
+  viewers?: mongoose.Types.ObjectId[]; // 查看者列表
   isPublic: boolean; // 是否公开
   allowCollaboration: boolean; // 是否允许协作
   maxQuestions: number; // 最大题目数
@@ -61,6 +62,10 @@ const questionBankSchema = new Schema<IQuestionBank>({
     ref: 'User'
   }],
   collaborators: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  viewers: [{
     type: Schema.Types.ObjectId,
     ref: 'User'
   }],
@@ -145,7 +150,8 @@ questionBankSchema.index({ category: 1 });
 questionBankSchema.virtual('totalMembers').get(function() {
   const managersCount = this.managers ? this.managers.length : 0;
   const collaboratorsCount = this.collaborators ? this.collaborators.length : 0;
-  return 1 + managersCount + collaboratorsCount;
+  const viewersCount = this.viewers ? this.viewers.length : 0;
+  return 1 + managersCount + collaboratorsCount + viewersCount;
 });
 
 // 确保虚拟字段在JSON序列化时包含

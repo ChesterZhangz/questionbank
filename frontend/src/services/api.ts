@@ -308,6 +308,10 @@ export const authAPI = {
   // 个人信息相关API
   getCurrentUser: () =>
     api.get<{ success: boolean; user?: any; error?: string }>('/auth/me'),
+
+  // 搜索用户
+  searchUsers: (query: string, limit?: number) =>
+    api.get<{ success: boolean; users?: any[]; error?: string }>(`/users/search?q=${encodeURIComponent(query)}&limit=${limit || 10}`),
   
   updateProfile: (data: {
     name?: string;

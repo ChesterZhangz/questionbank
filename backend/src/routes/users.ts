@@ -7,6 +7,56 @@ const router = express.Router();
 
 // 企业成员数量现在是动态计算的，不再需要手动更新
 
+// 搜索用户（所有登录用户可访问）
+router.get('/search', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { q, limit = '10' } = req.query;
+    
+    if (!q || typeof q !== 'string' || q.trim().length < 2) {
+      return res.json({
+        success: true,
+        users: []
+      });
+    }
+
+    const searchQuery = q.trim();
+    const limitNum = Math.min(parseInt(limit as string) || 10, 50); // 最多50个结果
+
+    // 搜索条件：用户名或邮箱包含搜索词，且邮箱已验证
+    const users = await User.find({
+      $and: [
+        {
+          $or: [
+            { name: { $regex: searchQuery, $options: 'i' } },
+            { email: { $regex: searchQuery, $options: 'i' } }
+          ]
+        },
+        { isEmailVerified: true },
+        { isActive: true }
+      ]
+    }, 'name email enterpriseName avatar')
+      .limit(limitNum)
+      .sort({ name: 1 });
+
+    // 格式化用户数据
+    const formattedUsers = users.map(user => ({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      enterpriseName: user.enterpriseName,
+      avatar: user.avatar
+    }));
+
+    return res.json({
+      success: true,
+      users: formattedUsers
+    });
+  } catch (error) {
+    console.error('搜索用户失败:', error);
+    return res.status(500).json({ success: false, error: '搜索用户失败' });
+  }
+});
+
 // 获取所有用户（仅管理员可访问）
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {

@@ -241,7 +241,7 @@ export interface UpdateQuestionBankRequest {
 
 export interface QuestionBankMember {
   email: string;
-  role: 'manager' | 'collaborator';
+  role: 'manager' | 'collaborator' | 'viewer';
 }
 
 // 题目相关类型更新

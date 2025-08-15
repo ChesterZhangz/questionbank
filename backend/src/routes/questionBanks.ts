@@ -367,7 +367,8 @@ router.get('/:bid/members', authMiddleware, checkQuestionBankPermission, async (
     const members = {
       creator: await User.findById(questionBank.creator).select('name email'),
       managers: await User.find({ _id: { $in: questionBank.managers } }).select('name email'),
-      collaborators: await User.find({ _id: { $in: questionBank.collaborators } }).select('name email')
+      collaborators: await User.find({ _id: { $in: questionBank.collaborators } }).select('name email'),
+      viewers: questionBank.viewers ? await User.find({ _id: { $in: questionBank.viewers } }).select('name email') : []
     };
 
     return res.json({
@@ -384,7 +385,7 @@ router.get('/:bid/members', authMiddleware, checkQuestionBankPermission, async (
 // 添加成员
 router.post('/:bid/members', authMiddleware, checkQuestionBankPermission, [
   body('email').isEmail().withMessage('请输入有效的邮箱地址'),
-  body('role').isIn(['manager', 'collaborator']).withMessage('角色必须是manager或collaborator')
+  body('role').isIn(['manager', 'collaborator', 'viewer']).withMessage('角色必须是manager、collaborator或viewer')
 ], async (req: QuestionBankRequest, res: any) => {
   try {
     const errors = validationResult(req);
@@ -415,6 +416,7 @@ router.post('/:bid/members', authMiddleware, checkQuestionBankPermission, [
     // 检查是否已经是成员
     const isAlreadyMember = questionBank.managers.includes(user._id) || 
                           questionBank.collaborators.includes(user._id) ||
+                          (questionBank.viewers && questionBank.viewers.includes(user._id)) ||
                           questionBank.creator.toString() === (user._id as any).toString();
     
     if (isAlreadyMember) {
@@ -424,8 +426,11 @@ router.post('/:bid/members', authMiddleware, checkQuestionBankPermission, [
     // 添加成员
     if (role === 'manager') {
       questionBank.managers.push(user._id);
-    } else {
+    } else if (role === 'collaborator') {
       questionBank.collaborators.push(user._id);
+    } else if (role === 'viewer') {
+      questionBank.viewers = questionBank.viewers || [];
+      questionBank.viewers.push(user._id);
     }
     
     await questionBank.save();
@@ -476,6 +481,9 @@ router.delete('/:bid/members/:userId', authMiddleware, checkQuestionBankPermissi
     // 移除成员
     questionBank.managers = questionBank.managers.filter((id: any) => id.toString() !== userId);
     questionBank.collaborators = questionBank.collaborators.filter((id: any) => id.toString() !== userId);
+    if (questionBank.viewers) {
+      questionBank.viewers = questionBank.viewers.filter((id: any) => id.toString() !== userId);
+    }
 
     await questionBank.save();
 
