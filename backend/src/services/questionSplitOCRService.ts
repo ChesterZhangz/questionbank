@@ -1,30 +1,22 @@
-const tencentcloud = require('tencentcloud-sdk-nodejs');
+import axios from 'axios';
 import { config } from '../config';
 
-// 导入腾讯云OCR SDK
-const OcrClient = tencentcloud.ocr.v20181119.Client;
+// Mathpix图片识别服务配置
 
-interface QuestionSplitOCRRequest {
-  ImageBase64?: string;
-  ImageUrl?: string;
-  ReturnText?: boolean;
-  ReturnCoord?: boolean;
-  ReturnType?: string;
+interface MathpixImageRequest {
+  imageBase64?: string;
+  imageUrl?: string;
+  returnText?: boolean;
+  returnCoord?: boolean;
+  returnType?: string;
 }
 
-interface QuestionSplitOCRResponse {
-  TextDetections: Array<{
-    Text: string;
-    Confidence: number;
-    Polygon: Array<{ X: number; Y: number }>;
-    AdvancedInfo: string;
-    ItemPolygon: Array<{ X: number; Y: number }>;
-    Words: Array<{
-      Character: string;
-      Confidence: number;
-    }>;
-  }>;
-  RequestId: string;
+interface MathpixImageResponse {
+  text: string;
+  confidence: number;
+  latex?: string;
+  html?: string;
+  error?: string;
 }
 
 interface ParsedQuestion {
@@ -49,25 +41,20 @@ interface ParsedQuestion {
 }
 
 export class QuestionSplitOCRService {
-  private client: any;
+  private mathpixApiKey: string;
+  private mathpixAppId: string;
 
   constructor() {
-    this.client = new OcrClient({
-      credential: {
-        secretId: config.tencentCloud.secretId,
-        secretKey: config.tencentCloud.secretKey,
-      },
-      region: 'ap-beijing',
-      profile: {
-        httpProfile: {
-          endpoint: 'ocr.tencentcloudapi.com',
-        },
-      },
-    });
+    this.mathpixApiKey = process.env.MATHPIX_API_KEY || '';
+    this.mathpixAppId = process.env.MATHPIX_APP_ID || 'mareate_internal';
+    
+    if (!this.mathpixApiKey) {
+      console.warn('Mathpix API密钥未配置，OCR功能可能无法正常工作');
+    }
   }
 
   /**
-   * 使用QuestionSplitOCR API解析题目
+   * 使用Mathpix API解析题目
    */
   async parseQuestions(params: {
     imageBase64?: string;
@@ -77,61 +64,164 @@ export class QuestionSplitOCRService {
     returnType?: string;
   }): Promise<ParsedQuestion[]> {
     try {
-      const request: QuestionSplitOCRRequest = {
-        // 只使用基本参数，避免腾讯云API的兼容性问题
-      };
-
-      if (params.imageBase64) {
-        request.ImageBase64 = params.imageBase64;
-      } else if (params.imageUrl) {
-        request.ImageUrl = params.imageUrl;
-      } else {
-        throw new Error('必须提供图片数据（Base64或URL）');
+      if (!this.mathpixApiKey) {
+        throw new Error('Mathpix API密钥未配置');
       }
 
-      console.log('调用腾讯云QuestionSplitOCR API...');
-      const response = await this.client.QuestionSplitOCR(request);
+      console.log('调用Mathpix图片识别API...');
+      const response = await this.callMathpixImageAPI(params);
       
-      console.log('QuestionSplitOCR响应:', JSON.stringify(response, null, 2));
+      console.log('Mathpix响应:', JSON.stringify(response, null, 2));
       
-      return this.processOCRResponse(response);
+      return this.processMathpixResponse(response);
     } catch (error: any) {
-      console.error('QuestionSplitOCR解析失败:', error);
+      console.error('Mathpix图片识别失败:', error);
       throw new Error(`OCR解析失败: ${error?.message || '未知错误'}`);
     }
   }
 
   /**
-   * 处理OCR响应，转换为结构化题目数据
+   * 调用Mathpix图片识别API
    */
-  private processOCRResponse(response: any): ParsedQuestion[] {
+  private async callMathpixImageAPI(params: {
+    imageBase64?: string;
+    imageUrl?: string;
+    returnText?: boolean;
+    returnCoord?: boolean;
+    returnType?: string;
+  }): Promise<MathpixImageResponse> {
+    const requestBody: any = {
+      formats: ['text', 'latex_styled'],
+      data_options: {
+        include_line_data: true,
+        include_word_data: true
+      }
+    };
+
+    if (params.imageBase64) {
+      requestBody.src = `data:image/jpeg;base64,${params.imageBase64}`;
+    } else if (params.imageUrl) {
+      requestBody.src = params.imageUrl;
+    } else {
+      throw new Error('必须提供图片数据（Base64或URL）');
+    }
+
+    const response = await axios.post('https://api.mathpix.com/v3/text', requestBody, {
+      headers: {
+        'app_id': this.mathpixAppId,
+        'app_key': this.mathpixApiKey,
+        'Content-Type': 'application/json'
+      },
+      timeout: 30000 // 30秒超时
+    });
+
+    if (response.data.error) {
+      throw new Error(`Mathpix API错误: ${response.data.error}`);
+    }
+
+    return {
+      text: response.data.text || '',
+      confidence: response.data.confidence || 0.8,
+      latex: response.data.latex_styled || '',
+      html: response.data.html || ''
+    };
+  }
+
+  /**
+   * 处理Mathpix响应，转换为结构化题目数据
+   */
+  private processMathpixResponse(response: MathpixImageResponse): ParsedQuestion[] {
     const questions: ParsedQuestion[] = [];
     
-    if (!response.QuestionInfo || response.QuestionInfo.length === 0) {
-      console.warn('OCR未检测到任何题目');
+    if (!response.text || response.text.trim().length === 0) {
+      console.warn('Mathpix未识别到任何文本内容');
       return questions;
     }
 
-    console.log(`检测到 ${response.QuestionInfo.length} 个题目组`);
+    console.log(`Mathpix识别到文本内容，长度: ${response.text.length} 字符`);
 
-    // 收集所有题目
-    const allQuestions: any[] = [];
-    response.QuestionInfo.forEach((questionGroup: any, groupIndex: number) => {
-      if (questionGroup.ResultList && questionGroup.ResultList.length > 0) {
-        questionGroup.ResultList.forEach((result: any, resultIndex: number) => {
-          const question = this.extractQuestionFromResult(result, groupIndex, resultIndex);
-          if (question) {
-            allQuestions.push(question);
-          }
-        });
+    // 将识别的文本按题目分割
+    const extractedQuestions = this.extractQuestionsFromText(response.text, response.confidence);
+    
+    // 智能去重和合并
+    const optimizedQuestions = this.optimizeQuestions(extractedQuestions);
+
+    console.log(`原始题目数: ${extractedQuestions.length}, 优化后题目数: ${optimizedQuestions.length}`);
+    return optimizedQuestions;
+  }
+
+  /**
+   * 从Mathpix识别的文本中提取题目
+   */
+  private extractQuestionsFromText(text: string, confidence: number): ParsedQuestion[] {
+    const questions: ParsedQuestion[] = [];
+    
+    // 按行分割文本
+    const lines = text.split('\n').filter(line => line.trim().length > 0);
+    
+    // 将文本按题目分组
+    const questionGroups = this.groupLinesByQuestion(lines);
+    
+    questionGroups.forEach((group, index) => {
+      const questionText = group.join('\n');
+      if (questionText.trim().length > 10) { // 过滤过短的内容
+        const questionInfo = this.analyzeQuestionContent(questionText);
+        
+        const question: ParsedQuestion = {
+          _id: `mathpix_question_${index + 1}`,
+          type: questionInfo.type,
+          content: {
+            stem: questionInfo.content,
+            options: questionInfo.options,
+            answer: questionInfo.answer,
+          },
+          difficulty: questionInfo.difficulty,
+          category: questionInfo.category,
+          tags: questionInfo.tags,
+          source: 'Mathpix OCR',
+          confidence: confidence,
+          coordinates: [], // Mathpix图片识别不提供坐标信息
+          metadata: {
+            knowledgePoints: questionInfo.knowledgePoints,
+          },
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        
+        questions.push(question);
       }
     });
+    
+    return questions;
+  }
 
-    // 智能去重和合并
-    const optimizedQuestions = this.optimizeQuestions(allQuestions);
+  /**
+   * 将文本行按题目分组
+   */
+  private groupLinesByQuestion(lines: string[]): string[][] {
+    const groups: string[][] = [];
+    let currentGroup: string[] = [];
 
-    console.log(`原始题目数: ${allQuestions.length}, 优化后题目数: ${optimizedQuestions.length}`);
-    return optimizedQuestions;
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      
+      // 检查是否是题目开始
+      if (this.isQuestionStart(trimmedLine)) {
+        if (currentGroup.length > 0) {
+          groups.push([...currentGroup]);
+        }
+        currentGroup = [trimmedLine];
+      } else {
+        currentGroup.push(trimmedLine);
+      }
+    }
+
+    // 添加最后一组
+    if (currentGroup.length > 0) {
+      groups.push(currentGroup);
+    }
+
+    return groups;
   }
 
   /**
@@ -304,132 +394,7 @@ export class QuestionSplitOCRService {
     };
   }
 
-  /**
-   * 从腾讯云OCR结果中提取题目
-   */
-  private extractQuestionFromResult(result: any, groupIndex: number, resultIndex: number): ParsedQuestion | null {
-    try {
-      if (!result.Question || result.Question.length === 0) {
-        return null;
-      }
-
-      const questionData = result.Question[0];
-      const questionText = questionData.Text || '';
-      const groupType = questionData.GroupType || 'unknown';
-
-      // 提取选项（如果有）
-      const options: Array<{ text: string; isCorrect: boolean }> = [];
-      if (result.Option && result.Option.length > 0) {
-        result.Option.forEach((option: any) => {
-          if (option.Text) {
-            options.push({ text: option.Text, isCorrect: false }); // 默认不是正确答案
-          }
-        });
-      }
-
-      // 分析题目内容
-      const analysis = this.analyzeQuestionContent(questionText);
-
-      // 构建题目对象
-      const question: ParsedQuestion = {
-        _id: `question_${groupIndex}_${resultIndex}`,
-        type: this.mapGroupTypeToQuestionType(groupType),
-        content: {
-          stem: questionText,
-          options: options.length > 0 ? options : undefined,
-          answer: analysis.answer,
-        },
-        difficulty: analysis.difficulty,
-        category: analysis.category,
-        tags: analysis.tags,
-        source: 'OCR', // 来源
-        confidence: 0.8, // 腾讯云OCR的置信度
-        coordinates: this.extractCoordinates(result.Coord),
-        metadata: {
-          knowledgePoints: analysis.knowledgePoints,
-        },
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      return question;
-    } catch (error) {
-      console.error('提取题目失败:', error);
-      return null;
-    }
-  }
-
-  /**
-   * 将腾讯云的GroupType映射到我们的题目类型
-   */
-  private mapGroupTypeToQuestionType(groupType: string): 'choice' | 'fill' | 'solution' {
-    switch (groupType) {
-      case 'multiple-choice':
-        return 'choice';
-      case 'fill-in-the-blank':
-        return 'fill';
-      case 'problem-solving':
-        return 'solution';
-      default:
-        return 'solution'; // 默认解析为解答题
-    }
-  }
-
-  /**
-   * 提取坐标信息
-   */
-  private extractCoordinates(coord: any[]): Array<{ x: number; y: number }> {
-    if (!coord || coord.length === 0) {
-      return [];
-    }
-
-    const coordinates: Array<{ x: number; y: number }> = [];
-    coord.forEach((point: any) => {
-      if (point.LeftTop) {
-        coordinates.push({ x: point.LeftTop.X, y: point.LeftTop.Y });
-      }
-      if (point.RightTop) {
-        coordinates.push({ x: point.RightTop.X, y: point.RightTop.Y });
-      }
-      if (point.LeftBottom) {
-        coordinates.push({ x: point.LeftBottom.X, y: point.LeftBottom.Y });
-      }
-      if (point.RightBottom) {
-        coordinates.push({ x: point.RightBottom.X, y: point.RightBottom.Y });
-      }
-    });
-
-    return coordinates;
-  }
-
-  /**
-   * 将文本检测结果分组为题目
-   */
-  private groupTextDetections(detections: any[]): any[][] {
-    const groups: any[][] = [];
-    let currentGroup: any[] = [];
-
-    detections.forEach((detection, index) => {
-      const text = detection.Text.trim();
-      
-      // 检查是否是题目开始（序号、题目标识等）
-      if (this.isQuestionStart(text)) {
-        if (currentGroup.length > 0) {
-          groups.push([...currentGroup]);
-        }
-        currentGroup = [detection];
-      } else {
-        currentGroup.push(detection);
-      }
-    });
-
-    // 添加最后一组
-    if (currentGroup.length > 0) {
-      groups.push(currentGroup);
-    }
-
-    return groups;
-  }
+  // 删除了腾讯云相关的方法，替换为Mathpix实现
 
   /**
    * 判断文本是否是题目开始
@@ -449,47 +414,7 @@ export class QuestionSplitOCRService {
     return questionPatterns.some(pattern => pattern.test(text));
   }
 
-  /**
-   * 从文本组中提取题目信息
-   */
-  private extractQuestionFromGroup(group: any[], index: number): ParsedQuestion | null {
-    if (group.length === 0) return null;
-
-    // 合并所有文本
-    const fullText = group.map(detection => detection.Text).join(' ');
-    
-    // 提取坐标信息
-    const coordinates = group.flatMap(detection => 
-      detection.Polygon?.map((point: any) => ({ x: point.X, y: point.Y })) || []
-    );
-
-    // 计算平均置信度
-    const avgConfidence = group.reduce((sum, detection) => sum + detection.Confidence, 0) / group.length;
-
-    // 智能识别题目类型和内容
-    const questionInfo = this.analyzeQuestionContent(fullText);
-
-    return {
-      _id: `question_${index + 1}`,
-      type: questionInfo.type,
-      content: {
-        stem: questionInfo.content,
-        options: questionInfo.options,
-        answer: questionInfo.answer,
-      },
-      difficulty: questionInfo.difficulty,
-      category: questionInfo.category,
-      tags: questionInfo.tags,
-      source: 'OCR', // 来源
-      confidence: avgConfidence,
-      coordinates,
-      metadata: {
-        knowledgePoints: questionInfo.knowledgePoints,
-      },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-  }
+  // 移除了旧的extractQuestionFromGroup方法，已被extractQuestionsFromText替代
 
   /**
    * 分析题目内容，提取结构化信息

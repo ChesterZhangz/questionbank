@@ -140,8 +140,8 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
   // 可用筛选选项
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   
-  // 防抖搜索 - 进一步减少延迟
-  const debouncedSearchTerm = useDebounce(searchTerm, 100); // 减少到50ms提高响应速度
+  // 防抖搜索 - 增加延迟避免频繁请求
+  const debouncedSearchTerm = useDebounce(searchTerm, 300); // 增加到300ms减少频繁请求
   
   // 用于防止重复请求的ref
   const hasInitialized = useRef(false);
@@ -181,100 +181,11 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
     }
   }, []);
 
-  // 数据补充函数：补充getAllQuestions API缺失的字段（性能优化版本）
-  const enrichQuestionsData = async (questions: Question[]) => {
-    // 智能缓存：避免重复请求相同题目的详情
-    const questionDetailCache = new Map<string, any>();
-    
-    // 1. 批量识别需要补充字段的题目
-    const questionsNeedingEnrichment = questions.filter(q => !q.source || !q.category);
-    const questionsWithCompleteData = questions.filter(q => q.source && q.category);
-    
-    
-    if (questionsNeedingEnrichment.length === 0) {
-      return questions;
-    }
-    
-    // 2. 延迟加载策略：先返回基础数据，在后台异步补充
-    const enrichedQuestions = questionsNeedingEnrichment.map(question => ({
-      ...question,
-      source: question.source || '',
-      category: question.category || ''
-    }));
-    
-    // 3. 合并结果，立即返回
-    const finalQuestions = [...questionsWithCompleteData, ...enrichedQuestions];
-    
-    // 4. 在后台异步补充缺失字段（不阻塞UI渲染）
-    setTimeout(async () => {
-      await enrichQuestionsInBackground(questionsNeedingEnrichment, questionDetailCache);
-    }, 100);
-    
-    return finalQuestions;
-  };
-
-  // 后台异步补充字段函数
-  const enrichQuestionsInBackground = async (questions: Question[], cache: Map<string, any>) => {
-    const batchSize = 5; // 每批处理5个请求
-    const delay = 100; // 批次间延迟100ms
-    
-    for (let i = 0; i < questions.length; i += batchSize) {
-      const batch = questions.slice(i, i + batchSize);
-      
-      await Promise.all(
-        batch.map(async (question) => {
-          try {
-            // 检查缓存
-            if (cache.has(question.qid)) {
-              const cachedData = cache.get(question.qid);
-              updateQuestionInState(question.qid, {
-                source: cachedData.source || '',
-                category: cachedData.category || ''
-              });
-              return;
-            }
-            
-            const detailResponse = await questionAPI.getQuestion(question.qid);
-            if (detailResponse.data.success && detailResponse.data.question) {
-              const detailData = detailResponse.data.question;
-              
-              // 缓存结果
-              cache.set(question.qid, detailData);
-              
-              // 更新状态中的题目数据
-              updateQuestionInState(question.qid, {
-                source: detailData.source || '',
-                category: detailData.category || ''
-              });
-              
-            }
-          } catch (error) {
-            console.warn(`后台补充题目 ${question.qid} 字段失败:`, error);
-          }
-        })
-      );
-      
-      // 批次间延迟
-      if (i + batchSize < questions.length) {
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-    }
-  };
-
-  // 更新状态中特定题目的字段
-  const updateQuestionInState = (qid: string, updates: Partial<Question>) => {
-    setQuestions(prevQuestions => 
-      prevQuestions.map(q => 
-        q.qid === qid ? { ...q, ...updates } : q
-      )
-    );
-  };
-
-  // 获取题目列表 - 简化版本
+  // 获取题目列表 - 优化版本，移除 enrichQuestionsData 避免循环更新
   const fetchQuestions = useCallback(async () => {
     // 防止重复请求
     const now = Date.now();
-    if (now - lastRequestTime.current < 100) {
+    if (now - lastRequestTime.current < 200) { // 增加防抖时间
       return;
     }
     lastRequestTime.current = now;
@@ -310,10 +221,8 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
       if (response.data.success) {
         const questionsData = response.data.data?.questions || [];
         
-        // 数据补充：如果getAllQuestions API返回的数据缺少某些字段，通过getQuestion API补充
-        const enrichedQuestionsData = await enrichQuestionsData(questionsData);
-        
-        setQuestions(enrichedQuestionsData);
+        // 直接设置题目数据，不进行数据补充避免状态循环
+        setQuestions(questionsData);
         
         // 更新分页信息
         if (response.data.data?.pagination) {
@@ -325,6 +234,8 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
         if (response.data.data?.filters) {
           setAvailableTags(response.data.data.filters.availableTags || []);
         }
+        
+        // 移除前端数据补充，避免反复刷新
       } else {
         setError('获取题目列表失败: ' + response.data.error);
       }
@@ -491,51 +402,59 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
     }
   }, [user, questionBanks]);
 
-  // 监听筛选参数变化，自动获取数据
+  // 统一监听所有参数变化，避免重复请求
   useEffect(() => {
-    // 构建当前筛选参数字符串
-    const currentFilterParams = JSON.stringify({
+    if (!hasInitialized.current) {
+      return; // 初始化阶段不执行
+    }
+    
+    // 构建当前参数字符串
+    const currentParams = JSON.stringify({
       search: debouncedSearchTerm,
       banks: selectedBanks,
       types: selectedTypes,
       difficulties: selectedDifficulties,
       tags: selectedTags,
       sortBy,
-      sortOrder
+      sortOrder,
+      page: currentPage,
+      pageSize
     });
     
-    // 只有当筛选参数真正发生变化时才获取数据
-    if (currentFilterParams !== lastFilterParams.current) {
-      lastFilterParams.current = currentFilterParams;
-      
-      // 如果筛选条件改变（除了分页），重置到第一页
-      const oldParams = JSON.parse(lastFilterParams.current || '{}');
-      const newParams = JSON.parse(currentFilterParams);
-      
-      if (oldParams.search !== newParams.search || 
-          oldParams.banks !== newParams.banks || 
-          oldParams.types !== newParams.types || 
-          oldParams.difficulties !== newParams.difficulties || 
-          oldParams.tags !== newParams.tags || 
-          oldParams.sortBy !== newParams.sortBy || 
-          oldParams.sortOrder !== newParams.sortOrder) {
-        setCurrentPage(1);
-      }
-      
-      const timer = setTimeout(() => {
-        fetchQuestions();
-      }, 100); // 增加防抖延迟，减少频繁请求
-      
-      return () => clearTimeout(timer);
+    // 检查参数是否真正发生变化
+    const previousParams = lastFilterParams.current;
+    if (currentParams === previousParams) {
+      return; // 参数未变化，不执行请求
     }
-  }, [debouncedSearchTerm, selectedBanks, selectedTypes, selectedDifficulties, selectedTags, sortBy, sortOrder]);
-
-  // 监听分页参数变化
-  useEffect(() => {
-    if (hasInitialized.current) {
+    
+    // 检查是否只是分页变化
+    const oldParams = previousParams ? JSON.parse(previousParams) : {};
+    const newParams = JSON.parse(currentParams);
+    
+    const isOnlyPageChange = 
+      oldParams.search === newParams.search &&
+      JSON.stringify(oldParams.banks) === JSON.stringify(newParams.banks) &&
+      JSON.stringify(oldParams.types) === JSON.stringify(newParams.types) &&
+      JSON.stringify(oldParams.difficulties) === JSON.stringify(newParams.difficulties) &&
+      JSON.stringify(oldParams.tags) === JSON.stringify(newParams.tags) &&
+      oldParams.sortBy === newParams.sortBy &&
+      oldParams.sortOrder === newParams.sortOrder;
+    
+    // 如果筛选条件改变（非分页），重置到第一页
+    if (!isOnlyPageChange && newParams.page !== 1) {
+      setCurrentPage(1);
+      return; // 等待页码重置后再请求
+    }
+    
+    lastFilterParams.current = currentParams;
+    
+    // 延迟执行，避免快速连续请求
+    const timer = setTimeout(() => {
       fetchQuestions();
-    }
-  }, [currentPage, pageSize]);
+    }, 150);
+    
+    return () => clearTimeout(timer);
+  }, [debouncedSearchTerm, selectedBanks, selectedTypes, selectedDifficulties, selectedTags, sortBy, sortOrder, currentPage, pageSize]);
 
   // 监听批量操作状态
   useEffect(() => {

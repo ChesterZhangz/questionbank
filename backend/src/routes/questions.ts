@@ -301,9 +301,9 @@ router.get('/', async (req: Request, res: Response): Promise<any> => {
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
     const limitNum = parseInt(limit as string);
     
-    // 只选择需要的字段，减少数据传输
+    // 只选择需要的字段，减少数据传输 - 包含所有必要字段
     const questionsQuery = Question.find(query)
-      .select('qid type difficulty tags status views createdAt bid content')
+      .select('qid type difficulty tags status views createdAt bid content source category updatedAt')
       .sort(sort)
       .skip(skip)
       .limit(limitNum)
@@ -1142,41 +1142,44 @@ router.get('/:qid/related', async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ success: false, error: '题目不存在' });
     }
 
-    // 计算题目关联度的函数 - 升级版数学题目智能匹配
+    // 计算题目关联度的函数 - 优化版：确保标签一致性为前提
     const calculateRelevanceScore = (question: any, currentQ: any): number => {
+      // 前置条件：必须有共同的核心标签
+      if (!hasRequiredTagMatch(currentQ.tags, question.tags)) {
+        return 0; // 没有核心标签匹配，直接返回0
+      }
+
       let score = 0;
       let totalWeight = 0;
 
-      // 1. 数学内容相似度（权重60%）
+      // 1. 强化标签匹配（权重40% - 提升权重）
+      if (currentQ.tags && currentQ.tags.length > 0 && question.tags && question.tags.length > 0) {
+        const tagScore = calculateAdvancedTagSimilarity(currentQ.tags, question.tags);
+        score += tagScore * 0.4;
+        totalWeight += 0.4;
+      }
+
+      // 2. 数学内容相似度（权重35% - 降低权重）
       if (currentQ.content?.stem && question.content?.stem) {
         const stem1 = currentQ.content.stem;
         const stem2 = question.content.stem;
         
-        // 数学内容相似度计算
         const mathSimilarityScore = calculateMathContentSimilarity(stem1, stem2);
-        score += mathSimilarityScore * 0.6;
-        totalWeight += 0.6;
+        score += mathSimilarityScore * 0.35;
+        totalWeight += 0.35;
       }
 
-      // 2. 标签匹配（权重16%）
-      if (currentQ.tags && currentQ.tags.length > 0 && question.tags && question.tags.length > 0) {
-        const commonTags = currentQ.tags.filter((tag: string) => question.tags.includes(tag));
-        const tagScore = commonTags.length / Math.max(currentQ.tags.length, question.tags.length);
-        score += tagScore * 0.16;
-        totalWeight += 0.16;
-      }
-
-      // 3. 分类匹配（权重16%）
+      // 3. 分类匹配（权重15%）
       if (currentQ.category && question.category && currentQ.category === question.category) {
-        score += 0.16;
-        totalWeight += 0.16;
+        score += 0.15;
+        totalWeight += 0.15;
       }
 
-      // 4. 难度匹配（权重6%）
+      // 4. 难度接近度（权重8%）
       const difficultyDiff = Math.abs(currentQ.difficulty - question.difficulty);
       const difficultyScore = Math.max(0, 1 - difficultyDiff / 5);
-      score += difficultyScore * 0.06;
-      totalWeight += 0.06;
+      score += difficultyScore * 0.08;
+      totalWeight += 0.08;
 
       // 5. 题目类型匹配（权重2%）
       if (currentQ.type === question.type) {
@@ -1186,6 +1189,73 @@ router.get('/:qid/related', async (req: AuthRequest, res: Response) => {
 
       // 返回标准化分数
       return totalWeight > 0 ? score / totalWeight : 0;
+    };
+
+    // 检查是否有必需的标签匹配
+    const hasRequiredTagMatch = (tags1: string[], tags2: string[]): boolean => {
+      if (!tags1 || !tags2 || tags1.length === 0 || tags2.length === 0) {
+        return false; // 如果任一题目没有标签，则不匹配
+      }
+
+      // 定义核心数学概念关键词
+      const coreKeywords = [
+        '函数', '几何', '代数', '三角', '概率', '统计', '导数', '积分', '极限',
+        '方程', '不等式', '图形', '面积', '周长', '体积', '角度', '直线', '圆',
+        '多项式', '因式', '根式', '指数', '对数', '复数', '向量', '矩阵',
+        '排列', '组合', '分布', '期望', '方差', '证明', '推理'
+      ];
+
+      // 检查是否有共同的核心关键词
+      for (const tag1 of tags1) {
+        for (const tag2 of tags2) {
+          // 检查是否包含相同的核心关键词
+          for (const keyword of coreKeywords) {
+            if (tag1.includes(keyword) && tag2.includes(keyword)) {
+              return true;
+            }
+          }
+          // 或者标签完全相同
+          if (tag1 === tag2) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    };
+
+    // 高级标签相似度计算
+    const calculateAdvancedTagSimilarity = (tags1: string[], tags2: string[]): number => {
+      // 完全匹配的标签
+      const exactMatches = tags1.filter(tag1 => tags2.includes(tag1));
+      
+      // 语义相似的标签（包含相同关键词）
+      let semanticMatches = 0;
+      const coreKeywords = [
+        '函数', '几何', '代数', '三角', '概率', '统计', '导数', '积分', '极限',
+        '方程', '不等式', '图形', '面积', '周长', '体积', '角度', '直线', '圆',
+        '多项式', '因式', '根式', '指数', '对数', '复数', '向量', '矩阵'
+      ];
+
+      for (const tag1 of tags1) {
+        for (const tag2 of tags2) {
+          if (tag1 !== tag2) { // 不是完全匹配的情况下
+            for (const keyword of coreKeywords) {
+              if (tag1.includes(keyword) && tag2.includes(keyword)) {
+                semanticMatches++;
+                break; // 避免重复计算同一对标签
+              }
+            }
+          }
+        }
+      }
+
+      // 计算综合相似度
+      const totalTags = Math.max(tags1.length, tags2.length);
+      const exactScore = exactMatches.length / totalTags;
+      const semanticScore = (semanticMatches * 0.7) / totalTags; // 语义匹配权重稍低
+
+      return Math.min(1.0, exactScore + semanticScore);
     };
 
     // 数学内容相似度计算函数 - 多维度特征提取版
@@ -1462,16 +1532,53 @@ router.get('/:qid/related', async (req: AuthRequest, res: Response) => {
       return 0.7 * typeSim + 0.3 * countSim;
     };
 
-    // 获取所有候选题目
-    const candidateQuery = {
+    // 获取候选题目 - 优化版：基于标签智能筛选
+    let candidateQuery: any = {
       _id: { $ne: currentQuestion._id },
       status: { $ne: 'deleted' }
     };
 
+    // 如果当前题目有标签，使用标签进行预筛选
+    if (currentQuestion.tags && currentQuestion.tags.length > 0) {
+      // 提取当前题目标签中的核心关键词
+      const coreKeywords = [
+        '函数', '几何', '代数', '三角', '概率', '统计', '导数', '积分', '极限',
+        '方程', '不等式', '图形', '面积', '周长', '体积', '角度', '直线', '圆',
+        '多项式', '因式', '根式', '指数', '对数', '复数', '向量', '矩阵'
+      ];
+      
+      const relevantKeywords: string[] = [];
+      currentQuestion.tags.forEach((tag: string) => {
+        coreKeywords.forEach(keyword => {
+          if (tag.includes(keyword)) {
+            relevantKeywords.push(keyword);
+          }
+        });
+      });
+
+      // 如果找到了相关关键词，使用它们筛选候选题目
+      if (relevantKeywords.length > 0) {
+        const tagFilterConditions = relevantKeywords.map(keyword => ({
+          tags: { $regex: keyword, $options: 'i' }
+        }));
+        
+        candidateQuery.$or = tagFilterConditions;
+        console.log('使用标签预筛选，关键词:', relevantKeywords);
+      } else {
+        // 如果没有核心关键词，直接使用标签匹配
+        candidateQuery.tags = { $in: currentQuestion.tags };
+        console.log('使用直接标签匹配筛选');
+      }
+    } else {
+      console.log('当前题目没有标签，获取所有候选题目');
+    }
+
+    console.log('候选题目查询条件:', JSON.stringify(candidateQuery, null, 2));
+
     const allCandidates = await Question.find(candidateQuery)
       .populate('creator', 'name email')
       .sort({ views: -1, createdAt: -1 })
-      .limit(50); // 限制候选数量以提高性能
+      .limit(100); // 适当增加候选数量以获得更好的匹配
 
     // 计算每个候选题目的关联度
     const candidatesWithScores = allCandidates.map(question => ({
@@ -1479,15 +1586,29 @@ router.get('/:qid/related', async (req: AuthRequest, res: Response) => {
       relevanceScore: calculateRelevanceScore(question, currentQuestion)
     }));
 
-    // 按关联度排序并筛选70%+的题目
-    const highRelevanceQuestions = candidatesWithScores
-      .filter(candidate => candidate.relevanceScore >= 0.7)
-      .sort((a, b) => b.relevanceScore - a.relevanceScore)
+    // 按关联度排序并筛选，确保标签一致性为前提
+    const relevantQuestions = candidatesWithScores
+      .filter(candidate => candidate.relevanceScore > 0) // 只保留有标签匹配的题目
+      .sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+    console.log(`经过标签筛选后有 ${relevantQuestions.length} 个相关题目`);
+
+    // 分层筛选：优先选择高质量匹配，如果不够再降低阈值
+    let finalQuestions = relevantQuestions
+      .filter(candidate => candidate.relevanceScore >= 0.6) // 提高质量要求
       .slice(0, limit)
       .map(candidate => candidate.question);
 
-    // 如果高关联度题目不够，也不降低阈值，保持高质量
-    let finalQuestions = highRelevanceQuestions;
+    // 如果高质量题目不够，适当降低阈值但保证标签匹配
+    if (finalQuestions.length < limit) {
+      const additionalQuestions = relevantQuestions
+        .filter(candidate => candidate.relevanceScore >= 0.3 && candidate.relevanceScore < 0.6)
+        .slice(0, limit - finalQuestions.length)
+        .map(candidate => candidate.question);
+      
+      finalQuestions = [...finalQuestions, ...additionalQuestions];
+      console.log(`补充了 ${additionalQuestions.length} 个中等质量的相关题目`);
+    }
 
     // 格式化返回数据
     const formattedQuestions = finalQuestions.map(q => ({

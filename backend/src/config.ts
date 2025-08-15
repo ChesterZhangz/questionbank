@@ -23,11 +23,17 @@ export const config = {
     }
   },
   
-  // 腾讯云配置
+  // 腾讯云配置（已弃用，保留配置）
   tencentCloud: {
     secretId: process.env.TENCENT_CLOUD_SECRET_ID || 'error',
     secretKey: process.env.TENCENT_CLOUD_SECRET_KEY || 'error',
     region: 'ap-beijing',
+  },
+  
+  // Mathpix配置
+  mathpix: {
+    apiKey: process.env.MATHPIX_API_KEY || '',
+    appId: process.env.MATHPIX_APP_ID || 'mareate_internal',
   },
   
   // DeepSeek API配置

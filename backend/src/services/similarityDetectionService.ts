@@ -21,10 +21,171 @@ interface DetectionRequest {
   answer?: string;
 }
 
+// 数学题目预设关键字分类
+interface MathKeywords {
+  geometry: string[];
+  algebra: string[];
+  function: string[];
+  calculus: string[];
+  probability: string[];
+  statistics: string[];
+  trigonometry: string[];
+  complex: string[];
+  number_theory: string[];
+  logic: string[];
+}
+
 export class SimilarityDetectionService {
   // 简单的内存缓存
   private cache = new Map<string, SimilarityResult[]>();
   private cacheTimeout = 5 * 60 * 1000; // 5分钟缓存
+  
+  // 数学题目关键字分类预设
+  private readonly mathKeywords: MathKeywords = {
+    geometry: [
+      '几何', '图形', '三角形', '四边形', '圆形', '正方形', '长方形', '梯形', '平行四边形', '菱形',
+      '面积', '周长', '体积', '表面积', '高', '底边', '半径', '直径', '角度', '垂直', '平行',
+      '相似', '全等', '对称', '旋转', '平移', '立体几何', '空间', '坐标', '向量', '点线面',
+      '直线', '射线', '线段', '交点', '切线', '弦', '弧', '扇形', '球', '圆锥', '圆柱',
+      '正多边形', '内角', '外角', '中点', '重心', '外心', '内心', '垂心'
+    ],
+    algebra: [
+      '代数', '方程', '不等式', '多项式', '因式分解', '配方', '二次函数', '一次函数',
+      '系数', '常数', '变量', '解', '根', '判别式', '韦达定理', '展开', '合并同类项',
+      '绝对值', '根式', '指数', '对数', '幂', '开方', '平方根', '立方根', '有理数',
+      '无理数', '实数', '虚数', '复数', '分式', '约分', '通分', '最简分数', '倒数'
+    ],
+    function: [
+      '函数', '定义域', '值域', '单调性', '奇偶性', '周期性', '对称性', '反函数',
+      '复合函数', '分段函数', '反比例函数', '幂函数', '指数函数', '对数函数',
+      '三角函数', '反三角函数', '最值', '零点', '极值', '渐近线', '图像', '性质'
+    ],
+    calculus: [
+      '导数', '微分', '积分', '极限', '连续', '可导', '切线', '法线', '增减性',
+      '凹凸性', '拐点', '最值', '优化', '变化率', '瞬时速度', '加速度', '牛顿',
+      '莱布尼茨', '求导', '积分', '定积分', '不定积分', '微积分基本定理'
+    ],
+    probability: [
+      '概率', '随机', '事件', '样本空间', '频率', '期望', '方差', '标准差',
+      '独立', '互斥', '条件概率', '贝叶斯', '排列', '组合', '二项式', '正态分布',
+      '均值', '中位数', '众数', '分布', '抽样', '估计', '检验', '置信区间'
+    ],
+    statistics: [
+      '统计', '数据', '图表', '条形图', '折线图', '饼图', '直方图', '散点图',
+      '平均数', '中位数', '众数', '极差', '方差', '标准差', '四分位数',
+      '回归', '相关', '抽样', '调查', '频数', '频率', '累积频率', '总体', '样本'
+    ],
+    trigonometry: [
+      '三角', '正弦', '余弦', '正切', '余切', '正割', '余割', 'sin', 'cos', 'tan',
+      '弧度', '角度', '象限', '周期', '振幅', '相位', '和差化积', '积化和差',
+      '倍角', '半角', '万能公式', '辅助角', '三角恒等式', '解三角形', '正弦定理', '余弦定理'
+    ],
+    complex: [
+      '复数', '虚数', '实部', '虚部', '共轭', '模', '辐角', '极坐标', '代数形式',
+      '三角形式', '指数形式', '复平面', '向量表示', 'i', '虚数单位'
+    ],
+    number_theory: [
+      '数论', '整数', '质数', '合数', '因数', '倍数', '最大公约数', '最小公倍数',
+      '互质', '同余', '模', '整除', '余数', '欧几里得算法', '费马小定理',
+      '中国剩余定理', '哥德巴赫猜想', '完全数', '亲和数'
+    ],
+    logic: [
+      '逻辑', '推理', '证明', '反证法', '数学归纳法', '充分', '必要', '充要',
+      '且', '或', '非', '命题', '真假', '逆命题', '否命题', '逆否命题',
+      '全称量词', '存在量词', '德摩根定律'
+    ]
+  };
+  
+  // 题目类别检测缓存
+  private categoryCache = new Map<string, string[]>();
+
+  /**
+   * 检测题目的数学类别
+   */
+  private detectMathCategories(stem: string): string[] {
+    // 检查缓存
+    const cacheKey = stem.substring(0, 100);
+    if (this.categoryCache.has(cacheKey)) {
+      return this.categoryCache.get(cacheKey)!;
+    }
+
+    const cleanText = stem.toLowerCase();
+    const detectedCategories: string[] = [];
+    const categoryScores: { [key: string]: number } = {};
+
+    // 为每个数学类别计算匹配分数
+    Object.entries(this.mathKeywords).forEach(([category, keywords]) => {
+      let score = 0;
+      let matchedKeywords = 0;
+
+      keywords.forEach((keyword: string) => {
+        if (cleanText.includes(keyword.toLowerCase())) {
+          score += keyword.length; // 关键字越长，权重越高
+          matchedKeywords++;
+        }
+      });
+
+      // 计算类别匹配度：匹配关键字数量 * 平均权重
+      if (matchedKeywords > 0) {
+        categoryScores[category] = score * Math.log(matchedKeywords + 1);
+      }
+    });
+
+    // 选择得分最高的类别（至少要有一定分数）
+    const sortedCategories = Object.entries(categoryScores)
+      .sort(([,a], [,b]) => b - a)
+      .filter(([,score]) => score >= 3); // 最低分数阈值
+
+    // 取前3个最相关的类别
+    const selectedCategories = sortedCategories.slice(0, 3).map(([category]) => category);
+    
+    // 缓存结果
+    this.categoryCache.set(cacheKey, selectedCategories);
+    
+    return selectedCategories;
+  }
+
+  /**
+   * 从检测到的类别生成相关标签
+   */
+  private generateTagsFromCategories(categories: string[]): string[] {
+    const tags: string[] = [];
+    
+    categories.forEach(category => {
+      // 为每个类别添加核心标签
+      switch (category) {
+        case 'geometry':
+          tags.push('几何', '图形', '面积', '周长');
+          break;
+        case 'algebra':
+          tags.push('代数', '方程', '不等式', '函数');
+          break;
+        case 'function':
+          tags.push('函数', '定义域', '值域', '单调性');
+          break;
+        case 'calculus':
+          tags.push('导数', '积分', '极限', '微分');
+          break;
+        case 'probability':
+          tags.push('概率', '统计', '随机', '期望');
+          break;
+        case 'trigonometry':
+          tags.push('三角函数', '正弦', '余弦', '正切');
+          break;
+        case 'complex':
+          tags.push('复数', '虚数', '实部', '虚部');
+          break;
+        case 'number_theory':
+          tags.push('数论', '整数', '质数', '因数');
+          break;
+        case 'logic':
+          tags.push('逻辑', '推理', '证明', '命题');
+          break;
+      }
+    });
+    
+    return [...new Set(tags)]; // 去重
+  }
 
   /**
    * 检测相似题目
@@ -41,8 +202,13 @@ export class SimilarityDetectionService {
 
       console.log('开始相似度检测:', { stem: request.stem.substring(0, 50) + '...', type: request.type });
 
-      // 1. 快速过滤候选题目
-      const candidates = await this.getCandidateQuestions(request);
+      // 1. 智能分类和标签提取
+      const detectedCategories = this.detectMathCategories(request.stem);
+      const enhancedRequest = { ...request, detectedCategories };
+      console.log('检测到的数学类别:', detectedCategories);
+
+      // 2. 基于分类的智能过滤候选题目  
+      const candidates = await this.getCandidateQuestions(enhancedRequest);
       console.log(`找到 ${candidates.length} 个候选题目`);
 
       // 2. 计算相似度
@@ -77,25 +243,61 @@ export class SimilarityDetectionService {
   }
 
   /**
-   * 获取候选题目（快速过滤）
+   * 获取候选题目（智能过滤）
    */
-  private async getCandidateQuestions(request: DetectionRequest): Promise<any[]> {
+  private async getCandidateQuestions(request: DetectionRequest & { detectedCategories?: string[] }): Promise<any[]> {
     const query: any = {
       status: { $ne: 'deleted' }
     };
 
-    // 移除题型、难度、分类过滤，只保留标签过滤
-    // 基于标签过滤（如果有标签）
+    // 优先使用检测到的类别生成标签进行筛选
+    let targetTags: string[] = [];
+    
+    if (request.detectedCategories && request.detectedCategories.length > 0) {
+      // 基于检测到的类别生成目标标签
+      targetTags = this.generateTagsFromCategories(request.detectedCategories);
+      console.log('基于分类生成的目标标签:', targetTags);
+    }
+    
+    // 合并用户提供的标签
     if (request.tags && request.tags.length > 0) {
-      query.tags = { $in: request.tags };
+      targetTags = [...targetTags, ...request.tags];
+    }
+    
+    // 去重标签
+    targetTags = [...new Set(targetTags)];
+
+    // 如果有目标标签，优先使用标签筛选
+    if (targetTags.length > 0) {
+      query.tags = { $in: targetTags };
     }
 
-    // 获取候选题目，减少数量并优化查询
+    // 如果没有标签，使用类别关键字进行内容匹配
+    else if (request.detectedCategories && request.detectedCategories.length > 0) {
+      const categoryKeywords: string[] = [];
+      request.detectedCategories.forEach(category => {
+        if (this.mathKeywords[category as keyof MathKeywords]) {
+          categoryKeywords.push(...this.mathKeywords[category as keyof MathKeywords].slice(0, 5)); // 取前5个关键词
+        }
+      });
+      
+      if (categoryKeywords.length > 0) {
+        // 使用$or进行内容匹配
+        query.$or = categoryKeywords.map(keyword => ({
+          'content.stem': { $regex: keyword, $options: 'i' }
+        }));
+      }
+    }
+
+    console.log('候选题目查询条件:', JSON.stringify(query, null, 2));
+
+    // 获取候选题目，优化查询
     const candidates = await Question.find(query)
       .select('content tags category difficulty type') // 只选择需要的字段
       .sort({ createdAt: -1 })
-      .limit(200); // 减少候选数量
+      .limit(150); // 进一步减少候选数量
 
+    console.log(`数据库查询返回 ${candidates.length} 个候选题目`);
     return candidates;
   }
 

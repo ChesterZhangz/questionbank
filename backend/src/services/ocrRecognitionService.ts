@@ -105,7 +105,7 @@ export class OCRRecognitionService {
   private async recognizeArea(area: QuestionArea, pages: any[]): Promise<Question | null> {
     try {
       // 简化版本：生成示例题目
-      // 实际项目中需要调用腾讯云OCR API
+      // 实际项目中需要调用Mathpix OCR API
       const questionTypes = ['choice', 'fill', 'solution'];
       const questionType = questionTypes[Math.floor(Math.random() * questionTypes.length)];
       
@@ -181,10 +181,10 @@ export class OCRRecognitionService {
   }
 
   /**
-   * 调用腾讯云OCR API（实际实现）
+   * 调用Mathpix OCR API（实际实现）
    */
-  private async callTencentOCR(imageBase64: string): Promise<any> {
-    // 这里应该调用腾讯云OCR API
+  private async callMathpixOCR(imageBase64: string): Promise<any> {
+    // 这里应该调用Mathpix OCR API
     // 为了简化，返回模拟数据
     return {
       TextDetections: [
