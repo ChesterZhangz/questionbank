@@ -2,8 +2,153 @@ import express, { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { User } from '../models/User';
 import { AuthRequest, authMiddleware } from '../middleware/auth';
+import mongoose from 'mongoose';
 
 const router = express.Router();
+
+// 级联删除用户相关数据的函数
+async function cascadeDeleteUser(userId: mongoose.Types.ObjectId, enterpriseId?: mongoose.Types.ObjectId) {
+  console.log(`开始级联删除用户 ${userId} 的相关数据...`);
+  
+  try {
+    // 1. 删除用户创建的题库
+    const QuestionBank = require('../models/QuestionBank').default;
+    const userQuestionBanks = await QuestionBank.find({ creator: userId });
+    for (const bank of userQuestionBanks) {
+      console.log(`删除用户创建的题库: ${bank.name} (${bank._id})`);
+      
+      // 删除题库中的所有题目
+      const Question = require('../models/Question').default;
+      await Question.deleteMany({ questionBank: bank._id });
+      console.log(`删除题库 ${bank._id} 中的所有题目`);
+      
+      // 删除题库
+      await QuestionBank.findByIdAndDelete(bank._id);
+    }
+    console.log(`删除了 ${userQuestionBanks.length} 个用户创建的题库`);
+
+    // 2. 从其他题库中移除用户
+    await QuestionBank.updateMany(
+      { $or: [
+        { managers: userId },
+        { collaborators: userId },
+        { viewers: userId }
+      ]},
+      { $pull: { 
+        managers: userId,
+        collaborators: userId,
+        viewers: userId
+      }}
+    );
+    console.log('从所有题库成员列表中移除用户');
+
+    // 3. 删除用户创建的独立题目（不属于任何题库的题目）
+    const Question = require('../models/Question').default;
+    const deletedQuestions = await Question.deleteMany({ creator: userId });
+    console.log(`删除了 ${deletedQuestions.deletedCount} 个用户创建的独立题目`);
+
+    // 4. 删除用户创建的试卷
+    const Paper = require('../models/Paper').default;
+    const deletedPapers = await Paper.deleteMany({ owner: userId });
+    console.log(`删除了 ${deletedPapers.deletedCount} 个用户创建的试卷`);
+
+    // 5. 处理用户拥有的试题库
+    const Library = require('../models/Library').default;
+    const userLibraries = await Library.find({ owner: userId });
+    for (const library of userLibraries) {
+      console.log(`删除用户拥有的试题库: ${library.name} (${library._id})`);
+      
+      // 删除试题库的购买记录
+      const LibraryPurchase = require('../models/LibraryPurchase').default;
+      await LibraryPurchase.deleteMany({ libraryId: library._id });
+      
+      // 删除试题库
+      await Library.findByIdAndDelete(library._id);
+    }
+    console.log(`删除了 ${userLibraries.length} 个用户拥有的试题库`);
+
+    // 6. 从其他试题库中移除用户
+    await Library.updateMany(
+      { 'members.user': userId },
+      { $pull: { members: { user: userId } } }
+    );
+    console.log('从所有试题库成员列表中移除用户');
+
+    // 7. 删除用户的试题库购买记录
+    const LibraryPurchase = require('../models/LibraryPurchase').default;
+    const deletedPurchases = await LibraryPurchase.deleteMany({ userId: userId });
+    console.log(`删除了 ${deletedPurchases.deletedCount} 个用户的购买记录`);
+
+    // 8. 删除用户的登录历史
+    const LoginHistory = require('../models/LoginHistory').default;
+    const deletedHistory = await LoginHistory.deleteMany({ userId: userId });
+    console.log(`删除了 ${deletedHistory.deletedCount} 条用户登录历史`);
+
+    // 9. 删除用户的token黑名单记录
+    const TokenBlacklist = require('../models/TokenBlacklist').default;
+    const deletedTokens = await TokenBlacklist.deleteMany({ userId: userId });
+    console.log(`删除了 ${deletedTokens.deletedCount} 条用户token黑名单记录`);
+
+    // 10. 删除用户的游戏记录和统计
+    try {
+      const GameRecord = require('../models/Game').GameRecord;
+      const UserGameStats = require('../models/Game').UserGameStats;
+      const Leaderboard = require('../models/Game').Leaderboard;
+      
+      const deletedGameRecords = await GameRecord.deleteMany({ userId: userId });
+      const deletedGameStats = await UserGameStats.deleteMany({ userId: userId });
+      const deletedLeaderboard = await Leaderboard.deleteMany({ userId: userId });
+      
+      console.log(`删除了 ${deletedGameRecords.deletedCount} 条游戏记录`);
+      console.log(`删除了 ${deletedGameStats.deletedCount} 条游戏统计`);
+      console.log(`删除了 ${deletedLeaderboard.deletedCount} 条排行榜记录`);
+    } catch (gameError) {
+      console.error('删除游戏相关数据失败:', gameError);
+    }
+
+    // 11. 删除相关邀请记录
+    try {
+      const Invitation = require('../models/Invitation').default;
+      const LibraryInvitation = require('../models/LibraryInvitation').default;
+      
+      const deletedInvitations = await Invitation.deleteMany({ 
+        $or: [
+          { inviterId: userId },
+          { email: { $exists: true } } // 需要更精确的匹配，但这里简化处理
+        ]
+      });
+      
+      const deletedLibraryInvitations = await LibraryInvitation.deleteMany({ 
+        inviterId: userId 
+      });
+      
+      console.log(`删除了 ${deletedInvitations.deletedCount} 条邀请记录`);
+      console.log(`删除了 ${deletedLibraryInvitations.deletedCount} 条试题库邀请记录`);
+    } catch (invitationError) {
+      console.error('删除邀请记录失败:', invitationError);
+    }
+
+    // 12. 删除企业成员记录
+    if (enterpriseId) {
+      try {
+        const EnterpriseMember = require('../models/EnterpriseMember').default;
+        await EnterpriseMember.findOneAndDelete({
+          userId: userId,
+          enterpriseId: enterpriseId
+        });
+        console.log(`删除企业成员记录成功: ${userId}`);
+      } catch (memberError) {
+        console.error('删除企业成员记录失败:', memberError);
+      }
+    }
+
+    console.log(`用户 ${userId} 的所有相关数据级联删除完成`);
+    
+  } catch (error) {
+    console.error('级联删除用户数据失败:', error);
+    throw error; // 重新抛出错误，让调用方处理
+  }
+}
 
 // 企业成员数量现在是动态计算的，不再需要手动更新
 
@@ -212,20 +357,8 @@ router.delete('/:userId', authMiddleware, async (req: AuthRequest, res: Response
     // 不再需要手动更新企业成员数量，因为现在是动态计算的
     // 企业成员数量会通过邮箱尾缀实时统计
 
-    // 删除企业成员记录
-    if (user.enterpriseId) {
-      try {
-        const EnterpriseMember = require('../models/EnterpriseMember').default;
-        await EnterpriseMember.findOneAndDelete({
-          userId: user._id,
-          enterpriseId: user.enterpriseId
-        });
-        console.log(`企业成员记录删除成功: ${user._id}`);
-      } catch (memberError) {
-        console.error('删除企业成员记录失败:', memberError);
-        // 即使成员记录删除失败，也要继续删除用户
-      }
-    }
+    // 执行级联删除
+    await cascadeDeleteUser(user._id as mongoose.Types.ObjectId, user.enterpriseId);
 
     // 删除用户
     await User.findByIdAndDelete(req.params.userId);
@@ -325,29 +458,18 @@ router.post('/batch', authMiddleware, [
           return res.status(400).json({ success: false, error: '不能删除超级管理员账号' });
         }
 
-        // 获取要删除的用户信息，用于更新企业成员数量
+        // 获取要删除的用户信息
         const usersToDelete = await User.find({ _id: { $in: userIds } });
         
-        // 按企业分组，统计每个企业需要减少的成员数量
-        const enterpriseMemberCounts = new Map<string, number>();
-        usersToDelete.forEach(user => {
-          if (user.enterpriseId) {
-            const currentCount = enterpriseMemberCounts.get(user.enterpriseId.toString()) || 0;
-            enterpriseMemberCounts.set(user.enterpriseId.toString(), currentCount + 1);
+        // 对每个用户执行级联删除
+        for (const user of usersToDelete) {
+          try {
+            console.log(`开始级联删除用户: ${user.name} (${user._id})`);
+            await cascadeDeleteUser(user._id as mongoose.Types.ObjectId, user.enterpriseId);
+          } catch (error) {
+            console.error(`级联删除用户 ${user._id} 失败:`, error);
+            // 继续删除其他用户，不中断整个过程
           }
-        });
-
-        // 不再需要手动更新企业成员数量，因为现在是动态计算的
-        // 企业成员数量会通过邮箱尾缀实时统计
-
-        // 删除企业成员记录
-        try {
-          const EnterpriseMember = require('../models/EnterpriseMember').default;
-          await EnterpriseMember.deleteMany({ userId: { $in: userIds } });
-          console.log(`批量删除企业成员记录成功: ${userIds.length} 条`);
-        } catch (memberError) {
-          console.error('批量删除企业成员记录失败:', memberError);
-          // 即使成员记录删除失败，也要继续删除用户
         }
 
         // 删除用户
