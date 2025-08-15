@@ -32,6 +32,10 @@ export interface ConfirmModalProps {
   width?: 'sm' | 'md' | 'lg' | 'xl';
   /** 是否阻止点击背景关闭 */
   preventClose?: boolean;
+  /** 确认按钮是否加载中 */
+  confirmLoading?: boolean;
+  /** 加载中时的文字 */
+  loadingText?: string;
 }
 
 const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -48,7 +52,9 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   confirmDanger = false,
   icon,
   width = 'md',
-  preventClose = false
+  preventClose = false,
+  confirmLoading = false,
+  loadingText = '处理中...'
 }) => {
   // 根据类型获取默认配置
   const getTypeConfig = () => {
@@ -173,9 +179,11 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 {showConfirm && (
                   <Button
                     onClick={handleConfirm}
+                    loading={confirmLoading}
+                    disabled={confirmLoading}
                     className={`px-6 py-2 ${confirmDanger ? 'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600' : config.buttonColor}`}
                   >
-                    {confirmText}
+                    {confirmLoading ? loadingText : confirmText}
                   </Button>
                 )}
               </div>

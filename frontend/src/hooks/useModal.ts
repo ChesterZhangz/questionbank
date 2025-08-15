@@ -14,6 +14,8 @@ export interface ModalState {
   showCancel?: boolean;
   showConfirm?: boolean;
   confirmDanger?: boolean;
+  confirmLoading?: boolean;
+  loadingText?: string;
 }
 
 export interface RightSlideModalState {
@@ -143,6 +145,16 @@ export const useModal = () => {
     setConfirmModal(prev => ({ ...prev, isOpen: false }));
   }, []);
 
+  // 设置确认按钮loading状态
+  const setConfirmLoading = useCallback((loading: boolean, loadingText?: string) => {
+    setConfirmModal(prev => ({ 
+      ...prev, 
+      confirmLoading: loading,
+      loadingText: loadingText || '处理中...',
+      preventClose: loading // 加载时防止关闭
+    }));
+  }, []);
+
   // 显示右侧弹窗
   const showRightSlide = useCallback((
     title: string,
@@ -206,6 +218,7 @@ export const useModal = () => {
     showInfo,
     showSuccess,
     closeConfirm,
+    setConfirmLoading,
     
     // 右侧弹窗
     rightSlideModal,

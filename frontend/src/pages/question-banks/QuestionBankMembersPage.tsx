@@ -48,6 +48,8 @@ const QuestionBankMembersPage: React.FC = () => {
     showConfirm, 
     confirmModal, 
     closeConfirm,
+    setConfirmLoading,
+    showSuccessRightSlide,
     showErrorRightSlide,
     rightSlideModal,
     closeRightSlide
@@ -221,13 +223,18 @@ const QuestionBankMembersPage: React.FC = () => {
       '确定要移除这个成员吗？',
       async () => {
         try {
+          setConfirmLoading(true, '正在移除...');
           const response = await questionBankAPI.removeMember(bid!, memberId);
           if (response.data.success) {
             fetchMembers(); // 重新获取成员列表
+            closeConfirm(); // 成功后关闭弹窗
+            showSuccessRightSlide('移除成功', '成员已成功移除');
           } else {
+            closeConfirm();
             showErrorRightSlide('移除失败', response.data.error || '移除成员失败');
           }
         } catch (error: any) {
+          closeConfirm();
           showErrorRightSlide('移除失败', error.response?.data?.error || '移除成员失败');
         }
       }
@@ -282,7 +289,7 @@ const QuestionBankMembersPage: React.FC = () => {
       `确定要删除选中的 ${selectedMembers.size} 个成员吗？`,
       async () => {
         try {
-          closeConfirm();
+          setConfirmLoading(true, '正在删除...');
           setIsBatchRemoving(true);
           
           const results = await Promise.allSettled(
@@ -297,12 +304,15 @@ const QuestionBankMembersPage: React.FC = () => {
           setSelectedMembers(new Set());
           fetchMembers();
 
+          closeConfirm(); // 操作完成后关闭弹窗
+
           if (failCount === 0) {
-            showErrorRightSlide('批量删除成功', `成功删除 ${successCount} 个成员`);
+            showSuccessRightSlide('批量删除成功', `成功删除 ${successCount} 个成员`);
           } else {
-            showErrorRightSlide('批量删除完成', `成功删除 ${successCount} 个成员，${failCount} 个失败`);
+            showSuccessRightSlide('批量删除完成', `成功删除 ${successCount} 个成员，${failCount} 个失败`);
           }
         } catch (error: any) {
+          closeConfirm();
           showErrorRightSlide('批量删除失败', error.response?.data?.error || '批量删除成员失败');
         } finally {
           setIsBatchRemoving(false);
@@ -353,9 +363,9 @@ const QuestionBankMembersPage: React.FC = () => {
       fetchMembers();
 
       if (failCount === 0) {
-        showErrorRightSlide('添加成功', `成功添加 ${successCount} 个成员`);
+        showSuccessRightSlide('添加成功', `成功添加 ${successCount} 个成员`);
       } else {
-        showErrorRightSlide('添加完成', `成功添加 ${successCount} 个成员，${failCount} 个失败`);
+        showSuccessRightSlide('添加完成', `成功添加 ${successCount} 个成员，${failCount} 个失败`);
       }
     } catch (error: any) {
       showErrorRightSlide('添加失败', error.response?.data?.error || '添加成员失败');
