@@ -1,23 +1,25 @@
 /* 导入自定义字体 */
 @font-face {
   font-family: 'WenYuan';
-  src: url('/font/WenYuanSerifSC-Regular.ttf') format('truetype');
+  src: url('../../font/WenYuanSerifSC-Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
+  font-display: swap; /* 优化字体加载 */
 }
 
 @font-face {
   font-family: 'WenYuan';
-  src: url('/font/WenYuanSerifSC-Bold.ttf') format('truetype');
+  src: url('../../font/WenYuanSerifSC-Bold.ttf') format('truetype');
   font-weight: bold;
   font-style: normal;
+  font-display: swap; /* 优化字体加载 */
 }
 
 /* 基础内容样式 - 针对非LaTeX内容（中文、英文等） */
 .latex-content,
 .prose .latex-content,
 .prose-sm .latex-content {
-  font-family: 'WenYuan', 'SimSun', 'STSong', 'Times New Roman', 'Times', serif !important;
+  font-family: 'WenYuan', 'SimSun', 'STSong', 'Microsoft YaHei', 'PingFang SC', 'Times New Roman', 'Times', serif !important;
   font-size: 1.3em !important;
   line-height: 1.6 !important;
   color: #374151 !important;

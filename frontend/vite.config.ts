@@ -12,7 +12,9 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: undefined
       }
-    }
+    },
+    // 确保字体文件被正确复制
+    copyPublicDir: true
   },
   server: {
     host: '0.0.0.0',
