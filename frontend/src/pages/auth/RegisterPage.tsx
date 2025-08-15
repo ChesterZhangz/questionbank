@@ -33,6 +33,7 @@ const RegisterPage: React.FC = () => {
   useEffect(() => {
     const fetchAllowedEnterprises = async () => {
       try {
+        setLoadingEnterprises(true);
         const response = await authAPI.getAllowedEnterprises();
         if (response.data.success) {
           setAllowedEnterprises(response.data.enterprises || []);
@@ -45,6 +46,11 @@ const RegisterPage: React.FC = () => {
     };
 
     fetchAllowedEnterprises();
+
+    // 添加定时刷新，每30秒更新一次企业名额信息
+    const interval = setInterval(fetchAllowedEnterprises, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -225,11 +231,36 @@ const RegisterPage: React.FC = () => {
               {/* 显示支持的企业 */}
               {!loadingEnterprises && allowedEnterprises.length > 0 && (
                 <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                      支持的企业邮箱后缀
-                    </span>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                        支持的企业邮箱后缀
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoadingEnterprises(true);
+                        const fetchAllowedEnterprises = async () => {
+                          try {
+                            const response = await authAPI.getAllowedEnterprises();
+                            if (response.data.success) {
+                              setAllowedEnterprises(response.data.enterprises || []);
+                            }
+                          } catch (error) {
+                            console.error('获取允许注册的企业失败:', error);
+                          } finally {
+                            setLoadingEnterprises(false);
+                          }
+                        };
+                        fetchAllowedEnterprises();
+                      }}
+                      className="text-xs text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                      disabled={loadingEnterprises}
+                    >
+                      {loadingEnterprises ? '刷新中...' : '刷新'}
+                    </button>
                   </div>
                   <div className="space-y-2">
                     {allowedEnterprises.map((enterprise, index) => (

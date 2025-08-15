@@ -159,17 +159,40 @@ router.get('/allowed-enterprises', async (req: Request, res: Response) => {
     const Enterprise = require('../models/Enterprise').Enterprise;
     const enterprises = await Enterprise.find({ 
       status: 'active' 
-    }).select('name emailSuffix currentMembers maxMembers');
+    }).select('name emailSuffix maxMembers');
+    
+    // 动态计算每个企业的实际成员数量和可用名额
+    const enterprisesWithActualMembers = await Promise.all(
+      enterprises.map(async (enterprise: any) => {
+        try {
+          // 统计邮箱尾缀相同的用户数量
+          const actualMemberCount = await User.countDocuments({
+            email: { $regex: enterprise.emailSuffix.replace('@', '@'), $options: 'i' }
+          });
+
+          return {
+            name: enterprise.name,
+            emailSuffix: enterprise.emailSuffix,
+            currentMembers: actualMemberCount,
+            maxMembers: enterprise.maxMembers,
+            availableSlots: Math.max(0, enterprise.maxMembers - actualMemberCount)
+          };
+        } catch (error) {
+          console.error(`计算企业 ${enterprise.name} 成员数量失败:`, error);
+          return {
+            name: enterprise.name,
+            emailSuffix: enterprise.emailSuffix,
+            currentMembers: 0,
+            maxMembers: enterprise.maxMembers,
+            availableSlots: enterprise.maxMembers
+          };
+        }
+      })
+    );
     
     return res.json({
       success: true,
-      enterprises: enterprises.map((enterprise: any) => ({
-        name: enterprise.name,
-        emailSuffix: enterprise.emailSuffix,
-        currentMembers: enterprise.currentMembers,
-        maxMembers: enterprise.maxMembers,
-        availableSlots: enterprise.maxMembers - enterprise.currentMembers
-      }))
+      enterprises: enterprisesWithActualMembers
     });
   } catch (error) {
     console.error('获取允许注册的企业失败:', error);
