@@ -234,7 +234,7 @@ const SupportedEmailSuffixes: React.FC<SupportedEmailSuffixesProps> = ({
                     <li>• <span className="text-blue-600 dark:text-blue-400 font-medium">蓝色区域</span>：支持的企业邮箱类型，需要联系管理员开通</li>
                     <li>• 使用企业邮箱注册可享受企业级功能和服务</li>
                     <li>• 个人邮箱（如 @qq.com、@163.com、@gmail.com）仅支持个人用户注册</li>
-                    <li>• 如需开通新的企业邮箱支持，请联系系统管理员</li>
+                    <li>• 如需开通新的企业邮箱支持，请联系系统管理员邮箱：admin@viquard.com</li>
                   </ul>
                 </div>
               </div>

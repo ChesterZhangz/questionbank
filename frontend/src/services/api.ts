@@ -297,6 +297,14 @@ export const authAPI = {
   resendVerification: (email: string) => 
     api.post<{ success: boolean; message?: string; error?: string }>('/auth/resend-verification', { email }),
   
+  // 忘记密码
+  forgotPassword: (data: { email: string }) =>
+    api.post<{ success: boolean; message?: string; error?: string }>('/auth/forgot-password', data),
+  
+  // 重置密码
+  resetPassword: (data: { token: string; password: string }) =>
+    api.post<{ success: boolean; message?: string; error?: string }>('/auth/reset-password', data),
+  
   // 个人信息相关API
   getCurrentUser: () =>
     api.get<{ success: boolean; user?: any; error?: string }>('/auth/me'),

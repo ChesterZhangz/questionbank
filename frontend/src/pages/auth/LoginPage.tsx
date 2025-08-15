@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowRight, BookOpen } from 'lucide-react';
+import { Mail, Lock, ArrowRight, BookOpen, X, Send, CheckCircle } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../stores/authStore';
 import { authAPI } from '../../services/api';
 import Button from '../../components/ui/Button';
@@ -18,6 +19,9 @@ const LoginPage: React.FC = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [forgotPasswordSent, setForgotPasswordSent] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -69,6 +73,38 @@ const LoginPage: React.FC = () => {
     } finally {
       setIsSubmitting(false);
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!forgotPasswordEmail) {
+      setErrors({ forgotPassword: '请输入邮箱地址' });
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotPasswordEmail)) {
+      setErrors({ forgotPassword: '请输入有效的邮箱地址' });
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setErrors({});
+      
+      const response = await authAPI.forgotPassword({ email: forgotPasswordEmail });
+      
+      if (response.data.success) {
+        setForgotPasswordSent(true);
+      } else {
+        setErrors({ forgotPassword: response.data.message || '发送失败' });
+      }
+    } catch (error: any) {
+      console.error('发送重置密码邮件失败:', error);
+      setErrors({ 
+        forgotPassword: error.response?.data?.message || '发送失败，请稍后重试'
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -160,6 +196,17 @@ const LoginPage: React.FC = () => {
                 required
                 icon={<Lock className="w-5 h-5" />}
               />
+              
+              {/* 忘记密码链接 */}
+              <div className="mt-2 text-right">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                >
+                  忘记密码？
+                </button>
+              </div>
             </motion.div>
 
             <motion.div
@@ -197,6 +244,166 @@ const LoginPage: React.FC = () => {
           </form>
         </Card>
       </motion.div>
+
+      {/* 忘记密码模态框 */}
+      <AnimatePresence>
+        {showForgotPassword && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            {/* 背景遮罩 */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => {
+                setShowForgotPassword(false);
+                setForgotPasswordSent(false);
+                setForgotPasswordEmail('');
+                setErrors({});
+              }}
+            />
+            
+            {/* 模态框内容 */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+            >
+              {!forgotPasswordSent ? (
+                // 发送重置邮件表单
+                <>
+                  {/* 头部 */}
+                  <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+                        <Lock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                          重置密码
+                        </h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          输入邮箱地址，我们将发送重置链接
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setForgotPasswordSent(false);
+                        setForgotPasswordEmail('');
+                        setErrors({});
+                      }}
+                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    </button>
+                  </div>
+
+                  {/* 内容区域 */}
+                  <div className="p-6">
+                    <div className="space-y-4">
+                      <Input
+                        label="企业邮箱"
+                        type="email"
+                        value={forgotPasswordEmail}
+                        onChange={(e) => {
+                          setForgotPasswordEmail(e.target.value);
+                          if (errors.forgotPassword) {
+                            setErrors(prev => ({ ...prev, forgotPassword: '' }));
+                          }
+                        }}
+                        error={errors.forgotPassword}
+                        placeholder="yourname@company.com"
+                        icon={<Mail className="w-5 h-5" />}
+                      />
+                      
+                      <Button
+                        onClick={handleForgotPassword}
+                        loading={isSubmitting}
+                        disabled={isSubmitting}
+                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                      >
+                        {isSubmitting ? '发送中...' : '发送重置链接'}
+                        {!isSubmitting && <Send className="w-4 h-4 ml-2" />}
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                // 发送成功状态
+                <>
+                  {/* 头部 */}
+                  <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
+                        <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                          邮件已发送
+                        </h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          请检查您的邮箱
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setForgotPasswordSent(false);
+                        setForgotPasswordEmail('');
+                        setErrors({});
+                      }}
+                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    </button>
+                  </div>
+
+                  {/* 内容区域 */}
+                  <div className="p-6">
+                    <div className="text-center space-y-4">
+                      <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                        <p className="text-sm text-green-800 dark:text-green-200">
+                          重置密码链接已发送到：
+                        </p>
+                        <p className="text-sm font-medium text-green-900 dark:text-green-100 mt-1">
+                          {forgotPasswordEmail}
+                        </p>
+                      </div>
+                      
+                      <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                        <p>• 请查看邮箱中的重置密码邮件</p>
+                        <p>• 链接有效期为24小时</p>
+                        <p>• 如果未收到邮件，请检查垃圾邮件文件夹</p>
+                      </div>
+                      
+                      <Button
+                        onClick={() => {
+                          setShowForgotPassword(false);
+                          setForgotPasswordSent(false);
+                          setForgotPasswordEmail('');
+                          setErrors({});
+                        }}
+                        className="w-full"
+                        variant="outline"
+                      >
+                        知道了
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

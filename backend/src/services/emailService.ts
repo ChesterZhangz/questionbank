@@ -390,5 +390,76 @@ export const emailService = {
       console.error('发送题库邀请邮件失败:', error);
       return false;
     }
+  },
+
+  // 发送密码重置邮件
+  async sendPasswordResetEmail(email: string, name: string, resetUrl: string): Promise<boolean> {
+    try {
+      const mailOptions = {
+        from: `"MaReaTe题库系统" <${process.env.QQ_EMAIL_USER}>`,
+        to: email,
+        subject: '重置您的密码 - MaReaTe题库系统',
+        html: `
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+              <h1 style="margin: 0; font-size: 28px; font-weight: 700;">🔒 重置密码</h1>
+              <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">MaReaTe题库系统</p>
+            </div>
+            
+            <div style="background: #fff; padding: 40px; border-radius: 0 0 10px 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+              <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                亲爱的 <strong>${name}</strong>，
+              </p>
+              
+              <p style="color: #666; line-height: 1.6; margin-bottom: 25px;">
+                我们收到了您重置密码的请求。请点击下面的按钮来重置您的密码：
+              </p>
+              
+              <div style="text-align: center; margin: 35px 0;">
+                <a href="${resetUrl}" 
+                   style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                          color: white; text-decoration: none; padding: 16px 32px; 
+                          border-radius: 8px; font-weight: 600; font-size: 16px; 
+                          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                          transition: all 0.3s ease;">
+                  🔐 重置密码
+                </a>
+              </div>
+              
+              <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 30px 0;">
+                <p style="color: #856404; margin: 0; font-size: 14px; line-height: 1.5;">
+                  <strong>⚠️ 重要提醒：</strong><br>
+                  • 此重置链接将在 <strong>24小时</strong> 后失效<br>
+                  • 如果您没有请求重置密码，请忽略此邮件<br>
+                  • 为了您的账户安全，请不要与他人分享此链接
+                </p>
+              </div>
+              
+              <p style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 15px;">
+                如果按钮无法点击，您也可以复制下面的链接到浏览器地址栏：
+              </p>
+              
+              <div style="background: #f1f3f4; padding: 15px; border-radius: 6px; word-break: break-all; font-family: monospace; font-size: 13px; color: #666;">
+                ${resetUrl}
+              </div>
+              
+              <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;">
+              
+              <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
+                此邮件由系统自动发送，请勿回复。<br>
+                如有问题请联系管理员：admin@viquard.com
+              </p>
+            </div>
+          </div>
+        `
+      };
+
+      const transporter = createTransporter();
+      await transporter.sendMail(mailOptions);
+      return true;
+    } catch (error) {
+      console.error('发送密码重置邮件失败:', error);
+      return false;
+    }
   }
 }; 

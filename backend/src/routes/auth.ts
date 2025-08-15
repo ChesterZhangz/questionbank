@@ -12,6 +12,7 @@ import { AuthRequest, authMiddleware } from '../middleware/auth';
 import { emailService } from '../services/emailService';
 import { parseUserAgent } from '../utils/userAgentParser';
 import { TokenService } from '../services/tokenService';
+import crypto from 'crypto';
 
 const router = express.Router();
 
@@ -670,6 +671,122 @@ router.post('/logout', async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('登出失败:', error);
     return res.status(500).json({ success: false, error: '登出失败' });
+  }
+});
+
+// 忘记密码 - 发送重置邮件
+router.post('/forgot-password', [
+  body('email')
+    .isEmail()
+    .withMessage('请输入有效的邮箱地址')
+], async (req: Request, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false,
+        message: errors.array()[0].msg
+      });
+    }
+
+    const { email } = req.body;
+
+    // 查找用户
+    const user = await User.findOne({ email });
+    
+    // 无论用户是否存在，都返回成功消息（安全考虑）
+    if (!user) {
+      return res.json({
+        success: true,
+        message: '如果该邮箱已注册，您将收到重置密码的邮件'
+      });
+    }
+
+    // 生成重置token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24小时后过期
+
+    // 保存重置token到用户记录
+    user.passwordResetToken = resetToken;
+    user.passwordResetExpires = resetTokenExpiry;
+    await user.save();
+
+    // 发送重置邮件
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    
+    await emailService.sendPasswordResetEmail(email, user.name, resetUrl);
+
+    console.log(`密码重置邮件已发送给用户: ${email}`);
+
+    return res.json({
+      success: true,
+      message: '重置密码邮件已发送，请查看您的邮箱'
+    });
+
+  } catch (error) {
+    console.error('发送密码重置邮件失败:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: '发送邮件失败，请稍后重试' 
+    });
+  }
+});
+
+// 重置密码
+router.post('/reset-password', [
+  body('token')
+    .notEmpty()
+    .withMessage('重置token不能为空'),
+  body('password')
+    .isLength({ min: 8, max: 20 })
+    .withMessage('密码长度必须在8-20位之间')
+], async (req: Request, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false,
+        message: errors.array()[0].msg
+      });
+    }
+
+    const { token, password } = req.body;
+
+    // 查找拥有该重置token且未过期的用户
+    const user = await User.findOne({
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: new Date() }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: '重置链接无效或已过期'
+      });
+    }
+
+    // 更新密码
+    user.password = password; // User模型会自动加密密码
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+
+    // 使所有现有token失效
+    await TokenService.invalidateAllUserTokens((user._id as any).toString());
+
+    console.log(`用户 ${user.email} 密码重置成功`);
+
+    return res.json({
+      success: true,
+      message: '密码重置成功，请使用新密码登录'
+    });
+
+  } catch (error) {
+    console.error('密码重置失败:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: '密码重置失败，请稍后重试' 
+    });
   }
 });
 

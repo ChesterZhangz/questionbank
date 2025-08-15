@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppLayout from './components/layout/AppLayout';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import EmailVerificationPage from './pages/auth/EmailVerificationPage';
 import RegisterSuccessPage from './pages/auth/RegisterSuccessPage';
@@ -116,6 +117,14 @@ const App: React.FC = () => {
               element={
                 <PublicRoute>
                   <RegisterPage />
+                </PublicRoute>
+              } 
+            />
+            <Route 
+              path="/reset-password" 
+              element={
+                <PublicRoute>
+                  <ResetPasswordPage />
                 </PublicRoute>
               } 
             />

@@ -42,6 +42,8 @@ export interface IUser extends Document {
   isEmailVerified: boolean;
   emailVerificationToken?: string;
   emailVerificationExpires?: Date;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
   lastLogin?: Date;
   emailSuffix: string; // 企业邮箱后缀
   enterpriseId?: mongoose.Types.ObjectId; // 所属企业ID（新字段）
@@ -215,6 +217,12 @@ const userSchema = new Schema<IUser>({
   emailVerificationExpires: {
     type: Date
   },
+  passwordResetToken: {
+    type: String
+  },
+  passwordResetExpires: {
+    type: Date
+  },
   lastLogin: {
     type: Date
   },
@@ -268,6 +276,7 @@ userSchema.methods.comparePassword = async function(candidatePassword: string): 
 // 索引（email已有unique约束，不需要重复索引）
 userSchema.index({ role: 1 });
 userSchema.index({ emailVerificationToken: 1 });
+userSchema.index({ passwordResetToken: 1 });
 userSchema.index({ enterpriseId: 1 });
 userSchema.index({ emailSuffix: 1 });
 
