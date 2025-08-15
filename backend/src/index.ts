@@ -164,28 +164,14 @@ if (process.env.NODE_ENV === 'production') {
     }
   }));
 
-  // 修复SPA路由的静态资源问题 - 处理 /auth/assets/ 等路径
-  app.use('/auth/assets', express.static(path.join(process.cwd(), '..', 'frontend/dist/assets'), {
-    setHeaders: (res, filePath) => {
-      if (filePath.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-      } else if (filePath.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css; charset=utf-8');
-      }
-    }
-  }));
-
-  // 添加静态资源请求日志
-  app.use('/auth/assets', (req, res, next) => {
-    console.log(`📁 静态资源请求: ${req.method} ${req.path} -> /assets${req.path.replace('/auth', '')}`);
-    next();
-  });
-
-  // 修复其他SPA路由的静态资源问题 - 更智能的路径处理
+  // 修复SPA路由的静态资源问题 - 统一处理所有 /path/assets/ 路径
   app.use('/:path/assets/:filename', (req, res, next) => {
     const { path: routePath, filename } = req.params;
     
-    // 尝试从根assets目录加载文件
+    // 记录请求日志
+    console.log(`📁 SPA静态资源请求: ${req.method} ${req.path} -> 重定向到 /assets/${filename}`);
+    
+    // 直接重定向到根assets目录
     const assetPath = path.join(process.cwd(), '..', 'frontend/dist/assets', filename);
     
     if (fs.existsSync(assetPath)) {
@@ -194,16 +180,30 @@ if (process.env.NODE_ENV === 'production') {
         res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
       } else if (filename.endsWith('.css')) {
         res.setHeader('Content-Type', 'text/css; charset=utf-8');
+      } else if (filename.endsWith('.woff')) {
+        res.setHeader('Content-Type', 'font/woff');
+      } else if (filename.endsWith('.woff2')) {
+        res.setHeader('Content-Type', 'font/woff2');
+      } else if (filename.endsWith('.ttf')) {
+        res.setHeader('Content-Type', 'font/ttf');
       } else if (filename.endsWith('.png')) {
         res.setHeader('Content-Type', 'image/png');
       } else if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) {
         res.setHeader('Content-Type', 'image/jpeg');
+      } else if (filename.endsWith('.gif')) {
+        res.setHeader('Content-Type', 'image/gif');
       } else if (filename.endsWith('.svg')) {
         res.setHeader('Content-Type', 'image/svg+xml');
       }
       
+      // 设置缓存头
+      if (filename.endsWith('.js') || filename.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1年缓存
+      }
+      
       res.sendFile(assetPath);
     } else {
+      console.log(`❌ 静态资源不存在: ${assetPath}`);
       next();
     }
   });
@@ -298,6 +298,21 @@ app.get('/debug/static', (req, res) => {
   });
 });
 
+// 调试端点 - 测试SPA路由的静态资源访问
+app.get('/debug/spa-assets/:filename', (req, res) => {
+  const { filename } = req.params;
+  const assetPath = path.join(process.cwd(), '..', 'frontend/dist/assets', filename);
+  
+  res.json({
+    requestedFile: filename,
+    assetPath,
+    exists: fs.existsSync(assetPath),
+    fileSize: fs.existsSync(assetPath) ? fs.statSync(assetPath).size : 0,
+    cwd: process.cwd(),
+    env: process.env.NODE_ENV
+  });
+});
+
 // 404处理 - 前端路由回退
 app.use('*', (req, res) => {
   // 如果是API请求，返回JSON错误
@@ -309,8 +324,10 @@ app.use('*', (req, res) => {
   if (process.env.NODE_ENV === 'production') {
     const indexPath = path.join(process.cwd(), '..', 'frontend/dist/index.html');
     if (fs.existsSync(indexPath)) {
+      console.log(`🔄 SPA路由回退: ${req.path} -> index.html`);
       return res.sendFile(indexPath);
     } else {
+      console.log(`❌ 前端文件不存在: ${indexPath}`);
       return res.status(404).json({ error: '前端文件不存在，请先构建前端项目' });
     }
   }
