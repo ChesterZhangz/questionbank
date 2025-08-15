@@ -274,6 +274,9 @@ const CreateQuestionPage: React.FC = () => {
         '退出多题目模式',
         '确定要退出多题目模式吗？未保存的题目将会丢失。',
         () => {
+          // 先关闭模态框
+          closeConfirm();
+          // 然后执行操作
           setIsMultiMode(false);
           setMultiQuestions([]);
         }

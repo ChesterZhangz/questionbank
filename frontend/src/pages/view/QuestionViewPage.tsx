@@ -71,22 +71,25 @@ const QuestionViewPage: React.FC = () => {
       '确认删除',
       '确定要删除这道题目吗？',
       async () => {
-
-    try {
-      const response = await questionAPI.batchOperation({
-        operation: 'delete',
-        questionIds: [question.qid] // 使用qid而不是_id
-      });
-      
-      if (response.data.success) {
-        navigate('/questions');
-      } else {
-        setError(response.data.error || '删除失败');
+        try {
+          // 先关闭模态框
+          closeConfirm();
+          
+          const response = await questionAPI.batchOperation({
+            operation: 'delete',
+            questionIds: [question.qid] // 使用qid而不是_id
+          });
+          
+          if (response.data.success) {
+            navigate('/questions');
+          } else {
+            setError(response.data.error || '删除失败');
+          }
+        } catch (error: any) {
+          setError(error.response?.data?.error || '删除失败');
+        }
       }
-    } catch (error: any) {
-      setError(error.response?.data?.error || '删除失败');
-    }
-  });
+    );
   };
 
   if (loading) {

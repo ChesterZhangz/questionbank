@@ -1626,6 +1626,8 @@ const BatchUploadPage: React.FC = () => {
                             '清空历史记录',
                             '确定要清空所有历史记录和当前会话吗？这将清除所有上传的文件和题目。',
                             () => {
+                              // 先关闭模态框
+                              closeConfirm();
                               clearHistory();
                               clearCurrentSession();
                             }
@@ -1722,6 +1724,8 @@ const BatchUploadPage: React.FC = () => {
                                       '删除历史记录',
                                       `确定要删除历史记录 "${historyDoc.fileName}" 吗？`,
                                       () => {
+                                        // 先关闭模态框
+                                        closeConfirm();
                                         setUploadHistory(prev => {
                                           const newHistory = prev.filter((_, i) => i !== index);
                                           localStorage.setItem('batchUploadHistory', JSON.stringify(newHistory));

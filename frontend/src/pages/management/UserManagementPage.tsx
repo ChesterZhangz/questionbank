@@ -275,6 +275,9 @@ const UserManagementPage: React.FC = () => {
       '此操作不可撤销。',
       async () => {
         try {
+          // 先关闭模态框
+          closeConfirm();
+          
           const response = await userAPI.deleteUser(userId);
           if (response.data.success) {
             // 删除成功，刷新用户列表
