@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import path from 'path';
 import { config } from '../config';
 
 // 创建邮件传输器函数 - 每次调用时重新创建
@@ -28,13 +29,11 @@ const createEmailTemplate = (params: {
   lang: 'zh' | 'en'; // 语言选择
 }) => {
   const { title, subtitle, greeting, content, buttonText, buttonUrl, footerText, color, lang } = params;
-  const logoUrl = `${config.frontendUrl}/assets/Mareate.png`; // Mareate.png 图标地址
-
   return `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <!-- 标题栏 - 适应深色/浅色模式 -->
       <div style="background: ${color}; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-        <img src="${logoUrl}" alt="Mareate" style="max-height: 60px; margin-bottom: 15px;" />
+        <img src="cid:mareate-logo" alt="Mareate" style="max-height: 60px; margin-bottom: 15px;" />
         <h1 style="margin: 0; font-size: 24px; font-weight: 600;">${lang === 'zh' ? title.zh : title.en}</h1>
         <p style="margin: 10px 0 0 0; opacity: 0.9;">${lang === 'zh' ? subtitle.zh : subtitle.en}</p>
       </div>
@@ -168,7 +167,14 @@ export const emailService = {
         from: `"Mareate题库系统" <${process.env.QQ_EMAIL_USER}>`,
         to: data.email,
         subject: lang === 'zh' ? 'Mareate题库系统 - 邮箱验证' : 'Mareate Question Bank System - Email Verification',
-        html: emailTemplate
+        html: emailTemplate,
+        attachments: [
+          {
+            filename: 'Mareate.png',
+            path: path.join(__dirname, '../../public/Mareate.png'),
+            cid: 'mareate-logo' // 内联图片ID，与HTML中的cid:mareate-logo对应
+          }
+        ]
       };
 
       const transporter = createTransporter();
@@ -243,7 +249,14 @@ export const emailService = {
         from: `"Mareate题库系统" <${process.env.QQ_EMAIL_USER}>`,
         to: email,
         subject: lang === 'zh' ? 'Mareate题库系统 - 欢迎加入！' : 'Mareate Question Bank System - Welcome!',
-        html: emailTemplate
+        html: emailTemplate,
+        attachments: [
+          {
+            filename: 'Mareate.png',
+            path: path.join(__dirname, '../../public/Mareate.png'),
+            cid: 'mareate-logo'
+          }
+        ]
       };
 
       const transporter = createTransporter();
@@ -369,7 +382,14 @@ export const emailService = {
         subject: lang === 'zh' 
           ? `Mareate题库系统 - 邀请加入试卷库：${data.libraryName}` 
           : `Mareate Question Bank System - Invitation to Paper Library: ${data.libraryName}`,
-        html: emailTemplate
+        html: emailTemplate,
+        attachments: [
+          {
+            filename: 'Mareate.png',
+            path: path.join(__dirname, '../../public/Mareate.png'),
+            cid: 'mareate-logo'
+          }
+        ]
       };
 
       const transporter = createTransporter();
@@ -490,7 +510,14 @@ export const emailService = {
         subject: lang === 'zh' 
           ? `Mareate题库系统 - 邀请加入题库：${data.questionBankName}` 
           : `Mareate Question Bank System - Invitation to Question Bank: ${data.questionBankName}`,
-        html: emailTemplate
+        html: emailTemplate,
+        attachments: [
+          {
+            filename: 'Mareate.png',
+            path: path.join(__dirname, '../../public/Mareate.png'),
+            cid: 'mareate-logo'
+          }
+        ]
       };
 
       const transporter = createTransporter();
@@ -561,7 +588,14 @@ export const emailService = {
         from: `"Mareate题库系统" <${process.env.QQ_EMAIL_USER}>`,
         to: email,
         subject: lang === 'zh' ? '重置您的密码 - Mareate题库系统' : 'Reset Your Password - Mareate Question Bank System',
-        html: emailTemplate
+        html: emailTemplate,
+        attachments: [
+          {
+            filename: 'Mareate.png',
+            path: path.join(__dirname, '../../public/Mareate.png'),
+            cid: 'mareate-logo'
+          }
+        ]
       };
 
       const transporter = createTransporter();
@@ -655,7 +689,14 @@ export const emailService = {
         subject: lang === 'zh' 
           ? `您已被添加到题库"${data.questionBankName}" - Mareate题库系统` 
           : `You have been added to question bank "${data.questionBankName}" - Mareate Question Bank System`,
-        html: emailTemplate
+        html: emailTemplate,
+        attachments: [
+          {
+            filename: 'Mareate.png',
+            path: path.join(__dirname, '../../public/Mareate.png'),
+            cid: 'mareate-logo'
+          }
+        ]
       };
 
       const transporter = createTransporter();
@@ -742,7 +783,14 @@ export const emailService = {
         subject: lang === 'zh' 
           ? `您已被移出题库"${data.questionBankName}" - Mareate题库系统` 
           : `You have been removed from question bank "${data.questionBankName}" - Mareate Question Bank System`,
-        html: emailTemplate
+        html: emailTemplate,
+        attachments: [
+          {
+            filename: 'Mareate.png',
+            path: path.join(__dirname, '../../public/Mareate.png'),
+            cid: 'mareate-logo'
+          }
+        ]
       };
 
       const transporter = createTransporter();
