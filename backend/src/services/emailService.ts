@@ -171,7 +171,7 @@ export const emailService = {
         attachments: [
           {
             filename: 'Mareate.png',
-            path: path.join(__dirname, '../../public/Mareate.png'),
+            path: path.join(__dirname, '../../public/avatars/Mareate.png'),
             cid: 'mareate-logo' // 内联图片ID，与HTML中的cid:mareate-logo对应
           }
         ]
@@ -253,7 +253,7 @@ export const emailService = {
         attachments: [
           {
             filename: 'Mareate.png',
-            path: path.join(__dirname, '../../public/Mareate.png'),
+            path: path.join(__dirname, '../../public/avatars/Mareate.png'),
             cid: 'mareate-logo'
           }
         ]
@@ -386,7 +386,7 @@ export const emailService = {
         attachments: [
           {
             filename: 'Mareate.png',
-            path: path.join(__dirname, '../../public/Mareate.png'),
+            path: path.join(__dirname, '../../public/avatars/Mareate.png'),
             cid: 'mareate-logo'
           }
         ]
@@ -514,7 +514,7 @@ export const emailService = {
         attachments: [
           {
             filename: 'Mareate.png',
-            path: path.join(__dirname, '../../public/Mareate.png'),
+            path: path.join(__dirname, '../../public/avatars/Mareate.png'),
             cid: 'mareate-logo'
           }
         ]
@@ -592,7 +592,7 @@ export const emailService = {
         attachments: [
           {
             filename: 'Mareate.png',
-            path: path.join(__dirname, '../../public/Mareate.png'),
+            path: path.join(__dirname, '../../public/avatars/Mareate.png'),
             cid: 'mareate-logo'
           }
         ]
@@ -693,7 +693,7 @@ export const emailService = {
         attachments: [
           {
             filename: 'Mareate.png',
-            path: path.join(__dirname, '../../public/Mareate.png'),
+            path: path.join(__dirname, '../../public/avatars/Mareate.png'),
             cid: 'mareate-logo'
           }
         ]
@@ -787,7 +787,7 @@ export const emailService = {
         attachments: [
           {
             filename: 'Mareate.png',
-            path: path.join(__dirname, '../../public/Mareate.png'),
+            path: path.join(__dirname, '../../public/avatars/Mareate.png'),
             cid: 'mareate-logo'
           }
         ]

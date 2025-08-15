@@ -122,26 +122,32 @@ router.get('/', authMiddleware, async (req: QuestionBankRequest, res: any) => {
       // 确定用户权限
       let userRole = 'viewer';
       
-      // 正确处理populate后的creator字段
-      const creatorId = typeof bank.creator === 'object' && bank.creator._id 
+      // 正确处理populate后的creator字段，包括null检查
+      const creatorId = bank.creator && typeof bank.creator === 'object' && bank.creator._id 
         ? bank.creator._id.toString() 
-        : bank.creator.toString();
+        : bank.creator 
+        ? bank.creator.toString()
+        : null;
       const userIdStr = userId.toString();
       
-      if (creatorId === userIdStr) {
+      if (creatorId && creatorId === userIdStr) {
         userRole = 'creator';
-      } else if (bank.managers.some(manager => {
-        const managerId = typeof manager === 'object' && manager._id 
+      } else if (bank.managers && bank.managers.some(manager => {
+        const managerId = manager && typeof manager === 'object' && manager._id 
           ? manager._id.toString() 
-          : manager.toString();
-        return managerId === userIdStr;
+          : manager 
+          ? manager.toString()
+          : null;
+        return managerId && managerId === userIdStr;
       })) {
         userRole = 'manager';
-      } else if (bank.collaborators.some(collaborator => {
-        const collaboratorId = typeof collaborator === 'object' && collaborator._id 
+      } else if (bank.collaborators && bank.collaborators.some(collaborator => {
+        const collaboratorId = collaborator && typeof collaborator === 'object' && collaborator._id 
           ? collaborator._id.toString() 
-          : collaborator.toString();
-        return collaboratorId === userIdStr;
+          : collaborator 
+          ? collaborator.toString()
+          : null;
+        return collaboratorId && collaboratorId === userIdStr;
       })) {
         userRole = 'collaborator';
       } else if (user.enterpriseId && 
