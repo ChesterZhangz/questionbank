@@ -29,20 +29,21 @@ export const useAuthStore = create<AuthStore>()(
       },
       
       logout: async () => {
-        try {
-          // 调用后端API使token失效
-          await authAPI.logout();
-        } catch (error) {
-          console.error('登出API调用失败:', error);
-          // 即使API调用失败，也要清除本地状态
-        }
-        
+        // 先清除本地状态，防止API调用失败时的错误提示
         set({
           user: null,
           token: null,
           isAuthenticated: false,
           isLoading: false,
         });
+        
+        try {
+          // 调用后端API使token失效（在清除本地状态后调用）
+          await authAPI.logout();
+        } catch (error) {
+          console.error('登出API调用失败:', error);
+          // 本地状态已清除，忽略API错误
+        }
       },
       
       setLoading: (loading: boolean) =>

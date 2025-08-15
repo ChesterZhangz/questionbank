@@ -234,7 +234,7 @@ const RegisterPage: React.FC = () => {
                 value={formData.email}
                 onChange={handleChange}
                 error={errors.email}
-                placeholder="yourname@viquard.com"
+                placeholder="yourname@company"
                 required
                 icon={<Mail className="w-5 h-5" />}
               />
@@ -316,7 +316,7 @@ const RegisterPage: React.FC = () => {
                     password={formData.password}
                     username={formData.name}
                     email={formData.email}
-                    showDetails={true}
+                    compact={true}
                   />
                 </div>
               )}

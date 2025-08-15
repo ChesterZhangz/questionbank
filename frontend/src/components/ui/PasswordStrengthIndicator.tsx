@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, XCircle, Shield } from 'lucide-react';
+import { CheckCircle, XCircle, Shield, HelpCircle } from 'lucide-react';
 import { PasswordValidator } from '../../utils/passwordValidator';
 
 interface PasswordStrengthIndicatorProps {
@@ -8,6 +8,8 @@ interface PasswordStrengthIndicatorProps {
   username?: string;
   email?: string;
   showDetails?: boolean;
+  /** 紧凑模式：只显示强度条和悬浮提示 */
+  compact?: boolean;
   className?: string;
 }
 
@@ -16,8 +18,10 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
   username,
   email,
   showDetails = true,
+  compact = false,
   className = ''
 }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
   const validation = PasswordValidator.validate(password, username, email);
 
   const getStrengthColor = (strength: 'weak' | 'medium' | 'strong') => {
@@ -54,6 +58,132 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
     return null;
   }
 
+  // 紧凑模式渲染
+  if (compact) {
+    return (
+      <div className={`space-y-2 ${className}`}>
+        {/* 密码强度条 */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                密码强度
+              </span>
+              <span className={`text-sm font-medium ${getStrengthTextColor(validation.strength)}`}>
+                {PasswordValidator.getStrengthText(validation.strength)}
+              </span>
+            </div>
+            
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${getStrengthWidth(validation.score)}%` }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className={`h-full rounded-full transition-colors duration-300 ${getStrengthColor(validation.strength)}`}
+              />
+            </div>
+          </div>
+          
+          {/* 帮助图标和悬浮提示 */}
+          <div className="relative">
+            <button
+              type="button"
+              onMouseEnter={() => setShowTooltip(true)}
+              onMouseLeave={() => setShowTooltip(false)}
+              className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <HelpCircle className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            </button>
+            
+            {/* 悬浮提示 */}
+            <AnimatePresence>
+              {showTooltip && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 z-50"
+                >
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                    密码安全要求
+                  </h4>
+                  
+                  <div className="space-y-2">
+                    {/* 验证规则 */}
+                    <ValidationRule
+                      passed={password.length >= 8 && password.length <= 20}
+                      text="密码长度8-20位"
+                    />
+                    <ValidationRule
+                      passed={!username || !PasswordValidator.isRelatedToUsername(password, username)}
+                      text="不包含用户名相关内容"
+                    />
+                    <ValidationRule
+                      passed={!email || !PasswordValidator.isRelatedToEmail(password, email)}
+                      text="不包含邮箱相关内容"
+                    />
+                    <ValidationRule
+                      passed={!PasswordValidator.containsBirthDatePattern(password)}
+                      text="不包含生日日期格式"
+                    />
+                    <ValidationRule
+                      passed={!PasswordValidator.hasConsecutiveRepeats(password)}
+                      text="无连续三位相同字符"
+                    />
+                    
+                    {/* 复杂度要求 */}
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-2 mt-3">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">建议包含：</p>
+                      <ValidationRule
+                        passed={/[a-z]/.test(password)}
+                        text="小写字母"
+                      />
+                      <ValidationRule
+                        passed={/[A-Z]/.test(password)}
+                        text="大写字母"
+                      />
+                      <ValidationRule
+                        passed={/\d/.test(password)}
+                        text="数字"
+                      />
+                      <ValidationRule
+                        passed={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)}
+                        text="特殊字符"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* 错误提示 */}
+                  {validation.errors.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                      <div className="flex items-start gap-2">
+                        <XCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                        <div className="space-y-1">
+                          {validation.errors.slice(0, 2).map((error, index) => (
+                            <p key={index} className="text-xs text-red-600 dark:text-red-400">
+                              {error}
+                            </p>
+                          ))}
+                          {validation.errors.length > 2 && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              还有 {validation.errors.length - 2} 个问题...
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 完整模式渲染
   return (
     <div className={`space-y-3 ${className}`}>
       {/* 密码强度条 */}

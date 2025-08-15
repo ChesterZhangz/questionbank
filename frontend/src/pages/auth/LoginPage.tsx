@@ -138,7 +138,7 @@ const LoginPage: React.FC = () => {
                 value={formData.email}
                 onChange={handleChange}
                 error={errors.email}
-                placeholder="yourname@viquard.com"
+                placeholder="yourname@company"
                 required
                 icon={<Mail className="w-5 h-5" />}
               />
