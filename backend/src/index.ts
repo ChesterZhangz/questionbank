@@ -99,6 +99,25 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// 静态资源服务 - 生产环境
+if (process.env.NODE_ENV === 'production') {
+  // 服务前端构建文件
+  app.use(express.static(path.join(process.cwd(), '..', 'frontend/dist'), {
+    setHeaders: (res, path) => {
+      // 设置正确的MIME类型
+      if (path.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      } else if (path.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      } else if (path.endsWith('.woff') || path.endsWith('.woff2')) {
+        res.setHeader('Content-Type', 'font/woff');
+      } else if (path.endsWith('.ttf')) {
+        res.setHeader('Content-Type', 'font/ttf');
+      }
+    }
+  }));
+}
+
 // 静态文件服务
 app.use('/uploads', express.static('uploads'));
 app.use('/api/avatars', express.static('public/avatars', {
@@ -213,16 +232,30 @@ app.use('/api/library-purchases', authMiddleware, libraryPurchaseRoutes); // 试
 app.use('/api/enterprises', authMiddleware, enterpriseRoutes); // 企业管理路由（仅superadmin）
 app.use('/api/my-enterprise', authMiddleware, myEnterpriseRoutes); // 我的企业路由
 
-// 404处理
+// 健康检查端点
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// 404处理 - 前端路由回退
 app.use('*', (req, res) => {
   // 如果是API请求，返回JSON错误
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: '接口不存在' });
   }
   
-  // 如果是前端路由，返回index.html让前端处理
+  // 生产环境：所有非API请求都返回前端index.html
   if (process.env.NODE_ENV === 'production') {
-    return res.sendFile(path.join(process.cwd(), '..', 'frontend/dist/index.html'));
+    const indexPath = path.join(process.cwd(), '..', 'frontend/dist/index.html');
+    if (fs.existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    } else {
+      return res.status(404).json({ error: '前端文件不存在，请先构建前端项目' });
+    }
   }
   
   // 开发环境返回404
