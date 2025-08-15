@@ -164,48 +164,43 @@ if (process.env.NODE_ENV === 'production') {
     }
   }));
 
-  // 修复SPA路由的静态资源问题 - 统一处理所有 /path/assets/ 路径
-  app.use('/:path/assets/:filename', (req, res, next) => {
-    const { path: routePath, filename } = req.params;
+  // 添加静态资源访问日志
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/assets/') || req.path.startsWith('/auth/')) {
+      console.log(`📁 请求路径: ${req.method} ${req.path}`);
+    }
+    next();
+  });
+
+  // 修复SPA路由的静态资源问题 - 直接重定向所有 /path/assets/ 到 /assets/
+  app.use('/:path/assets/:filename', (req, res) => {
+    const { filename } = req.params;
     
     // 记录请求日志
-    console.log(`📁 SPA静态资源请求: ${req.method} ${req.path} -> 重定向到 /assets/${filename}`);
+    console.log(`📁 SPA静态资源重定向: ${req.path} -> /assets/${filename}`);
     
     // 直接重定向到根assets目录
-    const assetPath = path.join(process.cwd(), '..', 'frontend/dist/assets', filename);
+    res.redirect(`/assets/${filename}`);
+  });
+
+  // 专门处理SPA路由 - 确保 /auth/* 等路径能正确访问
+  app.use(['/auth', '/login', '/register', '/dashboard', '/question-banks', '/questions', '/settings', '/users', '/paper-generation', '/question-management'], (req, res, next) => {
+    console.log(`🔄 SPA路由处理: ${req.path}`);
     
-    if (fs.existsSync(assetPath)) {
-      // 设置正确的MIME类型
-      if (filename.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-      } else if (filename.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css; charset=utf-8');
-      } else if (filename.endsWith('.woff')) {
-        res.setHeader('Content-Type', 'font/woff');
-      } else if (filename.endsWith('.woff2')) {
-        res.setHeader('Content-Type', 'font/woff2');
-      } else if (filename.endsWith('.ttf')) {
-        res.setHeader('Content-Type', 'font/ttf');
-      } else if (filename.endsWith('.png')) {
-        res.setHeader('Content-Type', 'image/png');
-      } else if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) {
-        res.setHeader('Content-Type', 'image/jpeg');
-      } else if (filename.endsWith('.gif')) {
-        res.setHeader('Content-Type', 'image/gif');
-      } else if (filename.endsWith('.svg')) {
-        res.setHeader('Content-Type', 'image/svg+xml');
-      }
-      
-      // 设置缓存头
-      if (filename.endsWith('.js') || filename.endsWith('.css')) {
-        res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1年缓存
-      }
-      
-      res.sendFile(assetPath);
-    } else {
-      console.log(`❌ 静态资源不存在: ${assetPath}`);
-      next();
+    // 如果是静态资源请求，跳过
+    if (req.path.includes('/assets/')) {
+      return next();
     }
+    
+    // 对于SPA路由，返回index.html
+    const indexPath = path.join(process.cwd(), '..', 'frontend/dist/index.html');
+    if (fs.existsSync(indexPath)) {
+      console.log(`📄 返回SPA index.html: ${req.path}`);
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.sendFile(indexPath);
+    }
+    
+    next();
   });
 } else {
   console.log('🔧 开发环境：前端由 Vite 开发服务器提供');
@@ -324,11 +319,18 @@ app.use('*', (req, res) => {
   if (process.env.NODE_ENV === 'production') {
     const indexPath = path.join(process.cwd(), '..', 'frontend/dist/index.html');
     if (fs.existsSync(indexPath)) {
-      console.log(`🔄 SPA路由回退: ${req.path} -> index.html`);
+      console.log(`🔄 SPA路由回退: ${req.path} -> index.html (${indexPath})`);
+      
+      // 设置正确的Content-Type
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.sendFile(indexPath);
     } else {
       console.log(`❌ 前端文件不存在: ${indexPath}`);
-      return res.status(404).json({ error: '前端文件不存在，请先构建前端项目' });
+      return res.status(404).json({ 
+        error: '前端文件不存在，请先构建前端项目',
+        path: indexPath,
+        cwd: process.cwd()
+      });
     }
   }
   
