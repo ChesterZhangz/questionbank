@@ -20,7 +20,7 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import { questionAPI } from '../../services/api';
 import { useModal } from '../../hooks/useModal';
-import { HoverTooltip } from '../editor';
+
 import MagicTextTransition from '../animations/MagicTextTransition';
 // 导入LaTeXPreview组件，使用与QuestionCard相同的渲染逻辑
 import LaTeXPreview from '../editor/preview/LaTeXPreview';
@@ -321,23 +321,20 @@ const QuestionView: React.FC<QuestionViewProps> = ({
     }
   };
 
-  // 处理滚动事件 - 使用主容器的滚动
+  // 处理滚动事件
   const handleScroll = useCallback(() => {
-    // 使用主容器的滚动位置来计算进度
-    const mainContainer = document.querySelector('.main-content-container');
-    if (mainContainer) {
-      const { scrollTop, scrollHeight, clientHeight } = mainContainer as HTMLElement;
+    if (scrollContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
       const progress = scrollTop / (scrollHeight - clientHeight);
       setScrollProgress(progress);
     }
   }, []);
 
-  // 添加滚动事件监听器到主容器
   useEffect(() => {
-    const mainContainer = document.querySelector('.main-content-container');
-    if (mainContainer) {
-      mainContainer.addEventListener('scroll', handleScroll);
-      return () => mainContainer.removeEventListener('scroll', handleScroll);
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+      return () => scrollContainer.removeEventListener('scroll', handleScroll);
     }
   }, [handleScroll]);
 
@@ -469,14 +466,14 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                 </div>
 
                 {/* 内容区域 */}
-                <div className="flex-1 overflow-y-auto scrollbar-enhanced main-content-container">
+                <div className="flex-1 overflow-y-auto scrollbar-enhanced">
                   <div className="p-6">
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
                       {/* 主要内容 */}
                       <div className="xl:col-span-2">
                         <motion.div
                           key={animationKey}
-                          className="question-card-enhanced h-[calc(90vh-200px)]"
+                          className="question-card-enhanced h-[calc(90vh-200px)] overflow-hidden"
                           initial={{ 
                             opacity: 0, 
                             x: slideDirection === 'left' ? -20 : slideDirection === 'right' ? 20 : 0,
@@ -493,7 +490,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                           }}
                         >
                           <Card className="h-full flex flex-col">
-                            <div className="p-6 flex-1 flex flex-col">
+                            <div className="p-6 flex-1 flex flex-col overflow-hidden">
                               {/* 题目信息头部 */}
                               <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center space-x-3">
@@ -592,7 +589,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                               </div>
 
                               {/* 标签页内容 */}
-                              <div className="flex-1">
+                              <div className="flex-1 overflow-y-auto scrollbar-enhanced">
                                 <AnimatePresence mode="wait">
                                   {activeTab === 'question' && (
                                     <motion.div
@@ -898,24 +895,18 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                 </div>
                               ) : (
                                 <div className="flex-1 flex flex-col min-h-0">
-                                  {/* 相关题目列表 */}
+                                  {/* 滑动容器 */}
                                   <div 
                                     ref={scrollContainerRef}
-                                    className="flex-1"
+                                    className="flex-1 overflow-y-auto scrollbar-enhanced"
                                   >
                                     <div className="space-y-3 pr-3 pb-4">
                                       {relatedQuestions.map((q) => (
-                                        <HoverTooltip 
-                                          key={q.qid} 
-                                          content={q.content?.stem || '题目内容缺失'}
-                                          config={{ mode: 'lightweight' }}
+                                        <motion.div 
+                                          key={q.qid}
+                                          className="related-question-enhanced group relative border rounded-lg transition-all duration-200 cursor-pointer overflow-hidden shadow-sm hover:shadow-md"
+                                          onClick={() => handleViewRelatedQuestion(q.qid)}
                                         >
-                                          <motion.div 
-                                            className="related-question-enhanced group relative border rounded-lg transition-all duration-200 cursor-pointer overflow-hidden shadow-sm hover:shadow-md"
-                                            onClick={() => handleViewRelatedQuestion(q.qid)}
-                                            whileHover={{ scale: 1.01 }}
-                                            whileTap={{ scale: 0.99 }}
-                                          >
                                             <div className="p-3">
                                               <div className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">
                                                 <LaTeXPreview 
@@ -960,7 +951,6 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                               </div>
                                             </div>
                                           </motion.div>
-                                        </HoverTooltip>
                                       ))}
                                     </div>
                                   </div>

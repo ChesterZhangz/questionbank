@@ -340,11 +340,11 @@
   left: 100%;
 }
 
-/* 相关题目卡片优雅效果 */
+/* 相关题目卡片样式 - 移除放大效果 */
 .related-question-enhanced {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   position: relative;
 }
 
@@ -353,26 +353,9 @@
   border: 1px solid #4b5563;
 }
 
-.related-question-enhanced::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, transparent 0%, rgba(59, 130, 246, 0.03) 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.related-question-enhanced:hover::before {
-  opacity: 1;
-}
-
 .related-question-enhanced:hover {
-  transform: translateY(-2px);
   border-color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
 }
 
 /* 加载动画优雅效果 */
