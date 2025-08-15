@@ -428,30 +428,7 @@
   color: #d1d5db;
 }
 
-/* 搜索结果专用样式 - 仅针对非LaTeX内容 */
-.search-result-content .katex {
-  /* 使用KaTeX默认样式 */
-}
 
-.search-result-content .katex-display {
-  /* 使用KaTeX默认样式 */
-}
-
-.search-result-content .katex-display .katex {
-  /* 使用KaTeX默认样式 */
-}
-
-.search-result-content .katex:not(.katex-display) {
-  /* 使用KaTeX默认样式 */
-}
-
-.search-result-content .katex-html {
-  /* 使用KaTeX默认样式 */
-}
-
-.search-result-content .katex-display .katex-html {
-  /* 使用KaTeX默认样式 */
-}
 
 /* 打印样式 - 仅针对非LaTeX内容 */
 @media print {

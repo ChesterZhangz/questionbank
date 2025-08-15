@@ -165,7 +165,6 @@ router.post('/', authMiddleware, [
         status: enterprise.status,
         maxMembers: enterprise.maxMembers,
         currentMembers: enterprise.currentMembers,
-
       }
     });
   } catch (error) {

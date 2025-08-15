@@ -25,6 +25,11 @@ router.get('/info', authMiddleware, async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ success: false, error: '企业不存在' });
     }
 
+    // 动态计算企业当前成员数量
+    const actualMemberCount = await User.countDocuments({
+      email: { $regex: enterprise.emailSuffix.replace('@', '@'), $options: 'i' }
+    });
+
     // 获取用户在企业中的角色信息
     const enterpriseMember = await EnterpriseMember.findOne({
       userId: user._id,
@@ -51,7 +56,7 @@ router.get('/info', authMiddleware, async (req: AuthRequest, res: Response) => {
         size: enterprise.size,
         status: enterprise.status,
         maxMembers: enterprise.maxMembers,
-        currentMembers: enterprise.currentMembers
+        currentMembers: actualMemberCount  // 使用动态计算的成员数量
       },
       userRole: {
         isSuperAdmin: enterpriseMember.role === 'superAdmin',
