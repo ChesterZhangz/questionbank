@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import { body, validationResult, query } from 'express-validator';
 import { Question } from '../models/Question';
 import QuestionBank from '../models/QuestionBank';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest, authMiddleware } from '../middleware/auth';
 import { SimilarityDetectionService } from '../services/similarityDetectionService';
 import { User } from '../models/User';
 
@@ -1131,15 +1131,69 @@ router.get('/favorites', async (req: AuthRequest, res: Response) => {
 });
 
 // 获取相关题目
-router.get('/:qid/related', async (req: AuthRequest, res: Response) => {
+router.get('/:qid/related', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { qid } = req.params;
     const limit = parseInt(req.query.limit as string) || 3;
     const excludeCurrent = req.query.excludeCurrent === 'true';
 
+    // 权限验证：检查用户是否有权限访问该题目的相关题目
     const currentQuestion = await Question.findOne({ qid });
     if (!currentQuestion) {
       return res.status(404).json({ success: false, error: '题目不存在' });
+    }
+
+    // 检查用户权限
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, error: '用户未认证' });
+    }
+
+    // 检查用户是否有权限访问该题目
+    let hasPermission = false;
+
+    // 1. 用户创建的题目
+    if (currentQuestion.creator && currentQuestion.creator.toString() === user._id.toString()) {
+      hasPermission = true;
+    }
+
+    // 2. 检查题目所属题库的权限
+    if (currentQuestion.bid) {
+      const questionBank = await QuestionBank.findOne({ bid: currentQuestion.bid });
+      if (questionBank) {
+        // 用户是题库创建者
+        if (questionBank.creator && questionBank.creator.toString() === user._id.toString()) {
+          hasPermission = true;
+        }
+        // 用户是题库管理者
+        else if (questionBank.managers && questionBank.managers.includes(user._id)) {
+          hasPermission = true;
+        }
+        // 用户是题库协作者
+        else if (questionBank.collaborators && questionBank.collaborators.includes(user._id)) {
+          hasPermission = true;
+        }
+        // 用户是题库查看者
+        else if (questionBank.viewers && questionBank.viewers.includes(user._id)) {
+          hasPermission = true;
+        }
+        // 企业隐式查看者（同企业用户）
+        else if (questionBank.emailSuffix === user.emailSuffix && user.enterpriseId) {
+          hasPermission = true;
+        }
+      }
+    }
+
+    // 3. 超级管理员和管理员有所有权限
+    if (user.role === 'superadmin' || user.role === 'admin') {
+      hasPermission = true;
+    }
+
+    if (!hasPermission) {
+      return res.status(403).json({ 
+        success: false, 
+        error: '权限不足，无法获取该题目的相关题目' 
+      });
     }
 
     // 计算题目关联度的函数 - 优化版：确保标签一致性为前提
@@ -1532,11 +1586,43 @@ router.get('/:qid/related', async (req: AuthRequest, res: Response) => {
       return 0.7 * typeSim + 0.3 * countSim;
     };
 
-    // 获取候选题目 - 优化版：基于标签智能筛选
+    // 获取候选题目 - 优化版：基于标签智能筛选，同时考虑用户权限
     let candidateQuery: any = {
       _id: { $ne: currentQuestion._id },
       status: { $ne: 'deleted' }
     };
+
+    // 根据用户权限限制候选题目范围
+    if (user.role !== 'superadmin' && user.role !== 'admin') {
+      // 普通用户只能看到有权限的题目
+      const userBankQuery = {
+        $or: [
+          { creator: user._id }, // 用户创建的题库
+          { managers: user._id }, // 用户管理的题库
+          { collaborators: user._id }, // 用户协作的题库
+          { viewers: user._id }, // 用户查看的题库
+          { 
+            emailSuffix: user.emailSuffix, // 用户企业邮箱后缀匹配的题库
+            status: 'active' // 题库状态为活跃
+          }
+        ]
+      };
+
+      const userBanks = await QuestionBank.find(userBankQuery);
+      const userBankIds = userBanks.map((bank: any) => bank._id.toString());
+      const userBankBids = userBanks.map((bank: any) => bank.bid);
+
+      // 限制候选题目必须在用户有权限的题库中
+      candidateQuery.$and = [
+        {
+          $or: [
+            { bid: { $in: userBankIds } }, // 题目属于用户相关题库
+            { bid: { $in: userBankBids } }, // 题目属于用户相关题库（bid字段）
+            { creator: user._id } // 用户创建的题目
+          ]
+        }
+      ];
+    }
 
     // 如果当前题目有标签，使用标签进行预筛选
     if (currentQuestion.tags && currentQuestion.tags.length > 0) {
