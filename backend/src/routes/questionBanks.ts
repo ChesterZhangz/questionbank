@@ -381,6 +381,81 @@ router.get('/:bid/members', authMiddleware, checkQuestionBankPermission, async (
 });
 
 // 移除题库成员
+// 添加成员
+router.post('/:bid/members', authMiddleware, checkQuestionBankPermission, [
+  body('email').isEmail().withMessage('请输入有效的邮箱地址'),
+  body('role').isIn(['manager', 'collaborator']).withMessage('角色必须是manager或collaborator')
+], async (req: QuestionBankRequest, res: any) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '输入验证失败',
+        details: errors.array()
+      });
+    }
+
+    const questionBank = req.questionBank;
+    const userRole = req.userRole;
+
+    // 只有创建者和管理者可以添加成员
+    if (userRole !== 'creator' && userRole !== 'manager') {
+      return res.status(403).json({ success: false, error: '没有权限添加成员' });
+    }
+
+    const { email, role } = req.body;
+
+    // 查找用户
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ success: false, error: '该邮箱用户不存在' });
+    }
+
+    // 检查是否已经是成员
+    const isAlreadyMember = questionBank.managers.includes(user._id) || 
+                          questionBank.collaborators.includes(user._id) ||
+                          questionBank.creator.toString() === (user._id as any).toString();
+    
+    if (isAlreadyMember) {
+      return res.status(400).json({ success: false, error: '该用户已经是题库成员' });
+    }
+
+    // 添加成员
+    if (role === 'manager') {
+      questionBank.managers.push(user._id);
+    } else {
+      questionBank.collaborators.push(user._id);
+    }
+    
+    await questionBank.save();
+
+    // 发送成员添加通知邮件
+    try {
+      const inviter = await User.findById(req.user._id);
+      await emailService.sendMemberAddedEmail({
+        email: user.email,
+        name: user.name,
+        role: role,
+        questionBankName: questionBank.name,
+        inviterName: inviter?.name || '管理员',
+        questionBankUrl: `${process.env.FRONTEND_URL}/question-banks/${questionBank.bid}`
+      });
+    } catch (emailError) {
+      console.error('发送成员添加邮件失败:', emailError);
+      // 不影响添加成员的主要功能
+    }
+
+    return res.json({ 
+      success: true, 
+      message: '成员添加成功'
+    });
+  } catch (error) {
+    console.error('添加成员失败:', error);
+    return res.status(500).json({ success: false, error: '添加成员失败' });
+  }
+});
+
 router.delete('/:bid/members/:userId', authMiddleware, checkQuestionBankPermission, async (req: QuestionBankRequest, res: any) => {
   try {
     const questionBank = req.questionBank;
@@ -403,6 +478,20 @@ router.delete('/:bid/members/:userId', authMiddleware, checkQuestionBankPermissi
     questionBank.collaborators = questionBank.collaborators.filter((id: any) => id.toString() !== userId);
 
     await questionBank.save();
+
+    // 发送成员移除通知邮件
+    try {
+      const remover = await User.findById(req.user._id);
+      await emailService.sendMemberRemovedEmail({
+        email: user.email,
+        name: user.name,
+        questionBankName: questionBank.name,
+        removerName: remover?.name || '管理员'
+      });
+    } catch (emailError) {
+      console.error('发送成员移除邮件失败:', emailError);
+      // 不影响移除成员的主要功能
+    }
 
     return res.json({
       success: true,

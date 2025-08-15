@@ -9,7 +9,12 @@ import {
   Shield, 
   User as UserIcon,
   Mail,
-  ArrowLeft
+  ArrowLeft,
+  CheckSquare,
+  Square,
+  UserX,
+  Send,
+  Upload
 } from 'lucide-react';
 import { questionBankAPI } from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
@@ -57,6 +62,14 @@ const QuestionBankMembersPage: React.FC = () => {
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [newMemberRole, setNewMemberRole] = useState<'manager' | 'collaborator'>('collaborator');
   const [isAddingMember, setIsAddingMember] = useState(false);
+
+  // 批量操作状态
+  const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
+  const [showBatchAdd, setShowBatchAdd] = useState(false);
+  const [batchEmails, setBatchEmails] = useState('');
+  const [batchRole, setBatchRole] = useState<'manager' | 'collaborator'>('collaborator');
+  const [isBatchAdding, setIsBatchAdding] = useState(false);
+  const [isBatchRemoving, setIsBatchRemoving] = useState(false);
 
   useEffect(() => {
     if (bid) {
@@ -217,6 +230,108 @@ const QuestionBankMembersPage: React.FC = () => {
     }
   };
 
+  // 批量选择操作
+  const handleSelectMember = (memberId: string) => {
+    const newSelected = new Set(selectedMembers);
+    if (newSelected.has(memberId)) {
+      newSelected.delete(memberId);
+    } else {
+      newSelected.add(memberId);
+    }
+    setSelectedMembers(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedMembers.size === filteredMembers.length) {
+      setSelectedMembers(new Set());
+    } else {
+      const allMemberIds = filteredMembers.map(m => m._id);
+      setSelectedMembers(new Set(allMemberIds));
+    }
+  };
+
+  // 批量添加成员
+  const handleBatchAddMembers = async () => {
+    if (!batchEmails.trim()) return;
+
+    try {
+      setIsBatchAdding(true);
+      const emails = batchEmails
+        .split(/[,\n\r]/)
+        .map(email => email.trim())
+        .filter(email => email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+
+      if (emails.length === 0) {
+        showErrorRightSlide('批量添加失败', '请输入有效的邮箱地址');
+        return;
+      }
+
+      const results = await Promise.allSettled(
+        emails.map(email => 
+          questionBankAPI.addMember(bid!, {
+            email,
+            role: batchRole
+          })
+        )
+      );
+
+      const successCount = results.filter(r => r.status === 'fulfilled').length;
+      const failCount = results.filter(r => r.status === 'rejected').length;
+
+      setBatchEmails('');
+      setShowBatchAdd(false);
+      fetchMembers();
+
+      if (failCount === 0) {
+        showErrorRightSlide('批量添加成功', `成功添加 ${successCount} 个成员`);
+      } else {
+        showErrorRightSlide('批量添加完成', `成功添加 ${successCount} 个成员，${failCount} 个失败`);
+      }
+    } catch (error: any) {
+      showErrorRightSlide('批量添加失败', error.response?.data?.error || '批量添加成员失败');
+    } finally {
+      setIsBatchAdding(false);
+    }
+  };
+
+  // 批量删除成员
+  const handleBatchRemoveMembers = async () => {
+    if (selectedMembers.size === 0) return;
+
+    showConfirm(
+      '批量删除成员',
+      `确定要删除选中的 ${selectedMembers.size} 个成员吗？`,
+      async () => {
+        try {
+          closeConfirm();
+          setIsBatchRemoving(true);
+          
+          const results = await Promise.allSettled(
+            Array.from(selectedMembers).map(memberId => 
+              questionBankAPI.removeMember(bid!, memberId)
+            )
+          );
+
+          const successCount = results.filter(r => r.status === 'fulfilled').length;
+          const failCount = results.filter(r => r.status === 'rejected').length;
+
+          setSelectedMembers(new Set());
+          fetchMembers();
+
+          if (failCount === 0) {
+            showErrorRightSlide('批量删除成功', `成功删除 ${successCount} 个成员`);
+          } else {
+            showErrorRightSlide('批量删除完成', `成功删除 ${successCount} 个成员，${failCount} 个失败`);
+          }
+        } catch (error: any) {
+          showErrorRightSlide('批量删除失败', error.response?.data?.error || '批量删除成员失败');
+        } finally {
+          setIsBatchRemoving(false);
+        }
+      }
+    );
+  };
+
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'creator':
@@ -326,7 +441,7 @@ const QuestionBankMembersPage: React.FC = () => {
                 className="flex items-center gap-2"
               >
                 <UserPlus className="w-4 w-4" />
-                添加成员
+                单个添加
               </Button>
             )}
           </div>
@@ -434,6 +549,56 @@ const QuestionBankMembersPage: React.FC = () => {
           </div>
         </Card>
 
+        {/* 批量操作工具栏 */}
+        <Card className="mb-6">
+          <div className="p-6">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleSelectAll}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                  >
+                    {selectedMembers.size === filteredMembers.length ? (
+                      <CheckSquare className="w-4 h-4" />
+                    ) : (
+                      <Square className="w-4 h-4" />
+                    )}
+                    {selectedMembers.size === filteredMembers.length ? '取消全选' : '全选'}
+                  </button>
+                  {selectedMembers.size > 0 && (
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      已选择 {selectedMembers.size} 个成员
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowBatchAdd(true)}
+                  className="bg-green-500 hover:bg-green-600 text-white"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  批量添加
+                </Button>
+                
+                {selectedMembers.size > 0 && (
+                  <Button
+                    onClick={handleBatchRemoveMembers}
+                    variant="outline"
+                    loading={isBatchRemoving}
+                    className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                  >
+                    <UserX className="w-4 h-4 mr-2" />
+                    批量删除 ({selectedMembers.size})
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </Card>
+
         {/* 成员列表 */}
         <Card>
           <div className="p-6">
@@ -454,6 +619,19 @@ const QuestionBankMembersPage: React.FC = () => {
                     className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
                   >
                     <div className="flex items-center gap-4">
+                      {/* 批量选择复选框 */}
+                      {canManageMembers && canRemoveMember(member.role) && (
+                        <button
+                          onClick={() => handleSelectMember(member._id)}
+                          className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          {selectedMembers.has(member._id) ? (
+                            <CheckSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          ) : (
+                            <Square className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                          )}
+                        </button>
+                      )}
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
                         <span className="text-white font-medium">
                           {member.name && member.name.length > 0 ? member.name.charAt(0).toUpperCase() : '?'}
@@ -568,6 +746,77 @@ const QuestionBankMembersPage: React.FC = () => {
                   </Button>
                 </div>
               </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* 批量添加成员模态框 */}
+      {showBatchAdd && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4"
+          >
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">批量添加成员</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    邮箱地址（每行一个或用逗号分隔）
+                  </label>
+                  <textarea
+                    value={batchEmails}
+                    onChange={(e) => setBatchEmails(e.target.value)}
+                    placeholder="user1@company.com&#10;user2@company.com&#10;user3@company.com"
+                    rows={6}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    只能添加 @{questionBank?.emailSuffix} 邮箱的用户
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    角色
+                  </label>
+                  <select
+                    value={batchRole}
+                    onChange={(e) => setBatchRole(e.target.value as 'manager' | 'collaborator')}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="collaborator">协作者</option>
+                    <option value="manager">管理者</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowBatchAdd(false);
+                      setBatchEmails('');
+                    }}
+                    className="flex-1"
+                  >
+                    取消
+                  </Button>
+                  <Button
+                    onClick={handleBatchAddMembers}
+                    loading={isBatchAdding}
+                    disabled={isBatchAdding || !batchEmails.trim()}
+                    className="flex-1 bg-green-500 hover:bg-green-600"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    {isBatchAdding ? '添加中...' : '批量添加'}
+                  </Button>
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>

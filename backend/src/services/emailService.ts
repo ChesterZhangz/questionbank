@@ -461,5 +461,140 @@ export const emailService = {
       console.error('发送密码重置邮件失败:', error);
       return false;
     }
+  },
+
+  // 发送成员添加通知邮件
+  async sendMemberAddedEmail(data: {
+    email: string;
+    name: string;
+    role: string;
+    questionBankName: string;
+    inviterName: string;
+    questionBankUrl: string;
+  }): Promise<boolean> {
+    try {
+      const roleText = data.role === 'manager' ? '管理者' : '协作者';
+      
+      const mailOptions = {
+        from: `"MaReaTe题库系统" <${process.env.QQ_EMAIL_USER}>`,
+        to: data.email,
+        subject: `您已被添加到题库"${data.questionBankName}" - MaReaTe题库系统`,
+        html: `
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+              <h1 style="margin: 0; font-size: 28px; font-weight: 700;">🎉 欢迎加入题库</h1>
+              <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">MaReaTe题库系统</p>
+            </div>
+            
+            <div style="background: #fff; padding: 40px; border-radius: 0 0 10px 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+              <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                亲爱的 <strong>${data.name}</strong>，
+              </p>
+              
+              <p style="color: #666; line-height: 1.6; margin-bottom: 25px;">
+                恭喜！您已被 <strong>${data.inviterName}</strong> 添加到题库 <strong>"${data.questionBankName}"</strong>，您的角色是 <strong>${roleText}</strong>。
+              </p>
+              
+              <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981; margin: 30px 0;">
+                <p style="color: #166534; margin: 0; font-size: 14px; line-height: 1.5;">
+                  <strong>🎯 您现在可以：</strong><br>
+                  ${data.role === 'manager' 
+                    ? '• 查看和编辑题库中的所有题目<br>• 管理题库设置和成员<br>• 导入和导出题目<br>• 生成试卷和统计分析' 
+                    : '• 查看题库中的所有题目<br>• 添加和编辑题目<br>• 参与题目讨论和协作<br>• 使用题目搜索和筛选功能'
+                  }
+                </p>
+              </div>
+              
+              <div style="text-align: center; margin: 35px 0;">
+                <a href="${data.questionBankUrl}" 
+                   style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+                          color: white; text-decoration: none; padding: 16px 32px; 
+                          border-radius: 8px; font-weight: 600; font-size: 16px; 
+                          box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+                          transition: all 0.3s ease;">
+                  🚀 立即访问题库
+                </a>
+              </div>
+              
+              <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;">
+              
+              <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
+                此邮件由系统自动发送，请勿回复。<br>
+                如有问题请联系管理员：admin@viquard.com
+              </p>
+            </div>
+          </div>
+        `
+      };
+
+      const transporter = createTransporter();
+      await transporter.sendMail(mailOptions);
+      return true;
+    } catch (error) {
+      console.error('发送成员添加邮件失败:', error);
+      return false;
+    }
+  },
+
+  // 发送成员移除通知邮件
+  async sendMemberRemovedEmail(data: {
+    email: string;
+    name: string;
+    questionBankName: string;
+    removerName: string;
+  }): Promise<boolean> {
+    try {
+      const mailOptions = {
+        from: `"MaReaTe题库系统" <${process.env.QQ_EMAIL_USER}>`,
+        to: data.email,
+        subject: `您已被移出题库"${data.questionBankName}" - MaReaTe题库系统`,
+        html: `
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <div style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+              <h1 style="margin: 0; font-size: 28px; font-weight: 700;">📋 题库访问变更</h1>
+              <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">MaReaTe题库系统</p>
+            </div>
+            
+            <div style="background: #fff; padding: 40px; border-radius: 0 0 10px 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+              <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                亲爱的 <strong>${data.name}</strong>，
+              </p>
+              
+              <p style="color: #666; line-height: 1.6; margin-bottom: 25px;">
+                我们通知您，您已被 <strong>${data.removerName}</strong> 从题库 <strong>"${data.questionBankName}"</strong> 中移除。
+              </p>
+              
+              <div style="background: #fef3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #f97316; margin: 30px 0;">
+                <p style="color: #92400e; margin: 0; font-size: 14px; line-height: 1.5;">
+                  <strong>📢 重要提醒：</strong><br>
+                  • 您将无法再访问该题库的内容<br>
+                  • 您之前的贡献和数据将被保留<br>
+                  • 如有疑问，请联系题库管理员<br>
+                  • 如需重新加入，请联系题库创建者
+                </p>
+              </div>
+              
+              <p style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 15px;">
+                感谢您之前对题库的贡献，祝您工作顺利！
+              </p>
+              
+              <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;">
+              
+              <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
+                此邮件由系统自动发送，请勿回复。<br>
+                如有问题请联系管理员：admin@viquard.com
+              </p>
+            </div>
+          </div>
+        `
+      };
+
+      const transporter = createTransporter();
+      await transporter.sendMail(mailOptions);
+      return true;
+    } catch (error) {
+      console.error('发送成员移除邮件失败:', error);
+      return false;
+    }
   }
 }; 

@@ -694,11 +694,27 @@ router.post('/forgot-password', [
     // 查找用户
     const user = await User.findOne({ email });
     
-    // 无论用户是否存在，都返回成功消息（安全考虑）
+    // 检查用户是否存在
     if (!user) {
-      return res.json({
-        success: true,
-        message: '如果该邮箱已注册，您将收到重置密码的邮件'
+      return res.status(400).json({
+        success: false,
+        message: '该邮箱地址未注册，请检查邮箱地址或先注册账号'
+      });
+    }
+
+    // 检查用户账号状态
+    if (!user.isActive) {
+      return res.status(400).json({
+        success: false,
+        message: '该账号已被禁用，无法重置密码'
+      });
+    }
+
+    // 检查邮箱是否已验证
+    if (!user.isEmailVerified) {
+      return res.status(400).json({
+        success: false,
+        message: '该邮箱尚未完成验证，请先验证邮箱后再重置密码'
       });
     }
 
