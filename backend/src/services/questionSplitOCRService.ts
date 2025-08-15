@@ -91,11 +91,7 @@ export class QuestionSplitOCRService {
     returnType?: string;
   }): Promise<MathpixImageResponse> {
     const requestBody: any = {
-      formats: ['text', 'latex_styled'],
-      data_options: {
-        include_line_data: true,
-        include_word_data: true
-      }
+      formats: ['text', 'latex_styled']
     };
 
     if (params.imageBase64) {

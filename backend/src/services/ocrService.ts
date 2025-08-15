@@ -42,11 +42,7 @@ async function callMathpixOCR(imageBase64: string): Promise<MathpixOCRResponse> 
 
     const requestBody = {
       src: `data:image/jpeg;base64,${imageBase64}`,
-      formats: ['text', 'latex_styled'],
-      data_options: {
-        include_line_data: true,
-        include_word_data: true
-      }
+      formats: ['text', 'latex_styled']
     };
 
     const response = await axios.post('https://api.mathpix.com/v3/text', requestBody, {
