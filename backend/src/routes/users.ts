@@ -12,13 +12,13 @@ async function cascadeDeleteUser(userId: mongoose.Types.ObjectId, enterpriseId?:
   
   try {
     // 1. 删除用户创建的题库
-    const QuestionBank = require('../models/QuestionBank').default;
+    const QuestionBank = mongoose.model('QuestionBank');
+    const Question = mongoose.model('Question');
     const userQuestionBanks = await QuestionBank.find({ creator: userId });
     for (const bank of userQuestionBanks) {
       console.log(`删除用户创建的题库: ${bank.name} (${bank._id})`);
       
       // 删除题库中的所有题目
-      const Question = require('../models/Question').default;
       await Question.deleteMany({ questionBank: bank._id });
       console.log(`删除题库 ${bank._id} 中的所有题目`);
       
@@ -43,23 +43,22 @@ async function cascadeDeleteUser(userId: mongoose.Types.ObjectId, enterpriseId?:
     console.log('从所有题库成员列表中移除用户');
 
     // 3. 删除用户创建的独立题目（不属于任何题库的题目）
-    const Question = require('../models/Question').default;
     const deletedQuestions = await Question.deleteMany({ creator: userId });
     console.log(`删除了 ${deletedQuestions.deletedCount} 个用户创建的独立题目`);
 
     // 4. 删除用户创建的试卷
-    const Paper = require('../models/Paper').default;
+    const Paper = mongoose.model('Paper');
     const deletedPapers = await Paper.deleteMany({ owner: userId });
     console.log(`删除了 ${deletedPapers.deletedCount} 个用户创建的试卷`);
 
     // 5. 处理用户拥有的试题库
-    const Library = require('../models/Library').default;
+    const Library = mongoose.model('Library');
+    const LibraryPurchase = mongoose.model('LibraryPurchase');
     const userLibraries = await Library.find({ owner: userId });
     for (const library of userLibraries) {
       console.log(`删除用户拥有的试题库: ${library.name} (${library._id})`);
       
       // 删除试题库的购买记录
-      const LibraryPurchase = require('../models/LibraryPurchase').default;
       await LibraryPurchase.deleteMany({ libraryId: library._id });
       
       // 删除试题库
@@ -75,25 +74,24 @@ async function cascadeDeleteUser(userId: mongoose.Types.ObjectId, enterpriseId?:
     console.log('从所有试题库成员列表中移除用户');
 
     // 7. 删除用户的试题库购买记录
-    const LibraryPurchase = require('../models/LibraryPurchase').default;
     const deletedPurchases = await LibraryPurchase.deleteMany({ userId: userId });
     console.log(`删除了 ${deletedPurchases.deletedCount} 个用户的购买记录`);
 
     // 8. 删除用户的登录历史
-    const LoginHistory = require('../models/LoginHistory').default;
+    const LoginHistory = mongoose.model('LoginHistory');
     const deletedHistory = await LoginHistory.deleteMany({ userId: userId });
     console.log(`删除了 ${deletedHistory.deletedCount} 条用户登录历史`);
 
     // 9. 删除用户的token黑名单记录
-    const TokenBlacklist = require('../models/TokenBlacklist').default;
+    const TokenBlacklist = mongoose.model('TokenBlacklist');
     const deletedTokens = await TokenBlacklist.deleteMany({ userId: userId });
     console.log(`删除了 ${deletedTokens.deletedCount} 条用户token黑名单记录`);
 
     // 10. 删除用户的游戏记录和统计
     try {
-      const GameRecord = require('../models/Game').GameRecord;
-      const UserGameStats = require('../models/Game').UserGameStats;
-      const Leaderboard = require('../models/Game').Leaderboard;
+      const GameRecord = mongoose.model('GameRecord');
+      const UserGameStats = mongoose.model('UserGameStats');
+      const Leaderboard = mongoose.model('Leaderboard');
       
       const deletedGameRecords = await GameRecord.deleteMany({ userId: userId });
       const deletedGameStats = await UserGameStats.deleteMany({ userId: userId });
@@ -108,8 +106,8 @@ async function cascadeDeleteUser(userId: mongoose.Types.ObjectId, enterpriseId?:
 
     // 11. 删除相关邀请记录
     try {
-      const Invitation = require('../models/Invitation').default;
-      const LibraryInvitation = require('../models/LibraryInvitation').default;
+      const Invitation = mongoose.model('Invitation');
+      const LibraryInvitation = mongoose.model('LibraryInvitation');
       
       const deletedInvitations = await Invitation.deleteMany({ 
         $or: [
@@ -131,7 +129,7 @@ async function cascadeDeleteUser(userId: mongoose.Types.ObjectId, enterpriseId?:
     // 12. 删除企业成员记录
     if (enterpriseId) {
       try {
-        const EnterpriseMember = require('../models/EnterpriseMember').default;
+        const EnterpriseMember = mongoose.model('EnterpriseMember');
         await EnterpriseMember.findOneAndDelete({
           userId: userId,
           enterpriseId: enterpriseId
@@ -181,7 +179,8 @@ async function cleanupOrphanedData() {
 
     // 1. 清理题库相关数据
     console.log('清理题库相关数据...');
-    const QuestionBank = require('../models/QuestionBank').default;
+    const QuestionBank = mongoose.model('QuestionBank');
+    const Question = mongoose.model('Question');
     
     // 删除创建者不存在的题库
     const orphanedQuestionBanks = await QuestionBank.find({
@@ -192,7 +191,6 @@ async function cleanupOrphanedData() {
       console.log(`删除孤立题库: ${bank.name} (创建者已不存在)`);
       
       // 删除题库中的所有题目
-      const Question = require('../models/Question').default;
       const deletedQuestions = await Question.deleteMany({ questionBank: bank._id });
       cleanupReport.questionsDeleted += deletedQuestions.deletedCount || 0;
       
@@ -238,7 +236,6 @@ async function cleanupOrphanedData() {
 
     // 2. 删除创建者不存在的独立题目
     console.log('清理独立题目...');
-    const Question = require('../models/Question').default;
     const orphanedQuestions = await Question.deleteMany({
       creator: { $nin: existingUsers.map(u => u._id) }
     });
@@ -246,7 +243,7 @@ async function cleanupOrphanedData() {
 
     // 3. 删除拥有者不存在的试卷
     console.log('清理试卷...');
-    const Paper = require('../models/Paper').default;
+    const Paper = mongoose.model('Paper');
     const orphanedPapers = await Paper.deleteMany({
       owner: { $nin: existingUsers.map(u => u._id) }
     });
@@ -254,7 +251,8 @@ async function cleanupOrphanedData() {
 
     // 4. 清理试题库相关数据
     console.log('清理试题库相关数据...');
-    const Library = require('../models/Library').default;
+    const Library = mongoose.model('Library');
+    const LibraryPurchase = mongoose.model('LibraryPurchase');
     
     // 删除拥有者不存在的试题库
     const orphanedLibraries = await Library.find({
@@ -265,7 +263,6 @@ async function cleanupOrphanedData() {
       console.log(`删除孤立试题库: ${library.name} (拥有者已不存在)`);
       
       // 删除相关购买记录
-      const LibraryPurchase = require('../models/LibraryPurchase').default;
       await LibraryPurchase.deleteMany({ libraryId: library._id });
       
       await Library.findByIdAndDelete(library._id);
@@ -296,7 +293,6 @@ async function cleanupOrphanedData() {
 
     // 5. 删除用户不存在的购买记录
     console.log('清理购买记录...');
-    const LibraryPurchase = require('../models/LibraryPurchase').default;
     const orphanedPurchases = await LibraryPurchase.deleteMany({
       userId: { $nin: existingUsers.map(u => u._id) }
     });
@@ -304,7 +300,7 @@ async function cleanupOrphanedData() {
 
     // 6. 删除用户不存在的登录历史
     console.log('清理登录历史...');
-    const LoginHistory = require('../models/LoginHistory').default;
+    const LoginHistory = mongoose.model('LoginHistory');
     const orphanedHistory = await LoginHistory.deleteMany({
       userId: { $nin: existingUsers.map(u => u._id) }
     });
@@ -312,7 +308,7 @@ async function cleanupOrphanedData() {
 
     // 7. 删除用户不存在的token黑名单
     console.log('清理token黑名单...');
-    const TokenBlacklist = require('../models/TokenBlacklist').default;
+    const TokenBlacklist = mongoose.model('TokenBlacklist');
     const orphanedTokens = await TokenBlacklist.deleteMany({
       userId: { $nin: existingUsers.map(u => u._id) }
     });
@@ -321,9 +317,9 @@ async function cleanupOrphanedData() {
     // 8. 清理游戏相关数据
     console.log('清理游戏数据...');
     try {
-      const GameRecord = require('../models/Game').GameRecord;
-      const UserGameStats = require('../models/Game').UserGameStats;
-      const Leaderboard = require('../models/Game').Leaderboard;
+      const GameRecord = mongoose.model('GameRecord');
+      const UserGameStats = mongoose.model('UserGameStats');
+      const Leaderboard = mongoose.model('Leaderboard');
       
       const orphanedGameRecords = await GameRecord.deleteMany({
         userId: { $nin: existingUsers.map(u => u._id) }
@@ -345,8 +341,8 @@ async function cleanupOrphanedData() {
     // 9. 清理邀请记录
     console.log('清理邀请记录...');
     try {
-      const Invitation = require('../models/Invitation').default;
-      const LibraryInvitation = require('../models/LibraryInvitation').default;
+      const Invitation = mongoose.model('Invitation');
+      const LibraryInvitation = mongoose.model('LibraryInvitation');
       
       const orphanedInvitations = await Invitation.deleteMany({
         inviterId: { $nin: existingUsers.map(u => u._id) }
@@ -364,7 +360,7 @@ async function cleanupOrphanedData() {
     // 10. 清理企业成员记录
     console.log('清理企业成员记录...');
     try {
-      const EnterpriseMember = require('../models/EnterpriseMember').default;
+      const EnterpriseMember = mongoose.model('EnterpriseMember');
       const orphanedEnterpriseMembers = await EnterpriseMember.deleteMany({
         userId: { $nin: existingUsers.map(u => u._id) }
       });
@@ -806,13 +802,13 @@ router.get('/orphaned-data-stats', authMiddleware, async (req: AuthRequest, res:
 
     try {
       // 统计孤立数据数量
-      const QuestionBank = require('../models/QuestionBank').default;
-      const Question = require('../models/Question').default;
-      const Paper = require('../models/Paper').default;
-      const Library = require('../models/Library').default;
-      const LibraryPurchase = require('../models/LibraryPurchase').default;
-      const LoginHistory = require('../models/LoginHistory').default;
-      const TokenBlacklist = require('../models/TokenBlacklist').default;
+      const QuestionBank = mongoose.model('QuestionBank');
+      const Question = mongoose.model('Question');
+      const Paper = mongoose.model('Paper');
+      const Library = mongoose.model('Library');
+      const LibraryPurchase = mongoose.model('LibraryPurchase');
+      const LoginHistory = mongoose.model('LoginHistory');
+      const TokenBlacklist = mongoose.model('TokenBlacklist');
       
       stats.orphanedData.questionBanks = await QuestionBank.countDocuments({
         creator: { $nin: existingUserIds }
@@ -844,9 +840,9 @@ router.get('/orphaned-data-stats', authMiddleware, async (req: AuthRequest, res:
       
       // 游戏相关数据统计
       try {
-        const GameRecord = require('../models/Game').GameRecord;
-        const UserGameStats = require('../models/Game').UserGameStats;
-        const Leaderboard = require('../models/Game').Leaderboard;
+        const GameRecord = mongoose.model('GameRecord');
+        const UserGameStats = mongoose.model('UserGameStats');
+        const Leaderboard = mongoose.model('Leaderboard');
         
         stats.orphanedData.gameRecords = await GameRecord.countDocuments({
           userId: { $nin: existingUserIds }
@@ -865,8 +861,8 @@ router.get('/orphaned-data-stats', authMiddleware, async (req: AuthRequest, res:
       
       // 邀请记录统计
       try {
-        const Invitation = require('../models/Invitation').default;
-        const LibraryInvitation = require('../models/LibraryInvitation').default;
+        const Invitation = mongoose.model('Invitation');
+        const LibraryInvitation = mongoose.model('LibraryInvitation');
         
         stats.orphanedData.invitations = await Invitation.countDocuments({
           inviterId: { $nin: existingUserIds }
@@ -881,7 +877,7 @@ router.get('/orphaned-data-stats', authMiddleware, async (req: AuthRequest, res:
       
       // 企业成员记录统计
       try {
-        const EnterpriseMember = require('../models/EnterpriseMember').default;
+        const EnterpriseMember = mongoose.model('EnterpriseMember');
         stats.orphanedData.enterpriseMembers = await EnterpriseMember.countDocuments({
           userId: { $nin: existingUserIds }
         });

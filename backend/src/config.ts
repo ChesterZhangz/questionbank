@@ -4,7 +4,7 @@ dotenv.config();
 
 export const config = {
   port: process.env.PORT || 5000,
-  mongoURI: process.env.MONGO_URI || 'mongodb://localhost:27017/mareate',
+  mongoURI: process.env.MONGODB_URI || 'mongodb://localhost:27017/mareate',
   jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
   
   // 前端URL配置
