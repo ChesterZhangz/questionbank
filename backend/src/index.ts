@@ -95,6 +95,14 @@ if (process.env.NODE_ENV === 'production') {
 // 日志中间件
 app.use(morgan('combined'));
 
+// 添加请求路径日志
+app.use((req, res, next) => {
+  if (req.path.startsWith('/assets/') || req.path.startsWith('/auth/')) {
+    console.log(`📁 请求路径: ${req.method} ${req.path}`);
+  }
+  next();
+});
+
 // 修复代理信任设置 - 解决X-Forwarded-For警告
 app.set('trust proxy', true);
 
@@ -164,23 +172,48 @@ if (process.env.NODE_ENV === 'production') {
     }
   }));
 
-  // 添加静态资源访问日志
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/assets/') || req.path.startsWith('/auth/')) {
-      console.log(`📁 请求路径: ${req.method} ${req.path}`);
-    }
-    next();
-  });
-
-  // 修复SPA路由的静态资源问题 - 直接重定向所有 /path/assets/ 到 /assets/
-  app.use('/:path/assets/:filename', (req, res) => {
-    const { filename } = req.params;
+  // 修复SPA路由的静态资源问题 - 统一处理所有 /path/assets/ 路径
+  app.use('/:path/assets/:filename', (req, res, next) => {
+    const { path: routePath, filename } = req.params;
     
     // 记录请求日志
-    console.log(`📁 SPA静态资源重定向: ${req.path} -> /assets/${filename}`);
+    console.log(`📁 SPA静态资源请求: ${req.method} ${req.path} -> 重定向到 /assets/${filename}`);
     
     // 直接重定向到根assets目录
-    res.redirect(`/assets/${filename}`);
+    const assetPath = path.join(process.cwd(), '..', 'frontend/dist/assets', filename);
+    
+    if (fs.existsSync(assetPath)) {
+      // 设置正确的MIME类型
+      if (filename.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      } else if (filename.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css; charset=utf-8');
+      } else if (filename.endsWith('.woff')) {
+        res.setHeader('Content-Type', 'font/woff');
+      } else if (filename.endsWith('.woff2')) {
+        res.setHeader('Content-Type', 'font/woff2');
+      } else if (filename.endsWith('.ttf')) {
+        res.setHeader('Content-Type', 'font/ttf');
+      } else if (filename.endsWith('.png')) {
+        res.setHeader('Content-Type', 'image/png');
+      } else if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) {
+        res.setHeader('Content-Type', 'image/jpeg');
+      } else if (filename.endsWith('.gif')) {
+        res.setHeader('Content-Type', 'image/gif');
+      } else if (filename.endsWith('.svg')) {
+        res.setHeader('Content-Type', 'image/svg+xml');
+      }
+      
+      // 设置缓存头
+      if (filename.endsWith('.js') || filename.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1年缓存
+      }
+      
+      res.sendFile(assetPath);
+    } else {
+      console.log(`❌ 静态资源不存在: ${assetPath}`);
+      next();
+    }
   });
 
   // 专门处理SPA路由 - 确保 /auth/* 等路径能正确访问
