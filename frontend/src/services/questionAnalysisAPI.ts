@@ -12,7 +12,7 @@ class QuestionAnalysisAPI {
   // 分析题目内容
   async analyzeQuestion(content: string): Promise<QuestionAnalysis> {
     try {
-      const response = await api.post('/api/question-analysis/analyze', {
+      const response = await api.post('question-analysis/analyze', {
         content
       });
       return response.data.analysis;
