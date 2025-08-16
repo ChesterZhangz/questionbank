@@ -486,7 +486,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
               {/* 选项区域 - 可滚动 */}
               {question.content.options && question.content.options.length > 0 && (
                 <div className="mb-4 min-w-0">
-                  <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-100 dark:scrollbar-track-gray-800 min-w-0">
+                  <div className="space-y-2 min-w-0">
                     {renderOptions()}
                   </div>
                 </div>
