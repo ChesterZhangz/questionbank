@@ -30,6 +30,9 @@ RUN npm ci
 # 复制后端源代码
 COPY backend/ ./
 
+# 确保public目录存在
+RUN mkdir -p public/avatars
+
 # 构建后端
 ENV FRONTEND_URL=http://43.160.253.32
 RUN npm run build
