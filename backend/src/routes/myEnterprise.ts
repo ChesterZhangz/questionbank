@@ -1045,13 +1045,15 @@ router.put('/set-admin/:memberId', authMiddleware, [
     const { role, position, departmentId } = req.body;
 
     // 检查要设置的成员是否存在且属于同一企业
-    const targetMember = await EnterpriseMember.findOne({
-      userId: memberId,
-      enterpriseId: user.enterpriseId
-    });
-
+    const targetMember = await EnterpriseMember.findById(memberId);
+    
     if (!targetMember) {
-      return res.status(404).json({ success: false, error: '成员不存在或不属于该企业' });
+      return res.status(404).json({ success: false, error: '成员不存在' });
+    }
+    
+    // 检查成员是否属于当前企业
+    if (targetMember.enterpriseId.toString() !== user.enterpriseId?.toString()) {
+      return res.status(404).json({ success: false, error: '成员不属于当前企业' });
     }
 
     // 不能修改自己的角色
@@ -1133,13 +1135,15 @@ router.put('/assign-department/:memberId', authMiddleware, [
     const { departmentId } = req.body;
 
     // 检查要分配的成员是否存在且属于同一企业
-    const targetMember = await EnterpriseMember.findOne({
-      userId: memberId,
-      enterpriseId: user.enterpriseId
-    });
-
+    const targetMember = await EnterpriseMember.findById(memberId);
+    
     if (!targetMember) {
-      return res.status(404).json({ success: false, error: '成员不存在或不属于该企业' });
+      return res.status(404).json({ success: false, error: '成员不存在' });
+    }
+    
+    // 检查成员是否属于当前企业
+    if (targetMember.enterpriseId.toString() !== user.enterpriseId?.toString()) {
+      return res.status(404).json({ success: false, error: '成员不属于当前企业' });
     }
 
     // 检查部门是否存在且属于同一企业
