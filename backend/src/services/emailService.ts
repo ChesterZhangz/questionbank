@@ -53,13 +53,14 @@ const createEmailTemplate = (params: {
   footerText: { zh: string; en: string };
   color: string; // 主题颜色
   lang: 'zh' | 'en'; // 语言选择
+  hasLogo?: boolean; // 是否有logo
 }) => {
-  const { title, subtitle, greeting, content, buttonText, buttonUrl, footerText, color, lang } = params;
+  const { title, subtitle, greeting, content, buttonText, buttonUrl, footerText, color, lang, hasLogo = false } = params;
   return `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <!-- 标题栏 - 适应深色/浅色模式 -->
       <div style="background: ${color}; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-        <img src="cid:mareate-logo" alt="Mareate" style="max-height: 60px; margin-bottom: 15px;" />
+        ${hasLogo ? '<img src="cid:mareate-logo" alt="Mareate" style="max-height: 60px; margin-bottom: 15px;" />' : ''}
         <h1 style="margin: 0; font-size: 24px; font-weight: 600;">${lang === 'zh' ? title.zh : title.en}</h1>
         <p style="margin: 10px 0 0 0; opacity: 0.9;">${lang === 'zh' ? subtitle.zh : subtitle.en}</p>
       </div>
@@ -153,6 +154,7 @@ export const emailService = {
       console.log(`  - 配置的frontendUrl: ${config.frontendUrl}`);
       console.log(`  - 环境变量FRONTEND_URL: ${process.env.FRONTEND_URL}`);
       
+      const hasLogo = getMareateLogoPath() !== null;
       const emailTemplate = createEmailTemplate({
         title: {
           zh: 'Mareate题库系统',
@@ -186,7 +188,8 @@ export const emailService = {
           en: 'This email was sent automatically by the system. Please do not reply.<br>If you have any questions, please contact the administrator: admin@viquard.com'
         },
         color: '#0066cc',
-        lang
+        lang,
+        hasLogo
       });
 
       const mailOptions = {
@@ -215,6 +218,7 @@ export const emailService = {
   // 发送欢迎邮件
   async sendWelcomeEmail(email: string, name: string, lang: 'zh' | 'en' = 'zh'): Promise<boolean> {
     try {
+      const hasLogo = getMareateLogoPath() !== null;
       const emailTemplate = createEmailTemplate({
         title: {
           zh: '欢迎加入Mareate题库系统！',
@@ -268,7 +272,8 @@ export const emailService = {
           en: 'If you have any questions, please contact the administrator: admin@viquard.com'
         },
         color: '#28a745',
-        lang
+        lang,
+        hasLogo
       });
 
       const mailOptions = {
@@ -324,6 +329,7 @@ export const emailService = {
         }
       };
 
+      const hasLogo = getMareateLogoPath() !== null;
       const emailTemplate = createEmailTemplate({
         title: {
           zh: '试卷库邀请',
@@ -399,7 +405,8 @@ export const emailService = {
           en: 'This email was sent automatically by the system. Please do not reply.<br>If you have any questions, please contact the administrator: admin@viquard.com'
         },
         color: '#0066cc',
-        lang
+        lang,
+        hasLogo
       });
 
       const mailOptions = {
@@ -452,6 +459,7 @@ export const emailService = {
         }
       };
 
+      const hasLogo = getMareateLogoPath() !== null;
       const emailTemplate = createEmailTemplate({
         title: {
           zh: '题库邀请',
@@ -527,7 +535,8 @@ export const emailService = {
           en: 'This email was sent automatically by the system. Please do not reply.<br>If you have any questions, please contact the administrator: admin@viquard.com'
         },
         color: '#0066cc',
-        lang
+        lang,
+        hasLogo
       });
 
       const mailOptions = {
@@ -558,6 +567,7 @@ export const emailService = {
   // 发送密码重置邮件
   async sendPasswordResetEmail(email: string, name: string, resetUrl: string, lang: 'zh' | 'en' = 'zh'): Promise<boolean> {
     try {
+      const hasLogo = getMareateLogoPath() !== null;
       const emailTemplate = createEmailTemplate({
         title: {
           zh: '重置密码',
@@ -607,7 +617,8 @@ export const emailService = {
           en: 'This email was sent automatically by the system. Please do not reply.<br>If you have any questions, please contact the administrator: admin@viquard.com'
         },
         color: '#0066cc',
-        lang
+        lang,
+        hasLogo
       });
 
       const mailOptions = {
@@ -651,6 +662,7 @@ export const emailService = {
           ? (lang === 'zh' ? '协作者' : 'Collaborator')
           : (lang === 'zh' ? '查看者' : 'Viewer'));
       
+      const hasLogo = getMareateLogoPath() !== null;
       const emailTemplate = createEmailTemplate({
         title: {
           zh: '欢迎加入题库',
@@ -706,7 +718,8 @@ export const emailService = {
           en: 'This email was sent automatically by the system. Please do not reply.<br>If you have any questions, please contact the administrator: admin@viquard.com'
         },
         color: '#10b981',
-        lang
+        lang,
+        hasLogo
       });
 
       const mailOptions = {
@@ -745,6 +758,7 @@ export const emailService = {
     try {
       const lang = data.lang || 'zh';
       
+      const hasLogo = getMareateLogoPath() !== null;
       const emailTemplate = createEmailTemplate({
         title: {
           zh: '题库访问变更',
@@ -800,7 +814,8 @@ export const emailService = {
           en: 'This email was sent automatically by the system. Please do not reply.<br>If you have any questions, please contact the administrator: admin@viquard.com'
         },
         color: '#f97316',
-        lang
+        lang,
+        hasLogo
       });
 
       const mailOptions = {
