@@ -129,11 +129,22 @@ backend/logs/
 *.xls
 *.xlsx
 
-# Image files (if they're large)
+# Image files (if they're large) - 但保留必要的静态资源
 *.jpg
 *.jpeg
 *.png
 *.gif
 *.bmp
 *.tiff
-*.svg 
+*.svg
+# 例外：保留前端和后端的必要图片文件
+!frontend/public/avatar/*.png
+!frontend/public/avatar/*.jpg
+!frontend/public/avatar/*.jpeg
+!frontend/public/avatar/*.gif
+!frontend/public/avatar/*.ico
+!backend/public/avatars/*.png
+!backend/public/avatars/*.jpg
+!backend/public/avatars/*.jpeg
+!backend/public/avatars/*.gif
+!backend/public/avatars/*.ico 
