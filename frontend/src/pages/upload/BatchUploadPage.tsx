@@ -624,7 +624,7 @@ const BatchUploadPage: React.FC = () => {
       console.log('🔄 步骤1: Mathpix提取和分割...');
       updateProcessingStep(document.id, 'Mathpix提取', 'processing', 20);
       
-      const response = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/mathpix-optimized/process-pdf-optimized`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'}/mathpix-optimized/process-pdf-optimized`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -772,7 +772,7 @@ const BatchUploadPage: React.FC = () => {
       console.log('🔄 步骤1: Mathpix提取和分割...');
       updateProcessingStep(document.id, 'Mathpix提取', 'processing', 20);
       
-      const response = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/mathpix-optimized/process-word-optimized`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'}/mathpix-optimized/process-word-optimized`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -919,7 +919,7 @@ const BatchUploadPage: React.FC = () => {
       console.log('🚀 步骤1: 使用优化版DeepSeek AI处理TeX文件...');
       updateProcessingStep(document.id, 'DeepSeek AI解析', 'processing', 20);
       
-      const response = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/mathpix-optimized/process-tex`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'}/mathpix-optimized/process-tex`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -1098,7 +1098,7 @@ const BatchUploadPage: React.FC = () => {
 
           // 发送取消请求到后端
           try {
-            await fetch(`${import.meta.env.VITE_API_URL || '/api'}/document-parser/cancel/${docId}`, {
+            await fetch(`${import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'}/document-parser/cancel/${docId}`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${token}`,
