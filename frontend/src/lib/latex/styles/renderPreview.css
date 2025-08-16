@@ -1,7 +1,7 @@
 /* 导入自定义字体 - 使用正确的路径 */
 @font-face {
   font-family: 'WenYuan';
-  src: url('/font/WenYuanSerifSC-Regular.ttf') format('truetype');
+  src: url('../../../public/font/WenYuanSerifSC-Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -9,7 +9,7 @@
 
 @font-face {
   font-family: 'WenYuan';
-  src: url('/font/WenYuanSerifSC-Bold.ttf') format('truetype');
+  src: url('../../../public/font/WenYuanSerifSC-Bold.ttf') format('truetype');
   font-weight: bold;
   font-style: normal;
   font-display: swap;
@@ -214,18 +214,18 @@
 }
 
 /* 选择题样式 - 绝对可靠的括号 */
-.latex-content .choice-bracket,
-.prose .latex-content .choice-bracket,
-.prose-sm .latex-content .choice-bracket {
-  display: inline-block !important;
-  min-width: 4em;
-  color: #4b5563 !important;
-  font-family: 'WenYuan', 'SimSun', 'STSong', serif !important;
-  font-size: 1.1em !important;
-  font-weight: normal !important;
-  margin: 0 0.2em !important;
-  line-height: 1.5 !important;
-}
+  .latex-content .choice-bracket,
+  .prose .latex-content .choice-bracket,
+  .prose-sm .latex-content .choice-bracket {
+    display: inline-block !important;
+    min-width: 4em;
+    color: #4b5563 !important;
+    font-family: 'SimSun', 'STSong', 'Microsoft YaHei', 'PingFang SC', serif !important;
+    font-size: 1.1em !important;
+    font-weight: normal !important;
+    margin: 0 0.2em !important;
+    line-height: 1.5 !important;
+  }
 
 /* Dark Mode下的选择题样式 */
 .dark .latex-content .choice-bracket,
