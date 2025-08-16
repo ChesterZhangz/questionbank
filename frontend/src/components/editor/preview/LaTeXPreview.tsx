@@ -22,7 +22,7 @@ const LaTeXPreview: React.FC<LaTeXPreviewProps> = ({
   config = {},
   className = '',
   maxWidth = 'max-w-md',
-  maxHeight = 'max-h-80',
+  maxHeight = '', // 移除默认高度限制
   showTitle = false,
   title = '预览',
   variant = 'default',
@@ -69,7 +69,7 @@ const LaTeXPreview: React.FC<LaTeXPreviewProps> = ({
         <div className="latex-preview-content">
           {content ? (
             <div 
-              className={`latex-content ${fullWidth ? 'w-full' : 'max-w-none'} overflow-x-auto overflow-y-auto ${heightClass} ${isDark ? 'dark' : ''}`}
+              className={`latex-content ${fullWidth ? 'w-full' : 'max-w-none'} overflow-x-auto ${heightClass} ${isDark ? 'dark' : ''}`}
               dangerouslySetInnerHTML={{
                 __html: renderResult.html
               }}
@@ -84,7 +84,7 @@ const LaTeXPreview: React.FC<LaTeXPreviewProps> = ({
           </div>
         )}
         {renderResult.warnings && renderResult.warnings.length > 0 && (
-          <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded text-xs text-yellow-600 dark:text-yellow-400">
+          <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-red-800 rounded text-xs text-yellow-600 dark:text-yellow-400">
             {renderResult.warnings.join(', ')}
           </div>
         )}
