@@ -127,17 +127,15 @@ async function cascadeDeleteUser(userId: mongoose.Types.ObjectId, enterpriseId?:
     }
 
     // 12. 删除企业成员记录
-    if (enterpriseId) {
-      try {
-        const EnterpriseMember = mongoose.model('EnterpriseMember');
-        await EnterpriseMember.findOneAndDelete({
-          userId: userId,
-          enterpriseId: enterpriseId
-        });
-        console.log(`删除企业成员记录成功: ${userId}`);
-      } catch (memberError) {
-        console.error('删除企业成员记录失败:', memberError);
-      }
+    try {
+      const EnterpriseMember = mongoose.model('EnterpriseMember');
+      // 删除所有与该用户相关的企业成员记录（不限于特定企业）
+      const deletedMembers = await EnterpriseMember.deleteMany({
+        userId: userId
+      });
+      console.log(`删除企业成员记录成功: ${deletedMembers.deletedCount} 条记录`);
+    } catch (memberError) {
+      console.error('删除企业成员记录失败:', memberError);
     }
 
     console.log(`用户 ${userId} 的所有相关数据级联删除完成`);
