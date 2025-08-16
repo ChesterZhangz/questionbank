@@ -58,7 +58,7 @@ const showCustomAlert = (message: string) => {
 
 // 创建axios实例
 const api = axios.create({
-  baseURL: import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:3001/api'),
+  baseURL: import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'),
   timeout: 30000, // 增加到30秒
   headers: {
     'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ const api = axios.create({
 
 // 创建专门用于AI分析的axios实例，超时时间设置为3分钟
 const aiAnalysisApi = axios.create({
-  baseURL: import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:3001/api'),
+  baseURL: import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'),
   timeout: 180000, // 3分钟 = 180000毫秒
   headers: {
     'Content-Type': 'application/json',
@@ -76,7 +76,7 @@ const aiAnalysisApi = axios.create({
 
 // 创建专门用于OCR的axios实例，超时时间设置为3分钟（因为包含DeepSeek AI矫正）
 const ocrApi = axios.create({
-  baseURL: import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:3001/api'),
+  baseURL: import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'),
   timeout: 180000, // 3分钟 = 180000毫秒
   headers: {
     'Content-Type': 'application/json',

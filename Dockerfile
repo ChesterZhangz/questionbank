@@ -13,7 +13,7 @@ RUN npm ci
 COPY frontend/ ./
 
 # 构建前端
-ENV VITE_API_URL=http://43.160.253.32/api
+ENV VITE_API_URL=https://www.mareate.com/api
 ENV VITE_BASE_URL=/
 RUN npm run build
 
@@ -35,7 +35,7 @@ COPY backend/ ./
 RUN mkdir -p public/avatars
 
 # 构建后端
-ENV FRONTEND_URL=http://43.160.253.32
+ENV FRONTEND_URL=https://www.mareate.com
 RUN npm run build
 
 # 生产阶段

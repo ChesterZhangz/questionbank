@@ -37,7 +37,7 @@ const EmailVerificationPage: React.FC = () => {
       setStatus('loading');
       setMessage('正在验证邮箱...');
       
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/auth/verify-email?token=${token}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'}/auth/verify-email?token=${token}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
