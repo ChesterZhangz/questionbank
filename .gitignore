@@ -85,12 +85,18 @@ jspm_packages/
 
 # Gatsby files
 .cache/
-# 忽略所有静态文件，包括图片和字体
+# 保留必要的静态文件，但忽略其他public内容
 # 后端静态文件
 backend/public/*
+!backend/public/avatars/
+!backend/public/avatars/*.png
 
 # 前端静态文件
 frontend/public/*
+!frontend/public/avatar/
+!frontend/public/avatar/*.png
+!frontend/public/font/
+!frontend/public/font/*
 
 # Storybook build outputs
 .out
@@ -131,4 +137,14 @@ backend/logs/
 *.bmp
 *.tiff
 *.svg
-# 注意：图片和字体文件不会上传到Gitee，需要在服务器上单独处理 
+# 例外：保留前端和后端的必要图片文件
+!frontend/public/avatar/*.png
+!frontend/public/avatar/*.jpg
+!frontend/public/avatar/*.jpeg
+!frontend/public/avatar/*.gif
+!frontend/public/avatar/*.ico
+!backend/public/avatars/*.png
+!backend/public/avatars/*.jpg
+!backend/public/avatars/*.jpeg
+!backend/public/avatars/*.gif
+!backend/public/avatars/*.ico 
