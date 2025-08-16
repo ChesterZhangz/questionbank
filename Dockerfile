@@ -64,6 +64,9 @@ COPY --from=backend-builder --chown=nextjs:nodejs /app/backend/dist ./backend/di
 COPY --from=backend-builder --chown=nextjs:nodejs /app/backend/package*.json ./backend/
 COPY --from=backend-builder --chown=nextjs:nodejs /app/backend/node_modules ./backend/node_modules
 
+# 复制静态文件目录
+COPY --from=backend-builder --chown=nextjs:nodejs /app/backend/public ./backend/public
+
 # 复制前端构建结果
 COPY --from=frontend-builder --chown=nextjs:nodejs /app/frontend/dist ./frontend/dist
 
