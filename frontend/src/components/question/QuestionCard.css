@@ -7,7 +7,7 @@
 .question-card-latex-content {
   /* 继承编辑区的字体设置 */
   font-family: 'WenYuan', 'SimSun', 'STSong', 'Times New Roman', 'Times', serif !important;
-  font-size: 1.3em !important; /* 增加字体大小从1.1em到1.3em */
+  font-size: 1.1em !important; /* 增加字体大小从1.1em到1.1em */
   line-height: 1.7 !important; /* 增加行高从1.6到1.7 */
   color: inherit !important;
   
@@ -17,26 +17,12 @@
   word-wrap: break-word !important;
 }
 
-/* 网格模式下的LaTeX内容样式 */
-.question-card-latex-content:not(.list-mode) {
-  /* 网格模式下的特殊样式 */
-  /* 移除高度限制和滚动条，让数学公式完整显示 */
-  /* max-height: 200px !important; */
-  /* overflow-y: auto !important; */
-  /* overflow-x: hidden !important; */
-  /* padding-right: 8px !important; */
-}
 
 /* 列表模式下的LaTeX内容样式 */
 .question-card-latex-content.list-mode {
   /* 列表模式下的特殊样式 */
   font-size: 1.2em !important; /* 增加字体大小从1em到1.2em */
   line-height: 1.5 !important; /* 增加行高从1.4到1.5 */
-  /* 移除高度限制和滚动条，让数学公式完整显示 */
-  /* max-height: 150px !important; */
-  /* overflow-y: auto !important; */
-  /* overflow-x: hidden !important; */
-  /* padding-right: 8px !important; */
 }
 
 /* 选项文本的LaTeX内容样式 */

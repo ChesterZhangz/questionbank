@@ -102,7 +102,7 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
       onClick={handleClose}
     >
       <div 
-        className={`bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden transition-all duration-300 transform modal-content ${
+        className={`bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-gray-900/50 max-w-4xl w-full max-h-[90vh] overflow-hidden transition-all duration-300 transform modal-content ${
           isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -116,16 +116,16 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
         ) : (
           <>
             {/* 头部 */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center space-x-3">
-                <AlertTriangle className="w-6 h-6 text-orange-500" />
+                <AlertTriangle className="w-6 h-6 text-orange-500 dark:text-orange-400" />
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">发现相似题目</h2>
-                  <p className="text-sm text-gray-600">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">发现相似题目</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     检测到 {similarQuestions.length} 个相似题目，建议检查是否重复
                   </p>
                   {totalQuestions > 1 && (
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       第 {currentQuestionIndex + 1} 题，共 {totalQuestions} 题有相似题目
                     </p>
                   )}
@@ -135,30 +135,30 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
                 {/* 翻页按钮 */}
                 {totalQuestions > 1 && (
                   <div className="flex items-center space-x-1">
-                    <button
-                      onClick={onPrevQuestion}
-                      disabled={currentQuestionIndex === 0}
-                      className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="上一题"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <span className="text-sm text-gray-600 px-2">
-                      {currentQuestionIndex + 1} / {totalQuestions}
-                    </span>
-                    <button
-                      onClick={onNextQuestion}
-                      disabled={currentQuestionIndex === totalQuestions - 1}
-                      className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="下一题"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
+                                    <button
+                  onClick={onPrevQuestion}
+                  disabled={currentQuestionIndex === 0}
+                  className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="上一题"
+                >
+                  <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                </button>
+                <span className="text-sm text-gray-600 dark:text-gray-300 px-2">
+                  {currentQuestionIndex + 1} / {totalQuestions}
+                </span>
+                <button
+                  onClick={onNextQuestion}
+                  disabled={currentQuestionIndex === totalQuestions - 1}
+                  className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="下一题"
+                >
+                  <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                </button>
                   </div>
                 )}
                 <button
                   onClick={handleClose}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -169,19 +169,19 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
             <div className="flex-1 overflow-y-auto p-6">
               {/* 当前题目预览 */}
               <div className="mb-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-3">当前题目</h3>
-                <Card className="p-4 bg-blue-50 border-blue-200">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">当前题目</h3>
+                <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700">
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <span className={`px-2 py-1 rounded text-sm font-medium ${getQuestionTypeColor(questionData.type)}`}>
                         {getQuestionTypeText(questionData.type)}
                       </span>
-                      <span className="text-yellow-500 text-sm">
+                      <span className="text-yellow-500 dark:text-yellow-400 text-sm">
                         {getDifficultyStars(questionData.difficulty)}
                       </span>
                     </div>
                     <div 
-                      className="text-sm text-gray-700 line-clamp-3 prose prose-sm max-w-none"
+                      className="text-sm text-gray-700 dark:text-gray-200 line-clamp-3 prose prose-sm max-w-none dark:prose-invert"
                       dangerouslySetInnerHTML={{ 
                         __html: renderContent(questionData.content.stem)
                       }}
@@ -192,7 +192,7 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
 
               {/* 相似题目列表 */}
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-3">相似题目列表</h3>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">相似题目列表</h3>
                 <div className="space-y-4">
                   {similarQuestions.map((result, index) => {
                     const similarityLevel = getSimilarityLevel(result.similarityScore);
@@ -224,9 +224,9 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
                           </div>
 
                           {/* 题目内容 */}
-                          <div className="text-sm text-gray-700">
+                          <div className="text-sm text-gray-700 dark:text-gray-200">
                             <div 
-                              className="line-clamp-2 mb-2 prose prose-sm max-w-none"
+                              className="line-clamp-2 mb-2 prose prose-sm max-w-none dark:prose-invert"
                               dangerouslySetInnerHTML={{ 
                                 __html: renderContent(result.question.content.stem)
                               }}
@@ -237,11 +237,11 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
 
                           {/* 相似原因 */}
                           {result.reasons.length > 0 && (
-                            <div className="text-xs text-gray-600">
+                            <div className="text-xs text-gray-600 dark:text-gray-400">
                               <div className="font-medium mb-1">相似原因：</div>
                               <div className="flex flex-wrap gap-1">
                                 {result.reasons.map((reason, idx) => (
-                                  <span key={idx} className="px-2 py-1 bg-gray-100 rounded text-xs">
+                                  <span key={idx} className="px-2 py-1 bg-gray-100 dark:bg-gray-600 rounded text-xs text-gray-700 dark:text-gray-200">
                                     {reason}
                                   </span>
                                 ))}
@@ -259,8 +259,8 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
             </div>
 
             {/* 底部操作 */}
-            <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
-              <div className="text-sm text-gray-600">
+            <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+              <div className="text-sm text-gray-600 dark:text-gray-300">
                 <AlertTriangle className="w-4 h-4 inline mr-1" />
                 建议仔细检查相似题目，避免创建重复内容
               </div>
