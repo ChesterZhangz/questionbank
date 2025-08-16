@@ -57,7 +57,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
         left: 0,
         right: 0,
         marginTop: '8px',
-        zIndex: 99999
+        zIndex: 999999
       });
     }
   }, [isOpen]);
