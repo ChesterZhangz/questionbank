@@ -1,7 +1,33 @@
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import path from 'path';
+import fs from 'fs';
 import { config } from '../config';
+
+// 获取Mareate.png图片路径
+const getMareateLogoPath = (): string | null => {
+  // 尝试多个可能的路径
+  const possiblePaths = [
+    path.join(__dirname, '../../public/avatars/Mareate.png'), // 开发环境
+    path.join(process.cwd(), 'public/avatars/Mareate.png'),  // 生产环境
+    path.join(process.cwd(), 'backend/public/avatars/Mareate.png'), // Docker环境
+    '/app/backend/public/avatars/Mareate.png' // Docker绝对路径
+  ];
+
+  for (const logoPath of possiblePaths) {
+    try {
+      if (fs.existsSync(logoPath)) {
+        console.log(`✅ 找到Mareate.png: ${logoPath}`);
+        return logoPath;
+      }
+    } catch (error) {
+      console.warn(`⚠️ 检查路径失败: ${logoPath}`, error);
+    }
+  }
+
+  console.error('❌ 未找到Mareate.png文件，请检查文件路径');
+  return null;
+};
 
 // 创建邮件传输器函数 - 每次调用时重新创建
 const createTransporter = () => {
@@ -168,13 +194,13 @@ export const emailService = {
         to: data.email,
         subject: lang === 'zh' ? 'Mareate题库系统 - 邮箱验证' : 'Mareate Question Bank System - Email Verification',
         html: emailTemplate,
-        attachments: [
+        attachments: getMareateLogoPath() ? [
           {
             filename: 'Mareate.png',
-            path: path.join(__dirname, '../../public/avatars/Mareate.png'),
+            path: getMareateLogoPath()!,
             cid: 'mareate-logo' // 内联图片ID，与HTML中的cid:mareate-logo对应
           }
-        ]
+        ] : []
       };
 
       const transporter = createTransporter();
@@ -250,13 +276,13 @@ export const emailService = {
         to: email,
         subject: lang === 'zh' ? 'Mareate题库系统 - 欢迎加入！' : 'Mareate Question Bank System - Welcome!',
         html: emailTemplate,
-        attachments: [
+        attachments: getMareateLogoPath() ? [
           {
             filename: 'Mareate.png',
-            path: path.join(__dirname, '../../public/avatars/Mareate.png'),
+            path: getMareateLogoPath()!,
             cid: 'mareate-logo'
           }
-        ]
+        ] : []
       };
 
       const transporter = createTransporter();
@@ -383,13 +409,13 @@ export const emailService = {
           ? `Mareate题库系统 - 邀请加入试卷库：${data.libraryName}` 
           : `Mareate Question Bank System - Invitation to Paper Library: ${data.libraryName}`,
         html: emailTemplate,
-        attachments: [
+        attachments: getMareateLogoPath() ? [
           {
             filename: 'Mareate.png',
-            path: path.join(__dirname, '../../public/avatars/Mareate.png'),
+            path: getMareateLogoPath()!,
             cid: 'mareate-logo'
           }
-        ]
+        ] : []
       };
 
       const transporter = createTransporter();
@@ -514,7 +540,7 @@ export const emailService = {
         attachments: [
           {
             filename: 'Mareate.png',
-            path: path.join(__dirname, '../../public/avatars/Mareate.png'),
+            path: getMareateLogoPath()!,
             cid: 'mareate-logo'
           }
         ]
@@ -592,7 +618,7 @@ export const emailService = {
         attachments: [
           {
             filename: 'Mareate.png',
-            path: path.join(__dirname, '../../public/avatars/Mareate.png'),
+            path: getMareateLogoPath()!,
             cid: 'mareate-logo'
           }
         ]
@@ -693,7 +719,7 @@ export const emailService = {
         attachments: [
           {
             filename: 'Mareate.png',
-            path: path.join(__dirname, '../../public/avatars/Mareate.png'),
+            path: getMareateLogoPath()!,
             cid: 'mareate-logo'
           }
         ]
@@ -787,7 +813,7 @@ export const emailService = {
         attachments: [
           {
             filename: 'Mareate.png',
-            path: path.join(__dirname, '../../public/avatars/Mareate.png'),
+            path: getMareateLogoPath()!,
             cid: 'mareate-logo'
           }
         ]

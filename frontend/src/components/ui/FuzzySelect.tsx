@@ -49,28 +49,29 @@ const FuzzySelect: React.FC<FuzzySelectProps> = ({
     }
   }, [searchTerm, options]);
 
-  // 计算下拉菜单位置
+  // 计算下拉菜单位置 - 只向下展开
   useEffect(() => {
     if (isOpen && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      const dropdownHeight = 240; // 预估下拉菜单高度
       
-      // 检查下方空间是否足够
-      const spaceBelow = viewportHeight - rect.bottom;
-      
-      // 优先向下展开，只有在下方空间严重不足时才向上展开
-      if (spaceBelow < 100 && rect.top > dropdownHeight) {
-        // 如果下方空间严重不足，但上方空间足够，则向上展开
-        setDropdownStyle({
-          position: 'fixed',
-          top: rect.top - dropdownHeight - 8,
-          left: rect.left,
-          width: rect.width,
-          zIndex: 99999
-        });
-      } else {
-        // 默认向下展开
+      // 始终向下展开，不向上展开
+      setDropdownStyle({
+        position: 'fixed',
+        top: rect.bottom + 8,
+        left: rect.left,
+        width: rect.width,
+        zIndex: 99999
+      });
+    }
+  }, [isOpen]);
+
+  // 监听窗口滚动和resize事件，重新计算位置 - 只向下展开
+  useEffect(() => {
+    const updatePosition = () => {
+      if (isOpen && containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        
+        // 始终向下展开，不向上展开
         setDropdownStyle({
           position: 'fixed',
           top: rect.bottom + 8,
@@ -78,36 +79,6 @@ const FuzzySelect: React.FC<FuzzySelectProps> = ({
           width: rect.width,
           zIndex: 99999
         });
-      }
-    }
-  }, [isOpen]);
-
-  // 监听窗口滚动和resize事件，重新计算位置
-  useEffect(() => {
-    const updatePosition = () => {
-      if (isOpen && containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
-        const dropdownHeight = 240;
-        const spaceBelow = viewportHeight - rect.bottom;
-        
-        if (spaceBelow < 100 && rect.top > dropdownHeight) {
-          setDropdownStyle({
-            position: 'fixed',
-            top: rect.top - dropdownHeight - 8,
-            left: rect.left,
-            width: rect.width,
-            zIndex: 99999
-          });
-        } else {
-          setDropdownStyle({
-            position: 'fixed',
-            top: rect.bottom + 8,
-            left: rect.left,
-            width: rect.width,
-            zIndex: 99999
-          });
-        }
       }
     };
 
