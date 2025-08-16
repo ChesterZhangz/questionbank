@@ -35,8 +35,13 @@
 
 1. 克隆项目
 ```bash
-git clone <your-gitee-repo-url>
-cd mareate-question-bank
+# 从 GitHub 克隆（推荐）
+git clone https://github.com/ChesterZhangz/questionbank.git
+cd questionbank
+
+# 或者从 Gitee 克隆
+git clone https://gitee.com/ChesterZhang_admin/question-bank.git
+cd question-bank
 ```
 
 2. 安装所有依赖
