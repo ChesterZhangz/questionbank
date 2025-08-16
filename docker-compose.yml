@@ -7,7 +7,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - FRONTEND_URL=http://www.mareate.com
+      - FRONTEND_URL=https://www.mareate.com
     env_file:
       - .env
     volumes:
