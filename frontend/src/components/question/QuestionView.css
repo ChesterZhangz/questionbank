@@ -46,6 +46,22 @@
   max-height: none !important;
   overflow: visible !important;
   padding-right: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* 移除LaTeX预览的边框和背景 */
+.question-view-latex-content .latex-preview {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.question-view-latex-content .latex-preview-container {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 /* 确保KaTeX公式在QuestionView中正确显示 */

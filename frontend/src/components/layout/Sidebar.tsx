@@ -65,7 +65,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       setActiveSection('dashboard');
     } else if (currentPath.startsWith('/question-banks')) {
       setActiveSection('question-banks');
-    } else if (currentPath === '/questions') {
+    } else if (currentPath === '/questions' || currentPath.startsWith('/questions/')) {
+      // 包括题目管理页面和查看题目页面
       setActiveSection('questions');
     } else if (currentPath === '/batch-upload') {
       setActiveSection('batch-upload');

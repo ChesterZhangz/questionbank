@@ -317,7 +317,8 @@ const QuestionView: React.FC<QuestionViewProps> = ({
         }
       }, 100);
     } else {
-      window.open(`/question-banks/${bid}/questions/${qid}`, '_blank');
+      // 修改URL格式，使用通用的题目查看页面
+      window.open(`/questions/${qid}/view`, '_blank');
     }
   };
 
