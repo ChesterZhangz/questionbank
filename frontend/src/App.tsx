@@ -1,36 +1,35 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppLayout from './components/layout/AppLayout';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
-import DashboardPage from './pages/dashboard/DashboardPage';
 import EmailVerificationPage from './pages/auth/EmailVerificationPage';
 import RegisterSuccessPage from './pages/auth/RegisterSuccessPage';
-import QuestionBankListPage from './pages/question-banks/QuestionBankListPage';
-import CreateQuestionBankPage from './pages/question-banks/CreateQuestionBankPage';
-import QuestionBankDetailPage from './pages/question-banks/QuestionBankDetailPage';
-import CreateQuestionPage from './pages/question-banks/CreateQuestionPage';
-import EditQuestionPage from './pages/question-banks/EditQuestionPage';
-import EditQuestionBankPage from './pages/question-banks/EditQuestionBankPage';
-import QuestionBankMembersPage from './pages/question-banks/QuestionBankMembersPage';
-import QuestionBankSettingsPage from './pages/question-banks/QuestionBankSettingsPage';
-import QuestionBankStatsPage from './pages/question-banks/QuestionBankStatsPage';
-import QuestionManagementPage from './pages/management/QuestionManagementPage';
-import BatchUploadPage from './pages/upload/BatchUploadPage';
-import QuestionPreviewPage from './pages/upload/QuestionPreviewPage';
-
-import PaperGenerationPage from './pages/generation/PaperGenerationPage';
-import UserManagementPage from './pages/management/UserManagementPage';
-import SettingsPage from './pages/profile/SettingsPage';
-import ProfilePage from './pages/profile/ProfilePage';
-import QuestionViewPage from './pages/view/QuestionViewPage';
 import VersionPage from './pages/VersionPage';
 
-// 企业相关页面
-import MyEnterprisePage from './pages/my-enterprise/MyEnterprisePage';
-import EnterpriseManagementPage from './pages/enterprise-management/EnterpriseManagementPage';
+// 懒加载大型页面组件
+const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage'));
+const QuestionBankListPage = lazy(() => import('./pages/question-banks/QuestionBankListPage'));
+const CreateQuestionBankPage = lazy(() => import('./pages/question-banks/CreateQuestionBankPage'));
+const QuestionBankDetailPage = lazy(() => import('./pages/question-banks/QuestionBankDetailPage'));
+const CreateQuestionPage = lazy(() => import('./pages/question-banks/CreateQuestionPage'));
+const EditQuestionPage = lazy(() => import('./pages/question-banks/EditQuestionPage'));
+const EditQuestionBankPage = lazy(() => import('./pages/question-banks/EditQuestionBankPage'));
+const QuestionBankMembersPage = lazy(() => import('./pages/question-banks/QuestionBankMembersPage'));
+const QuestionBankSettingsPage = lazy(() => import('./pages/question-banks/QuestionBankSettingsPage'));
+const QuestionBankStatsPage = lazy(() => import('./pages/question-banks/QuestionBankStatsPage'));
+const QuestionManagementPage = lazy(() => import('./pages/management/QuestionManagementPage'));
+const BatchUploadPage = lazy(() => import('./pages/upload/BatchUploadPage'));
+const QuestionPreviewPage = lazy(() => import('./pages/upload/QuestionPreviewPage'));
+const PaperGenerationPage = lazy(() => import('./pages/generation/PaperGenerationPage'));
+const UserManagementPage = lazy(() => import('./pages/management/UserManagementPage'));
+const SettingsPage = lazy(() => import('./pages/profile/SettingsPage'));
+const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
+const QuestionViewPage = lazy(() => import('./pages/view/QuestionViewPage'));
+const MyEnterprisePage = lazy(() => import('./pages/my-enterprise/MyEnterprisePage'));
+const EnterpriseManagementPage = lazy(() => import('./pages/enterprise-management/EnterpriseManagementPage'));
 import { useAuthStore } from './stores/authStore';
 import { BackgroundTaskProvider } from './contexts/BackgroundTaskContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -39,6 +38,8 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import ErrorBoundary from './components/errors/ErrorBoundary';
 import NetworkErrorHandler from './components/errors/NetworkErrorHandler';
 import { setupGlobalErrorHandler } from './utils/errorHandler';
+
+
 
 // 错误页面
 import { Page400, Page403, Page404, Page500 } from './pages/errors';

@@ -410,28 +410,63 @@ const MyEnterprisePage: React.FC = () => {
       }
 
       setSendingMessage(true);
-      const response = await enterpriseService.sendMessage(sendMessageForm);
       
-      if (response.data.success) {
-        showSuccessRightSlide('发送成功', '消息已发送');
-        setShowSendMessageModal(false);
-        setSendMessageForm({
-          content: '',
-          type: 'general',
-          recipients: [],
-          departmentId: undefined,
-          mentionedUsers: [],
-          mentionedDepartments: [],
-          replyTo: undefined
-        });
-        fetchMessages(); // 刷新消息列表
-      } else {
-        showErrorRightSlide('发送失败', response.data.message || '发送失败');
-      }
+      // 乐观更新：立即添加消息到UI
+      const optimisticMessage: MessageData = {
+        _id: `temp_${Date.now()}`,
+        enterprise: enterpriseInfo?.enterprise?._id || '',
+        content: sendMessageForm.content,
+        type: sendMessageForm.type,
+        sender: {
+          _id: currentUserId,
+          name: enterpriseInfo?.currentUser?.name || '我',
+          avatar: enterpriseInfo?.currentUser?.avatar
+        },
+        recipients: sendMessageForm.recipients.map(id => ({ _id: id, name: '', avatar: undefined })),
+        mentionedUsers: sendMessageForm.mentionedUsers.map(id => ({ _id: id, name: '' })),
+        mentionedDepartments: sendMessageForm.mentionedDepartments.map(id => ({ _id: id, name: '' })),
+        isPinned: false,
+        isRead: [{ _id: currentUserId, name: '', avatar: undefined }],
+        attachments: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        replies: []
+      };
+      
+      setMessages(prev => [optimisticMessage, ...prev]);
+      setShowSendMessageModal(false);
+      setSendMessageForm({
+        content: '',
+        type: 'general',
+        recipients: [],
+        departmentId: undefined,
+        mentionedUsers: [],
+        mentionedDepartments: [],
+        replyTo: undefined
+      });
+      
+      // 异步发送消息
+      enterpriseService.sendMessage(sendMessageForm).then((response) => {
+        if (response.data.success) {
+          showSuccessRightSlide('发送成功', '消息已发送');
+          // 静默刷新，获取真实的消息ID
+          fetchMessages();
+        } else {
+          showErrorRightSlide('发送失败', response.data.message || '发送失败');
+          // 移除乐观更新的消息
+          setMessages(prev => prev.filter(m => m._id !== optimisticMessage._id));
+        }
+      }).catch((error) => {
+        console.error('发送消息失败:', error);
+        showErrorRightSlide('发送失败', error.response?.data?.error || '发送失败');
+        // 移除乐观更新的消息
+        setMessages(prev => prev.filter(m => m._id !== optimisticMessage._id));
+      }).finally(() => {
+        setSendingMessage(false);
+      });
     } catch (error: any) {
       console.error('发送消息失败:', error);
       showErrorRightSlide('发送失败', error.response?.data?.error || '发送失败');
-    } finally {
       setSendingMessage(false);
     }
   };
@@ -439,21 +474,33 @@ const MyEnterprisePage: React.FC = () => {
   // 编辑成员职位
   const handleEditMember = async () => {
     try {
-      // 使用新的API设置管理员身份
-      const response = await enterpriseService.setAdminRole(editMemberForm._id, {
+      const updatedMember: EnterpriseMemberData = {
+        ...members.find(m => m._id === editMemberForm._id)!,
         role: editMemberForm.role,
         position: editMemberForm.position,
         departmentId: editMemberForm.departmentId || undefined
+      };
+      
+      setMembers(prev => prev.map(m => 
+        m._id === editMemberForm._id ? updatedMember : m
+      ));
+      
+      setShowEditMemberModal(false);
+      showSuccessRightSlide('更新成功', '成员职位更新成功');
+      
+      // 异步刷新数据（不阻塞UI）
+      enterpriseService.setAdminRole(editMemberForm._id, {
+        role: editMemberForm.role,
+        position: editMemberForm.position,
+        departmentId: editMemberForm.departmentId || undefined
+      }).then(() => {
+        // 静默刷新，不显示加载状态
+        fetchMembers();
+      }).catch(() => {
+        // 如果失败，回滚UI更改
+        fetchMembers();
       });
-      if (response.data.success) {
-        setShowEditMemberModal(false);
-        // 同时刷新成员列表和部门列表
-        await Promise.all([
-          fetchMembers(),
-          fetchDepartments()
-        ]);
-        showSuccessRightSlide('更新成功', '成员职位更新成功');
-      }
+      
     } catch (error: any) {
       console.error('更新成员职位失败:', error);
       console.error('错误详情:', error.response?.data);
