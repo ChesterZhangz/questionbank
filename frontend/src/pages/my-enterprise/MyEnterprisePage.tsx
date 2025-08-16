@@ -474,9 +474,16 @@ const MyEnterprisePage: React.FC = () => {
   // 编辑成员职位
   const handleEditMember = async () => {
     try {
+      console.log('🔍 调试信息 - editMemberForm:', editMemberForm);
+      console.log('🔍 调试信息 - members:', members);
+      
       // 找到要编辑的成员（使用用户ID查找）
       const memberToEdit = members.find(m => m.enterpriseMemberId === editMemberForm._id);
+      console.log('🔍 调试信息 - memberToEdit:', memberToEdit);
+      
       if (!memberToEdit) {
+        console.error('❌ 找不到要编辑的成员，editMemberForm._id:', editMemberForm._id);
+        console.error('❌ 所有成员的enterpriseMemberId:', members.map(m => ({ name: m.name, enterpriseMemberId: m.enterpriseMemberId })));
         showErrorRightSlide('错误', '找不到要编辑的成员');
         return;
       }
@@ -489,6 +496,8 @@ const MyEnterprisePage: React.FC = () => {
         departmentId: editMemberForm.departmentId || undefined
       };
       
+      console.log('🔍 调试信息 - 准备更新成员:', updatedMember);
+      
       setMembers(prev => prev.map(m => 
         m.enterpriseMemberId === editMemberForm._id ? updatedMember : m
       ));
@@ -496,23 +505,27 @@ const MyEnterprisePage: React.FC = () => {
       setShowEditMemberModal(false);
       showSuccessRightSlide('更新成功', '成员职位更新成功');
       
+      console.log('🔍 调试信息 - 准备调用API，memberId:', editMemberForm._id);
+      
       // 异步刷新数据（不阻塞UI）
       enterpriseService.setAdminRole(editMemberForm._id, {
         role: editMemberForm.role,
         position: editMemberForm.position,
         departmentId: editMemberForm.departmentId || undefined
-      }).then(() => {
+      }).then((response) => {
+        console.log('✅ API调用成功:', response);
         // 静默刷新，不显示加载状态
         fetchMembers();
       }).catch((error) => {
-        console.error('API调用失败:', error);
+        console.error('❌ API调用失败:', error);
+        console.error('❌ 错误详情:', error.response?.data);
         // 如果失败，回滚UI更改
         fetchMembers();
       });
       
     } catch (error: any) {
-      console.error('更新成员职位失败:', error);
-      console.error('错误详情:', error.response?.data);
+      console.error('❌ 更新成员职位失败:', error);
+      console.error('❌ 错误详情:', error.response?.data);
       showErrorRightSlide('更新失败', error.response?.data?.error || '更新成员职位失败');
     }
   };
@@ -639,20 +652,27 @@ const MyEnterprisePage: React.FC = () => {
 
   // 打开编辑成员模态框
   const openEditMemberModal = (member: EnterpriseMemberData) => {
+    console.log('🔍 调试信息 - 打开编辑模态框，member:', member);
+    
     // 超级管理员不能被编辑
     if (member.role === 'superAdmin') {
       showErrorRightSlide('权限不足', '超级管理员身份不能通过此界面修改，请使用身份转让功能');
       return;
     }
     
-    setEditMemberForm({
+    const formData = {
       _id: member.enterpriseMemberId || member._id, // 优先使用enterpriseMemberId，这是EnterpriseMember的ID
       name: member.name,
       role: member.role as 'member' | 'admin',
       position: member.position || '',
       departmentId: member.departmentId || null
-    });
+    };
     
+    console.log('🔍 调试信息 - 设置表单数据:', formData);
+    console.log('🔍 调试信息 - member.enterpriseMemberId:', member.enterpriseMemberId);
+    console.log('🔍 调试信息 - member._id:', member._id);
+    
+    setEditMemberForm(formData);
     setShowEditMemberModal(true);
   };
 
