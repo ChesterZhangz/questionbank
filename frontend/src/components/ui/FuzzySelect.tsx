@@ -52,14 +52,13 @@ const FuzzySelect: React.FC<FuzzySelectProps> = ({
   // 计算下拉菜单位置 - 只向下展开
   useEffect(() => {
     if (isOpen && containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      
       // 始终向下展开，不向上展开
       setDropdownStyle({
-        position: 'fixed',
-        top: rect.bottom + 8,
-        left: rect.left,
-        width: rect.width,
+        position: 'absolute',
+        top: '100%',
+        left: 0,
+        right: 0,
+        marginTop: '8px',
         zIndex: 99999
       });
     }
@@ -69,16 +68,8 @@ const FuzzySelect: React.FC<FuzzySelectProps> = ({
   useEffect(() => {
     const updatePosition = () => {
       if (isOpen && containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        
-        // 始终向下展开，不向上展开
-        setDropdownStyle({
-          position: 'fixed',
-          top: rect.bottom + 8,
-          left: rect.left,
-          width: rect.width,
-          zIndex: 99999
-        });
+        // 使用绝对定位，不需要重新计算位置
+        // 下拉菜单会自动跟随父容器
       }
     };
 
@@ -185,7 +176,7 @@ const FuzzySelect: React.FC<FuzzySelectProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-hidden z-[99999]"
+            className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl max-h-60 overflow-hidden z-[99999]"
             style={dropdownStyle}
           >
             {/* 搜索框 */}

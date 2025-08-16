@@ -47,38 +47,18 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
     }
   }, [searchTerm, options]);
 
-  // 计算下拉菜单位置
+  // 计算下拉菜单位置 - 始终向下展开
   useEffect(() => {
     if (isOpen && containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      const dropdownHeight = 240; // 预估下拉菜单高度
-      
-      // 检查下方空间是否足够
-      const spaceBelow = viewportHeight - rect.bottom;
-      const spaceAbove = rect.top;
-      
-      if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
-        // 如果下方空间不够，但上方空间足够，则向上展开
-        setDropdownStyle({
-          position: 'absolute',
-          bottom: '100%',
-          left: 0,
-          right: 0,
-          marginBottom: '8px',
-          zIndex: 99999
-        });
-      } else {
-        // 默认向下展开
-        setDropdownStyle({
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          right: 0,
-          marginTop: '8px',
-          zIndex: 99999
-        });
-      }
+      // 始终向下展开，使用绝对定位
+      setDropdownStyle({
+        position: 'absolute',
+        top: '100%',
+        left: 0,
+        right: 0,
+        marginTop: '8px',
+        zIndex: 99999
+      });
     }
   }, [isOpen]);
 
