@@ -504,11 +504,10 @@ const VersionPage: React.FC = () => {
               <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Star className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">当前版本 v0.65</h2>
+              <h2 className="text-2xl font-bold mb-2">当前版本 v0.67</h2>
               <p className="text-blue-100 text-lg mb-4">用户体验全面升级</p>
               <p className="text-blue-200">
-                本次更新带来了全新的用户界面和交互体验，让题库管理更加高效便捷. 
-                包括全新的自定义弹窗系统、完善的DarkMode支持、优化的响应式布局等. 
+                将注册界面重构、邮箱页面重设计、支持忘记密码界面！
               </p>
             </div>
           </Card>
@@ -626,7 +625,7 @@ const VersionPage: React.FC = () => {
                 感谢您的支持
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                从v0.5到v0.65，Mareate题库管理系统经历了巨大的发展和改进. 
+                从v0.5到v0.67，Mareate题库管理系统经历了巨大的发展和改进. 
                 我们致力于为用户提供最好的题库管理体验，每一次更新都凝聚着我们的心血和努力. 
                 感谢维启象限的全部成员！
               </p>
