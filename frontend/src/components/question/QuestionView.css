@@ -31,7 +31,7 @@
 .question-view-latex-content {
   /* 继承QuestionCard的字体设置 */
   font-family: 'WenYuan', 'SimSun', 'STSong', 'Times New Roman', 'Times', serif !important;
-  font-size: 1.2em !important;
+  font-size: 1.1em !important;
   line-height: 1.7 !important;
   color: inherit !important;
   

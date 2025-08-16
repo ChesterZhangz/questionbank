@@ -20,7 +20,7 @@
 .prose .latex-content,
 .prose-sm .latex-content {
   font-family: 'SimSun', 'STSong', 'Microsoft YaHei', 'PingFang SC', 'Times New Roman', 'Times', serif !important;
-  font-size: 1.2em !important;
+  font-size: 1rem !important;
   line-height: 1.6 !important;
   color: #374151 !important;
 }
