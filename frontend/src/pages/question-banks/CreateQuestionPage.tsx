@@ -747,33 +747,33 @@ const CreateQuestionPage: React.FC = () => {
   // 权限检查：如果用户没有任何可用的题库，显示权限不足提示
   if (!loadingBanks && availableBanks.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="max-w-md mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="bg-white rounded-lg shadow-lg p-8"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg dark:shadow-gray-900/50 p-8"
           >
             <motion.div 
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, duration: 0.3, type: "spring", stiffness: 200 }}
-              className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center"
+              className="w-16 h-16 mx-auto mb-4 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center"
             >
               <motion.div
                 initial={{ rotate: -10 }}
                 animate={{ rotate: 0 }}
                 transition={{ delay: 0.4, duration: 0.2 }}
               >
-                <AlertTriangle className="w-8 h-8 text-red-600" />
+                <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
               </motion.div>
             </motion.div>
             <motion.h2 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.3 }}
-              className="text-xl font-semibold text-gray-900 mb-2"
+              className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2"
             >
               权限不足
             </motion.h2>
@@ -781,7 +781,7 @@ const CreateQuestionPage: React.FC = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.3 }}
-              className="text-gray-600 mb-4"
+              className="text-gray-600 dark:text-gray-300 mb-4"
             >
               您没有权限为任何题库创建题目。只有题库的创建者、管理员或协作者才能创建题目。
             </motion.p>
