@@ -474,15 +474,23 @@ const MyEnterprisePage: React.FC = () => {
   // 编辑成员职位
   const handleEditMember = async () => {
     try {
+      // 找到要编辑的成员（使用用户ID查找）
+      const memberToEdit = members.find(m => m.enterpriseMemberId === editMemberForm._id);
+      if (!memberToEdit) {
+        showErrorRightSlide('错误', '找不到要编辑的成员');
+        return;
+      }
+
+      // 乐观更新：立即更新UI
       const updatedMember: EnterpriseMemberData = {
-        ...members.find(m => m._id === editMemberForm._id)!,
+        ...memberToEdit,
         role: editMemberForm.role,
         position: editMemberForm.position,
         departmentId: editMemberForm.departmentId || undefined
       };
       
       setMembers(prev => prev.map(m => 
-        m._id === editMemberForm._id ? updatedMember : m
+        m.enterpriseMemberId === editMemberForm._id ? updatedMember : m
       ));
       
       setShowEditMemberModal(false);
@@ -496,7 +504,8 @@ const MyEnterprisePage: React.FC = () => {
       }).then(() => {
         // 静默刷新，不显示加载状态
         fetchMembers();
-      }).catch(() => {
+      }).catch((error) => {
+        console.error('API调用失败:', error);
         // 如果失败，回滚UI更改
         fetchMembers();
       });
