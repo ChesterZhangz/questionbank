@@ -2,8 +2,9 @@ services:
   mareate-app:
     build: .
     container_name: mareate-app
-    ports:
-      - "80:3001"
+    # 移除端口映射，只通过nginx访问
+    # ports:
+    #   - "80:3001"
     environment:
       - NODE_ENV=production
       - PORT=3001
