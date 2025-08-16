@@ -85,7 +85,10 @@ jspm_packages/
 
 # Gatsby files
 .cache/
-public
+# 保留必要的静态文件，但忽略其他public内容
+public/*
+!public/avatars/
+!public/avatars/*.png
 
 # Storybook build outputs
 .out
