@@ -439,7 +439,8 @@ const MyEnterprisePage: React.FC = () => {
   // 编辑成员职位
   const handleEditMember = async () => {
     try {
-      const response = await enterpriseService.updateMemberPosition(editMemberForm._id, {
+      // 使用新的API设置管理员身份
+      const response = await enterpriseService.setAdminRole(editMemberForm._id, {
         role: editMemberForm.role,
         position: editMemberForm.position,
         departmentId: editMemberForm.departmentId || undefined

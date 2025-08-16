@@ -941,15 +941,12 @@ router.put('/transfer-super-admin', authMiddleware, [
     
     // 检查新超级管理员是否存在且属于同一企业
     const newSuperAdminMember = await EnterpriseMember.findOne({
-      _id: newSuperAdminId,
+      userId: newSuperAdminId,
       enterpriseId: user.enterpriseId
     });
 
     if (!newSuperAdminMember) {
-      // 尝试查找所有企业成员，看看是否有数据
-      const allMembers = await EnterpriseMember.find({ enterpriseId: user.enterpriseId });
-      
-      return res.status(404).json({ success: false, error: '新超级管理员不存在' });
+      return res.status(404).json({ success: false, error: '新超级管理员不存在或不属于该企业' });
     }
 
     // 不能转让给自己
@@ -978,11 +975,14 @@ router.put('/transfer-super-admin', authMiddleware, [
         { 
           role: 'superAdmin',
           permissions: [
+            'manage_members',
             'manage_departments',
-            'manage_members', 
-            'send_messages',
+            'manage_messages',
             'view_statistics',
-            'manage_enterprise'
+            'invite_users',
+            'remove_users',
+            'edit_enterprise',
+            'manage_roles'
           ]
         },
         { session }
@@ -1007,6 +1007,164 @@ router.put('/transfer-super-admin', authMiddleware, [
   } catch (error) {
     console.error('转让超级管理员身份失败:', error);
     return res.status(500).json({ success: false, error: '转让超级管理员身份失败' });
+  }
+});
+
+// 设置管理员身份（只有超级管理员可以调用）
+router.put('/set-admin/:memberId', authMiddleware, [
+  body('role').isIn(['admin', 'member']).withMessage('角色必须是 admin 或 member'),
+  body('position').optional().isString().withMessage('职位必须是字符串'),
+  body('departmentId').optional().isMongoId().withMessage('部门ID格式无效')
+], async (req: AuthRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false,
+        error: '输入验证失败',
+        details: errors.array() 
+      });
+    }
+
+    const user = await User.findById(req.user?._id);
+    if (!user?.enterpriseId) {
+      return res.status(404).json({ success: false, error: '您尚未加入任何企业' });
+    }
+
+    // 检查当前用户是否为超级管理员
+    const currentUserMember = await EnterpriseMember.findOne({
+      userId: user._id,
+      enterpriseId: user.enterpriseId
+    });
+
+    if (!currentUserMember || currentUserMember.role !== 'superAdmin') {
+      return res.status(403).json({ success: false, error: '只有企业超级管理员可以设置管理员身份' });
+    }
+
+    const { memberId } = req.params;
+    const { role, position, departmentId } = req.body;
+
+    // 检查要设置的成员是否存在且属于同一企业
+    const targetMember = await EnterpriseMember.findOne({
+      userId: memberId,
+      enterpriseId: user.enterpriseId
+    });
+
+    if (!targetMember) {
+      return res.status(404).json({ success: false, error: '成员不存在或不属于该企业' });
+    }
+
+    // 不能修改自己的角色
+    if (targetMember.userId.toString() === user._id?.toString()) {
+      return res.status(400).json({ success: false, error: '不能修改自己的角色' });
+    }
+
+    // 设置权限
+    let permissions: string[] = [];
+    if (role === 'admin') {
+      permissions = [
+        'manage_members',
+        'manage_departments',
+        'manage_messages',
+        'view_statistics',
+        'invite_users'
+      ];
+    } else if (role === 'member') {
+      permissions = [
+        'view_statistics'
+      ];
+    }
+
+    // 更新成员信息
+    const updatedMember = await EnterpriseMember.findByIdAndUpdate(
+      targetMember._id,
+      {
+        role,
+        permissions,
+        position: position || undefined,
+        departmentId: departmentId || undefined
+      },
+      { new: true }
+    ).populate('userId', 'name email avatar')
+     .populate('departmentId', 'name code');
+
+    return res.json({
+      success: true,
+      message: '成员身份设置成功',
+      data: updatedMember
+    });
+
+  } catch (error) {
+    console.error('设置管理员身份失败:', error);
+    return res.status(500).json({ success: false, error: '设置管理员身份失败' });
+  }
+});
+
+// 分配部门（只有超级管理员和管理员可以调用）
+router.put('/assign-department/:memberId', authMiddleware, [
+  body('departmentId').isMongoId().withMessage('部门ID格式无效')
+], async (req: AuthRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false,
+        error: '输入验证失败',
+        details: errors.array() 
+      });
+    }
+
+    const user = await User.findById(req.user?._id);
+    if (!user?.enterpriseId) {
+      return res.status(404).json({ success: false, error: '您尚未加入任何企业' });
+    }
+
+    // 检查当前用户是否有权限
+    const currentUserMember = await EnterpriseMember.findOne({
+      userId: user._id,
+      enterpriseId: user.enterpriseId
+    });
+
+    if (!currentUserMember || !['superAdmin', 'admin'].includes(currentUserMember.role)) {
+      return res.status(403).json({ success: false, error: '只有超级管理员和管理员可以分配部门' });
+    }
+
+    const { memberId } = req.params;
+    const { departmentId } = req.body;
+
+    // 检查要分配的成员是否存在且属于同一企业
+    const targetMember = await EnterpriseMember.findOne({
+      userId: memberId,
+      enterpriseId: user.enterpriseId
+    });
+
+    if (!targetMember) {
+      return res.status(404).json({ success: false, error: '成员不存在或不属于该企业' });
+    }
+
+    // 检查部门是否存在且属于同一企业
+    const department = await Department.findById(departmentId);
+    if (!department || department.enterprise.toString() !== user.enterpriseId.toString()) {
+      return res.status(404).json({ success: false, error: '部门不存在或不属于该企业' });
+    }
+
+    // 更新成员部门
+    const updatedMember = await EnterpriseMember.findByIdAndUpdate(
+      targetMember._id,
+      { departmentId },
+      { new: true }
+    ).populate('userId', 'name email avatar')
+     .populate('departmentId', 'name code');
+
+    return res.json({
+      success: true,
+      message: '部门分配成功',
+      data: updatedMember
+    });
+
+  } catch (error) {
+    console.error('分配部门失败:', error);
+    return res.status(500).json({ success: false, error: '分配部门失败' });
   }
 });
 

@@ -134,6 +134,52 @@ async function cascadeDeleteUser(userId: mongoose.Types.ObjectId, enterpriseId?:
         userId: userId
       });
       console.log(`删除企业成员记录成功: ${deletedMembers.deletedCount} 条记录`);
+      
+      // 13. 如果删除的是超级管理员，自动转让给最早注册的用户
+      if (enterpriseId) {
+        try {
+          // 检查是否还有其他超级管理员
+          const remainingSuperAdmins = await EnterpriseMember.find({
+            enterpriseId: enterpriseId,
+            role: 'superAdmin'
+          });
+          
+          if (remainingSuperAdmins.length === 0) {
+            console.log('检测到企业没有超级管理员，开始自动转让...');
+            
+            // 查找最早注册的企业成员
+            const earliestMember = await EnterpriseMember.findOne({
+              enterpriseId: enterpriseId
+            }).sort({ joinDate: 1 });
+            
+            if (earliestMember) {
+              // 将最早注册的成员提升为超级管理员
+              await EnterpriseMember.findByIdAndUpdate(
+                earliestMember._id,
+                {
+                  role: 'superAdmin',
+                  permissions: [
+                    'manage_members',
+                    'manage_departments',
+                    'manage_messages',
+                    'view_statistics',
+                    'invite_users',
+                    'remove_users',
+                    'edit_enterprise',
+                    'manage_roles'
+                  ]
+                }
+              );
+              
+              console.log(`自动转让超级管理员成功: 用户 ${earliestMember.userId} 成为新的超级管理员`);
+            } else {
+              console.log('企业中没有其他成员，无法自动转让超级管理员');
+            }
+          }
+        } catch (transferError) {
+          console.error('自动转让超级管理员失败:', transferError);
+        }
+      }
     } catch (memberError) {
       console.error('删除企业成员记录失败:', memberError);
     }

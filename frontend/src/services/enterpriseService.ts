@@ -287,6 +287,18 @@ export const enterpriseService = {
   transferSuperAdmin: (newSuperAdminId: string) =>
     api.put<{ success: boolean; message: string; data: { oldSuperAdmin: string; newSuperAdmin: string } }>('/my-enterprise/transfer-super-admin', { newSuperAdminId }),
 
+  // 设置管理员身份
+  setAdminRole: (memberId: string, data: {
+    role: 'admin' | 'member';
+    position?: string;
+    departmentId?: string;
+  }) =>
+    api.put<{ success: boolean; message: string; data: EnterpriseMember }>(`/my-enterprise/set-admin/${memberId}`, data),
+
+  // 分配部门
+  assignDepartment: (memberId: string, departmentId: string) =>
+    api.put<{ success: boolean; message: string; data: EnterpriseMember }>(`/my-enterprise/assign-department/${memberId}`, { departmentId }),
+
   // ==================== 企业用户管理 ====================
   
   // 获取企业用户统计
