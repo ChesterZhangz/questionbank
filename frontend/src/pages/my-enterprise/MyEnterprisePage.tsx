@@ -28,6 +28,7 @@ import MultiSelect from '../../components/ui/MultiSelect';
 import LaTeXHighlightInput from '../../components/editor/latex/LaTeXHighlightInput';
 import HoverTooltip from '../../components/editor/preview/HoverTooltip';
 import Avatar from '../../components/ui/Avatar';
+import LoadingPage from '../../components/ui/LoadingPage';
 
 
 // 后端返回的企业信息接口
@@ -147,7 +148,8 @@ const MyEnterprisePage: React.FC = () => {
   // 弹窗状态管理
   const { 
     confirmModal,
-    showDanger,
+    showConfirm,
+    setConfirmLoading,
     showSuccess,
     closeConfirm,
     rightSlideModal,
@@ -228,16 +230,28 @@ const MyEnterprisePage: React.FC = () => {
 
   // 发送消息状态
   const [sendingMessage, setSendingMessage] = useState(false);
+  
+
 
   // 初始化数据
   useEffect(() => {
-    fetchEnterpriseInfo();
+    const initializeData = async () => {
+      try {
+        setLoading(true);
+        await fetchEnterpriseInfo();
+      } catch (error) {
+        console.error('初始化数据失败:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    initializeData();
   }, []);
 
   // 获取企业信息
   const fetchEnterpriseInfo = async () => {
     try {
-      setLoading(true);
       const response = await enterpriseService.getMyEnterpriseInfo();
       if (response.data.success) {
         setEnterpriseInfo(response.data);
@@ -245,25 +259,41 @@ const MyEnterprisePage: React.FC = () => {
         if (response.data.currentUser) {
           setCurrentUserId(response.data.currentUser._id);
         }
-        await Promise.all([
+        
+        // 优化：并行加载数据，提高加载速度
+        const [membersResult, departmentsResult, messagesResult] = await Promise.allSettled([
           fetchMembers(),
           fetchDepartments(),
           fetchMessages()
         ]);
+        
+        // 处理加载结果
+        if (membersResult.status === 'rejected') {
+          console.error('获取成员列表失败:', membersResult.reason);
+        }
+        if (departmentsResult.status === 'rejected') {
+          console.error('获取部门列表失败:', departmentsResult.reason);
+        }
+        if (messagesResult.status === 'rejected') {
+          console.error('获取消息列表失败:', messagesResult.reason);
+        }
       } else {
         setError('获取企业信息失败');
       }
     } catch (error: any) {
       console.error('获取企业信息失败:', error);
       setError(error.response?.data?.error || '获取企业信息失败');
-    } finally {
-      setLoading(false);
     }
   };
 
   // 获取成员列表
-  const fetchMembers = async (page: number = 1) => {
+  const fetchMembers = async (page: number = 1, forceRefresh: boolean = false) => {
     try {
+      // 缓存机制：如果不是强制刷新且已有数据，则跳过请求
+      if (!forceRefresh && members.length > 0 && page === 1) {
+        return;
+      }
+
       const params: any = { page, limit: 20 };
       if (searchTerm) params.search = searchTerm;
       if (selectedDepartment) params.department = selectedDepartment;
@@ -285,8 +315,13 @@ const MyEnterprisePage: React.FC = () => {
   };
 
   // 获取部门列表
-  const fetchDepartments = async () => {
+  const fetchDepartments = async (forceRefresh: boolean = false) => {
     try {
+      // 缓存机制：如果不是强制刷新且已有数据，则跳过请求
+      if (!forceRefresh && departments.length > 0) {
+        return;
+      }
+
       const response = await enterpriseService.getEnterpriseDepartments();
       if (response.data.success) {
         setDepartments(response.data.data || []);
@@ -300,8 +335,13 @@ const MyEnterprisePage: React.FC = () => {
   };
 
   // 获取消息列表
-  const fetchMessages = async () => {
+  const fetchMessages = async (forceRefresh: boolean = false) => {
     try {
+      // 缓存机制：如果不是强制刷新且已有数据，则跳过请求
+      if (!forceRefresh && messages.length > 0) {
+        return;
+      }
+
       const response = await enterpriseService.getMessages({ page: 1, limit: 20 });
       if (response.data.success) {
         // 转换后端数据为前端期望的格式
@@ -325,63 +365,88 @@ const MyEnterprisePage: React.FC = () => {
 
   // 处理搜索
   const handleSearch = () => {
-    fetchMembers(1);
+    fetchMembers(1, true);
   };
 
   // 处理部门筛选
   const handleDepartmentFilter = (departmentId: string) => {
     setSelectedDepartment(departmentId);
-    fetchMembers(1);
+    fetchMembers(1, true);
   };
 
   // 创建部门
   const handleCreateDepartment = async () => {
     try {
+      // 设置创建中状态
+      setConfirmLoading(true, '创建中...');
       const response = await enterpriseService.createDepartment(createDepartmentForm);
       if (response.data.success) {
         setShowCreateDepartmentModal(false);
         setCreateDepartmentForm({ name: '', code: '', description: '' });
-        fetchDepartments();
-        // 这里可以添加成功提示
+        fetchDepartments(true);
+        showSuccessRightSlide('创建成功', '部门已成功创建');
       }
     } catch (error: any) {
       console.error('创建部门失败:', error);
-      // 这里可以添加错误提示
+      showErrorRightSlide('创建失败', error.response?.data?.error || '创建部门失败');
+    } finally {
+      setConfirmLoading(false);
     }
   };
 
   // 编辑部门
   const handleEditDepartment = async () => {
     try {
+      // 设置保存中状态
+      setConfirmLoading(true, '保存中...');
       const response = await enterpriseService.updateDepartment(editDepartmentForm._id, {
         name: editDepartmentForm.name,
         description: editDepartmentForm.description
       });
       if (response.data.success) {
         setShowEditDepartmentModal(false);
-        fetchDepartments();
-        // 这里可以添加成功提示
+        fetchDepartments(true);
+        showSuccessRightSlide('更新成功', '部门信息已成功更新');
       }
     } catch (error: any) {
       console.error('更新部门失败:', error);
-      // 这里可以添加错误提示
+      showErrorRightSlide('更新失败', error.response?.data?.error || '更新部门失败');
+    } finally {
+      setConfirmLoading(false);
     }
   };
 
   // 删除部门
   const handleDeleteDepartment = async (departmentId: string) => {
-    if (window.confirm('确定要删除这个部门吗？')) {
-      try {
-        const response = await enterpriseService.deleteDepartment(departmentId);
-        if (response.data.success) {
-          fetchDepartments();
-          // 这里可以添加成功提示
+    // 使用 ConfirmModal 替代 window.confirm
+    showConfirm(
+      '删除部门',
+      '确定要删除这个部门吗？此操作不可撤销。',
+      async () => {
+        try {
+          setConfirmLoading(true, '删除中...');
+          const response = await enterpriseService.deleteDepartment(departmentId);
+          if (response.data.success) {
+            showSuccessRightSlide('删除成功', '部门已成功删除');
+            // 刷新部门列表
+            fetchDepartments(true);
+            // 删除成功后自动关闭确认弹窗
+            closeConfirm();
+          }
+        } catch (error: any) {
+          console.error('删除部门失败:', error);
+          showErrorRightSlide('删除失败', error.response?.data?.error || '删除部门失败');
+        } finally {
+          setConfirmLoading(false);
         }
-      } catch (error: any) {
-        console.error('删除部门失败:', error);
-        // 这里可以添加错误提示
+      },
+      {
+        type: 'danger',
+        confirmText: '删除',
+        cancelText: '取消',
+        confirmDanger: true
       }
-    }
+    );
   };
 
   // 发送消息
@@ -449,8 +514,12 @@ const MyEnterprisePage: React.FC = () => {
       enterpriseService.sendMessage(sendMessageForm).then((response) => {
         if (response.data.success) {
           showSuccessRightSlide('发送成功', '消息已发送');
-          // 静默刷新，获取真实的消息ID
-          fetchMessages();
+          // 更新乐观更新的消息为真实消息
+          setMessages(prev => prev.map(m => 
+            m._id === optimisticMessage._id 
+              ? { ...m, _id: response.data.data?._id || m._id }
+              : m
+          ));
         } else {
           showErrorRightSlide('发送失败', response.data.message || '发送失败');
           // 移除乐观更新的消息
@@ -532,6 +601,8 @@ const MyEnterprisePage: React.FC = () => {
         replyTo: replyForm.replyTo
       };
 
+      // 设置发送中状态
+      setConfirmLoading(true, '发送中...');
       const response = await enterpriseService.sendMessage(messageData);
       if (response.data.success) {
         setReplyingToMessage(null); // 关闭回复输入框
@@ -545,12 +616,16 @@ const MyEnterprisePage: React.FC = () => {
     } catch (error: any) {
       console.error('回复消息失败:', error);
       showErrorRightSlide('回复失败', error.response?.data?.error || error.message);
+    } finally {
+      setConfirmLoading(false);
     }
   };
 
   // 转让超级管理员身份
   const handleTransferSuperAdmin = async () => {
     try {
+      // 设置处理中状态
+      setConfirmLoading(true, '转让中...');
       const response = await enterpriseService.transferSuperAdmin(transferSuperAdminForm.newSuperAdminId);
       
       if (response.data.success) {
@@ -582,6 +657,8 @@ const MyEnterprisePage: React.FC = () => {
       }
       
       showErrorRightSlide('转让失败', errorMessage);
+    } finally {
+      setConfirmLoading(false);
     }
   };
 
@@ -603,27 +680,58 @@ const MyEnterprisePage: React.FC = () => {
     });
   };
 
-  // 删除消息
-  const handleDeleteMessage = async (messageId: string) => {
-    showDanger(
-      '删除消息',
-      '确定要删除这条消息吗？删除后无法恢复。',
-      async () => {
-        try {
-          const response = await enterpriseService.deleteMessage(messageId);
-          if (response.data.success) {
-            fetchMessages();
-            showSuccessRightSlide('删除成功', '消息已成功删除');
-          }
-        } catch (error: any) {
-          console.error('删除消息失败:', error);
-          const errorMessage = error.response?.data?.error || '删除消息失败';
-          showErrorRightSlide('删除失败', errorMessage);
-        }
-        // 关闭确认弹窗
-        closeConfirm();
+  // 删除消息状态
+  const [showDeleteMessageModal, setShowDeleteMessageModal] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
+  const [deletingMessage, setDeletingMessage] = useState(false);
+
+  // 打开删除消息确认弹窗
+  const openDeleteMessageModal = (messageId: string) => {
+    setMessageToDelete(messageId);
+    setShowDeleteMessageModal(true);
+  };
+
+  // 确认删除消息
+  const confirmDeleteMessage = async () => {
+    if (!messageToDelete) return;
+    
+    try {
+      setDeletingMessage(true);
+      
+      // 异步删除消息
+      const response = await enterpriseService.deleteMessage(messageToDelete);
+      if (response.data.success) {
+        // 删除成功后，立即从UI中移除消息
+        setMessages(prevMessages => {
+          const newMessages = prevMessages.filter(msg => {
+            // 如果是主消息，移除整个消息及其回复
+            if (msg._id === messageToDelete) {
+              return false;
+            }
+            // 如果是回复消息，从回复列表中移除
+            return {
+              ...msg,
+              replies: msg.replies?.filter(reply => reply._id !== messageToDelete) || []
+            };
+          });
+          return newMessages;
+        });
+        
+        showSuccessRightSlide('删除成功', '消息已成功删除');
+        // 强制刷新消息列表，确保数据同步
+        fetchMessages(true);
+      } else {
+        showErrorRightSlide('删除失败', response.data.message || '删除失败');
       }
-    );
+    } catch (error: any) {
+      console.error('删除消息失败:', error);
+      const errorMessage = error.response?.data?.error || '删除消息失败';
+      showErrorRightSlide('删除失败', errorMessage);
+    } finally {
+      setDeletingMessage(false);
+      setShowDeleteMessageModal(false);
+      setMessageToDelete(null);
+    }
   };
 
   // 切换回复展开状态
@@ -752,12 +860,13 @@ const MyEnterprisePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-blue-900/20 dark:to-indigo-900/20 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">加载中...</p>
-        </div>
-      </div>
+      <LoadingPage
+        type="loading"
+        animation="shimmer"
+        title="正在加载企业信息"
+        description="正在连接企业服务，请稍候..."
+        fullScreen={true}
+      />
     );
   }
 
@@ -1232,7 +1341,7 @@ const MyEnterprisePage: React.FC = () => {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => handleDeleteMessage(msg._id)}
+                                  onClick={() => openDeleteMessageModal(msg._id)}
                                   className="text-red-600 hover:text-red-700"
                                   title="删除消息"
                                 >
@@ -1299,7 +1408,7 @@ const MyEnterprisePage: React.FC = () => {
                                             <Button
                                               size="sm"
                                               variant="outline"
-                                              onClick={() => handleDeleteMessage(reply._id)}
+                                              onClick={() => openDeleteMessageModal(reply._id)}
                                               className="text-red-600 hover:text-red-700"
                                               title="删除回复"
                                             >
@@ -1346,10 +1455,10 @@ const MyEnterprisePage: React.FC = () => {
                                     <Button
                                       size="sm"
                                       onClick={handleReplyMessage}
-                                      disabled={!replyForm.content.trim()}
+                                      disabled={!replyForm.content.trim() || confirmModal.confirmLoading}
                                       className="bg-blue-600 hover:bg-blue-700 text-white"
                                     >
-                                      发送
+                                      {confirmModal.confirmLoading ? confirmModal.loadingText : '发送'}
                                     </Button>
                                     <Button
                                       size="sm"
@@ -1430,8 +1539,11 @@ const MyEnterprisePage: React.FC = () => {
                 >
                   取消
                 </Button>
-                <Button onClick={handleCreateDepartment}>
-                  创建
+                <Button 
+                  onClick={handleCreateDepartment}
+                  disabled={confirmModal.confirmLoading}
+                >
+                  {confirmModal.confirmLoading ? confirmModal.loadingText : '创建'}
                 </Button>
               </div>
             </div>
@@ -1492,8 +1604,11 @@ const MyEnterprisePage: React.FC = () => {
                 >
                   取消
                 </Button>
-                <Button onClick={handleEditDepartment}>
-                  保存
+                <Button 
+                  onClick={handleEditDepartment}
+                  disabled={confirmModal.confirmLoading}
+                >
+                  {confirmModal.confirmLoading ? confirmModal.loadingText : '保存'}
                 </Button>
               </div>
             </div>
@@ -1822,14 +1937,34 @@ const MyEnterprisePage: React.FC = () => {
                 <Button 
                   onClick={handleTransferSuperAdmin}
                   className="bg-yellow-600 hover:bg-yellow-700"
-                  disabled={!transferSuperAdminForm.newSuperAdminId}
+                  disabled={!transferSuperAdminForm.newSuperAdminId || confirmModal.confirmLoading}
                 >
-                  确认转让
+                  {confirmModal.confirmLoading ? confirmModal.loadingText : '确认转让'}
                 </Button>
               </div>
             </div>
           </div>
         )}
+
+        {/* 删除消息确认模态框 */}
+        <ConfirmModal
+          isOpen={showDeleteMessageModal}
+          title="删除消息"
+          message="确定要删除这条消息吗？删除后无法恢复。"
+          type="delete"
+          confirmText="删除"
+          cancelText="取消"
+          onConfirm={confirmDeleteMessage}
+          onCancel={() => {
+            setShowDeleteMessageModal(false);
+            setMessageToDelete(null);
+          }}
+          confirmDanger={true}
+          theme="glass"
+          position="center"
+          confirmLoading={deletingMessage}
+          loadingText="删除中..."
+        />
 
         {/* 确认模态框 */}
         <ConfirmModal

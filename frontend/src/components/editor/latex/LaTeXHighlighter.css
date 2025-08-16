@@ -14,15 +14,53 @@
  */
 
 .latex-highlighter {
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-family: monospace;
   font-size: 14px;
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: break-word;
   word-wrap: break-word;
+  letter-spacing: 0px;
+  tab-size: 4;
   color: #374151;
   box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  word-spacing: normal; /* 确保单词间距一致 */
+  text-align: left; /* 确保文本对齐一致 */
+  font-variant-ligatures: none; /* 禁用连字 */
+  font-feature-settings: normal; /* 确保字体特性一致 */
+}
+
+/* 完全隐藏高亮层的滚动条，确保与textarea布局一致 */
+.latex-highlighter::-webkit-scrollbar,
+.latex-highlight-container::-webkit-scrollbar {
+  display: none;
+}
+
+.latex-highlight-container {
+  scrollbar-width: none !important; /* Firefox - 强制隐藏 */
+  -ms-overflow-style: none !important; /* Internet Explorer 10+ - 强制隐藏 */
+  overflow: hidden !important; /* 强制隐藏所有滚动 */
+}
+
+/* 确保高亮层内容不会产生滚动条 */
+.latex-highlighter {
+  overflow: hidden !important;
+}
+
+/* 强制禁用外层容器的滚动条 */
+.latex-highlight-input {
+  overflow: hidden !important;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* Internet Explorer 10+ */
+}
+
+.latex-highlight-input::-webkit-scrollbar {
+  display: none !important;
 }
 
 /* 确保普通文本（没有高亮类的文本）有正确的颜色 */

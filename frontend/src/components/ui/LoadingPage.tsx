@@ -23,7 +23,7 @@ export interface LoadingPageProps {
   /** 自定义图标 */
   icon?: React.ReactNode;
   /** 加载动画类型 */
-  animation?: 'spinner' | 'pulse' | 'dots' | 'wave';
+  animation?: 'spinner' | 'pulse' | 'dots' | 'wave' | 'ripple' | 'bounce' | 'shimmer';
   /** 是否全屏显示 */
   fullScreen?: boolean;
   /** 自定义样式类 */
@@ -150,6 +150,59 @@ const LoadingPage: React.FC<LoadingPageProps> = ({
                 className="w-1 bg-blue-600 dark:bg-blue-400 rounded-full"
               />
             ))}
+          </div>
+        );
+      case 'ripple':
+        return (
+          <div className="relative w-12 h-12">
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className="absolute inset-0 border-2 border-blue-600 dark:border-blue-400 rounded-full"
+                animate={{ 
+                  scale: [0, 1.2], 
+                  opacity: [1, 0] 
+                }}
+                transition={{ 
+                  duration: 1.5, 
+                  repeat: Infinity, 
+                  delay: i * 0.5,
+                  ease: "easeOut"
+                }}
+              />
+            ))}
+          </div>
+        );
+      case 'bounce':
+        return (
+          <div className="flex space-x-2">
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                animate={{ y: [0, -20, 0] }}
+                transition={{ 
+                  duration: 0.8, 
+                  repeat: Infinity, 
+                  delay: i * 0.2,
+                  ease: "easeInOut"
+                }}
+                className="w-3 h-3 bg-blue-600 dark:bg-blue-400 rounded-full"
+              />
+            ))}
+          </div>
+        );
+      case 'shimmer':
+        return (
+          <div className="relative w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full overflow-hidden">
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              animate={{ x: [-100, 100] }}
+              transition={{ 
+                duration: 1.5, 
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
           </div>
         );
       default:

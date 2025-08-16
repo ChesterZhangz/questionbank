@@ -82,6 +82,10 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       setActiveSection('analytics');
     } else if (currentPath === '/settings') {
       setActiveSection('settings');
+    } else if (currentPath === '/profile') {
+      setActiveSection('profile');
+    } else if (currentPath === '/version') {
+      setActiveSection('version');
     }
   }, [location.pathname]);
 
@@ -243,11 +247,17 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
         <div className="space-y-2">
           <button
             onClick={() => navigate('/profile')}
-            className={`w-full flex items-center gap-4 text-sm text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 rounded-xl transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
+            className={`w-full flex items-center gap-4 text-sm rounded-xl transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
+              activeSection === 'profile'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 hover:text-gray-900 dark:hover:text-gray-100'
+            } ${
               collapsed ? 'justify-center px-3 py-3' : 'px-4 py-3'
             }`}
           >
-            <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            <User className={`w-4 h-4 transition-colors duration-300 ${
+              activeSection === 'profile' ? 'text-white' : 'text-gray-600 dark:text-gray-400'
+            }`} />
             <AnimatePresence>
               {!collapsed && (
                 <motion.span
@@ -266,11 +276,17 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           {user?.enterpriseId && (
             <button
               onClick={() => navigate('/my-enterprise')}
-              className={`w-full flex items-center gap-4 text-sm text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 rounded-xl transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
+              className={`w-full flex items-center gap-4 text-sm rounded-xl transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
+                activeSection === 'my-enterprise'
+                  ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 hover:text-gray-900 dark:hover:text-gray-100'
+              } ${
                 collapsed ? 'justify-center px-3 py-3' : 'px-4 py-3'
               }`}
             >
-              <Building2 className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              <Building2 className={`w-4 h-4 transition-colors duration-300 ${
+                activeSection === 'my-enterprise' ? 'text-white' : 'text-gray-600 dark:text-gray-400'
+              }`} />
               <AnimatePresence>
                 {!collapsed && (
                   <motion.span
@@ -288,11 +304,17 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           
           <button
             onClick={() => navigate('/settings')}
-            className={`w-full flex items-center gap-4 text-sm text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 rounded-xl transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
+            className={`w-full flex items-center gap-4 text-sm rounded-xl transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
+              activeSection === 'settings'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 hover:text-gray-900 dark:hover:text-gray-100'
+            } ${
               collapsed ? 'justify-center px-3 py-3' : 'px-4 py-3'
             }`}
           >
-            <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            <Settings className={`w-4 h-4 transition-colors duration-300 ${
+              activeSection === 'settings' ? 'text-white' : 'text-gray-600 dark:text-gray-400'
+            }`} />
             <AnimatePresence>
               {!collapsed && (
                 <motion.span
@@ -333,11 +355,17 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
         <div className="mt-4 pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
           <button
             onClick={() => navigate('/version')}
-            className={`w-full flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-white/40 dark:hover:bg-gray-700/40 rounded-lg transition-all duration-300 ${
+            className={`w-full flex items-center gap-4 text-sm rounded-lg transition-all duration-300 ${
+              activeSection === 'version'
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-white/40 dark:hover:bg-gray-700/40'
+            } ${
               collapsed ? 'justify-center px-2 py-2' : 'px-3 py-2'
             }`}
           >
-            <Info className="w-3.5 h-3.5" />
+            <Info className={`w-3.5 h-3.5 transition-colors duration-300 ${
+              activeSection === 'version' ? 'text-white' : ''
+            }`} />
             <AnimatePresence>
               {!collapsed && (
                 <motion.div

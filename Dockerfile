@@ -14,6 +14,7 @@ COPY frontend/ ./
 
 # 构建前端
 ENV VITE_API_URL=http://43.160.253.32/api
+ENV VITE_BASE_URL=/
 RUN npm run build
 
 # 后端构建阶段
@@ -72,6 +73,8 @@ COPY --from=backend-builder --chown=nextjs:nodejs /app/backend/public ./backend/
 
 # 复制前端构建结果
 COPY --from=frontend-builder --chown=nextjs:nodejs /app/frontend/dist ./frontend/dist
+# 确保图标文件被复制
+COPY --from=frontend-builder --chown=nextjs:nodejs /app/frontend/public ./frontend/public
 
 # 复制环境配置文件
 COPY .env ./

@@ -45,11 +45,113 @@
   color: #f6f8fa !important;
 }
 
+/* 为宽度超标的数学内容添加横向滚动 */
+.latex-content .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  padding: 0.5em 0;
+  margin: 0.3em 0; /* 添加垂直间距 */
+  vertical-align: baseline; /* 确保基线对齐 */
+}
+
+.latex-content .katex-display::-webkit-scrollbar {
+  height: 6px;
+}
+
+.latex-content .katex-display::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.latex-content .katex-display::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.latex-content .katex-display::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark Mode下的数学公式横向滚动条样式 */
+.dark .latex-content .katex-display::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .latex-content .katex-display::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.dark .latex-content .katex-display::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* 为行内数学公式也添加横向滚动支持 */
+.latex-content .katex {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: inline-block;
+  vertical-align: middle; /* 改为middle对齐，更自然 */
+  transform: translateY(-0.05em); /* 微调位置，修正偏上的问题 */
+}
+
+/* 为长表格和矩阵添加横向滚动 */
+.latex-content table {
+  max-width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+
+.latex-content table::-webkit-scrollbar {
+  height: 6px;
+}
+
+.latex-content table::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.latex-content table::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.latex-content table::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark Mode下的表格横向滚动条样式 */
+.dark .latex-content table::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .latex-content table::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.dark .latex-content table::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
 /* 文本内容样式 - 适当调整行间距 */
 .latex-content p {
   margin: 0.3em 0; /* 缩小行间距，从0.8em减少到0.3em */
   line-height: 1.6; /* 适当调整行高 */
   color: inherit; /* 继承父元素的颜色 */
+  display: flex; /* 使用flexbox改善对齐 */
+  align-items: baseline; /* 基线对齐 */
+  flex-wrap: wrap; /* 允许换行 */
+}
+
+/* 确保段落内的数学公式正确对齐 */
+.latex-content p .katex {
+  flex-shrink: 0; /* 防止数学公式被压缩 */
+}
+
+.latex-content p .katex-display {
+  flex-basis: 100%; /* 块级数学公式独占一行 */
+  margin: 0.5em 0;
 }
 
 .latex-content p:first-child {
@@ -67,6 +169,48 @@
   display: inline-flex;
   align-items: center;
   margin: 0 0.3em;
+}
+
+/* 为长数学公式和特殊数学环境添加横向滚动 */
+.latex-content .math-long,
+.latex-content .katex-display .katex-html {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+
+/* 矩阵和数组的横向滚动 */
+.latex-content .katex-display .katex-html .array,
+.latex-content .katex-display .katex-html .matrix {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+
+/* 长等式的横向滚动 */
+.latex-content .katex-display .katex-html .eqnarray,
+.latex-content .katex-display .katex-html .align {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+
+/* 修正KaTeX的strut元素导致的对齐偏移 */
+.latex-content .katex .strut {
+  height: auto !important;
+  vertical-align: baseline !important;
+}
+
+/* 修正KaTeX的base元素对齐 */
+.latex-content .katex .base {
+  vertical-align: baseline !important;
+  line-height: normal !important;
+}
+
+/* 精确修正KaTeX整体的对齐问题 */
+.latex-content .katex-html {
+  vertical-align: baseline !important;
+  line-height: 1 !important;
 }
 
 /* 选择题样式 - 绝对可靠的括号 */
@@ -360,7 +504,7 @@
 
 .preview-panel-content {
   padding: 1.5rem;
-  height: 28rem;
+  height: 31.25rem; /* 500px = 31.25rem */
   overflow-y: auto;
   background: white;
 }
@@ -412,6 +556,41 @@
 .latex-preview-content {
   color: #374151;
   padding: 0 1rem 1rem;
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* 为渲染预览添加滚动条样式 */
+.latex-preview-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.latex-preview-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.latex-preview-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.latex-preview-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark Mode下的滚动条样式 */
+.dark .latex-preview-content::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .latex-preview-content::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.dark .latex-preview-content::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 
 /* Dark Mode 预览容器样式 */
@@ -426,6 +605,29 @@
 
 .dark .latex-preview-content {
   color: #d1d5db;
+}
+
+/* 渲染预览增强样式 - 支持滚动 */
+.preview-enhanced {
+  height: 100%;
+  overflow: hidden;
+}
+
+.preview-enhanced .latex-preview-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-enhanced .latex-preview-title {
+  flex-shrink: 0;
+}
+
+.preview-enhanced .latex-preview-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
 }
 
 

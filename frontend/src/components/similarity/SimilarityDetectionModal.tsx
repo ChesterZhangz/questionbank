@@ -36,6 +36,9 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      // 阻止背景页面滚动
+      document.body.style.overflow = 'hidden';
+      
       setIsLoading(true);
       // 延迟显示动画，让内容先加载
       const timer = setTimeout(() => {
@@ -53,9 +56,18 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
     }
   }, [isOpen]);
 
+  // 清理函数：模态框关闭时恢复页面滚动
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   // 处理关闭
   const handleClose = () => {
     setIsVisible(false);
+    // 恢复页面滚动
+    document.body.style.overflow = 'unset';
     setTimeout(() => {
       onClose();
     }, 300);
@@ -102,10 +114,16 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
       onClick={handleClose}
     >
       <div 
-        className={`bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-gray-900/50 max-w-4xl w-full max-h-[90vh] overflow-hidden transition-all duration-300 transform modal-content ${
+        className={`bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-gray-900/50 max-w-4xl w-full max-h-[90vh] overflow-y-auto transition-all duration-300 transform modal-content ${
           isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
         }`}
         onClick={(e) => e.stopPropagation()}
+        onWheel={(e) => e.stopPropagation()}
+        style={{ 
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
       >
         {/* 加载状态 */}
         {isLoading ? (
@@ -116,7 +134,7 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
         ) : (
           <>
             {/* 头部 */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
               <div className="flex items-center space-x-3">
                 <AlertTriangle className="w-6 h-6 text-orange-500 dark:text-orange-400" />
                 <div>
@@ -166,7 +184,10 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
             </div>
 
             {/* 内容 */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div 
+              className="flex-1 overflow-y-auto p-6 min-h-0"
+              onWheel={(e) => e.stopPropagation()}
+            >
               {/* 当前题目预览 */}
               <div className="mb-6">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">当前题目</h3>
@@ -259,7 +280,7 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
             </div>
 
             {/* 底部操作 */}
-            <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+            <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex-shrink-0">
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 <AlertTriangle className="w-4 h-4 inline mr-1" />
                 建议仔细检查相似题目，避免创建重复内容

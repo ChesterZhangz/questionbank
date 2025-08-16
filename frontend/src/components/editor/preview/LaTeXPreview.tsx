@@ -70,6 +70,13 @@ const LaTeXPreview: React.FC<LaTeXPreviewProps> = ({
           {content ? (
             <div 
               className={`latex-content ${fullWidth ? 'w-full' : 'max-w-none'} ${heightClass} ${isDark ? 'dark' : ''}`}
+              style={{
+                minHeight: 'fit-content',
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word',
+                maxWidth: '100%',
+                overflow: 'visible'
+              }}
               dangerouslySetInnerHTML={{
                 __html: renderResult.html
               }}

@@ -54,14 +54,68 @@ const LaTeXHighlightInput: React.FC<LaTeXHighlightInputProps> = ({
   const highlighterRef = useRef<HTMLDivElement>(null);
   const autoCompleteRef = useRef<HTMLDivElement>(null);
 
-  // 同步滚动
-  const syncScroll = useCallback(() => {
+  // 同步滚动和尺寸
+  const syncScrollAndSize = useCallback(() => {
     if (textareaRef.current && highlighterRef.current) {
       const textarea = textareaRef.current;
       const highlighter = highlighterRef.current;
       
-      highlighter.scrollTop = textarea.scrollTop;
-      highlighter.scrollLeft = textarea.scrollLeft;
+      // 获取textarea的精确样式
+      const textareaStyle = getComputedStyle(textarea);
+      
+      // 计算textarea的实际内容区域（考虑边框、内边距、滚动条）
+      const paddingLeft = parseFloat(textareaStyle.paddingLeft) || 0;
+      const paddingRight = parseFloat(textareaStyle.paddingRight) || 0;
+      const paddingTop = parseFloat(textareaStyle.paddingTop) || 0;
+      const paddingBottom = parseFloat(textareaStyle.paddingBottom) || 0;
+      
+      // 计算内容区域的实际可用宽度（这是换行计算的关键）
+      const contentWidth = textarea.clientWidth - paddingLeft - paddingRight;
+      const contentHeight = textarea.clientHeight - paddingTop - paddingBottom;
+      
+      // 只在尺寸真正发生变化时才更新，避免无限循环
+      // 同时考虑宽度变大和变小的情况
+      const currentWidth = parseFloat(highlighter.style.width) || 0;
+      const currentHeight = parseFloat(highlighter.style.height) || 0;
+      const currentPaddingLeft = parseFloat(highlighter.style.paddingLeft) || 0;
+      
+      const widthChanged = Math.abs(currentWidth - textarea.clientWidth) > 1;
+      const heightChanged = Math.abs(currentHeight - textarea.clientHeight) > 1;
+      const paddingChanged = Math.abs(currentPaddingLeft - paddingLeft) > 0.5;
+      
+      if (widthChanged || heightChanged || paddingChanged) {
+        
+        // 设置高亮层为完全匹配textarea的内容区域，确保换行一致
+        highlighter.style.width = `${textarea.clientWidth}px`;
+        // 使用scrollHeight确保容器足够高，能够显示所有内容
+        const containerHeight = Math.max(textarea.scrollHeight, textarea.clientHeight);
+        highlighter.style.height = `${containerHeight}px`;
+        highlighter.style.paddingLeft = `${paddingLeft}px`;
+        highlighter.style.paddingRight = `${paddingRight}px`;
+        highlighter.style.paddingTop = `${paddingTop}px`;
+        highlighter.style.paddingBottom = `${paddingBottom}px`;
+        
+        // 确保高亮层内容区域精确匹配textarea的内容区域
+        const highlighterContent = highlighter.querySelector('.latex-highlighter') as HTMLElement;
+        if (highlighterContent) {
+          // 强制重设宽度，确保收缩时也能正确同步
+          highlighterContent.style.width = 'auto';
+          highlighterContent.style.maxWidth = `${contentWidth}px`;
+          highlighterContent.style.minWidth = `${contentWidth}px`;
+          highlighterContent.style.width = `${contentWidth}px`;
+          // 使用scrollHeight确保内容完全可见
+          const scrollHeight = Math.max(textarea.scrollHeight, contentHeight);
+          highlighterContent.style.height = `${scrollHeight}px`;
+        }
+        
+        console.log('Debug alignment updated:', {
+          textareaClientWidth: textarea.clientWidth,
+          textareaClientHeight: textarea.clientHeight,
+          contentWidth,
+          contentHeight,
+          padding: { paddingLeft, paddingRight, paddingTop, paddingBottom }
+        });
+      }
     }
   }, []);
 
@@ -120,36 +174,125 @@ const LaTeXHighlightInput: React.FC<LaTeXHighlightInputProps> = ({
       }
     };
 
-  // 更新自动补全位置 - 使用与Input组件相同的简单方法
+  // 更新自动补全位置 - 考虑文本自动换行
   const updateAutoCompletePosition = (position: number) => {
     if (textareaRef.current && containerRef.current) {
       const textarea = textareaRef.current;
-      const rect = textarea.getBoundingClientRect();
+      const textareaRect = textarea.getBoundingClientRect();
+      
+      // 获取textarea的样式
+      const computedStyle = getComputedStyle(textarea);
+      const lineHeight = parseFloat(computedStyle.lineHeight) || 20;
+      const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
+      const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
+      const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
+      
+      // 计算textarea的可用宽度（考虑padding）
+      const availableWidth = textareaRect.width - paddingLeft - paddingRight;
       
       // 计算光标位置
       const textBeforeCursor = value.substring(0, position);
+      const logicalLines = textBeforeCursor.split('\n');
+      const currentLogicalLine = logicalLines[logicalLines.length - 1];
+      const logicalLineIndex = logicalLines.length - 1;
       
-      // 使用Canvas测量文本宽度
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      if (context) {
-        const computedStyle = getComputedStyle(textarea);
-        context.font = computedStyle.font;
-        
-        // 处理多行文本
-        const lines = textBeforeCursor.split('\n');
-        const currentLine = lines[lines.length - 1];
-        const textWidth = context.measureText(currentLine).width;
-        
-        // 计算位置 - 使用固定偏移
-        const padding = 30; // textarea的padding
-        
-        // 设置位置在光标右侧
-        const x = rect.left + padding + textWidth;
-                const y = rect.top + padding + (lines.length - 1) * (parseFloat(computedStyle.lineHeight) || 24);
-        
-        setAutoCompletePosition({ x, y });
+      // 创建临时div来计算换行情况
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.visibility = 'hidden';
+      tempDiv.style.width = `${availableWidth}px`;
+      tempDiv.style.whiteSpace = 'pre-wrap'; // 关键：使用pre-wrap而不是pre
+      tempDiv.style.wordBreak = 'break-word';
+      tempDiv.style.fontFamily = computedStyle.fontFamily;
+      tempDiv.style.fontSize = computedStyle.fontSize;
+      tempDiv.style.fontWeight = computedStyle.fontWeight;
+      tempDiv.style.letterSpacing = computedStyle.letterSpacing;
+      tempDiv.style.lineHeight = computedStyle.lineHeight;
+      document.body.appendChild(tempDiv);
+      
+      // 计算之前所有逻辑行产生的视觉行数
+      let totalVisualLines = 0;
+      for (let i = 0; i < logicalLineIndex; i++) {
+        tempDiv.textContent = logicalLines[i];
+        // 计算这一逻辑行占用的视觉行数
+        const lineVisualHeight = tempDiv.offsetHeight;
+        const linesInThisLogicalLine = Math.ceil(lineVisualHeight / lineHeight);
+        totalVisualLines += linesInThisLogicalLine;
       }
+      
+      // 计算当前逻辑行到光标位置的视觉行偏移和列位置
+      tempDiv.textContent = currentLogicalLine;
+      
+      // 准备测量当前行的高度
+      const textNode = document.createTextNode(currentLogicalLine);
+      tempDiv.innerHTML = '';
+      tempDiv.appendChild(textNode);
+      
+      // 当前行已经在tempDiv中，不需要额外测量高度
+      
+      // 计算光标在当前逻辑行中的视觉位置
+      // 这需要逐字符测量，找到光标所在的视觉行
+      let visualLineOffset = 0;
+      let visualColumnPosition = 0;
+      
+      if (currentLogicalLine.length > 0) {
+        // 创建一个临时span来测量每个字符的位置
+        const measureSpan = document.createElement('span');
+        measureSpan.style.position = 'absolute';
+        measureSpan.style.visibility = 'hidden';
+        measureSpan.style.whiteSpace = 'pre-wrap';
+        measureSpan.style.wordBreak = 'break-word';
+        measureSpan.style.width = `${availableWidth}px`;
+        measureSpan.style.fontFamily = computedStyle.fontFamily;
+        measureSpan.style.fontSize = computedStyle.fontSize;
+        measureSpan.style.fontWeight = computedStyle.fontWeight;
+        measureSpan.style.letterSpacing = computedStyle.letterSpacing;
+        document.body.appendChild(measureSpan);
+        
+        // 找到光标所在的视觉行
+        let lastTop = -1;
+        let currentTop = 0;
+        
+        for (let i = 0; i <= currentLogicalLine.length; i++) {
+          measureSpan.textContent = currentLogicalLine.substring(0, i);
+          currentTop = measureSpan.offsetHeight;
+          
+          if (lastTop !== -1 && currentTop > lastTop) {
+            // 发现了一个新的视觉行
+            visualLineOffset++;
+            visualColumnPosition = 0;
+          }
+          
+          if (i === currentLogicalLine.length) {
+            // 我们到达了光标位置
+            break;
+          }
+          
+          lastTop = currentTop;
+          visualColumnPosition++;
+        }
+        
+        document.body.removeChild(measureSpan);
+      }
+      
+      // 计算最终的视觉行索引
+      const visualLineIndex = totalVisualLines + visualLineOffset;
+      
+      // 计算光标在textarea中的位置
+      const cursorX = paddingLeft + (visualColumnPosition * (parseFloat(computedStyle.fontSize) * 0.6)); // 估算字符宽度
+      const cursorY = paddingTop + (visualLineIndex * lineHeight);
+      
+      document.body.removeChild(tempDiv);
+      
+      // 考虑textarea的滚动位置
+      const scrollTop = textarea.scrollTop;
+      const scrollLeft = textarea.scrollLeft;
+      
+      // 计算绝对位置（相对于视口）
+      const x = textareaRect.left + cursorX - scrollLeft;
+      const y = textareaRect.top + cursorY - scrollTop + 5; // 在光标下方5px显示
+      
+      setAutoCompletePosition({ x, y });
     }
   };
 
@@ -292,36 +435,98 @@ const LaTeXHighlightInput: React.FC<LaTeXHighlightInputProps> = ({
     };
   }, [showAutoComplete]);
 
-  // 同步滚动事件
+  // 同步滚动事件和尺寸变化
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.addEventListener('scroll', syncScroll);
-      return () => textarea.removeEventListener('scroll', syncScroll);
+      // 使用transform同步滚动，避免双重滚动框架
+      const handleScroll = () => {
+        if (highlighterRef.current) {
+          const highlighter = highlighterRef.current;
+          // 使用transform来同步滚动位置，避免重新布局
+          highlighter.style.transform = `translate(-${textarea.scrollLeft}px, -${textarea.scrollTop}px)`;
+        }
+      };
+      
+      textarea.addEventListener('scroll', handleScroll);
+      // 初始化同步
+      syncScrollAndSize();
+      return () => textarea.removeEventListener('scroll', handleScroll);
     }
-  }, [syncScroll]);
+  }, [syncScrollAndSize]);
+
+  // 当内容变化时，延迟同步尺寸，避免频繁调用
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      syncScrollAndSize();
+    }, 50); // 延迟50ms，避免快速输入时频繁调用
+    
+    return () => clearTimeout(timer);
+  }, [value, syncScrollAndSize]);
+
+  // 监听窗口大小变化和容器尺寸变化
+  useEffect(() => {
+    const handleResize = () => {
+      // 强制重新计算，确保宽度变化时正确同步
+      setTimeout(() => {
+        syncScrollAndSize();
+        // 双重调用确保收缩时也能正确同步
+        setTimeout(syncScrollAndSize, 50);
+      }, 0);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // 添加ResizeObserver监听容器自身的尺寸变化
+    const container = containerRef.current;
+    if (container && window.ResizeObserver) {
+      const resizeObserver = new ResizeObserver(() => {
+        handleResize();
+      });
+      resizeObserver.observe(container);
+      
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        resizeObserver.disconnect();
+      };
+    }
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, [syncScrollAndSize]);
 
   return (
     <div 
       ref={containerRef}
       className={`relative latex-highlight-input ${className}`}
-      style={style}
+      style={{
+        ...style,
+        overflow: 'hidden' // 强制禁用外层滚动条
+      }}
     >
-      {/* 高亮背景层 */}
+      {/* 高亮背景层 - 完全禁用滚动，只跟随textarea */}
       <div
         ref={highlighterRef}
-        className={`absolute inset-0 pointer-events-none overflow-auto ${isDark ? 'dark' : ''}`}
+        className={`absolute pointer-events-none overflow-hidden latex-highlight-container ${isDark ? 'dark' : ''}`}
         style={{
-          padding: '12px',
+          top: '1px', // 考虑边框宽度
+          left: '1px',
           fontSize: '14px',
           lineHeight: '1.6',
-          fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+          fontFamily: 'monospace', // 使用单一字体，确保一致性
+          letterSpacing: '0px', // 确保字母间距一致
           color: 'inherit', // 继承颜色，让高亮显示
           zIndex: 1,
           whiteSpace: 'pre-wrap',
           wordBreak: 'break-word',
           overflowWrap: 'break-word',
-          wordWrap: 'break-word'
+          wordWrap: 'break-word',
+          tabSize: 4, // 确保tab大小一致
+          boxSizing: 'border-box', // 确保盒模型一致
+          wordSpacing: 'normal', // 确保单词间距一致
+          textAlign: 'left', // 确保文本对齐一致
+          fontVariantLigatures: 'none', // 禁用连字
+          fontFeatureSettings: 'normal', // 确保字体特性一致
+          borderRadius: '6px' // 与textarea保持一致
         }}
       >
         <LaTeXHighlighter content={value} className={isDark ? 'dark' : ''} />
@@ -348,14 +553,21 @@ const LaTeXHighlightInput: React.FC<LaTeXHighlightInputProps> = ({
           padding: '12px',
           fontSize: '14px',
           lineHeight: '1.6',
-          fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+          fontFamily: 'monospace', // 使用单一字体，确保一致性
+          letterSpacing: '0px', // 确保字母间距一致
           color: 'transparent',
           caretColor: isFocused ? '#3b82f6' : isDark ? '#9ca3af' : '#374151',
           zIndex: 2,
           whiteSpace: 'pre-wrap',
           wordBreak: 'break-word',
           overflowWrap: 'break-word',
-          wordWrap: 'break-word'
+          wordWrap: 'break-word',
+          tabSize: 4, // 确保tab大小一致
+          boxSizing: 'border-box', // 确保盒模型一致
+          wordSpacing: 'normal', // 确保单词间距一致
+          textAlign: 'left', // 确保文本对齐一致
+          fontVariantLigatures: 'none', // 禁用连字
+          fontFeatureSettings: 'normal' // 确保字体特性一致
         }}
       />
       

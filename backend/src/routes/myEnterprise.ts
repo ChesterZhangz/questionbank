@@ -202,11 +202,22 @@ router.post('/departments', authMiddleware, [
       return res.status(404).json({ success: false, error: '您尚未加入任何企业' });
     }
 
+    console.log('🔍 创建部门权限检查调试信息:');
+    console.log('  用户ID:', user._id);
+    console.log('  企业ID:', user.enterpriseId);
+
     // 检查用户权限
     const enterpriseMember = await EnterpriseMember.findOne({
       userId: user._id,
       enterpriseId: user.enterpriseId
     });
+
+    console.log('  企业成员记录:', enterpriseMember ? '存在' : '不存在');
+    if (enterpriseMember) {
+      console.log('  角色:', enterpriseMember.role);
+      console.log('  权限:', enterpriseMember.permissions);
+      console.log('  有manage_departments权限:', enterpriseMember.permissions.includes('manage_departments'));
+    }
 
     if (!enterpriseMember || !enterpriseMember.permissions.includes('manage_departments')) {
       return res.status(403).json({ success: false, error: '权限不足' });

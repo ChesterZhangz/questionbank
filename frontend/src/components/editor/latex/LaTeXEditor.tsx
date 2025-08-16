@@ -109,7 +109,7 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
     return searchAllSymbols(currentCommand);
   };
 
-  // 更新自动补全位置（使用传入的位置参数）
+  // 更新自动补全位置（使用传入的位置参数）- 考虑文本自动换行
   const updateAutoCompletePositionWithPosition = (position: number) => {
     if (textareaRef.current) {
       const textarea = textareaRef.current;
@@ -120,31 +120,104 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
       const lineHeight = parseFloat(computedStyle.lineHeight) || 20;
       const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
       const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
+      const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
+      
+      // 计算textarea的可用宽度（考虑padding）
+      const availableWidth = textareaRect.width - paddingLeft - paddingRight;
       
       // 计算光标位置
       const textBeforeCursor = value.substring(0, position);
-      const lines = textBeforeCursor.split('\n');
-      const currentLine = lines[lines.length - 1];
-      const lineIndex = lines.length - 1;
+      const logicalLines = textBeforeCursor.split('\n');
+      const currentLogicalLine = logicalLines[logicalLines.length - 1];
+      const logicalLineIndex = logicalLines.length - 1;
       
-      // 创建临时span来计算当前行的宽度
-      const tempSpan = document.createElement('span');
-      tempSpan.style.position = 'absolute';
-      tempSpan.style.visibility = 'hidden';
-      tempSpan.style.whiteSpace = 'pre';
-      tempSpan.style.fontFamily = computedStyle.fontFamily;
-      tempSpan.style.fontSize = computedStyle.fontSize;
-      tempSpan.style.fontWeight = computedStyle.fontWeight;
-      tempSpan.style.letterSpacing = computedStyle.letterSpacing;
-      document.body.appendChild(tempSpan);
+      // 创建临时div来计算换行情况
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.visibility = 'hidden';
+      tempDiv.style.width = `${availableWidth}px`;
+      tempDiv.style.whiteSpace = 'pre-wrap'; // 关键：使用pre-wrap而不是pre
+      tempDiv.style.wordBreak = 'break-word';
+      tempDiv.style.fontFamily = computedStyle.fontFamily;
+      tempDiv.style.fontSize = computedStyle.fontSize;
+      tempDiv.style.fontWeight = computedStyle.fontWeight;
+      tempDiv.style.letterSpacing = computedStyle.letterSpacing;
+      tempDiv.style.lineHeight = computedStyle.lineHeight;
+      document.body.appendChild(tempDiv);
       
-      tempSpan.textContent = currentLine;
-      const currentLineWidth = tempSpan.offsetWidth;
-      document.body.removeChild(tempSpan);
+      // 计算之前所有逻辑行产生的视觉行数
+      let totalVisualLines = 0;
+      for (let i = 0; i < logicalLineIndex; i++) {
+        tempDiv.textContent = logicalLines[i];
+        // 计算这一逻辑行占用的视觉行数
+        const lineVisualHeight = tempDiv.offsetHeight;
+        const linesInThisLogicalLine = Math.ceil(lineVisualHeight / lineHeight);
+        totalVisualLines += linesInThisLogicalLine;
+      }
+      
+      // 计算当前逻辑行到光标位置的视觉行偏移和列位置
+      tempDiv.textContent = currentLogicalLine;
+      
+      // 准备测量当前行的高度
+      const textNode = document.createTextNode(currentLogicalLine);
+      tempDiv.innerHTML = '';
+      tempDiv.appendChild(textNode);
+      
+      // 当前行已经在tempDiv中，不需要额外测量高度
+      
+      // 计算光标在当前逻辑行中的视觉位置
+      // 这需要逐字符测量，找到光标所在的视觉行
+      let visualLineOffset = 0;
+      let visualColumnPosition = 0;
+      
+      if (currentLogicalLine.length > 0) {
+        // 创建一个临时span来测量每个字符的位置
+        const measureSpan = document.createElement('span');
+        measureSpan.style.position = 'absolute';
+        measureSpan.style.visibility = 'hidden';
+        measureSpan.style.whiteSpace = 'pre-wrap';
+        measureSpan.style.wordBreak = 'break-word';
+        measureSpan.style.width = `${availableWidth}px`;
+        measureSpan.style.fontFamily = computedStyle.fontFamily;
+        measureSpan.style.fontSize = computedStyle.fontSize;
+        measureSpan.style.fontWeight = computedStyle.fontWeight;
+        measureSpan.style.letterSpacing = computedStyle.letterSpacing;
+        document.body.appendChild(measureSpan);
+        
+        // 找到光标所在的视觉行
+        let lastTop = -1;
+        let currentTop = 0;
+        
+        for (let i = 0; i <= currentLogicalLine.length; i++) {
+          measureSpan.textContent = currentLogicalLine.substring(0, i);
+          currentTop = measureSpan.offsetHeight;
+          
+          if (lastTop !== -1 && currentTop > lastTop) {
+            // 发现了一个新的视觉行
+            visualLineOffset++;
+            visualColumnPosition = 0;
+          }
+          
+          if (i === currentLogicalLine.length) {
+            // 我们到达了光标位置
+            break;
+          }
+          
+          lastTop = currentTop;
+          visualColumnPosition++;
+        }
+        
+        document.body.removeChild(measureSpan);
+      }
+      
+      // 计算最终的视觉行索引
+      const visualLineIndex = totalVisualLines + visualLineOffset;
       
       // 计算光标在textarea中的位置
-      const cursorX = paddingLeft + currentLineWidth;
-      const cursorY = paddingTop + (lineIndex * lineHeight);
+      const cursorX = paddingLeft + (visualColumnPosition * (parseFloat(computedStyle.fontSize) * 0.6)); // 估算字符宽度
+      const cursorY = paddingTop + (visualLineIndex * lineHeight);
+      
+      document.body.removeChild(tempDiv);
       
       // 考虑textarea的滚动位置
       const scrollTop = textarea.scrollTop;
@@ -466,7 +539,9 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
                     className={simplified ? 'border-0' : ''}
                     style={{ 
                       height: simplified ? '200px' : '340px',
-                      overflow: 'auto'
+                      overflow: 'auto',
+                      fontFamily: 'monospace', // 使用单一字体，确保一致性
+                      letterSpacing: '0px' // 确保字母间距一致
                     }}
                     onCursorPositionChange={handleCursorPositionChange}
                   />
@@ -481,7 +556,9 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
                   className={simplified ? 'border-0' : ''}
                   style={{ 
                     height: simplified ? '200px' : '340px',
-                    overflow: 'auto'
+                    overflow: 'auto',
+                    fontFamily: 'monospace', // 使用单一字体，确保一致性
+                    letterSpacing: '0px' // 确保字母间距一致
                   }}
                   onCursorPositionChange={handleCursorPositionChange}
                 />
@@ -534,7 +611,7 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
 
         {/* 预览区域 */}
         {isPreviewVisible && (
-          <div className="h-96">
+          <div className="h-[500px]">
             <LaTeXPreview
               content={value}
               config={config}

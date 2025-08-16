@@ -333,13 +333,28 @@ const highlightLaTeX = (content: string): string => {
   let currentSpan = '';
   
   tokens.forEach((token, index) => {
+    // 处理制表符，转换为普通空格以保持换行行为一致
+    if (token.char === '\t') {
+      // 使用4个普通空格替代制表符，保持换行行为
+      token.char = '    ';
+    }
+    // 保持普通空格不变，确保换行行为与textarea一致
+    
     if (token.className !== currentClass) {
       // 关闭当前span
       if (currentSpan) {
+        // 转义HTML特殊字符，但保持普通空格不变
+        const escapedSpan = currentSpan
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+        
         if (currentClass) {
-          result += `<span class="${currentClass}">${currentSpan}</span>`;
+          result += `<span class="${currentClass}">${escapedSpan}</span>`;
         } else {
-          result += `<span class="latex-text">${currentSpan}</span>`;
+          result += `<span class="latex-text">${escapedSpan}</span>`;
         }
       }
       
@@ -353,22 +368,38 @@ const highlightLaTeX = (content: string): string => {
     // 处理最后一个token
     if (index === tokens.length - 1) {
       if (currentSpan) {
+        // 转义HTML特殊字符，但保持普通空格不变
+        const escapedSpan = currentSpan
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+        
         if (currentClass) {
-          result += `<span class="${currentClass}">${currentSpan}</span>`;
+          result += `<span class="${currentClass}">${escapedSpan}</span>`;
         } else {
-          result += `<span class="latex-text">${currentSpan}</span>`;
+          result += `<span class="latex-text">${escapedSpan}</span>`;
         }
       }
     }
   });
   
-  // 验证输出长度是否与输入一致（去除HTML标签）
-  const textOnly = result.replace(/<[^>]*>/g, '');
+  // 验证输出长度是否与输入一致（去除HTML标签并解码HTML实体）
+  const textOnly = result
+    .replace(/<[^>]*>/g, '') // 移除HTML标签
+    .replace(/&amp;/g, '&')  // 解码HTML实体
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+  
   if (textOnly.length !== content.length) {
     console.warn('LaTeX highlighter length mismatch:', {
       input: content.length,
       output: textOnly.length,
-      content: content.substring(0, 50) + '...'
+      content: content.substring(0, 50) + '...',
+      textOnly: textOnly.substring(0, 50) + '...'
     });
   }
   
