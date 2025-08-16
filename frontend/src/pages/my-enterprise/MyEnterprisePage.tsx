@@ -1565,19 +1565,89 @@ const MyEnterprisePage: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       选择接收者
                     </label>
+                    
+                    {/* 快速选择按钮 */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const allMemberIds = members?.map(m => m._id).filter(id => id !== currentUserId) || [];
+                          setSendMessageForm({ ...sendMessageForm, recipients: allMemberIds });
+                        }}
+                        className="text-xs"
+                      >
+                        全选成员
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const adminIds = members?.filter(m => m.role === 'admin' || m.role === 'superAdmin').map(m => m._id) || [];
+                          setSendMessageForm({ ...sendMessageForm, recipients: adminIds });
+                        }}
+                        className="text-xs"
+                      >
+                        选择管理员
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSendMessageForm({ ...sendMessageForm, recipients: [] });
+                        }}
+                        className="text-xs"
+                      >
+                        清空选择
+                      </Button>
+                    </div>
+                    
                     <MultiSelect
                       label="选择接收者"
                       options={members?.map(member => ({
                         value: member._id,
-                        label: member.name
-                      })) || []}
+                        label: `${member.name}${member.role === 'superAdmin' ? ' (超级管理员)' : member.role === 'admin' ? ' (管理员)' : ''}`
+                      })).filter(option => option.value !== currentUserId) || []}
                       value={sendMessageForm.recipients}
                       onChange={(value) => setSendMessageForm({ ...sendMessageForm, recipients: value.map(v => String(v)) })}
-                      placeholder="选择接收者"
+                      placeholder="选择接收者（可多选）"
                       className="w-full"
                     />
+                    
+                    {/* 已选择统计 */}
+                    {sendMessageForm.recipients.length > 0 && (
+                      <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <p className="text-xs text-blue-700 dark:text-blue-300">
+                          已选择 {sendMessageForm.recipients.length} 个接收者
+                        </p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {sendMessageForm.recipients.map(recipientId => {
+                            const member = members?.find(m => m._id === recipientId);
+                            return member ? (
+                              <span key={recipientId} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200">
+                                {member.name}
+                                <button
+                                  type="button"
+                                  onClick={() => setSendMessageForm({
+                                    ...sendMessageForm,
+                                    recipients: sendMessageForm.recipients.filter(id => id !== recipientId)
+                                  })}
+                                  className="ml-1 hover:bg-blue-200 dark:hover:bg-blue-700 rounded-full w-4 h-4 flex items-center justify-center"
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ) : null;
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      可以选择多个用户作为接收者
+                      可以选择多个用户作为接收者，支持快速选择功能
                     </p>
                   </div>
                 )}

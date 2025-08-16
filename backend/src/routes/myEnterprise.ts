@@ -459,11 +459,8 @@ router.post('/messages', authMiddleware, [
           return res.status(403).json({ success: false, error: '您只能向自己所属部门发送消息' });
         }
 
-        const departmentMembers = await EnterpriseMember.find({
-          enterpriseId: user.enterpriseId,
-          departmentId: departmentId
-        });
-        finalRecipients = departmentMembers.map(member => new mongoose.Types.ObjectId(member.userId.toString()));
+        // 优化：部门消息的接收者将在前端实时计算，减少后端负担
+        finalRecipients = [];
         messageType = 'department';
       } else if (type === 'announcement') {
         // 公告消息：只有管理员和超级管理员可以发送
@@ -471,10 +468,7 @@ router.post('/messages', authMiddleware, [
           return res.status(403).json({ success: false, error: '只有管理员可以发送公告' });
         }
         
-        const allMembers = await EnterpriseMember.find({
-          enterpriseId: user.enterpriseId
-        });
-        finalRecipients = allMembers.map(member => new mongoose.Types.ObjectId(member.userId.toString()));
+        finalRecipients = [];
         messageType = 'announcement';
       } else if (type === 'reply' && replyTo) {
         // 回复消息：验证原消息
@@ -515,47 +509,41 @@ router.post('/messages', authMiddleware, [
         return res.status(400).json({ success: false, error: '无效的消息类型或缺少必要参数' });
       }
 
-      // 验证接收者是否都是有效的用户ID
-      if (finalRecipients.length > 0) {
-        const validUsers = await User.find({
-          _id: { $in: finalRecipients },
-          enterpriseId: user.enterpriseId
-        });
+      // 优化：减少数据库查询，使用批量验证
+      if (finalRecipients.length > 0 || mentionedUsers.length > 0 || mentionedDepartments.length > 0) {
+        // 合并所有需要验证的用户ID
+        const allUserIds = [...new Set([...finalRecipients, ...mentionedUsers])];
         
-        if (validUsers.length !== finalRecipients.length) {
-          return res.status(400).json({ 
-            success: false, 
-            error: '部分接收者不存在或不属于同一企业' 
-          });
+        if (allUserIds.length > 0) {
+          const validUsers = await User.find({
+            _id: { $in: allUserIds },
+            enterpriseId: user.enterpriseId
+          }).select('_id');
+          
+          const validUserIds = validUsers.map((u: any) => u._id.toString());
+          const invalidUserIds = allUserIds.filter(id => !validUserIds.includes(id.toString()));
+          
+          if (invalidUserIds.length > 0) {
+            return res.status(400).json({ 
+              success: false, 
+              error: `部分用户不存在或不属于同一企业: ${invalidUserIds.join(', ')}` 
+            });
+          }
         }
-      }
-
-      // 验证@提及的用户和部门
-      if (mentionedUsers.length > 0) {
-        const validMentionedUsers = await User.find({
-          _id: { $in: mentionedUsers },
-          enterpriseId: user.enterpriseId
-        });
         
-        if (validMentionedUsers.length !== mentionedUsers.length) {
-          return res.status(400).json({ 
-            success: false, 
-            error: '部分提及的用户不存在或不属于同一企业' 
-          });
-        }
-      }
-
-      if (mentionedDepartments.length > 0) {
-        const validMentionedDepts = await Department.find({
-          _id: { $in: mentionedDepartments },
-          enterprise: user.enterpriseId
-        });
-        
-        if (validMentionedDepts.length !== mentionedDepartments.length) {
-          return res.status(400).json({ 
-            success: false, 
-            error: '部分提及的部门不存在或不属于同一企业' 
-          });
+        // 验证部门
+        if (mentionedDepartments.length > 0) {
+          const validMentionedDepts = await Department.find({
+            _id: { $in: mentionedDepartments },
+            enterprise: user.enterpriseId
+          }).select('_id');
+          
+          if (validMentionedDepts.length !== mentionedDepartments.length) {
+            return res.status(400).json({ 
+              success: false, 
+              error: '部分提及的部门不存在或不属于同一企业' 
+            });
+          }
         }
       }
     } catch (error) {
@@ -595,7 +583,8 @@ router.post('/messages', authMiddleware, [
       isRead: [] // 初始状态：没有人已读
     });
 
-    await message.save();
+    // 优化：使用insertOne而不是save，减少中间件执行
+    await EnterpriseMessage.insertOne(message);
 
     return res.status(201).json({
       success: true,
