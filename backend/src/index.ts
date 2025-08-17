@@ -64,7 +64,9 @@ app.use(cors({
     'http://www.mareate.com',
     'https://www.mareate.com',
     'http://43.160.253.32',
-    'https://43.160.253.32'
+    'https://43.160.253.32',
+    'http://localhost:5173',  // 开发环境
+    'http://localhost:3001'   // 开发环境
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
