@@ -169,7 +169,7 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose, userId
                         <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
                           {user.avatar ? (
                             <img
-                              src={user.avatar.startsWith('http') ? user.avatar : `/api${user.avatar}`}
+                              src={user.avatar.startsWith('http') ? user.avatar : `${import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'}${user.avatar}`}
                               alt={user.name}
                               className="w-full h-full object-cover"
                             />

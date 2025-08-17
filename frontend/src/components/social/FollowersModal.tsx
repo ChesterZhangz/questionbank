@@ -162,7 +162,7 @@ const FollowersModal: React.FC<FollowersModalProps> = ({ isOpen, onClose, userId
                         <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                           {follower.avatar ? (
                             <img
-                              src={follower.avatar.startsWith('http') ? follower.avatar : `/api${follower.avatar}`}
+                              src={follower.avatar.startsWith('http') ? follower.avatar : `${import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'}${follower.avatar}`}
                               alt={follower.name}
                               className="w-full h-full object-cover"
                             />

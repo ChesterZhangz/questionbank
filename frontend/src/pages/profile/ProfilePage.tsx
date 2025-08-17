@@ -279,7 +279,7 @@ const ProfilePage: React.FC = () => {
       if (avatarPath.startsWith('http')) return avatarPath;
       if (avatarPath.startsWith('/')) {
         // 使用代理路径，因为前端配置了代理
-        return `/api${avatarPath}`;
+        return `${import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'}${avatarPath}`;
       }
       return avatarPath;
     };
