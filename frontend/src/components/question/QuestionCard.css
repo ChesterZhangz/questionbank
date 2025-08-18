@@ -46,6 +46,9 @@
   /* 列表模式下的特殊样式 */
   font-size: 1.1em !important; /* 调整字体大小从1.2em到1.1em */
   line-height: 1.5 !important; /* 增加行高从1.4到1.5 */
+  /* 列表模式下移除高度限制，允许完整显示 */
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 /* 选项文本的LaTeX内容样式 */
@@ -291,7 +294,6 @@
 .question-card-option:hover {
   background-color: #f9fafb;
   border-color: #d1d5db;
-  transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 

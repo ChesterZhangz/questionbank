@@ -274,28 +274,28 @@ const ReactionGame: React.FC<ReactionGameProps> = ({
       {/* 游戏统计 */}
       <div className="grid grid-cols-4 gap-3 mb-6">
         <motion.div 
-          className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200"
+          className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-xl border border-blue-200 dark:border-blue-700"
           whileHover={{ scale: 1.05 }}
         >
-          <div className="text-xl font-bold text-blue-600">{score}</div>
-          <div className="text-xs text-blue-500 font-medium">得分</div>
+          <div className="text-xl font-bold text-blue-600 dark:text-blue-400">{score}</div>
+          <div className="text-xs text-blue-500 dark:text-blue-300 font-medium">得分</div>
         </motion.div>
         <motion.div 
-          className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200"
+          className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-xl border border-green-200 dark:border-green-700"
           whileHover={{ scale: 1.05 }}
         >
-          <div className="text-xl font-bold text-green-600">{rounds}/{config.maxRounds}</div>
-          <div className="text-xs text-green-500 font-medium">回合</div>
+          <div className="text-xl font-bold text-green-600 dark:text-green-400">{rounds}/{config.maxRounds}</div>
+          <div className="text-xs text-green-500 dark:text-green-300 font-medium">回合</div>
         </motion.div>
         <motion.div 
-          className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200"
+          className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl border border-purple-200 dark:border-purple-700"
           whileHover={{ scale: 1.05 }}
         >
-          <div className="text-xl font-bold text-purple-600">{timeLeft}</div>
-          <div className="text-xs text-purple-500 font-medium">时间</div>
+          <div className="text-xl font-bold text-purple-600 dark:text-purple-400">{timeLeft}</div>
+          <div className="text-xs text-purple-500 dark:text-purple-300 font-medium">时间</div>
         </motion.div>
         <motion.div 
-          className="text-center p-3 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200"
+          className="text-center p-3 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-xl border border-orange-200 dark:border-orange-700"
           whileHover={{ scale: 1.05 }}
         >
           <div className="text-xl font-bold text-orange-600">{Math.round(progress)}%</div>

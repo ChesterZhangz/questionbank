@@ -190,17 +190,17 @@ export class SimilarityDetectionService {
   /**
    * 检测相似题目
    */
-  async detectSimilarQuestions(request: DetectionRequest, threshold: number = 0.8): Promise<SimilarityResult[]> {
+  async detectSimilarQuestions(request: DetectionRequest, threshold: number = 0.8, excludeQuestionId?: string): Promise<SimilarityResult[]> {
     try {
       // 检查缓存
-      const cacheKey = `${request.stem.substring(0, 100)}_${threshold}`;
+      const cacheKey = `${request.stem.substring(0, 100)}_${threshold}_${excludeQuestionId || 'none'}`;
       const cached = this.cache.get(cacheKey);
       if (cached) {
         console.log('使用缓存结果');
         return cached;
       }
 
-      console.log('开始相似度检测:', { stem: request.stem.substring(0, 50) + '...', type: request.type });
+      console.log('开始相似度检测:', { stem: request.stem.substring(0, 50) + '...', type: request.type, excludeId: excludeQuestionId });
 
       // 1. 智能分类和标签提取
       const detectedCategories = this.detectMathCategories(request.stem);
@@ -211,8 +211,15 @@ export class SimilarityDetectionService {
       const candidates = await this.getCandidateQuestions(enhancedRequest);
       console.log(`找到 ${candidates.length} 个候选题目`);
 
-      // 2. 计算相似度
-      const similarityResults = candidates.map(question => {
+      // 3. 排除当前题目本身（如果提供了ID）
+      const filteredCandidates = excludeQuestionId 
+        ? candidates.filter(question => question._id?.toString() !== excludeQuestionId)
+        : candidates;
+      
+      console.log(`排除当前题目后剩余 ${filteredCandidates.length} 个候选题目`);
+
+      // 4. 计算相似度
+      const similarityResults = filteredCandidates.map(question => {
         const similarityDetails = this.calculateSimilarityDetails(request, question);
         const totalScore = this.calculateTotalSimilarity(similarityDetails);
         
@@ -224,10 +231,11 @@ export class SimilarityDetectionService {
         };
       });
 
-      // 3. 筛选高相似度题目
+      // 5. 筛选高相似度题目并限制返回数量
       const highSimilarityResults = similarityResults
         .filter(result => result.similarityScore >= threshold)
-        .sort((a, b) => b.similarityScore - a.similarityScore);
+        .sort((a, b) => b.similarityScore - a.similarityScore)
+        .slice(0, 10); // 最多返回10个相似题目
 
       // 缓存结果
       this.cache.set(cacheKey, highSimilarityResults);
@@ -293,9 +301,9 @@ export class SimilarityDetectionService {
 
     // 获取候选题目，优化查询
     const candidates = await Question.find(query)
-      .select('content tags category difficulty type') // 只选择需要的字段
+      .select('content tags category difficulty type _id') // 添加_id字段用于去重
       .sort({ createdAt: -1 })
-      .limit(150); // 进一步减少候选数量
+      .limit(100); // 减少候选数量以提高性能
 
     console.log(`数据库查询返回 ${candidates.length} 个候选题目`);
     return candidates;
@@ -651,7 +659,7 @@ export class SimilarityDetectionService {
   /**
    * 实时检测相似度（优化版本）
    */
-  async detectSimilarityRealTime(stem: string, type: string, difficulty: number): Promise<{
+  async detectSimilarityRealTime(stem: string, type: string, difficulty: number, excludeQuestionId?: string): Promise<{
     hasSimilar: boolean;
     similarCount: number;
     maxSimilarity: number;
@@ -674,8 +682,8 @@ export class SimilarityDetectionService {
         category: ''
       };
 
-      // 使用更低的阈值进行快速检测
-      const similarQuestions = await this.detectSimilarQuestions(request, 0.7);
+      // 使用更高的阈值进行快速检测，避免推送不相关的题目
+      const similarQuestions = await this.detectSimilarQuestions(request, 0.75, excludeQuestionId);
       
       return {
         hasSimilar: similarQuestions.length > 0,

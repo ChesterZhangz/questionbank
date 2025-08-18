@@ -310,8 +310,8 @@ export const authAPI = {
     api.get<{ success: boolean; user?: any; error?: string }>('/auth/me'),
 
   // 搜索用户
-  searchUsers: (query: string, limit?: number) =>
-    api.get<{ success: boolean; users?: any[]; error?: string }>(`/users/search?q=${encodeURIComponent(query)}&limit=${limit || 10}`),
+  searchUsers: (query: string, limit?: number, excludeQuestionBank?: string) =>
+    api.get<{ success: boolean; users?: any[]; error?: string }>(`/users/search?q=${encodeURIComponent(query)}&limit=${limit || 10}${excludeQuestionBank ? `&excludeQuestionBank=${excludeQuestionBank}` : ''}`),
   
   updateProfile: (data: {
     name?: string;
@@ -531,6 +531,7 @@ export const questionAPI = {
     options?: Array<{ text: string; isCorrect: boolean }>;
     answer?: string;
     threshold?: number;
+    excludeQuestionId?: string;
   }) => 
     api.post<{
       success: boolean;
@@ -545,6 +546,7 @@ export const questionAPI = {
     stem: string;
     type: string;
     difficulty: number;
+    excludeQuestionId?: string;
   }) => 
     api.post<{
       success: boolean;

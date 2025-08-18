@@ -23,7 +23,7 @@ import RightSlideModal from '../../components/ui/RightSlideModal';
 import Button from '../../components/ui/Button';
 import { useQuestionPreviewStore } from '../../stores/questionPreviewStore';
 import { questionBankAPI, questionAPI, questionAnalysisAPI } from '../../services/api';
-import type { Question, SimilarityResult } from '../../types';
+import type { Question, SimilarityResult, AIAnalysisResult } from '../../types';
 import QuestionPreviewHeader from '../../components/preview/QuestionPreviewHeader';
 import QuestionPreviewToolbar from '../../components/preview/QuestionPreviewToolbar';
 import QuestionPreviewStats from '../../components/preview/QuestionPreviewStats';
@@ -111,6 +111,8 @@ const QuestionPreviewPage: React.FC = () => {
   const [currentSimilarityQuestionIndex, setCurrentSimilarityQuestionIndex] = useState(0);
   const [similarityQuestionIds, setSimilarityQuestionIds] = useState<string[]>([]);
   const [hasTriggeredSimilarityDetection, setHasTriggeredSimilarityDetection] = useState(false);
+  // 低难度题目答案生成中的队列（用于显示“等待生成答案与解析”）
+  const [answerGeneratingQuestions, setAnswerGeneratingQuestions] = useState<string[]>([]);
 
   // 拖拽传感器
   const sensors = useSensors(
@@ -450,59 +452,28 @@ const QuestionPreviewPage: React.FC = () => {
 
     try {
       setAnalyzingQuestions(selectedQuestions.map(q => q.id!).filter(Boolean));
+      
+      // 1. 先进行AI分析获取标签
       const results = await batchAnalyzeQuestions(selectedQuestions);
       
-      // 将AI分析结果应用到题目上，并为低难度题目生成答案
-      const updatedQuestions = await Promise.all(questions.map(async (question) => {
+      // 2. 立即应用标签并更新UI
+      const questionsWithTags = questions.map((question) => {
         const resultIndex = selectedQuestions.findIndex(q => q.id === question.id);
         if (resultIndex !== -1 && results[resultIndex]) {
           const result = results[resultIndex];
-          let updatedQuestion = {
+          return {
             ...question,
             category: result.category,
             tags: result.tags,
             difficulty: result.difficulty,
             type: result.questionType
           };
-          
-          // 如果难度为3星及以下，自动生成答案和解析
-          if (result.difficulty <= 3) {
-            try {
-              
-              const answerResult = await questionAnalysisAPI.generateAnswer({
-                content: question.content.stem,
-                type: result.questionType,
-                difficulty: result.difficulty,
-                category: result.category,
-                tags: result.tags
-              });
-              
-              if (answerResult.data?.data) {
-                const answerData = answerResult.data.data;
-                
-                // 更新题目的答案和解析（完全覆盖，不保留旧数据）
-                updatedQuestion.content = {
-                  ...updatedQuestion.content,
-                  answer: answerData.answer || '',
-                  solution: answerData.solution || '',
-                  fillAnswers: answerData.fillAnswers || [],
-                  solutionAnswers: answerData.solutionAnswers || []
-                };
-                
-              }
-            } catch (answerError) {
-              // 自动生成答案和解析失败，但不影响AI分析结果
-            }
-          }
-          
-          return updatedQuestion;
         }
         return question;
-      }));
+      });
       
-      // 更新题目列表
-      setQuestions(updatedQuestions);
-      // 移除直接设置filteredQuestions，让筛选逻辑处理
+      // 3. 立即更新UI显示标签
+      setQuestions(questionsWithTags);
       
       // 同时保存到分析结果中
       const newResults = { ...analysisResults };
@@ -515,13 +486,22 @@ const QuestionPreviewPage: React.FC = () => {
 
       // 自动保存草稿以持久化AI分析结果
       autoSaveDraft();
-
-      // 统计低难度题目数量
-      const lowDifficultyCount = results.filter(result => result.difficulty <= 3).length;
-      const message = lowDifficultyCount > 0 
-        ? `已完成 ${selectedQuestions.length} 道题目的AI分析，其中 ${lowDifficultyCount} 道低难度题目已自动生成答案和解析`
-        : `已完成 ${selectedQuestions.length} 道题目的AI分析，已应用到题目`;
-      showSuccessRightSlide("操作成功", message);
+      
+      // 4. 显示标签分析完成的消息
+      showSuccessRightSlide("操作成功", `已完成 ${selectedQuestions.length} 道题目的AI分析`);
+      
+      // 5. 异步生成答案（不阻塞UI）
+      const lowDifficultyQuestions = selectedQuestions.filter((_, index) => 
+        results[index]?.difficulty <= 3
+      );
+      
+      if (lowDifficultyQuestions.length > 0) {
+        // 标记这些题目正在等待生成答案与解析
+        setAnswerGeneratingQuestions(lowDifficultyQuestions.map(q => q.id!).filter(Boolean));
+        // 后台异步生成答案
+        generateAnswersInBackground(lowDifficultyQuestions, results);
+      }
+      
     } catch (error) {
       showErrorRightSlide("操作失败", '批量AI分析失败');
     } finally {
@@ -529,28 +509,19 @@ const QuestionPreviewPage: React.FC = () => {
     }
   }, [selectedQuestions, questions, analysisResults, setAnalyzingQuestions, setAnalysisResults, batchAnalyzeQuestions, setQuestions]);
 
-  // 处理单题AI分析
-  const handleSingleAnalysis = useCallback(async (questionId: string) => {
-    const question = questions.find(q => q.id === questionId);
-    if (!question) return;
-
+  // 后台异步生成答案
+  const generateAnswersInBackground = useCallback(async (questionsToGenerate: Question[], results: AIAnalysisResult[]) => {
     try {
-      setAnalyzingQuestions([...analyzingQuestions, questionId]);
-      const result = await analyzeQuestion(question.content.stem);
+      let completedCount = 0;
       
-      // 将AI分析结果应用到题目上
-      const updatedQuestion = {
-        ...question,
-        category: result.category,
-        tags: result.tags,
-        difficulty: result.difficulty,
-        type: result.questionType
-      };
-      
-      // 如果难度为3星及以下，自动生成答案和解析
-      if (result.difficulty <= 3) {
+      for (let i = 0; i < questionsToGenerate.length; i++) {
+        const question = questionsToGenerate[i];
+        const resultIndex = selectedQuestions.findIndex(q => q.id === question.id);
+        const result = results[resultIndex];
+        
+        if (!result) continue;
+        
         try {
-          
           const answerResult = await questionAnalysisAPI.generateAnswer({
             content: question.content.stem,
             type: result.questionType,
@@ -562,26 +533,67 @@ const QuestionPreviewPage: React.FC = () => {
           if (answerResult.data?.data) {
             const answerData = answerResult.data.data;
             
-            // 更新题目的答案和解析（完全覆盖，不保留旧数据）
-            updatedQuestion.content = {
-              ...updatedQuestion.content,
-              answer: answerData.answer || '',
-              solution: answerData.solution || '',
-              fillAnswers: answerData.fillAnswers || [],
-              solutionAnswers: answerData.solutionAnswers || []
-            };
+            // 更新单个题目的答案
+            setQuestions(questions.map(q => 
+              q.id === question.id ? {
+                ...q,
+                content: {
+                  ...q.content,
+                  answer: answerData.answer || '',
+                  solution: answerData.solution || '',
+                  fillAnswers: answerData.fillAnswers || [],
+                  solutionAnswers: answerData.solutionAnswers || []
+                }
+              } : q
+            ));
+            // 从“等待生成答案”队列移除
+            setAnswerGeneratingQuestions(prev => prev.filter(id => id !== question.id));
             
+            completedCount++;
           }
         } catch (answerError) {
+          console.error(`题目 ${question.id} 答案生成失败:`, answerError);
+          // 失败也移除等待状态，避免卡住
+          setAnswerGeneratingQuestions(prev => prev.filter(id => id !== question.id));
         }
       }
       
-      // 更新题目列表
+      // 答案生成完成后显示提示
+      if (completedCount > 0) {
+        showSuccessRightSlide("答案生成完成", `已为 ${completedCount} 道低难度题目生成答案和解析`);
+        // 重新保存草稿以包含答案
+        autoSaveDraft();
+      }
+    } catch (error) {
+      console.error('后台答案生成失败:', error);
+    }
+  }, [selectedQuestions, setQuestions, questions]);
+
+  // 处理单题AI分析
+  const handleSingleAnalysis = useCallback(async (questionId: string) => {
+    const question = questions.find(q => q.id === questionId);
+    if (!question) return;
+
+    try {
+      setAnalyzingQuestions([...analyzingQuestions, questionId]);
+      
+      // 1. 先进行AI分析获取标签
+      const result = await analyzeQuestion(question.content.stem);
+      
+      // 2. 立即应用标签并更新UI
+      const updatedQuestion = {
+        ...question,
+        category: result.category,
+        tags: result.tags,
+        difficulty: result.difficulty,
+        type: result.questionType
+      };
+      
+      // 3. 立即更新UI显示标签
       const updatedQuestions = questions.map(q => 
         q.id === questionId ? updatedQuestion : q
       );
       setQuestions(updatedQuestions);
-      // 移除直接设置filteredQuestions，让筛选逻辑处理
       
       // 同时保存到分析结果中
       setAnalysisResults({
@@ -591,17 +603,65 @@ const QuestionPreviewPage: React.FC = () => {
 
       // 自动保存草稿以持久化AI分析结果
       autoSaveDraft();
-
-      const message = result.difficulty <= 3 
-        ? 'AI分析完成，已应用到题目，并自动生成了答案和解析'
-        : 'AI分析完成，已应用到题目';
-      showSuccessRightSlide("操作成功", message);
+      
+      // 4. 显示标签分析完成的消息
+      showSuccessRightSlide("操作成功", 'AI分析完成，已应用到题目');
+      
+      // 5. 如果难度为3星及以下，异步生成答案
+      if (result.difficulty <= 3) {
+        setAnswerGeneratingQuestions(prev => Array.from(new Set([...(prev || []), questionId])));
+        generateSingleAnswerInBackground(questionId, question, result);
+      }
+      
     } catch (error) {
       showErrorRightSlide("操作失败", 'AI分析失败');
     } finally {
       setAnalyzingQuestions(analyzingQuestions.filter(id => id !== questionId));
     }
   }, [questions, analyzingQuestions, analysisResults, setAnalyzingQuestions, setAnalysisResults, analyzeQuestion, setQuestions]);
+
+  // 后台异步生成单题答案
+  const generateSingleAnswerInBackground = useCallback(async (questionId: string, question: Question, result: AIAnalysisResult) => {
+    try {
+      const answerResult = await questionAnalysisAPI.generateAnswer({
+        content: question.content.stem,
+        type: result.questionType,
+        difficulty: result.difficulty,
+        category: result.category,
+        tags: result.tags
+      });
+      
+      if (answerResult.data?.data) {
+        const answerData = answerResult.data.data;
+        
+        // 更新题目的答案和解析
+        setQuestions(questions.map(q => 
+          q.id === questionId ? {
+            ...q,
+            content: {
+              ...q.content,
+              answer: answerData.answer || '',
+              solution: answerData.solution || '',
+              fillAnswers: answerData.fillAnswers || [],
+              solutionAnswers: answerData.solutionAnswers || []
+            }
+          } : q
+        ));
+        
+        // 重新保存草稿以包含答案
+        autoSaveDraft();
+        
+        // 显示答案生成完成的消息
+        showSuccessRightSlide("答案生成完成", '已为题目生成答案和解析');
+      }
+    } catch (answerError) {
+      console.error(`题目 ${questionId} 答案生成失败:`, answerError);
+      // 答案生成失败不影响标签分析结果，不显示错误消息
+    } finally {
+      // 无论成功或失败，移除等待状态
+      setAnswerGeneratingQuestions(prev => prev.filter(id => id !== questionId));
+    }
+  }, [setQuestions, questions]);
 
   // 自动相似度检测函数
   const autoDetectSimilarity = useCallback(async (questionsToDetect: Question[]) => {
@@ -621,7 +681,8 @@ const QuestionPreviewPage: React.FC = () => {
             difficulty: 3,
             category: '',
             tags: question.tags || [],
-            threshold: 0.7 // 提高阈值，只显示高相似度的题目
+            threshold: 0.75, // 提高阈值，只显示高相似度的题目
+            excludeQuestionId: question.id || question._id // 排除当前题目本身
           });
 
           if (response.data?.similarQuestions && response.data.similarQuestions.length > 0) {
@@ -1129,6 +1190,7 @@ const QuestionPreviewPage: React.FC = () => {
                     questions={filteredQuestions}
                     selectedQuestions={selectedQuestions}
                     analyzingQuestions={analyzingQuestions}
+                    answerGeneratingQuestions={answerGeneratingQuestions}
                     onSelect={handleQuestionSelect}
                     onEdit={handleEditQuestion}
                     onAnalyze={handleSingleAnalysis}
@@ -1142,6 +1204,7 @@ const QuestionPreviewPage: React.FC = () => {
                     questions={filteredQuestions}
                     selectedQuestions={selectedQuestions}
                     analyzingQuestions={analyzingQuestions}
+                    answerGeneratingQuestions={answerGeneratingQuestions}
                     onSelect={handleQuestionSelect}
                     onEdit={handleEditQuestion}
                     onAnalyze={handleSingleAnalysis}

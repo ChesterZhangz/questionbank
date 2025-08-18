@@ -436,6 +436,7 @@ const QuestionBankDetailPage: React.FC = () => {
                   key={question.qid}
                   question={question}
                   bid={bid!}
+                  bankName={questionBank.name}
                   userRole={userRole}
                   index={index}
                   onFavorite={handleFavoriteQuestion}

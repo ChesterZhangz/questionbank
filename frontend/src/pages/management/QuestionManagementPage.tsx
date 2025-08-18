@@ -465,7 +465,7 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
   const QuestionCardWrapper = React.memo<{ question: Question; selected: boolean; index: number }>(({ question, selected, index }) => {
     // 使用 useMemo 优化题库信息查找
     const questionBank = useMemo(() => 
-      questionBanks.find(bank => bank._id === question.bid), 
+      questionBanks.find(bank => bank.bid === question.bid), 
       [questionBanks, question.bid]
     );
     
@@ -492,7 +492,8 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
     return (
       <QuestionCard
         question={question}
-        bid={questionBank?.name || question.bid || '未知题库'}
+        bid={question.bid}
+        bankName={questionBank?.name}
         userRole={userRole}
         index={index}
         onFavorite={handleFavorite}

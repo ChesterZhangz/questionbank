@@ -521,14 +521,14 @@ const QuestionView: React.FC<QuestionViewProps> = ({
 
                               {/* 标签 */}
                               <div className="mb-6 space-y-2">
-                                {currentQuestion.category && typeof currentQuestion.category === 'string' && (
+                                {currentQuestion.category && Array.isArray(currentQuestion.category) && currentQuestion.category.length > 0 && (
                                   <div className="flex flex-wrap gap-2">
-                                    {currentQuestion.category.split(',').map((category, index) => (
+                                    {currentQuestion.category.map((category, index) => (
                                       <span
                                         key={`category-${index}`}
                                         className="tag-enhanced inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                                       >
-                                        {category.trim()}
+                                        {category}
                                       </span>
                                     ))}
                                   </div>

@@ -25,6 +25,16 @@ class QuestionAnalysisService {
     this.baseURL = this.config.baseURL || 'https://api.deepseek.com/v1';
   }
 
+  // 难度评级：直接使用AI评级，不做额外调整
+  private enforceStrictDifficulty(
+    input: { difficulty: number; questionType?: string; options?: any },
+    content: string
+  ): number {
+    // 直接返回AI的评级，不做额外调整
+    const raw = Number.isFinite(input.difficulty) ? Math.round(input.difficulty) : 3;
+    return Math.max(1, Math.min(5, raw));
+  }
+
   private validateApiKey() {
     // 重新读取环境变量，确保dotenv.config()已执行
     const apiKey = process.env.DEEPSEEK_API_KEY;
@@ -61,7 +71,7 @@ class QuestionAnalysisService {
     // 验证API密钥
     const apiKey = this.validateApiKey();
     
-    const prompt = `你是一个专业的数学题目分析专家。请分析以下数学题目，并返回JSON格式的分析结果。
+          const prompt = `你是一个专业的数学题目分析专家。请分析以下数学题目，并返回JSON格式的分析结果。
 题目内容：${content}
 
 ## 分析要求：
@@ -75,11 +85,13 @@ class QuestionAnalysisService {
 - 如果题目没有明确的分问结构（\\subp、\\subsubp），但要求求解某个值或范围，也判断为解答题(solution)
 
 ### 2. 小题型分类（category）
-从以下选项中最多选取3个相关的：
+从以下选项中最多选取3个相关的，返回为数组格式：
 - '计算题', '创新题', '新定义题', '应用题', '综合题', 
   '实验题', '探究题', '开放题', '竞赛题', '判断题', '连线题', '排序题', '匹配题',
   '论述题', '分析题', '设计题', '评价题', '比较题', '归纳题',
   '概念题'
+
+注意：category字段必须是数组格式，例如：["新定义题", "综合题"]，不要用逗号分隔的字符串
 
 ### 3. 知识点标签（tags）
 从以下选项中选择最多5个相关的，你也可以添加额外的标签，比如函数之下还有函数的定义，函数的性质等，：
@@ -90,27 +102,29 @@ class QuestionAnalysisService {
 - 选项格式通常是：A. 内容 B. 内容 C. 内容 D. 内容
 
 ### 5. 难度判断（difficulty）
-根据题目复杂程度判断难度等级（1-5），请严格按照以下标准进行苛刻评级：
+根据题目复杂程度判断难度等级（1-5）。请客观、准确地评估题目难度：
 | **星级** | **难度系数范围** | **题目类型**                  | **认知能力要求**               | **典型特征**                                                                 |
 |----------|------------------|-------------------------------|--------------------------------|----------------------------------------------------------------------------|
-| ★☆☆☆☆ (1星) | 0.9以上         | 最基础题（如选择题前3题）     | 纯记忆、直接套用               | 单一知识点，直接套用公式，无计算或极简单计算，一眼看出答案 |
-| ★★☆☆☆ (2星) | 0.7-0.9         | 基础题（简单填空、基础解答）  | 理解、简单应用                 | 1-2个知识点，简单变换，计算量小，步骤不超过3步 |
-| ★★★☆☆ (3星) | 0.5-0.7         | 中等题（常规解答题）          | 分析、综合应用                 | 2-3个知识点组合，需要一定推理，计算量中等，步骤5步以内 |
+| ★☆☆☆☆ (1星) | 0.9以上         | 最基础题（如选择题前3题）     | 计算、思维非常简单               | 简单计算，直接套用公式，或者简单分类讨论，或者非常直白的思路 |
+| ★★☆☆☆ (2星) | 0.7-0.9         | 基础题（简单填空、基础解答）  | 理解、简单应用，计算量可以增加，                | 1-2个知识点，简单变换，计算量小，步骤不超过3步 |
+| ★★★☆☆ (3星) | 0.5-0.7         | 中等题（常规解答题）          | 分析、综合应用，计算量非常大，一般需要通过技巧化简计算量  |可以有不同知识板块的组合，需要一定推理，步骤5步以内 |
 | ★★★★☆ (4星) | 0.2-0.5         | 较难题（压轴题前部）          | 评价、复杂推理                 | 多知识点综合，需要创新思路，计算复杂，步骤较多 |
-| ★★★★★ (5星) | 0.2以下         | 极难题（压轴题最后一问）      | 创造、批判性思维               | 超纲内容，需要特殊技巧，计算极其复杂，区分度极高 |
+| ★★★★★ (5星) | 0.2以下         | 极难题（压轴题最后一问）      | 创造、思维很难，具有创新性               | 需要特殊技巧，计算极其复杂，区分度极高 |
 
 **评级原则**：
-- 只有真正简单到一眼能看出答案的题目才能评1星
-- 需要任何思考的题目至少评2星
-- 涉及多个知识点或需要推理的题目至少评3星
-- 需要创新思路或特殊技巧的题目评4-5星
-- 宁可评低不要评高，保持严格标准
+- 根据题目实际复杂程度客观评级，不要刻意压低或抬高
+- 选择题：简单题1-2星，中等题3星，复杂题4星，极难题5星
+- 填空题：简单题1-2星，中等题3星，复杂题4星，极难题5星  
+- 解答题：简单题2-3星，中等题3-4星，复杂题4-5星
+- 如果题目的计算量偏大，但是思维量偏小，则最多三星. 四星一定要是有比较深的思维程度的题. 
+- 多小题题目（含\\subp/\\subsubp）根据整体复杂度评级
+- 竞赛题、压轴题等特殊题型可给到4-5星
 
 ### 6. 返回格式
 请严格按照以下JSON格式返回，不要添加任何其他内容，不要添加任何解释，不要进行LaTeX转换：
 
 {
-  "category": "小题型",
+  "category": ["小题型1", "小题型2"],
   "tags": ["知识点1", "知识点2", "知识点3"],
   "options": ["选项A内容", "选项B内容", "选项C内容", "选项D内容"],
   "difficulty": 3,
@@ -119,6 +133,7 @@ class QuestionAnalysisService {
 
 注意：
 - 如果题目不是选择题，options字段为空数组
+- category字段必须是数组格式，最多包含3个元素
 - tags数组最多包含5个元素
 - difficulty必须是1-5的整数
 - questionType必须是"choice"、"multiple-choice"、"fill"、"solution"之一
@@ -155,11 +170,30 @@ class QuestionAnalysisService {
       if (jsonMatch) {
         const analysis = JSON.parse(jsonMatch[0]);
         console.log('DeepSeek分析结果:', analysis);
+
+        // 直接使用AI评级，不做额外调整
+        const rawDifficulty = Number.isInteger(analysis.difficulty) ? analysis.difficulty : parseInt(String(analysis.difficulty || 3), 10);
+        const normalizedDifficulty = this.enforceStrictDifficulty({
+          difficulty: rawDifficulty,
+          questionType: analysis.questionType,
+          options: analysis.options
+        }, content);
+
+        // 处理category字段：如果是字符串且包含逗号，则分割为数组
+        let processedCategory = analysis.category || '综合题';
+        if (typeof processedCategory === 'string' && processedCategory.includes(',')) {
+          processedCategory = processedCategory.split(',').map(cat => cat.trim()).filter(cat => cat.length > 0);
+        } else if (typeof processedCategory === 'string') {
+          processedCategory = [processedCategory];
+        } else if (!Array.isArray(processedCategory)) {
+          processedCategory = ['综合题'];
+        }
+
         return {
-          category: analysis.category || '综合题',
-          tags: analysis.tags || [],
-          options: analysis.options || [],
-          difficulty: analysis.difficulty || 3,
+          category: processedCategory,
+          tags: Array.isArray(analysis.tags) ? analysis.tags.slice(0, 5) : [],
+          options: Array.isArray(analysis.options) ? analysis.options : [],
+          difficulty: normalizedDifficulty,
           questionType: analysis.questionType || 'choice'
         };
       } else {

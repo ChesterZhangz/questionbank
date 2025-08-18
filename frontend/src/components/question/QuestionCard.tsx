@@ -7,7 +7,6 @@ import {
   MoreVertical,
   BookOpen,
   Calendar,
-  Camera,
   Trash2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +15,7 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 // 导入LaTeXPreview组件，使用与编辑区相同的渲染逻辑
 import LaTeXPreview from '../editor/preview/LaTeXPreview';
-import { useScreenshotStore } from '../../stores/screenshotStore';
+
 import { useModal } from '../../hooks/useModal';
 import ConfirmModal from '../ui/ConfirmModal';
 // 导入QuestionCard专用的LaTeX样式
@@ -25,6 +24,7 @@ import './QuestionCard.css';
 interface QuestionCardProps {
   question: Question;
   bid: string;
+  bankName?: string; // 题库名称，用于显示
   userRole: string;
   index: number; // 添加索引用于编号
   onFavorite?: (qid: string, isFavorite: boolean) => void;
@@ -44,6 +44,7 @@ interface QuestionCardProps {
 const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
   question,
   bid,
+  bankName,
   userRole,
   index,
   onFavorite,
@@ -57,14 +58,17 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
   onDelete
 }) => {
   // 弹窗状态管理
-  const { showConfirm, showSuccessRightSlide, showErrorRightSlide, confirmModal, closeConfirm } = useModal();
+  const { showConfirm, showErrorRightSlide, confirmModal, closeConfirm } = useModal();
   
-  const { config } = useScreenshotStore();
-  // 格式化题库编号显示
-  const formatBid = (bid: string) => {
-    if (!bid) return '未知题库';
-    if (bid.length <= 12) return bid;
-    return bid.substring(0, 8) + '...' + bid.substring(bid.length - 4);
+
+  // 格式化题库名称显示
+  const formatBankName = (name?: string) => {
+    if (!name) return '未知题库';
+    // 如果题库名称太长，进行截断显示
+    if (name.length > 20) {
+      return name.substring(0, 18) + '...';
+    }
+    return name;
   };
 
   // 格式化日期显示
@@ -245,45 +249,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
     );
   };
 
-  // 截图功能 - 使用新的截图工具
-  const handleScreenshot = async () => {
-    try {
-      // 导入截图工具
-      const { generateScreenshot } = await import('../screenshot/QuestionScreenshotTool');
-      
-      // 调用截图工具的方法
-      await generateScreenshot({
-        question,
-        bid,
-        bankName: formatBid(bid), // 使用格式化的题库名称
-        config,
-        onScreenshot: async (canvas: HTMLCanvasElement) => {
-          // 转换为图片并复制到剪贴板
-          try {
-            canvas.toBlob(async (blob: Blob | null) => {
-              if (blob) {
-                const clipboardItem = new ClipboardItem({
-                  'image/png': blob
-                });
-                await navigator.clipboard.write([clipboardItem]);
-                showSuccessRightSlide('复制成功', '题目截图已复制到剪贴板！');
-              }
-            }, 'image/png', 1.0);
-          } catch (error) {
-            // 如果剪贴板API不支持，则下载文件
-            console.warn('剪贴板API不支持，改为下载文件:', error);
-            const link = document.createElement('a');
-            link.download = `Mareate_题目_${String(index + 1).padStart(2, '0')}.png`;
-            link.href = canvas.toDataURL('image/png', 1.0);
-            link.click();
-          }
-        }
-      });
-    } catch (error) {
-      console.error('截图失败:', error);
-      showErrorRightSlide('截图失败', '截图失败，请重试');
-    }
-  };
+  
 
   // 点击外部关闭菜单
   const handleClickOutside = (event: MouseEvent) => {
@@ -422,17 +388,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                           </button>
                         )}
 
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleScreenshot();
-                            setShowMenu(false);
-                          }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          <Camera className="w-4 h-4 mr-2" />
-                          截图分享
-                        </button>
+
 
                         {(userRole === 'creator' || userRole === 'manager') && onDelete && (
                           <button
@@ -496,12 +452,12 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
             {/* 底部信息 - 固定 */}
             <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700 min-w-0">
               <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 min-w-0">
-                <div className="flex items-center space-x-2 min-w-0 flex-1">
-                  <BookOpen className="w-3 h-3 flex-shrink-0" />
-                  <span className="truncate text-xs" title={bid}>
-                    {formatBid(bid)}
-                  </span>
-                </div>
+                                  <div className="flex items-center space-x-2 min-w-0 flex-1">
+                    <BookOpen className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate text-xs" title={bankName || bid}>
+                      {formatBankName(bankName)}
+                    </span>
+                  </div>
                 <div className="flex items-center space-x-2 min-w-0">
                   <Calendar className="w-3 h-3 flex-shrink-0" />
                   <span className="text-xs whitespace-nowrap" title={new Date(question.createdAt).toLocaleDateString()}>
@@ -513,10 +469,10 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
           </div>
         </Card>
       ) : (
-        // 列表模式 - 简化
+        // 列表模式 - 完整显示
         <div className="question-card w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md dark:hover:shadow-gray-900/30 transition-all duration-200">
           <div className="p-4">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-start space-x-4">
               {/* 选择复选框 */}
               {showCheckbox && (
                 <div className="flex-shrink-0">
@@ -531,15 +487,15 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
               )}
 
               {/* 题目内容 */}
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <div className="flex items-center justify-between mb-2 min-w-0">
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate min-w-0 flex-1">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between mb-2 min-w-0">
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 min-w-0 flex-1">
                     <div 
-                      className="text-gray-900 dark:text-gray-100 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 overflow-hidden"
+                      className="text-gray-900 dark:text-gray-100 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
                       onClick={handleViewDetail}
                     >
                       <LaTeXPreview 
-                        content={question.content.stem.substring(0, 80) + '...'} 
+                        content={question.content.stem} 
                         config={{ 
                           mode: 'full',
                           features: {
@@ -558,7 +514,6 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                         showTitle={false}
                         className="question-card-latex-content list-mode"
                         maxWidth="max-w-none"
-                        maxHeight="max-h-8"
                       />
                     </div>
                   </h3>
@@ -579,70 +534,88 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                       />
                     </Button>
 
-                    {/* 更多操作菜单 */}
-                    <div className="relative">
+                    {/* 直接展示操作按钮（列表区域不使用下拉） */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewDetail();
+                      }}
+                      className="p-1"
+                    >
+                      <Eye className="w-4 h-4 text-gray-500 dark:text-gray-300" />
+                    </Button>
+                    {(userRole === 'creator' || userRole === 'manager' || userRole === 'collaborator') && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setShowMenu(!showMenu);
+                          handleEdit();
                         }}
                         className="p-1"
                       >
-                        <MoreVertical className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                        <Edit className="w-4 h-4 text-gray-500 dark:text-gray-300" />
                       </Button>
+                    )}
+                    {(userRole === 'creator' || userRole === 'manager') && onDelete && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete();
+                        }}
+                        className="p-1 text-red-600 border-red-200 dark:text-red-400 dark:border-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
 
-                      {showMenu && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg dark:shadow-gray-900/50 border dark:border-gray-700 z-20">
-                          <div className="py-1">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleViewDetail();
-                                setShowMenu(false);
-                              }}
-                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                            >
-                              <Eye className="w-4 h-4 mr-2" />
-                              查看详情
-                            </button>
-                            
-                            {(userRole === 'creator' || userRole === 'manager' || userRole === 'collaborator') && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEdit();
-                                  setShowMenu(false);
-                                }}
-                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                              >
-                                <Edit className="w-4 h-4 mr-2" />
-                                编辑题目
-                              </button>
-                            )}
-
-                            {(userRole === 'creator' || userRole === 'manager') && onDelete && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete();
-                                  setShowMenu(false);
-                                }}
-                                className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                删除题目
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-3 text-sm text-gray-500 dark:text-gray-400 min-w-0 overflow-hidden flex-wrap">
+                {/* 选项区域 - 列表模式下完整显示 */}
+                {question.content.options && question.content.options.length > 0 && (
+                  <div className="mt-3">
+                    <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">选项：</div>
+                    <div className="space-y-2">
+                      {question.content.options.map((option, optionIndex) => (
+                        <div key={optionIndex} className="flex items-start space-x-2 text-sm">
+                          <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-full text-xs font-medium text-gray-600 dark:text-gray-300">
+                            {String.fromCharCode(65 + optionIndex)}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <LaTeXPreview 
+                              content={option.text} 
+                              config={{ 
+                                mode: 'full',
+                                features: {
+                                  markdown: true,
+                                  questionSyntax: true,
+                                  autoNumbering: true,
+                                  errorHandling: 'lenient'
+                                },
+                                styling: {
+                                  fontSize: '0.9rem',
+                                  lineHeight: '1.5',
+                                  maxWidth: '100%'
+                                }
+                              }}
+                              variant="compact"
+                              showTitle={false}
+                              className="question-card-latex-content list-mode"
+                              maxWidth="max-w-none"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex items-center space-x-3 text-sm text-gray-500 dark:text-gray-400 min-w-0 overflow-hidden flex-wrap mt-3">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${getQuestionTypeColor(question.type)}`}>
                     {getQuestionTypeText(question.type)}
                   </span>
@@ -656,8 +629,8 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                   >
                     {getDifficultyText(question.difficulty)}
                   </span>
-                  <span className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 rounded-md text-xs font-medium truncate max-w-24" title={bid || '未知题库'}>
-                    {formatBid(bid)}
+                  <span className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 rounded-md text-xs font-medium truncate max-w-24" title={bankName || '未知题库'}>
+                    {formatBankName(bankName)}
                   </span>
                   <span className="flex items-center space-x-1 flex-shrink-0">
                     <Star className="h-3 w-3 fill-current text-yellow-400 dark:text-yellow-500" />

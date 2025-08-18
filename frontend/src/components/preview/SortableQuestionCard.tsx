@@ -28,6 +28,7 @@ interface SortableQuestionCardProps {
   onDelete: () => void;
   onSplit?: () => void;
   isAnalyzing: boolean;
+  isAnswerGenerating?: boolean;
 }
 
 const SortableQuestionCard: React.FC<SortableQuestionCardProps> = ({
@@ -39,7 +40,8 @@ const SortableQuestionCard: React.FC<SortableQuestionCardProps> = ({
   onAnalyze,
   onDelete,
   onSplit,
-  isAnalyzing
+  isAnalyzing,
+  isAnswerGenerating = false
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -106,7 +108,7 @@ const SortableQuestionCard: React.FC<SortableQuestionCardProps> = ({
         opacity: isDragging ? 0.5 : 1, 
         scale: isDragging ? 1.05 : 1 
       }}
-      whileHover={{ scale: 1.02 }}
+
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       className={`sortable-question-card ${viewMode === 'grid' ? 'grid-view' : 'list-view'} ${
@@ -163,10 +165,10 @@ const SortableQuestionCard: React.FC<SortableQuestionCardProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={onAnalyze}
-                disabled={isAnalyzing}
+                disabled={isAnalyzing || isAnswerGenerating}
                 className="action-button p-1 h-8 w-8 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-                <Brain className={`h-4 w-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
+                <Brain className={`h-4 w-4 ${isAnalyzing || isAnswerGenerating ? 'animate-spin' : ''}`} />
               </Button>
               {onSplit && (
                 <Button
@@ -297,10 +299,14 @@ const SortableQuestionCard: React.FC<SortableQuestionCardProps> = ({
             </span>
 
             {/* 分类信息 */}
-            {question.category && (
-              <span className="tag category px-2 py-1 rounded-full text-xs">
-                {question.category}
-              </span>
+            {question.category && Array.isArray(question.category) && question.category.length > 0 && (
+              <>
+                {question.category.map((cat: string, idx: number) => (
+                  <span key={idx} className="tag category px-2 py-1 rounded-full text-xs">
+                    {cat}
+                  </span>
+                ))}
+              </>
             )}
 
             {/* 知识点标签 */}

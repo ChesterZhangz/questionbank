@@ -199,7 +199,7 @@ async function cascadeDeleteUser(userId: mongoose.Types.ObjectId, enterpriseId?:
 // 搜索用户（所有登录用户可访问）
 router.get('/search', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { q, limit = '10' } = req.query;
+    const { q, limit = '10', excludeQuestionBank } = req.query;
     
     if (!q || typeof q !== 'string' || q.trim().length < 2) {
       return res.json({
@@ -211,8 +211,8 @@ router.get('/search', authMiddleware, async (req: AuthRequest, res: Response) =>
     const searchQuery = q.trim();
     const limitNum = Math.min(parseInt(limit as string) || 10, 50); // 最多50个结果
 
-    // 搜索条件：用户名或邮箱包含搜索词，且邮箱已验证
-    const users = await User.find({
+    // 基础搜索条件：用户名或邮箱包含搜索词，且邮箱已验证
+    let searchConditions: any = {
       $and: [
         {
           $or: [
@@ -223,7 +223,34 @@ router.get('/search', authMiddleware, async (req: AuthRequest, res: Response) =>
         { isEmailVerified: true },
         { isActive: true }
       ]
-    }, 'name email enterpriseName avatar')
+    };
+
+    // 如果指定了排除题库，则排除已经是该题库成员的用户
+    if (excludeQuestionBank && typeof excludeQuestionBank === 'string') {
+      try {
+        const QuestionBank = mongoose.model('QuestionBank');
+        const questionBank = await QuestionBank.findOne({ bid: excludeQuestionBank });
+        if (questionBank) {
+          const existingMemberIds = [
+            questionBank.creator,
+            ...questionBank.managers,
+            ...questionBank.collaborators,
+            ...(questionBank.viewers || [])
+          ];
+          
+          if (existingMemberIds.length > 0) {
+            searchConditions.$and.push({
+              _id: { $nin: existingMemberIds }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('获取题库信息失败:', error);
+        // 如果获取题库信息失败，继续执行搜索，不排除任何用户
+      }
+    }
+
+    const users = await User.find(searchConditions, 'name email enterpriseName avatar')
       .limit(limitNum)
       .sort({ name: 1 });
 

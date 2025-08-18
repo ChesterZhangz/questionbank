@@ -123,9 +123,8 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
     }
     
     // 验证分类和标签
-    if (editedQuestion.category && typeof editedQuestion.category === 'string') {
-      const categories = editedQuestion.category.split(',').map(cat => cat.trim()).filter(Boolean);
-      if (categories.length > 3) {
+    if (editedQuestion.category && Array.isArray(editedQuestion.category)) {
+      if (editedQuestion.category.length > 3) {
         errors.push('小题型分类最多3个');
       }
     }
@@ -730,8 +729,8 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
                               小题型分类
                             </label>
                             <QuestionTypeSelector
-                              selectedTypes={editedQuestion.category && typeof editedQuestion.category === 'string' ? editedQuestion.category.split(',').map(c => c.trim()) : []}
-                              onTypesChange={(types) => updateField('category', types.join(', '))}
+                              selectedTypes={editedQuestion.category && Array.isArray(editedQuestion.category) ? editedQuestion.category : []}
+                              onTypesChange={(types) => updateField('category', types)}
                               maxCount={3}
                               className="border-0 shadow-none"
                             />
@@ -807,18 +806,18 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
                         {getDifficultyText(editedQuestion.difficulty || 3)}
                       </span>
                       <AnimatePresence>
-                        {editedQuestion.category && typeof editedQuestion.category === 'string' && (
+                        {editedQuestion.category && Array.isArray(editedQuestion.category) && editedQuestion.category.length > 0 && (
                           <>
-                            {editedQuestion.category.split(',').map((category, index) => (
+                            {editedQuestion.category.map((category, index) => (
                               <motion.span
-                                key={`category-${category.trim()}-${index}`}
+                                key={`category-${category}-${index}`}
                                 initial={{ scale: 0, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 exit={{ scale: 0, opacity: 0 }}
                                 transition={{ duration: 0.2, delay: index * 0.1 }}
                                 className="px-2 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700"
                               >
-                                {category.trim()}
+                                {category}
                               </motion.span>
                             ))}
                           </>

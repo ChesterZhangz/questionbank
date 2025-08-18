@@ -50,7 +50,8 @@ router.post('/detect', [
       tags,
       options,
       answer,
-      threshold = 0.8
+      threshold = 0.8,
+      excludeQuestionId
     } = req.body;
 
     console.log('收到相似度检测请求:', { stem: stem.substring(0, 50) + '...', type, difficulty });
@@ -65,7 +66,7 @@ router.post('/detect', [
       answer
     };
 
-    const similarQuestions = await similarityService.detectSimilarQuestions(detectionRequest, threshold);
+    const similarQuestions = await similarityService.detectSimilarQuestions(detectionRequest, threshold, excludeQuestionId);
 
     // 格式化返回数据
     const formattedResults = similarQuestions.map(result => ({
@@ -130,9 +131,9 @@ router.post('/detect-realtime', [
       });
     }
 
-    const { stem, type, difficulty } = req.body;
+    const { stem, type, difficulty, excludeQuestionId } = req.body;
 
-    const result = await similarityService.detectSimilarityRealTime(stem, type, difficulty);
+    const result = await similarityService.detectSimilarityRealTime(stem, type, difficulty, excludeQuestionId);
 
     return res.json({
       success: true,

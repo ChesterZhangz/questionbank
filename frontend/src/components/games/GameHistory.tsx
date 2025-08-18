@@ -115,7 +115,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 头部 */}
@@ -149,11 +149,11 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
             </div>
 
             {/* 筛选器 */}
-            <div className="p-6 border-b border-gray-200">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-600">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
-                  <Filter className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-700">游戏类型:</span>
+                  <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">游戏类型:</span>
                 </div>
                 <div className="flex space-x-2">
                   {gameTypes.map((type) => (
@@ -163,7 +163,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
                       className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
                         selectedGameType === type.value
                           ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                       }`}
                     >
                       {type.label}
@@ -208,16 +208,16 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 hover:shadow-md transition-all"
+                      className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-xl border border-gray-200 dark:border-gray-600 hover:shadow-md transition-all"
                     >
                       <div className="flex items-center space-x-4">
                         <div className="flex items-center space-x-3">
                           <div className="text-2xl">{getGameIcon(record.gameType)}</div>
                           <div>
-                            <div className="font-semibold text-gray-800">
+                            <div className="font-semibold text-gray-800 dark:text-gray-100">
                               {getGameTitle(record.gameType)}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
                               难度: {record.difficulty}
                             </div>
                           </div>
@@ -226,40 +226,40 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
                       
                       <div className="flex items-center space-x-6">
                         <div className="text-center">
-                          <div className="text-lg font-bold text-blue-600">{record.score}</div>
-                          <div className="text-xs text-gray-500">分数</div>
+                          <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{record.score}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">分数</div>
                         </div>
                         
                         {record.gameData && (
                           <>
                             {record.gameData.moves && (
                               <div className="text-center">
-                                <div className="text-sm font-semibold text-green-600">{record.gameData.moves}</div>
-                                <div className="text-xs text-gray-500">步数</div>
+                                <div className="text-sm font-semibold text-green-600 dark:text-green-400">{record.gameData.moves}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">步数</div>
                               </div>
                             )}
                             
                             {record.gameData.timeUsed && (
                               <div className="text-center">
-                                <div className="text-sm font-semibold text-purple-600">{record.gameData.timeUsed}s</div>
-                                <div className="text-xs text-gray-500">用时</div>
+                                <div className="text-sm font-semibold text-purple-600 dark:text-purple-400">{record.gameData.timeUsed}s</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">用时</div>
                               </div>
                             )}
                             
                             {record.gameData.accuracy && (
                               <div className="text-center">
-                                <div className="text-sm font-semibold text-orange-600">{record.gameData.accuracy}%</div>
-                                <div className="text-xs text-gray-500">准确率</div>
+                                <div className="text-sm font-semibold text-orange-600 dark:text-orange-400">{record.gameData.accuracy}%</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">准确率</div>
                               </div>
                             )}
                           </>
                         )}
                         
                         <div className="text-center">
-                          <div className="text-sm font-semibold text-gray-600">
+                          <div className="text-sm font-semibold text-gray-600 dark:text-gray-300">
                             {formatDate(record.createdAt)}
                           </div>
-                          <div className="text-xs text-gray-500">时间</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">时间</div>
                         </div>
                       </div>
                     </motion.div>
@@ -270,16 +270,16 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
 
             {/* 分页 */}
             {pagination.pages > 1 && (
-              <div className="p-6 border-t border-gray-200">
+              <div className="p-6 border-t border-gray-200 dark:border-gray-600">
                 <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 dark:text-gray-300">
                     共 {pagination.total} 条记录，第 {pagination.page} / {pagination.pages} 页
                   </div>
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handlePageChange(pagination.page - 1)}
                       disabled={pagination.page <= 1}
-                      className="px-3 py-1 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-1 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       上一页
                     </button>

@@ -98,26 +98,67 @@ export class LaTeXRenderer {
   private renderFull(content: string): string {
     let processed = content;
 
-    // 处理Markdown语法
-    if (this.config.features.markdown) {
-      processed = this.renderMarkdown(processed);
-    }
+    // 处理表格环境（必须在其他处理之前）
+    const tablePlaceholders: string[] = [];
+    processed = this.renderTablesWithPlaceholders(processed, tablePlaceholders);
 
     // 处理题目语法
     if (this.config.features.questionSyntax) {
       processed = this.renderQuestionSyntax(processed);
     }
 
+    // 处理Markdown
+    if (this.config.features.markdown) {
+      processed = this.renderMarkdown(processed);
+    }
+
     // 处理LaTeX公式
     processed = this.renderLaTeX(processed);
 
+    // 恢复表格内容
+    processed = this.restoreTablePlaceholders(processed, tablePlaceholders);
+
+    return processed;
+  }
+
+  /**
+   * 渲染表格并使用占位符替换
+   */
+  private renderTablesWithPlaceholders(content: string, placeholders: string[]): string {
+    return content.replace(/\\begin\{tabular\}(\[[^\]]*\])?\{([^}]*)\}([\s\S]*?)\\end\{tabular\}/g, (_, options, columnSpec, tableContent) => {
+      try {
+        console.log('找到表格:', { options, columnSpec, tableContent: tableContent.substring(0, 100) + '...' });
+        const tableHTML = this.parseTable(tableContent, columnSpec, options);
+        const placeholder = `__TABLE_PLACEHOLDER_${placeholders.length}__`;
+        placeholders.push(tableHTML);
+        return placeholder;
+      } catch (error) {
+        console.error('表格解析错误:', error);
+        return `<div class="latex-error">表格解析错误: ${error}</div>`;
+      }
+    });
+  }
+
+  /**
+   * 恢复表格占位符
+   */
+  private restoreTablePlaceholders(content: string, placeholders: string[]): string {
+    let processed = content;
+    placeholders.forEach((placeholder, index) => {
+      processed = processed.replace(`__TABLE_PLACEHOLDER_${index}__`, placeholder);
+    });
     return processed;
   }
 
   private renderLightweight(content: string): string {
     let processed = content;
+    // 处理表格环境（必须在其他处理之前）
+    const tablePlaceholders: string[] = [];
+    processed = this.renderTablesWithPlaceholders(processed, tablePlaceholders);
     processed = this.renderBasicLaTeX(processed);
     processed = this.renderSimpleQuestionSyntax(processed);
+    // 恢复表格内容
+    processed = this.restoreTablePlaceholders(processed, tablePlaceholders);
     return processed;
   }
 
@@ -126,8 +167,13 @@ export class LaTeXRenderer {
     if (processed.length > 100) {
       processed = processed.substring(0, 100) + '...';
     }
+    // 处理表格环境（必须在其他处理之前）
+    const tablePlaceholders: string[] = [];
+    processed = this.renderTablesWithPlaceholders(processed, tablePlaceholders);
     processed = this.renderBasicLaTeX(processed);
     processed = this.renderSimpleQuestionSyntax(processed);
+    // 恢复表格内容
+    processed = this.restoreTablePlaceholders(processed, tablePlaceholders);
     return processed;
   }
 
@@ -412,6 +458,254 @@ export class LaTeXRenderer {
     });
     
     return processed;
+  }
+
+
+
+  /**
+   * 解析表格内容
+   */
+  private parseTable(tableContent: string, columnSpec: string, options?: string): string {
+    console.log('开始解析表格:', { columnSpec, options, tableContentLength: tableContent.length });
+    
+    // 解析列规格
+    const columns = this.parseColumnSpec(columnSpec);
+    
+    // 解析表格行
+    const rows = this.parseTableRows(tableContent);
+    
+    console.log('表格解析结果:', { columns: columns.length, rows: rows.length });
+    
+    // 生成HTML表格
+    return this.generateTableHTML(rows, columns, options);
+  }
+
+  /**
+   * 解析列规格
+   */
+  private parseColumnSpec(columnSpec: string): Array<{ align: string; border: boolean }> {
+    const columns: Array<{ align: string; border: boolean }> = [];
+    
+    for (let i = 0; i < columnSpec.length; i++) {
+      const char = columnSpec[i];
+      
+      if (char === '|') {
+        // 边框字符，不创建新列，但标记下一个列有左边框
+        continue;
+      }
+      
+      let align = 'left';
+      let border = false;
+      
+      switch (char) {
+        case 'l':
+          align = 'left';
+          break;
+        case 'c':
+          align = 'center';
+          break;
+        case 'r':
+          align = 'right';
+          break;
+        default:
+          align = 'left';
+      }
+      
+      // 检查是否有左边框（前一个字符是|）
+      if (i > 0 && columnSpec[i - 1] === '|') {
+        border = true;
+      }
+      
+      columns.push({ align, border });
+    }
+    
+    // 检查最后一个字符是否是|，如果是，最后一个列有右边框
+    if (columnSpec.endsWith('|') && columns.length > 0) {
+      columns[columns.length - 1].border = true;
+    }
+    
+    console.log('解析列规格:', columnSpec, '结果:', columns);
+    return columns;
+  }
+
+  /**
+   * 解析表格行
+   */
+  private parseTableRows(tableContent: string): string[][] {
+    const rows: string[][] = [];
+    
+    // 按行分割
+    const lines = tableContent.split('\\\\');
+    console.log('表格内容行数:', lines.length);
+    
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      
+      // 按&分割单元格
+      const cells = line.split('&').map(cell => cell.trim());
+      console.log('行内容:', line.substring(0, 50) + '...', '单元格数:', cells.length);
+      if (cells.length > 0) {
+        rows.push(cells);
+      }
+    }
+    
+    console.log('解析到的行数:', rows.length);
+    return rows;
+  }
+
+  /**
+   * 生成HTML表格
+   */
+  private generateTableHTML(rows: string[][], columns: Array<{ align: string; border: boolean }>, options?: string): string {
+    let tableClass = 'latex-table';
+    let tableStyle = '';
+    
+    // 处理表格选项
+    if (options) {
+      if (options.includes('|')) {
+        tableClass += ' latex-table-bordered';
+      }
+    }
+    
+    // 检查是否有边框
+    const hasBorders = columns.some(col => col.border) || (options && options.includes('|'));
+    if (hasBorders) {
+      tableClass += ' latex-table-bordered';
+      tableStyle = 'border-collapse: collapse; border: 1px solid #ccc;';
+    }
+    
+    // 检查表格是否需要横向滚动
+    const needsScroll = rows.some(row => row.length > 4) || columns.length > 4;
+    
+    let html = '';
+    if (needsScroll) {
+      html += '<div class="latex-table-container">';
+    }
+    
+    html += `<table class="${tableClass}" style="${tableStyle}">`;
+    
+    // 生成表格内容
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      html += '<tr>';
+      
+      for (let j = 0; j < row.length; j++) {
+        const cell = row[j];
+        const column = columns[j] || { align: 'left', border: false };
+        
+        let cellStyle = `text-align: ${column.align};`;
+        if (hasBorders) {
+          cellStyle += ' border: 1px solid #ccc; padding: 8px;';
+        } else {
+          cellStyle += ' padding: 4px 8px;';
+        }
+        
+        // 处理\hline
+        let cellContent = cell.replace(/\\hline/g, '');
+        
+        // 处理\multirow和\multicolumn
+        cellContent = this.processTableCommands(cellContent);
+        
+        html += `<td style="${cellStyle}">${cellContent}</td>`;
+      }
+      
+      html += '</tr>';
+    }
+    
+    html += '</table>';
+    
+    if (needsScroll) {
+      html += '</div>';
+    }
+    
+    return html;
+  }
+
+  /**
+   * 处理表格特殊命令
+   */
+  private processTableCommands(content: string): string {
+    // 处理\multirow
+    content = content.replace(/\\multirow\{(\d+)\}\{([^}]*)\}\{([^}]*)\}/g, (_, __, ___, text) => {
+      return `<span style="display: inline-block; vertical-align: middle;">${text}</span>`;
+    });
+    
+    // 处理\multicolumn
+    content = content.replace(/\\multicolumn\{(\d+)\}\{([^}]*)\}\{([^}]*)\}/g, (_, __, align, text) => {
+      let alignStyle = 'text-align: left;';
+      switch (align) {
+        case 'c':
+          alignStyle = 'text-align: center;';
+          break;
+        case 'r':
+          alignStyle = 'text-align: right;';
+          break;
+      }
+      return `<span style="${alignStyle}">${text}</span>`;
+    });
+    
+    // 处理\hline（在单元格级别忽略）
+    content = content.replace(/\\hline/g, '');
+    
+    // 处理表格中的数学公式
+    content = this.renderTableMath(content);
+    
+    return content;
+  }
+
+  /**
+   * 渲染表格中的数学公式
+   */
+  private renderTableMath(content: string): string {
+    // 处理块级公式
+    content = content.replace(/\$\$([\s\S]*?)\$\$/g, (_, latex) => {
+      try {
+        return katex.renderToString(latex, { 
+          displayMode: true, 
+          throwOnError: false,
+          output: 'html',
+          minRuleThickness: 0.04,
+          maxSize: 16,
+          maxExpand: 1000,
+          macros: {
+            "\\textit": "\\textit{#1}",
+            "\\textbf": "\\textbf{#1}"
+          }
+        });
+      } catch (error) {
+        console.error('表格数学公式渲染错误:', error);
+        return `<span class="text-red-500">数学公式错误</span>`;
+      }
+    });
+
+    // 处理行内公式
+    content = content.replace(/\$([^$]*?(?:\n[^$\n]*?)*?)\$/g, (_, latex) => {
+      try {
+        return katex.renderToString(latex, { 
+          displayMode: false, 
+          throwOnError: false,
+          output: 'html',
+          minRuleThickness: 0.04,
+          maxSize: 14,
+          maxExpand: 1000,
+          macros: {
+            "\\textit": "\\textit{#1}",
+            "\\textbf": "\\textbf{#1}",
+            "\\begin{pmatrix}": "\\begin{pmatrix}",
+            "\\end{pmatrix}": "\\end{pmatrix}",
+            "\\begin{bmatrix}": "\\begin{bmatrix}",
+            "\\end{bmatrix}": "\\end{bmatrix}",
+            "\\begin{vmatrix}": "\\begin{vmatrix}",
+            "\\end{vmatrix}": "\\end{vmatrix}"
+          }
+        });
+      } catch (error) {
+        console.error('表格行内数学公式渲染错误:', error);
+        return `<span class="text-red-500">数学公式错误</span>`;
+      }
+    });
+
+    return content;
   }
 
   private toRoman(num: number): string {

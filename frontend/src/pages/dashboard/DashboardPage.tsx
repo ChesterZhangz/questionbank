@@ -632,7 +632,7 @@ const DashboardPage: React.FC = () => {
                 >
                   <Card className="p-6">
                     <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-lg font-semibold text-gray-900">我的题库</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">我的题库</h3>
                       <Button onClick={() => navigate('/question-banks')}>
                         <Plus className="w-4 h-4 mr-2" />
                         新建题库
@@ -648,23 +648,23 @@ const DashboardPage: React.FC = () => {
                               initial={{ opacity: 0, y: 20 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: index * 0.1 }}
-                              className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                               onClick={() => navigate(`/question-banks/${bank.bid}`)}
                             >
                               <div className="flex items-start justify-between mb-3">
-                                <h4 className="font-semibold text-gray-900">{bank.name}</h4>
+                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{bank.name}</h4>
                                 <div className="flex items-center space-x-2">
-                                  <button className="p-1 text-gray-400 hover:text-gray-600">
+                                  <button className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
                                     <Eye className="w-4 h-4" />
                                   </button>
-                                  <button className="p-1 text-gray-400 hover:text-gray-600">
+                                  <button className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
                                     <Edit className="w-4 h-4" />
                                   </button>
                                 </div>
                               </div>
-                              <p className="text-sm text-gray-600 mb-3">{bank.description}</p>
+                              <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{bank.description}</p>
                               <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                                <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                                   <span>{bank.questionCount} 题</span>
                                   <span>{formatTime(bank.lastModified)}</span>
                                 </div>
@@ -672,7 +672,7 @@ const DashboardPage: React.FC = () => {
                                   {bank.tags.slice(0, 2).map((tag: string, tagIndex: number) => (
                                     <span
                                       key={tagIndex}
-                                      className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                                      className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs rounded-full"
                                     >
                                       {tag}
                                     </span>
@@ -690,11 +690,11 @@ const DashboardPage: React.FC = () => {
                               initial={{ opacity: 0, x: 20 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: index * 0.1 }}
-                              className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                              className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
                               onClick={() => navigate(`/question-banks/${bank.bid}`)}
                             >
                               <div className="flex items-center space-x-4">
-                                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                                   <FolderOpen className="w-5 h-5 text-blue-600" />
                                 </div>
                                 <div>

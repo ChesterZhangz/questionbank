@@ -16,6 +16,7 @@ interface FavoritesModalProps {
 
 interface FavoriteQuestion extends Question {
   favoritedAt: string;
+  bankName?: string; // 题库名称
 }
 
 const FavoritesModal: React.FC<FavoritesModalProps> = ({ isOpen, onClose }) => {
@@ -192,6 +193,7 @@ const FavoritesModal: React.FC<FavoritesModalProps> = ({ isOpen, onClose }) => {
                         key={question.qid}
                         question={question}
                         bid={question.bid || ''}
+                        bankName={question.bankName}
                         userRole="student"
                         index={index}
                         isFavorite={true}

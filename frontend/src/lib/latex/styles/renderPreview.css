@@ -640,3 +640,130 @@
     page-break-inside: avoid;
   }
 }
+
+/* LaTeX表格样式 */
+.latex-table {
+  width: 100%;
+  margin: 1rem 0;
+  font-family: 'WenYuan', 'SimSun', 'STSong', 'Microsoft YaHei', 'PingFang SC', 'Times New Roman', 'Times', serif;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  border-collapse: collapse;
+  border-spacing: 0;
+  background: white;
+}
+
+/* 带边框的表格 */
+.latex-table-bordered {
+  border: 1px solid #d1d5db;
+}
+
+.latex-table-bordered td {
+  border: 1px solid #d1d5db;
+  padding: 8px 12px;
+}
+
+/* 无边框表格 */
+.latex-table:not(.latex-table-bordered) td {
+  padding: 4px 8px;
+  border: none;
+}
+
+/* 表格单元格样式 */
+.latex-table td {
+  vertical-align: middle;
+  word-wrap: break-word;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 表格内容中的数学公式 */
+.latex-table .katex {
+  font-size: 0.9em;
+  line-height: 1.2;
+}
+
+.latex-table .katex-display {
+  margin: 0;
+  padding: 0;
+}
+
+/* 表格中的特殊命令样式 */
+.latex-table .multirow-content {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.latex-table .multicolumn-content {
+  display: inline-block;
+  text-align: inherit;
+}
+
+/* Dark Mode下的表格样式 */
+.dark .latex-table {
+  background: #1f2937;
+  color: #f6f8fa;
+}
+
+.dark .latex-table-bordered {
+  border-color: #4b5563;
+}
+
+.dark .latex-table-bordered td {
+  border-color: #4b5563;
+}
+
+/* 表格响应式设计 */
+@media (max-width: 768px) {
+  .latex-table {
+    font-size: 0.8rem;
+  }
+  
+  .latex-table td {
+    padding: 4px 6px;
+    max-width: 150px;
+  }
+  
+  .latex-table .katex {
+    font-size: 0.8em;
+  }
+}
+
+/* 表格横向滚动 */
+.latex-table-container {
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 1rem 0;
+}
+
+.latex-table-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.latex-table-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.latex-table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.latex-table-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark Mode下的表格滚动条 */
+.dark .latex-table-container::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .latex-table-container::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.dark .latex-table-container::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}

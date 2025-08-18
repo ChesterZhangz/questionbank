@@ -409,6 +409,33 @@ router.get('/status', authMiddleware, async (req: AuthRequest, res) => {
       } as any;
     }
 
+    // 检查每日游戏次数限制是否需要刷新
+    if (userStats && userStats.lastGameDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const lastGameDate = new Date(userStats.lastGameDate);
+      lastGameDate.setHours(0, 0, 0, 0);
+
+      // 如果是新的一天，重置每日计数器和禁用状态
+      if (lastGameDate.getTime() !== today.getTime()) {
+        await UserGameStats.updateOne(
+          { userId },
+          { 
+            dailyGameCount: 0,
+            lastGameDate: new Date(),
+            isGameDisabled: false,
+            gameDisabledUntil: undefined
+          }
+        );
+        
+        // 更新内存中的统计数据
+        userStats.dailyGameCount = 0;
+        userStats.lastGameDate = new Date();
+        userStats.isGameDisabled = false;
+        userStats.gameDisabledUntil = undefined;
+      }
+    }
+
     // 检查是否被禁用
     if (userStats && userStats.isGameDisabled && userStats.gameDisabledUntil) {
       const now = new Date();

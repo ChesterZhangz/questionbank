@@ -142,27 +142,7 @@ const MemoryGame: React.FC<MemoryGameProps> = ({
     }
   }, [score, timeLimit, gridSize, moves, timeLeft, matchedPairs, totalPairs]);
 
-  // 创建一个不依赖score的提交函数，用于计时器
-  const submitScoreForTimer = useCallback(async (currentScore: number) => {
-    try {
-      await GameAPIService.submitGameRecord({
-        gameType: 'memory',
-        score: currentScore,
-        difficulty: 'medium',
-        settings: {
-          timeLimit,
-          gridSize
-        },
-        gameData: {
-          moves,
-          timeUsed: timeLimit - timeLeft,
-          accuracy: totalPairs > 0 ? Math.round((matchedPairs / totalPairs) * 100) : 0
-        }
-      });
-    } catch (error) {
-      console.error('提交分数失败:', error);
-    }
-  }, [timeLimit, gridSize, moves, timeLeft, matchedPairs, totalPairs]);
+
 
   // 时间倒计时
   useEffect(() => {
@@ -172,7 +152,30 @@ const MemoryGame: React.FC<MemoryGameProps> = ({
       setTimeLeft(prev => {
         if (prev <= 1) {
           setIsGameActive(false);
-          submitScoreForTimer(score);
+          // 直接在这里处理游戏结束，避免依赖submitScoreForTimer
+          const finalScore = score;
+          const finalMoves = moves;
+          const finalMatchedPairs = matchedPairs;
+          const finalTotalPairs = totalPairs;
+          
+          // 异步提交分数
+          GameAPIService.submitGameRecord({
+            gameType: 'memory',
+            score: finalScore,
+            difficulty: 'medium',
+            settings: {
+              timeLimit,
+              gridSize
+            },
+            gameData: {
+              moves: finalMoves,
+              timeUsed: timeLimit,
+              accuracy: finalTotalPairs > 0 ? Math.round((finalMatchedPairs / finalTotalPairs) * 100) : 0
+            }
+          }).catch((error: any) => {
+            console.error('提交分数失败:', error);
+          });
+          
           onGameEnd();
           return 0;
         }
@@ -181,7 +184,7 @@ const MemoryGame: React.FC<MemoryGameProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isGameActive, onGameEnd, submitScoreForTimer]);
+  }, [isGameActive, onGameEnd, score, moves, matchedPairs, totalPairs, timeLimit, gridSize]);
 
   // 检查游戏是否完成
   useEffect(() => {
@@ -216,49 +219,49 @@ const MemoryGame: React.FC<MemoryGameProps> = ({
       {/* 游戏统计 */}
       <div className="grid grid-cols-5 gap-3 mb-6">
         <motion.div 
-          className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200"
+          className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-xl border border-blue-200 dark:border-blue-700"
           whileHover={{ scale: 1.05 }}
         >
-          <div className="text-xl font-bold text-blue-600">{score}</div>
-          <div className="text-xs text-blue-500 font-medium">得分</div>
+          <div className="text-xl font-bold text-blue-600 dark:text-blue-400">{score}</div>
+          <div className="text-xs text-blue-500 dark:text-blue-300 font-medium">得分</div>
         </motion.div>
         <motion.div 
-          className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200"
+          className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-xl border border-green-200 dark:border-green-700"
           whileHover={{ scale: 1.05 }}
         >
-          <div className="text-xl font-bold text-green-600">{moves}</div>
-          <div className="text-xs text-green-500 font-medium">步数</div>
+          <div className="text-xl font-bold text-green-600 dark:text-green-400">{moves}</div>
+          <div className="text-xs text-green-500 dark:text-green-300 font-medium">步数</div>
         </motion.div>
         <motion.div 
-          className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200"
+          className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl border border-purple-200 dark:border-purple-700"
           whileHover={{ scale: 1.05 }}
         >
-          <div className="text-xl font-bold text-purple-600">{matchedPairs}/{totalPairs}</div>
-          <div className="text-xs text-purple-500 font-medium">配对</div>
+          <div className="text-xl font-bold text-purple-600 dark:text-purple-400">{matchedPairs}/{totalPairs}</div>
+          <div className="text-xs text-purple-500 dark:text-purple-300 font-medium">配对</div>
         </motion.div>
         <motion.div 
-          className="text-center p-3 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200"
+          className="text-center p-3 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-xl border border-orange-200 dark:border-orange-700"
           whileHover={{ scale: 1.05 }}
         >
-          <div className="text-xl font-bold text-orange-600">{timeLeft}</div>
-          <div className="text-xs text-orange-500 font-medium">时间</div>
+          <div className="text-xl font-bold text-orange-600 dark:text-orange-400">{timeLeft}</div>
+          <div className="text-xs text-orange-500 dark:text-orange-300 font-medium">时间</div>
         </motion.div>
         <motion.div 
-          className="text-center p-3 bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl border border-pink-200"
+          className="text-center p-3 bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/30 dark:to-pink-800/30 rounded-xl border border-pink-200 dark:border-pink-700"
           whileHover={{ scale: 1.05 }}
         >
-          <div className="text-xl font-bold text-pink-600">{Math.round(progress)}%</div>
-          <div className="text-xs text-pink-500 font-medium">进度</div>
+          <div className="text-xl font-bold text-pink-600 dark:text-pink-400">{Math.round(progress)}%</div>
+          <div className="text-xs text-pink-500 dark:text-pink-300 font-medium">进度</div>
         </motion.div>
       </div>
 
       {/* 进度条 */}
       <div className="mb-6">
-        <div className="flex justify-between text-sm text-gray-600 mb-2">
+        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300 mb-2">
           <span>完成进度</span>
           <span>{Math.round(progress)}%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <motion.div
             className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full"
             initial={{ width: '0%' }}
@@ -271,16 +274,16 @@ const MemoryGame: React.FC<MemoryGameProps> = ({
       {/* 游戏标题 */}
       <div className="text-center mb-6">
         <div className="flex items-center justify-center mb-2">
-          <Brain className="w-8 h-8 text-green-600 mr-3" />
-          <h3 className="text-2xl font-bold text-gray-800">记忆游戏</h3>
+          <Brain className="w-8 h-8 text-green-600 dark:text-green-400 mr-3" />
+          <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100">记忆游戏</h3>
         </div>
-        <p className="text-gray-600">找到所有相同的数字配对</p>
+        <p className="text-gray-600 dark:text-gray-300">找到所有相同的数字配对</p>
       </div>
 
       {/* 卡片网格 */}
       <div className="flex justify-center mb-6">
         <div 
-          className="grid gap-2 bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-2xl border border-gray-200"
+          className="grid gap-2 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 p-4 rounded-2xl border border-gray-200 dark:border-gray-600"
           style={{ 
             gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
             maxWidth: `${gridSize * 80 + 32}px`

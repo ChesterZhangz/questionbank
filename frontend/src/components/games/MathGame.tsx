@@ -174,27 +174,7 @@ const MathGame: React.FC<MathGameProps> = ({
   // 计算准确率
   const accuracy = totalAnswered > 0 ? Math.round((correctAnswered / totalAnswered) * 100) : 0;
 
-  // 创建一个不依赖score的提交函数，用于计时器
-  const submitScoreForTimer = useCallback(async (currentScore: number) => {
-    try {
-      await GameAPIService.submitGameRecord({
-        gameType: 'math',
-        score: currentScore,
-        difficulty,
-        settings: {
-          timeLimit,
-          difficulty
-        },
-        gameData: {
-          moves: totalAnswered,
-          accuracy: accuracy,
-          timeUsed: timeLimit - timeLeft
-        }
-      });
-    } catch (error) {
-      console.error('提交分数失败:', error);
-    }
-  }, [difficulty, timeLimit, totalAnswered, accuracy, timeLeft]);
+
 
   // 时间倒计时
   useEffect(() => {
@@ -204,8 +184,29 @@ const MathGame: React.FC<MathGameProps> = ({
       setTimeLeft(prev => {
         if (prev <= 1) {
           setIsGameActive(false);
-          // 使用不依赖score的提交函数
-          submitScoreForTimer(score);
+          // 直接在这里处理游戏结束，避免依赖submitScoreForTimer
+          const finalScore = score;
+          const finalAccuracy = accuracy;
+          const finalTotalAnswered = totalAnswered;
+          
+          // 异步提交分数
+          GameAPIService.submitGameRecord({
+            gameType: 'math',
+            score: finalScore,
+            difficulty: difficulty,
+            settings: {
+              timeLimit,
+              difficulty
+            },
+            gameData: {
+              moves: finalTotalAnswered,
+              accuracy: finalAccuracy,
+              timeUsed: timeLimit
+            }
+          }).catch((error: any) => {
+            console.error('提交分数失败:', error);
+          });
+          
           onGameEnd();
           return 0;
         }
@@ -214,7 +215,7 @@ const MathGame: React.FC<MathGameProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isGameActive, onGameEnd, submitScoreForTimer]);
+  }, [isGameActive, onGameEnd, score, accuracy, totalAnswered, difficulty, timeLimit]);
 
   // 响应游戏状态变化
   useEffect(() => {
@@ -234,42 +235,42 @@ const MathGame: React.FC<MathGameProps> = ({
       {/* 游戏统计 */}
       <div className="grid grid-cols-4 gap-3 mb-6">
         <motion.div 
-          className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200"
+          className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-xl border border-blue-200 dark:border-blue-700"
           whileHover={{ scale: 1.05 }}
         >
-          <div className="text-2xl font-bold text-blue-600">{score}</div>
-          <div className="text-xs text-blue-500 font-medium">总分</div>
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{score}</div>
+          <div className="text-xs text-blue-500 dark:text-blue-300 font-medium">总分</div>
         </motion.div>
         <motion.div 
-          className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200"
+          className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-xl border border-green-200 dark:border-green-700"
           whileHover={{ scale: 1.05 }}
         >
-          <div className="text-2xl font-bold text-green-600">{streak}</div>
-          <div className="text-xs text-green-500 font-medium">连胜</div>
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">{streak}</div>
+          <div className="text-xs text-green-500 dark:text-green-300 font-medium">连胜</div>
         </motion.div>
         <motion.div 
-          className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200"
+          className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl border border-purple-200 dark:border-purple-700"
           whileHover={{ scale: 1.05 }}
         >
-          <div className="text-2xl font-bold text-purple-600">{accuracy}%</div>
-          <div className="text-xs text-purple-500 font-medium">准确率</div>
+          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{accuracy}%</div>
+          <div className="text-xs text-purple-500 dark:text-purple-300 font-medium">准确率</div>
         </motion.div>
         <motion.div 
-          className="text-center p-3 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200"
+          className="text-center p-3 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-xl border border-orange-200 dark:border-orange-700"
           whileHover={{ scale: 1.05 }}
         >
-          <div className="text-2xl font-bold text-orange-600">{timeLeft}</div>
-          <div className="text-xs text-orange-500 font-medium">剩余时间</div>
+          <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{timeLeft}</div>
+          <div className="text-xs text-orange-500 dark:text-orange-300 font-medium">剩余时间</div>
         </motion.div>
       </div>
 
       {/* 进度条 */}
       <div className="mb-6">
-        <div className="flex justify-between text-sm text-gray-600 mb-2">
+        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300 mb-2">
           <span>时间进度</span>
           <span>{Math.round(((timeLimit - timeLeft) / timeLimit) * 100)}%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <motion.div
             className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full"
             initial={{ width: '100%' }}
@@ -287,13 +288,13 @@ const MathGame: React.FC<MathGameProps> = ({
         transition={{ duration: 0.3 }}
         className="text-center mb-6"
       >
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl p-8 border border-gray-200 dark:border-gray-600">
           <div className="flex items-center justify-center mb-4">
-            <Calculator className="w-8 h-8 text-blue-600 mr-3" />
-            <h3 className="text-xl font-bold text-gray-800">数学计算</h3>
+            <Calculator className="w-8 h-8 text-blue-600 dark:text-blue-400 mr-3" />
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">数学计算</h3>
           </div>
           
-          <div className="text-4xl font-bold text-gray-800 mb-6">
+          <div className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-6">
             {currentProblem?.question}
           </div>
           
@@ -309,7 +310,7 @@ const MathGame: React.FC<MathGameProps> = ({
                 }
               }}
               onKeyPress={handleKeyPress}
-              className="w-32 px-4 py-3 text-center text-2xl font-bold border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all"
+              className="w-32 px-4 py-3 text-center text-2xl font-bold border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               placeholder="?"
               autoFocus
               disabled={!isGameActive}
@@ -336,8 +337,8 @@ const MathGame: React.FC<MathGameProps> = ({
             exit={{ opacity: 0, y: -20, scale: 0.9 }}
             className={`text-center p-4 rounded-xl font-semibold text-lg ${
               feedback === 'correct' 
-                ? 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300' 
-                : 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300'
+                ? 'bg-gradient-to-r from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30 text-green-800 dark:text-green-200 border border-green-300 dark:border-green-600' 
+                : 'bg-gradient-to-r from-red-100 to-red-200 dark:from-red-900/30 dark:to-red-800/30 text-red-800 dark:text-red-200 border border-red-300 dark:border-red-600'
             }`}
           >
             {feedback === 'correct' ? (

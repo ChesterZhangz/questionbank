@@ -329,7 +329,7 @@ const QuestionBankMembersPage: React.FC = () => {
     }
 
     try {
-      const response = await authAPI.searchUsers(query, 20);
+      const response = await authAPI.searchUsers(query, 20, bid);
       if (response.data.success) {
         setSearchResults(response.data.users || []);
       }

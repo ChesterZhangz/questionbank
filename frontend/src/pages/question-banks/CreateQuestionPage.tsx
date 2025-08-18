@@ -560,7 +560,7 @@ const CreateQuestionPage: React.FC = () => {
     const answers: { label: string; index: number }[] = [];
     let subpCount = 0;
     let subsubpCount = 0;
-    let subpWithSubsubp = new Set<number>();
+    const subpWithSubsubp = new Set<number>();
     
     for (const line of lines) {
       if (line.includes('\\subp')) {

@@ -444,9 +444,9 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                    className="bg-blue-50 border-b border-blue-200 p-4"
+                    className="bg-blue-50 dark:bg-blue-900/30 border-b border-blue-200 dark:border-blue-600 p-4"
                   >
-                    <div className="text-sm text-blue-800">
+                    <div className="text-sm text-blue-800 dark:text-blue-200">
                       <strong>游戏说明：</strong>
                       {gameInfo[currentGame].description}
                   </div>
@@ -455,9 +455,9 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
             </AnimatePresence>
 
               {/* 游戏选择器 */}
-              <div className="p-4 border-b border-gray-200">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-600">
                 <div className="flex items-center justify-between">
-                  <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+                  <div className="flex space-x-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                     {(['math', 'memory', 'puzzle', 'reaction'] as const).map((game) => (
                       <button
                         key={game}
@@ -465,7 +465,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                         disabled={isGameActive}
                         className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
                           currentGame === game
-                            ? 'bg-white text-gray-800 shadow-sm'
+                            ? 'bg-white dark:bg-gray-600 text-gray-800 dark:text-gray-100 shadow-sm'
                             : isGameActive
                             ? 'text-gray-400 cursor-not-allowed'
                             : 'text-gray-600 hover:text-gray-800'
@@ -495,24 +495,24 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                       <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Play className="w-10 h-10 text-white" />
                       </div>
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">准备开始游戏</h3>
-                      <p className="text-gray-600 mb-6">选择游戏类型，点击开始按钮开始挑战</p>
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">准备开始游戏</h3>
+                      <p className="text-gray-600 dark:text-gray-300 mb-6">选择游戏类型，点击开始按钮开始挑战</p>
                       
                       {/* 游戏状态信息 */}
                       {gameStatus && (
-                        <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-                          <div className="text-sm text-gray-700">
+                        <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg border border-blue-200 dark:border-blue-600">
+                          <div className="text-sm text-gray-700 dark:text-gray-200">
                             <div className="flex items-center justify-center space-x-4">
                               <span>今日游戏次数: {gameStatus.dailyGameCount}/15</span>
                               {gameStatus.dailyGameCount > 5 && (
-                                <span className="text-orange-600 font-medium">注意工作</span>
+                                <span className="text-orange-600 dark:text-orange-400 font-medium">注意工作</span>
                               )}
                               {gameStatus.dailyGameCount >= 15 && (
-                                <span className="text-red-600 font-medium">已达上限</span>
+                                <span className="text-red-600 dark:text-red-400 font-medium">已达上限</span>
                               )}
                             </div>
                             {gameStatus.warningMessage && (
-                              <div className="mt-2 text-orange-600 text-xs text-center">
+                              <div className="mt-2 text-orange-600 dark:text-orange-400 text-xs text-center">
                                 {gameStatus.warningMessage}
                               </div>
                             )}
@@ -551,8 +551,8 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                       <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Trophy className="w-10 h-10 text-white" />
                       </div>
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">本次游戏已结束</h3>
-                      <p className="text-gray-600 mb-6">所有游戏都已结束，点击重新开始按钮重新挑战</p>
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">本次游戏已结束</h3>
+                      <p className="text-gray-600 dark:text-gray-300 mb-6">所有游戏都已结束，点击重新开始按钮重新挑战</p>
                     </div>
                     <Button
                       onClick={handleRestartAllGames}
@@ -615,31 +615,31 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
               </div>
 
               {/* 分数统计 */}
-              <div className="bg-gray-50 p-4 border-t border-gray-200">
+              <div className="bg-gray-50 dark:bg-gray-700 p-4 border-t border-gray-200 dark:border-gray-600">
                 <div className="grid grid-cols-4 gap-3">
                   {(['math', 'memory', 'puzzle', 'reaction'] as const).map((game) => (
                     <div
                       key={game}
                       className={`text-center p-2 rounded-lg transition-all ${
                         currentGame === game
-                          ? `bg-${gameInfo[game].color}-100 border-${gameInfo[game].color}-200 border`
+                          ? `bg-${gameInfo[game].color}-100 border-${gameInfo[game].color}-200 border dark:bg-gray-800/50 dark:border-gray-600`
                           : isGameActive
-                          ? 'bg-white cursor-not-allowed opacity-50'
-                          : 'bg-white hover:bg-gray-50 cursor-pointer'
+                          ? 'bg-white dark:bg-gray-700 cursor-not-allowed opacity-50'
+                          : 'bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer'
                       }`}
                       onClick={isGameActive ? undefined : () => setCurrentGame(game)}
                     >
                       <div className="text-sm mb-1">{gameInfo[game].icon}</div>
-                      <div className="text-xs font-medium text-gray-600 mb-1">
+                      <div className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                         {gameInfo[game].title}
-                    </div>
+                      </div>
                       <div className={`text-sm font-bold text-${gameInfo[game].color}-600`}>
                         {scores[game]}
-                  </div>
-                    </div>
-                          ))}
-                        </div>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </motion.div>
                 )}
               </div>

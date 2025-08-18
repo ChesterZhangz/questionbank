@@ -7,6 +7,7 @@ interface QuestionGridProps {
   questions: Question[];
   selectedQuestions: Question[];
   analyzingQuestions: string[];
+  answerGeneratingQuestions?: string[];
   onSelect: (questionId: string, selected: boolean) => void;
   onEdit: (questionId: string) => void;
   onAnalyze: (questionId: string) => void;
@@ -18,6 +19,7 @@ const QuestionGrid: React.FC<QuestionGridProps> = ({
   questions,
   selectedQuestions,
   analyzingQuestions,
+  answerGeneratingQuestions = [],
   onSelect,
   onEdit,
   onAnalyze,
@@ -67,6 +69,7 @@ const QuestionGrid: React.FC<QuestionGridProps> = ({
               onSplit={onSplit ? () => onSplit(question.id || question._id) : undefined}
               onDelete={() => onDelete(question.id || question._id)}
               isAnalyzing={question.id ? analyzingQuestions.includes(question.id) : false}
+              isAnswerGenerating={question.id ? answerGeneratingQuestions.includes(question.id) : false}
             />
           </motion.div>
         ))}

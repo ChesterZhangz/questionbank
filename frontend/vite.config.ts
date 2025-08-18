@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => ({
           'vendor-ui': ['framer-motion', 'lucide-react', 'tailwindcss'],
           'vendor-math': ['katex', 'react-katex'],
           'vendor-pdf': ['pdfjs-dist'],
-          'vendor-utils': ['axios', 'html2canvas', 'mammoth', 'prismjs'],
+          'vendor-utils': ['axios', 'mammoth', 'prismjs'],
           'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
           'vendor-state': ['zustand', '@tanstack/react-query']
         }

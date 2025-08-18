@@ -10,12 +10,11 @@ import {
   Shield,
   Database,
   Eye,
-  EyeOff,
-  Camera
+  EyeOff
 } from 'lucide-react';
 import { useLayoutStore } from '../../stores/layoutStore';
 import { useAuthStore } from '../../stores/authStore';
-import { useScreenshotStore } from '../../stores/screenshotStore';
+
 import { useTheme } from '../../contexts/ThemeContext';
 import { authAPI } from '../../services/api';
 import Card from '../../components/ui/Card';
@@ -28,7 +27,7 @@ const SettingsPage: React.FC = () => {
   const { layoutMode, setLayoutMode } = useLayoutStore();
   const { theme, setTheme } = useTheme();
   const { logout } = useAuthStore();
-  const { config, updateConfig, resetConfig } = useScreenshotStore();
+
 
   // 弹窗状态管理
   const { 
@@ -296,213 +295,7 @@ const SettingsPage: React.FC = () => {
             </Card>
           </motion.div>
 
-          {/* 截图设置 */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
-                    <Camera className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">截图设置</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">自定义题目截图显示内容</p>
-                  </div>
-                </div>
 
-                <div className="space-y-6">
-                  {/* 显示内容设置 */}
-                  <div>
-                    <h4 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">显示内容</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <label className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600">
-                        <input
-                          type="checkbox"
-                          checked={config.showQuestionNumber}
-                          onChange={(e) => updateConfig({ showQuestionNumber: e.target.checked })}
-                          className="mr-3 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
-                        />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">题目编号</span>
-                      </label>
-
-                      <label className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600">
-                        <input
-                          type="checkbox"
-                          checked={config.showCreateTime}
-                          onChange={(e) => updateConfig({ showCreateTime: e.target.checked })}
-                          className="mr-3 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
-                        />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">创建时间</span>
-                      </label>
-
-                      <label className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600">
-                        <input
-                          type="checkbox"
-                          checked={config.showTags}
-                          onChange={(e) => updateConfig({ showTags: e.target.checked })}
-                          className="mr-3 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
-                        />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">题目类型</span>
-                      </label>
-
-                      <label className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600">
-                        <input
-                          type="checkbox"
-                          checked={config.showDifficulty}
-                          onChange={(e) => updateConfig({ showDifficulty: e.target.checked })}
-                          className="mr-3 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
-                        />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">难度等级</span>
-                      </label>
-
-                      <label className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600">
-                        <input
-                          type="checkbox"
-                          checked={config.showCategory}
-                          onChange={(e) => updateConfig({ showCategory: e.target.checked })}
-                          className="mr-3 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
-                        />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">分类标签</span>
-                      </label>
-
-                      <label className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600">
-                        <input
-                          type="checkbox"
-                          checked={config.showKnowledgeTags}
-                          onChange={(e) => updateConfig({ showKnowledgeTags: e.target.checked })}
-                          className="mr-3 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
-                        />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">知识点标签</span>
-                      </label>
-
-                      <label className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600">
-                        <input
-                          type="checkbox"
-                          checked={config.showSource}
-                          onChange={(e) => updateConfig({ showSource: e.target.checked })}
-                          className="mr-3 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
-                        />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">题目来源</span>
-                      </label>
-
-                      <label className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600">
-                        <input
-                          type="checkbox"
-                          checked={config.showBankName}
-                          onChange={(e) => updateConfig({ showBankName: e.target.checked })}
-                          className="mr-3 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
-                        />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">题库名称</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* 答案和解析设置 */}
-                  <div>
-                    <h4 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">答案和解析</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <label className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600">
-                        <input
-                          type="checkbox"
-                          checked={config.showAnswer}
-                          onChange={(e) => updateConfig({ showAnswer: e.target.checked })}
-                          className="mr-3 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
-                        />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">显示答案</span>
-                      </label>
-
-                      <label className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600">
-                        <input
-                          type="checkbox"
-                          checked={config.showSolution}
-                          onChange={(e) => updateConfig({ showSolution: e.target.checked })}
-                          className="mr-3 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
-                        />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">显示解析</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* 样式设置 */}
-                  <div>
-                    <h4 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">样式设置</h4>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          图片宽度: {config.width}px
-                        </label>
-                        <input
-                          type="range"
-                          min="800"
-                          max="1600"
-                          step="100"
-                          value={config.width}
-                          onChange={(e) => updateConfig({ width: parseInt(e.target.value) })}
-                          className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          内边距: {config.padding}px
-                        </label>
-                        <input
-                          type="range"
-                          min="20"
-                          max="80"
-                          step="10"
-                          value={config.padding}
-                          onChange={(e) => updateConfig({ padding: parseInt(e.target.value) })}
-                          className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          字体样式
-                        </label>
-                        <select
-                          value={config.fontFamily}
-                          onChange={(e) => updateConfig({ fontFamily: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent dark:bg-gray-700 dark:text-gray-300"
-                        >
-                          <option value='Georgia, "Times New Roman", serif'>衬线字体 (Georgia)</option>
-                          <option value='Arial, "Helvetica Neue", sans-serif'>无衬线字体 (Arial)</option>
-                          <option value='"Microsoft YaHei", "PingFang SC", sans-serif'>中文字体 (微软雅黑)</option>
-                          <option value='"Courier New", Courier, monospace'>等宽字体 (Courier)</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 操作按钮 */}
-                  <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-600">
-                    <Button
-                      variant="outline"
-                      onClick={resetConfig}
-                      className="flex-1 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                    >
-                      重置默认
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        // 预览功能可以在这里实现
-                        showErrorRightSlide('功能开发中', '预览功能开发中...');
-                      }}
-                      className="flex-1 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                    >
-                      预览效果
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
         </div>
       </div>
 

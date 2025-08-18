@@ -128,7 +128,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
     const answers: { label: string; index: number }[] = [];
     let subpCount = 0;
     let subsubpCount = 0;
-    let subpWithSubsubp = new Set<number>();
+    const subpWithSubsubp = new Set<number>();
     
     // 第一遍：统计所有的 \subp 和 \subsubp
     for (const line of lines) {

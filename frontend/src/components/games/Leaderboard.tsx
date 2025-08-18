@@ -82,10 +82,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
 
   const getRankColor = (rank: number) => {
     switch (rank) {
-      case 1: return 'bg-gradient-to-r from-yellow-100 to-yellow-200 border-yellow-300';
-      case 2: return 'bg-gradient-to-r from-gray-100 to-gray-200 border-gray-300';
-      case 3: return 'bg-gradient-to-r from-amber-100 to-amber-200 border-amber-300';
-      default: return 'bg-white hover:bg-gray-50 border-gray-200';
+      case 1: return 'bg-gradient-to-r from-yellow-100 to-yellow-200 dark:from-yellow-900/30 dark:to-yellow-800/30 border-yellow-300 dark:border-yellow-600';
+      case 2: return 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 border-gray-300 dark:border-gray-500';
+      case 3: return 'bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-900/30 dark:to-amber-800/30 border-amber-300 dark:border-amber-600';
+      default: return 'bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600';
     }
   };
 
@@ -103,7 +103,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 头部 */}
@@ -138,15 +138,15 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
 
             {/* 当前用户排名 */}
             {currentUserRank && (
-              <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 border-b border-green-200">
+              <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 border-b border-green-200 dark:border-green-600">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <TrendingUp className="w-5 h-5 text-green-600" />
-                    <span className="text-sm font-medium text-gray-700">你的排名</span>
+                    <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">你的排名</span>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold text-green-600">第 {currentUserRank} 名</div>
-                    <div className="text-sm text-gray-600">{currentUserScore} 分</div>
+                    <div className="text-lg font-bold text-green-600 dark:text-green-400">第 {currentUserRank} 名</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">{currentUserScore} 分</div>
                   </div>
                 </div>
               </div>
@@ -189,7 +189,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                       transition={{ delay: index * 0.05 }}
                       className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
                         entry.score === currentUserScore
-                          ? 'bg-gradient-to-r from-blue-100 to-purple-100 border-blue-300 shadow-md' 
+                          ? 'bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 border-blue-300 dark:border-blue-600 shadow-md' 
                           : getRankColor(entry.rank)
                       }`}
                     >
@@ -197,10 +197,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                         <div className="flex items-center space-x-2">
                           {getRankIcon(entry.rank)}
                           <span className={`font-bold ${
-                            entry.rank === 1 ? 'text-yellow-600' :
-                            entry.rank === 2 ? 'text-gray-600' :
-                            entry.rank === 3 ? 'text-amber-600' :
-                            'text-gray-700'
+                            entry.rank === 1 ? 'text-yellow-600 dark:text-yellow-400' :
+                            entry.rank === 2 ? 'text-gray-600 dark:text-gray-300' :
+                            entry.rank === 3 ? 'text-amber-600 dark:text-amber-400' :
+                            'text-gray-700 dark:text-gray-200'
                           }`}>
                             #{entry.rank}
                           </span>
@@ -208,7 +208,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                         <div className="flex items-center space-x-2">
                           <User className="w-4 h-4 text-gray-500" />
                           <span className={`font-medium ${
-                            entry.score === currentUserScore ? 'text-blue-700' : 'text-gray-800'
+                            entry.score === currentUserScore ? 'text-blue-700 dark:text-blue-300' : 'text-gray-800 dark:text-gray-100'
                           }`}>
                             {entry.username}
                           </span>
@@ -218,8 +218,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-lg font-bold text-gray-800">{entry.score}</div>
-                        <div className="text-xs text-gray-500">分</div>
+                        <div className="text-lg font-bold text-gray-800 dark:text-gray-100">{entry.score}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">分</div>
                       </div>
                     </motion.div>
                   ))}
@@ -228,8 +228,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
             </div>
 
             {/* 底部 */}
-            <div className="p-6 bg-gray-50 border-t border-gray-200">
-              <div className="text-center text-sm text-gray-600">
+            <div className="p-6 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+              <div className="text-center text-sm text-gray-600 dark:text-gray-300">
                 <p>排行榜实时更新</p>
                 <p className="mt-1">挑战自己，创造新纪录！</p>
               </div>
