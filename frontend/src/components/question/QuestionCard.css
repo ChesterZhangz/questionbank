@@ -17,6 +17,29 @@
   word-wrap: break-word !important;
 }
 
+/* 题目内容区域滚动容器 */
+.question-card-content-scroll {
+  /* 重新计算高度：卡片总高度384px - 内边距48px - 头部区域约80px - 底部信息约40px = 约216px */
+  max-height: 180px !important; /* 题目主干最大高度，留出更多空间给选项 */
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  /* 添加内边距避免内容贴边 */
+  padding-right: 8px !important;
+  /* 平滑滚动 */
+  scroll-behavior: smooth !important;
+}
+
+/* 选项区域滚动容器 */
+.question-card-options-scroll {
+  /* 选项区域高度，考虑底部信息区域 */
+  max-height: 100px !important; /* 选项区域最大高度 */
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  /* 添加内边距避免内容贴边 */
+  padding-right: 8px !important;
+  /* 平滑滚动 */
+  scroll-behavior: smooth !important;
+}
 
 /* 列表模式下的LaTeX内容样式 */
 .question-card-latex-content.list-mode {
@@ -30,43 +53,102 @@
   /* 选项文本的特殊样式 */
   font-size: 1rem !important; /* 调整字体大小从1.1em到1rem */
   line-height: 1.6 !important; /* 增加行高从1.5到1.6 */
-  /* 移除高度限制和滚动条，让数学公式完整显示 */
-  /* max-height: 100px !important; */
-  /* overflow-y: auto !important; */
-  /* overflow-x: hidden !important; */
-  /* padding-right: 8px !important; */
 }
 
-/* 自定义滚动条样式 */
+/* 自定义滚动条样式 - 默认隐藏，悬浮时显示 */
+.question-card-content-scroll::-webkit-scrollbar,
+.question-card-options-scroll::-webkit-scrollbar,
 .question-card-latex-content::-webkit-scrollbar {
-  width: 6px !important;
+  width: 0px !important; /* 默认隐藏滚动条 */
+  transition: width 0.3s ease-in-out !important; /* 添加宽度过渡动画 */
 }
 
+/* 悬浮时显示滚动条 */
+.question-card:hover .question-card-content-scroll::-webkit-scrollbar,
+.question-card:hover .question-card-options-scroll::-webkit-scrollbar,
+.question-card:hover .question-card-latex-content::-webkit-scrollbar {
+  width: 6px !important; /* 悬浮时显示滚动条 */
+}
+
+.question-card-content-scroll::-webkit-scrollbar-track,
+.question-card-options-scroll::-webkit-scrollbar-track,
 .question-card-latex-content::-webkit-scrollbar-track {
   background: #f1f5f9 !important;
   border-radius: 3px !important;
+  opacity: 0 !important; /* 默认透明 */
+  transition: opacity 0.3s ease-in-out !important; /* 添加透明度过渡动画 */
 }
 
+/* 悬浮时显示滚动条轨道 */
+.question-card:hover .question-card-content-scroll::-webkit-scrollbar-track,
+.question-card:hover .question-card-options-scroll::-webkit-scrollbar-track,
+.question-card:hover .question-card-latex-content::-webkit-scrollbar-track {
+  opacity: 1 !important; /* 悬浮时显示 */
+}
+
+.question-card-content-scroll::-webkit-scrollbar-thumb,
+.question-card-options-scroll::-webkit-scrollbar-thumb,
 .question-card-latex-content::-webkit-scrollbar-thumb {
   background: #cbd5e1 !important;
   border-radius: 3px !important;
+  opacity: 0 !important; /* 默认透明 */
+  transition: opacity 0.3s ease-in-out !important; /* 添加透明度过渡动画 */
 }
 
+/* 悬浮时显示滚动条滑块 */
+.question-card:hover .question-card-content-scroll::-webkit-scrollbar-thumb,
+.question-card:hover .question-card-options-scroll::-webkit-scrollbar-thumb,
+.question-card:hover .question-card-latex-content::-webkit-scrollbar-thumb {
+  opacity: 1 !important; /* 悬浮时显示 */
+}
+
+.question-card-content-scroll::-webkit-scrollbar-thumb:hover,
+.question-card-options-scroll::-webkit-scrollbar-thumb:hover,
 .question-card-latex-content::-webkit-scrollbar-thumb:hover {
   background: #94a3b8 !important;
 }
 
 /* Dark Mode下的滚动条样式 */
+.dark .question-card-content-scroll::-webkit-scrollbar-track,
+.dark .question-card-options-scroll::-webkit-scrollbar-track,
 .dark .question-card-latex-content::-webkit-scrollbar-track {
   background: #374151 !important;
 }
 
+.dark .question-card-content-scroll::-webkit-scrollbar-thumb,
+.dark .question-card-options-scroll::-webkit-scrollbar-thumb,
 .dark .question-card-latex-content::-webkit-scrollbar-thumb {
   background: #6b7280 !important;
 }
 
+.dark .question-card-content-scroll::-webkit-scrollbar-thumb:hover,
+.dark .question-card-options-scroll::-webkit-scrollbar-thumb:hover,
 .dark .question-card-latex-content::-webkit-scrollbar-thumb:hover {
   background: #9ca3af !important;
+}
+
+/* Firefox兼容性 - 使用scrollbar-width和scrollbar-color */
+.question-card-content-scroll,
+.question-card-options-scroll,
+.question-card-latex-content {
+  scrollbar-width: none !important; /* Firefox默认隐藏滚动条 */
+  scrollbar-color: transparent transparent !important; /* Firefox滚动条颜色 */
+  transition: scrollbar-width 0.3s ease-in-out !important; /* Firefox滚动条宽度过渡 */
+}
+
+/* 悬浮时显示Firefox滚动条 */
+.question-card:hover .question-card-content-scroll,
+.question-card:hover .question-card-options-scroll,
+.question-card:hover .question-card-latex-content {
+  scrollbar-width: thin !important; /* Firefox悬浮时显示细滚动条 */
+  scrollbar-color: #cbd5e1 #f1f5f9 !important; /* Firefox滚动条颜色 */
+}
+
+/* Dark Mode下的Firefox滚动条 */
+.dark .question-card:hover .question-card-content-scroll,
+.dark .question-card:hover .question-card-options-scroll,
+.dark .question-card:hover .question-card-latex-content {
+  scrollbar-color: #6b7280 #374151 !important; /* Dark Mode下的Firefox滚动条颜色 */
 }
 
 /* 确保KaTeX公式在QuestionCard中正确显示 */
@@ -74,11 +156,26 @@
   font-size: 1em !important;
   line-height: 1.2 !important;
   color: inherit !important;
+  /* 修复：移除行内公式的横向滚动，让公式自然换行 */
+  max-width: none !important;
+  overflow-x: visible !important;
+  display: inline !important;
+  vertical-align: middle !important;
+}
+
+/* 修复：确保选项中的公式不会导致横向滚动 */
+.question-card-option-content .katex {
+  max-width: none !important;
+  overflow-x: visible !important;
+  white-space: normal !important;
 }
 
 .question-card-latex-content .katex-display {
   margin: 0.5em 0 !important;
   text-align: center !important;
+  /* 修复：仅对块级公式保留横向滚动 */
+  overflow-x: auto !important;
+  max-width: 100% !important;
 }
 
 .question-card-latex-content .katex-html {
@@ -109,39 +206,7 @@
   vertical-align: baseline !important;
 }
 
-.question-card-latex-content .subproblem {
-  font-weight: 500 !important;
-  color: inherit !important; /* 改为inherit，继承父元素的颜色 */
-  margin: 0.2em 0 !important;
-  padding: 0.3em 0 !important;
-  display: block !important;
-  font-family: 'WenYuan', 'SimSun', 'STSong', serif !important;
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-  text-indent: 0 !important;
-}
-
-.question-card-latex-content .subproblem-number {
-  display: inline-block !important;
-  min-width: 2em !important;
-  font-weight: bold !important;
-  color: #1f2937 !important; /* 改为深色，确保清晰可见 */
-  margin-right: 0.5em !important;
-}
-
-.question-card-latex-content .subproblem-sub {
-  margin: 0.1em 0 !important;
-  padding: 0.1em 0 !important;
-  color: inherit !important; /* 改为inherit，继承父元素的颜色 */
-}
-
-.question-card-latex-content .subproblem-sub .subproblem-number {
-  display: inline-block !important;
-  min-width: 1.5em !important;
-  font-weight: bold !important;
-  color: #1f2937 !important; /* 改为深色，确保清晰可见 */
-  margin-right: 0.5em !important;
-}
+/* 移除重复的subproblem样式，现在使用全局样式 */
 
 /* Dark Mode支持 */
 .dark .question-card-latex-content {
@@ -166,22 +231,6 @@
 
 .dark .question-card-latex-content .fill-blank {
   border-bottom-color: #9ca3af !important;
-}
-
-.dark .question-card-latex-content .subproblem {
-  color: #f6f8fa !important; /* 在暗色主题下使用浅色 */
-}
-
-.dark .question-card-latex-content .subproblem-number {
-  color: #fbbf24 !important; /* 在暗色主题下使用黄色，确保清晰可见 */
-}
-
-.dark .question-card-latex-content .subproblem-sub {
-  color: #f6f8fa !important; /* 在暗色主题下使用浅色 */
-}
-
-.dark .question-card-latex-content .subproblem-sub .subproblem-number {
-  color: #fbbf24 !important; /* 在暗色主题下使用黄色，确保清晰可见 */
 }
 
 /* 斜体和粗体样式 */
@@ -281,6 +330,10 @@
   flex: 1;
   min-width: 0;
   line-height: 1.6;
+  /* 修复：确保选项内容不会因为内部元素过宽而出现横向滚动 */
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  overflow-x: visible !important;
 }
 
 /* 选项标签样式 */
@@ -296,4 +349,26 @@
 .dark .question-card-options-label {
   color: #9ca3af;
   border-bottom-color: #4b5563;
+}
+
+/* 响应式设计 - 移动端优化 */
+@media (max-width: 768px) {
+  .question-card-content-scroll {
+    max-height: 140px !important; /* 移动端减少最大高度 */
+  }
+  
+  .question-card-options-scroll {
+    max-height: 80px !important; /* 移动端减少最大高度 */
+  }
+}
+
+/* 响应式设计 - 大屏幕优化 */
+@media (min-width: 1024px) {
+  .question-card-content-scroll {
+    max-height: 220px !important; /* 大屏幕增加最大高度 */
+  }
+  
+  .question-card-options-scroll {
+    max-height: 120px !important; /* 大屏幕增加最大高度 */
+  }
 }

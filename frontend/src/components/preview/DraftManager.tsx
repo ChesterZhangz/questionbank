@@ -14,6 +14,7 @@ import Button from '../ui/Button';
 import { useQuestionPreviewStore, type QuestionDraft } from '../../stores/questionPreviewStore';
 import { useModal } from '../../hooks/useModal';
 import RightSlideModal from '../ui/RightSlideModal';
+import ConfirmModal from '../ui/ConfirmModal';
 
 interface DraftManagerProps {
   isOpen: boolean;
@@ -26,6 +27,8 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
   // 弹窗状态管理
   const { 
     showConfirm,
+    confirmModal,
+    closeConfirm,
     rightSlideModal,
     showSuccessRightSlide,
     showErrorRightSlide,
@@ -71,26 +74,29 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
         '确认覆盖',
         confirmMessage,
         () => {
-        // 覆盖现有草稿
-        const { updateDraft, setCurrentDraftId, setIsDraftMode } = useQuestionPreviewStore.getState();
-        updateDraft(duplicateDraft.id, {
-          name: draftName.trim(),
-          description: draftDescription.trim() || undefined,
-          questions: questions
+          // 覆盖现有草稿
+          const { updateDraft, setCurrentDraftId, setIsDraftMode } = useQuestionPreviewStore.getState();
+          updateDraft(duplicateDraft.id, {
+            name: draftName.trim(),
+            description: draftDescription.trim() || undefined,
+            questions: questions
+          });
+          setCurrentDraftId(duplicateDraft.id);
+          setIsDraftMode(true);
+          
+          setDraftName('');
+          setDraftDescription('');
+          setShowSaveForm(false);
+          showSuccessRightSlide('更新成功', `已更新草稿：${duplicateDraft.name}`);
+          
+          // 通知父组件用户已主动保存草稿
+          if (onUserSaveDraft) {
+            onUserSaveDraft();
+          }
+          
+          // 关闭确认弹窗
+          closeConfirm();
         });
-        setCurrentDraftId(duplicateDraft.id);
-        setIsDraftMode(true);
-        
-        setDraftName('');
-        setDraftDescription('');
-        setShowSaveForm(false);
-        showSuccessRightSlide('更新成功', `已更新草稿：${duplicateDraft.name}`);
-        
-        // 通知父组件用户已主动保存草稿
-        if (onUserSaveDraft) {
-          onUserSaveDraft();
-        }
-      });
       return;
     }
 
@@ -115,6 +121,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
         () => {
           loadDraft(draft.id);
           showSuccessRightSlide('加载成功', `已加载草稿：${draft.name}`);
+          closeConfirm();
         }
       );
       return;
@@ -131,6 +138,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
       () => {
         deleteDraft(draft.id);
         showSuccessRightSlide('删除成功', '草稿删除成功');
+        closeConfirm();
       }
     );
   };
@@ -473,6 +481,12 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
               </div>
             </div>
           </motion.div>
+
+          {/* 确认弹窗 */}
+          <ConfirmModal
+            {...confirmModal}
+            onCancel={closeConfirm}
+          />
 
           {/* 右侧滑入通知 */}
           <RightSlideModal

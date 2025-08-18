@@ -538,7 +538,7 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
                     rows={simplified? 7: 14}
                     className={simplified ? 'border-0' : ''}
                     style={{ 
-                      height: simplified ? '200px' : '340px',
+                      height: simplified ? '182.5px' : '340px',
                       overflow: 'auto',
                       fontFamily: 'monospace', // 使用单一字体，确保一致性
                       letterSpacing: '0px' // 确保字母间距一致
@@ -555,7 +555,7 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
                   rows={simplified? 7: 14}
                   className={simplified ? 'border-0' : ''}
                   style={{ 
-                    height: simplified ? '200px' : '340px',
+                    height: simplified ? '182.5px' : '340px',
                     overflow: 'auto',
                     fontFamily: 'monospace', // 使用单一字体，确保一致性
                     letterSpacing: '0px' // 确保字母间距一致

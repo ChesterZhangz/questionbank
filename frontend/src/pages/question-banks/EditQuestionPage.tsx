@@ -24,6 +24,7 @@ const EditQuestionPage: React.FC = () => {
     showConfirm, 
     confirmModal, 
     closeConfirm,
+    setConfirmLoading,
     showSuccessRightSlide,
     rightSlideModal,
     closeRightSlide
@@ -89,7 +90,7 @@ const EditQuestionPage: React.FC = () => {
       fetchQuestionBank();
       fetchAllQuestions();
     }
-  }, [bid, qid, fetchQuestion, fetchQuestionBank, fetchAllQuestions]);
+  }, [bid, qid]); // 移除函数依赖，避免无限循环
 
   // 处理题目内容变化
   const handleQuestionChange = useCallback((updatedQuestion: Partial<Question>) => {
@@ -126,6 +127,7 @@ const EditQuestionPage: React.FC = () => {
         '确认离开',
         '您有未保存的更改，确定要离开吗？',
         () => {
+          closeConfirm();
           navigate(-1); // 回到上一个页面
         }
       );
@@ -139,9 +141,15 @@ const EditQuestionPage: React.FC = () => {
     showConfirm(
       '确认重置',
       '确定要重置所有更改吗？',
-      () => {
-        fetchQuestion();
-        setHasChanges(false);
+      async () => {
+        setConfirmLoading(true, '正在重置...');
+        try {
+          await fetchQuestion();
+          setHasChanges(false);
+        } finally {
+          setConfirmLoading(false);
+          closeConfirm();
+        }
       }
     );
   };

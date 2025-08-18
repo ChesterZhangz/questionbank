@@ -15,7 +15,6 @@ export const clearAllAuthData = (): void => {
   sessionStorage.removeItem('token');
   sessionStorage.removeItem('user');
   
-  console.log('所有认证数据已清理');
 };
 
 /**
@@ -31,7 +30,6 @@ export const validateToken = (token: string): boolean => {
     
     // 检查令牌是否过期
     if (payload.exp && payload.exp < currentTime) {
-      console.log('Token已过期:', new Date(payload.exp * 1000));
       return false;
     }
     

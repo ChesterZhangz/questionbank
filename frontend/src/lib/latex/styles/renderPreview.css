@@ -19,7 +19,7 @@
 .latex-content,
 .prose .latex-content,
 .prose-sm .latex-content {
-  font-family: 'SimSun', 'STSong', 'Microsoft YaHei', 'PingFang SC', 'Times New Roman', 'Times', serif !important;
+  font-family: 'WenYuan', 'SimSun', 'STSong', 'Microsoft YaHei', 'PingFang SC', 'Times New Roman', 'Times', serif !important;
   font-size: 1rem !important;
   line-height: 1.6 !important;
   color: #374151 !important;
@@ -261,23 +261,22 @@
 .latex-content .subproblem,
 .prose .latex-content .subproblem,
 .prose-sm .latex-content .subproblem {
-  font-weight: 500;
-  color: #4b5563;
-  margin: 0.2em 0;
-  padding: 0.3em 0;
-  display: block; /* Changed to block for better layout, then reverted to span in JS */
-  font-family: 'WenYuan', 'SimSun', 'STSong', serif;
-  margin-left: 0; /* Reset for no indentation */
-  padding-left: 0;
-  text-indent: 0;
-  position: relative; /* Added for positioning, then removed */
+  font-weight: 500 !important;
+  color: inherit !important; /* 改为inherit，继承父元素的颜色 */
+  margin: 0.2em 0 !important;
+  padding: 0.3em 0 !important;
+  display: block !important;
+  font-family: 'WenYuan', 'SimSun', 'STSong', serif !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  text-indent: 0 !important;
 }
 
 /* Dark Mode下的小问样式 */
 .dark .latex-content .subproblem,
 .dark .prose .latex-content .subproblem,
 .dark .prose-sm .latex-content .subproblem {
-  color: #9ca3af;
+  color: #f6f8fa !important; /* 在暗色主题下使用浅色 */
 }
 
 /* 小问序号样式 */
@@ -285,35 +284,37 @@
 .prose .latex-content .subproblem-number,
 .prose-sm .latex-content .subproblem-number {
   display: inline-block !important;
-  min-width: 2em;
-  font-weight: bold;
-  color: #4b5563;
-  margin-right: 0.5em;
+  min-width: 2em !important;
+  font-weight: bold !important;
+  color: #1f2937 !important; /* 改为深色，确保清晰可见 */
+  margin-right: 0.5em !important;
 }
 
 /* Dark Mode下的小问序号样式 */
 .dark .latex-content .subproblem-number,
 .dark .prose .latex-content .subproblem-number,
 .dark .prose-sm .latex-content .subproblem-number {
-  color: #9ca3af;
+  color: #fbbf24 !important; /* 在暗色主题下使用黄色，确保清晰可见 */
 }
 
-/* 子小题样式 - 去掉背景框架，内容对齐序号 */
+/* 子小题样式 - 去掉背景框架，内容对齐序号，添加缩进 */
 .latex-content .subproblem-sub,
 .prose .latex-content .subproblem-sub,
 .prose-sm .latex-content .subproblem-sub {
-  margin: 0.1em 0 0.1em 0; /* Final state: no left margin for no indentation */
-  padding: 0.1em 0;
-  position: relative; /* Added for positioning, then removed */
-  left: 0; /* Final state: no left offset for no indentation */
-  color: #4b5563;
+  margin: 0.1em 0 !important;
+  padding: 0.1em 0 !important;
+  color: inherit !important; /* 改为inherit，继承父元素的颜色 */
+  margin-left: 1.5em !important; /* 添加缩进 */
+  padding-left: 0.5em !important; /* 额外内边距 */
+  border-left: 2px solid #e5e7eb !important; /* 左侧边框，增强层级感 */
 }
 
 /* Dark Mode下的子小题样式 */
 .dark .latex-content .subproblem-sub,
 .dark .prose .latex-content .subproblem-sub,
 .dark .prose-sm .latex-content .subproblem-sub {
-  color: #9ca3af;
+  color: #f6f8fa !important; /* 在暗色主题下使用浅色 */
+  border-left-color: #4b5563 !important; /* Dark Mode下的边框颜色 */
 }
 
 /* 子小题序号样式 */
@@ -321,17 +322,17 @@
 .prose .latex-content .subproblem-sub .subproblem-number,
 .prose-sm .latex-content .subproblem-sub .subproblem-number {
   display: inline-block !important;
-  min-width: 1.5em;
-  font-weight: bold;
-  color: #4b5563;
-  margin-right: 0.5em;
+  min-width: 1.5em !important;
+  font-weight: bold !important;
+  color: #1f2937 !important; /* 改为深色，确保清晰可见 */
+  margin-right: 0.5em !important;
 }
 
 /* Dark Mode下的子小题序号样式 */
 .dark .latex-content .subproblem-sub .subproblem-number,
 .dark .prose .latex-content .subproblem-sub .subproblem-number,
 .dark .prose-sm .latex-content .subproblem-sub .subproblem-number {
-  color: #9ca3af;
+  color: #fbbf24 !important; /* 在暗色主题下使用黄色，确保清晰可见 */
 }
 
 /* 斜体和粗体样式 */

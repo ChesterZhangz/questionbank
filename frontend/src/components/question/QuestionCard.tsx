@@ -310,7 +310,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
         // 网格模式 - 统一高度
         <Card 
           ref={cardRef}
-          className={`w-full h-96 hover:shadow-lg dark:hover:shadow-gray-900/30 transition-all duration-200 cursor-pointer group flex flex-col ${
+          className={`question-card w-full h-96 hover:shadow-lg dark:hover:shadow-gray-900/30 transition-all duration-200 cursor-pointer group flex flex-col ${
             selected ? 'ring-2 ring-blue-500 dark:ring-blue-400 bg-blue-50 dark:bg-blue-900/20' : ''
           }`}
           onClick={handleViewDetail}
@@ -455,10 +455,10 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
             </div>
 
             {/* 题目内容区域 - 可滚动 */}
-            <div className="flex-1 overflow-hidden min-w-0">
-              {/* 题目主干 */}
-              <div className="mb-4 min-w-0">
-                <h3 className="text-base font-medium text-gray-900 dark:text-gray-100 mb-3 line-clamp-3 leading-relaxed min-w-0">
+            <div className="flex-1 overflow-hidden min-w-0 flex flex-col">
+              {/* 题目主干 - 可滚动 */}
+              <div className="flex-1 min-w-0 question-card-content-scroll mb-2">
+                <h3 className="text-base font-medium text-gray-900 dark:text-gray-100 mb-3 leading-relaxed min-w-0">
                   <LaTeXPreview 
                     content={question.content.stem} 
                     config={{ 
@@ -485,7 +485,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
 
               {/* 选项区域 - 可滚动 */}
               {question.content.options && question.content.options.length > 0 && (
-                <div className="mb-4 min-w-0">
+                <div className="flex-shrink-0 min-w-0 question-card-options-scroll">
                   <div className="space-y-2 min-w-0">
                     {renderOptions()}
                   </div>
@@ -514,7 +514,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
         </Card>
       ) : (
         // 列表模式 - 简化
-        <div className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md dark:hover:shadow-gray-900/30 transition-all duration-200">
+        <div className="question-card w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md dark:hover:shadow-gray-900/30 transition-all duration-200">
           <div className="p-4">
             <div className="flex items-center space-x-4">
               {/* 选择复选框 */}

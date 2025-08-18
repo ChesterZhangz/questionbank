@@ -28,6 +28,7 @@ export interface OptimizedProcessedQuestion {
   options?: string[];
   blanks?: number[];
   rawContent?: string; // 保留原始内容用于调试
+  detectedType?: 'choice' | 'fill' | 'solution'; // 新增：AI检测到的题型
 }
 
 interface DeepSeekConfig {
@@ -101,102 +102,84 @@ class OptimizedDeepSeekAIService {
   }
 
   /**
-   * 根据题目类型生成处理提示
+   * 统一智能处理提示（所有题目都使用相同的处理方式）
    */
   private generateProcessingPrompt(questionContent: string, expectedType: 'choice' | 'fill' | 'solution'): string {
-    const baseInstructions = `
-请对以下数学题目进行处理，完成以下任务：
-1. 删除所有与画图、作图、绘制图形相关的内容
-2. 将所有数学符号转换为标准LaTeX格式，用$...$包围，或者是用$$...$$包裹.
-3. 矫正可能的LaTeX格式错误. 如果需要使用环境，不要使用cases环境，而是使用aligend环境；用\\dfrac表示分数，不要用\\frac（除上下标）. 
-4. 保持题目的完整性和逻辑性（除题目文件内以外的文字不要出现）.
+    const prompt = `
+请智能识别并处理以下题目：
 
-题目内容：
+【处理规则】
+- 清理：删除所有"画图/作图/绘图"等描述
+- 数学：行内$...$，块级$$...$$；一律\\dfrac；\\displaystyle用于\\sum/\\prod；新定义用\\textit{...}；cases改为\\left\\{\\begin{aligned}...\\end{aligned}\\right.
+- 语法：\\choice 选择括号；\\fill 表示填空（注意：\\fill 绝对不要用$...$包裹，直接使用\\fill），如果你遇到题目最后=\fill$，请把\fill提取出来；小问用\\subp，小小问用\\subsubp
+- 其它：移除分值与题号；去除图片/\\tikz
+
+【智能识别】
+- 选择题：含A/B/C/D选项或"下列说法正确的是/选择正确选项"等
+- 填空题：含下划线"_"、括号"()/[]"或"\\fill"（注意：填空题必须包含\\fill标记）
+- 解答题：含"求…值/证明/计算/解"或"\\subp/\\subsubp"，每一小问都用\\subp 表示，小小问用\\subsubp 表示. 例如：（1）、（2）、（3）可以为 \\subp 、\\subp 、\\subp
+
+题目：
 ${questionContent}
 
-`;
+【输出格式】
+仅返回JSON（按智能识别结果）：
+// 选择题
+{ "processedContent": "题干（不含选项）", "options": ["A","B","C","D"], "detectedType": "choice" }
+// 填空题  
+{ "processedContent": "题干（注意：填空题必须包含\\fill标记，且\\fill不要用$...$包裹）", "blankCount": 数字, "detectedType": "fill" }
+// 解答题
+{ "processedContent": "题干", "detectedType": "solution" }
 
-    let specificInstructions = '';
-    let outputFormat = '';
-
-    switch (expectedType) {
-      case 'choice':
-        specificInstructions = `
-5. 这是一道选择题，请识别并提取所有选项（A、B、C、D等）
-6. 确保选项内容完整且格式统一
-`;
-        outputFormat = `
-请严格按照以下JSON格式返回：
-{
-  "processedContent": "处理后的题目内容（不包含选项）",
-  "options": ["选项A内容", "选项B内容", "选项C内容", "选项D内容"]
-}
-`;
-        break;
-
-      case 'fill':
-        specificInstructions = `
-5. 如果这是填空题，那么用\\fill 表达需要填的空. 
-`;
-        outputFormat = `
-请严格按照以下JSON格式返回：
-{
-  "processedContent": "处理后的完整题目内容",
-  "blankCount": 填空数量（数字）
-}
-`;
-        break;
-
-      case 'solution':
-        specificInstructions = `
-5. 这是一道解答题，保持题目的完整结构
-6. 如果有小题（1）、（2）、（3）等，用 \\subp 表示，小小问（i、ii、iii等或其他形式呈现的）用\\subsubp 表示. （将（1）、（2）、（3）等去掉）
-7. 去掉题目中所有的分值区域，不要保存任何分值内容，也不要有\\section{}. 
-`;
-        outputFormat = `
-请严格按照以下JSON格式返回：
-{
-  "processedContent": "处理后的完整题目内容"
-}
-`;
-        break;
-    }
-
-    return baseInstructions + specificInstructions + outputFormat + `
-
-重要提示：
-- 只返回JSON格式，不要有任何其他文字
-- 数学符号必须用$...$格式，如：$\\frac{1}{2}$、$x^2$、$\\sqrt{3}$
-- 保持题目编号和结构完整
-- 删除画图相关内容时要保持语句通顺
+重要：仅返回JSON；数学一律$...$/$$...$$、\\dfrac；\\fill绝对不要用$...$包裹；去掉分值与题号；无额外文本。
 
 处理结果：`;
+
+    return prompt;
   }
 
   /**
    * 解析处理结果
    */
-  private parseProcessedResult(
-    content: string, 
-    questionNumber: string, 
+    private parseProcessedResult(
+    content: string,
+    questionNumber: string,
     expectedType: 'choice' | 'fill' | 'solution',
     originalContent: string
   ): OptimizedProcessedQuestion {
     try {
-      // 尝试直接JSON解析
-      const result = JSON.parse(content);
+      // 清理可能的Markdown代码块格式
+      let cleanedContent = content.trim();
+      
+      // 移除可能的 ```json 和 ``` 标记
+      if (cleanedContent.startsWith('```json')) {
+        cleanedContent = cleanedContent.replace(/^```json\s*/, '');
+      }
+      if (cleanedContent.startsWith('```')) {
+        cleanedContent = cleanedContent.replace(/^```\s*/, '');
+      }
+      if (cleanedContent.endsWith('```')) {
+        cleanedContent = cleanedContent.replace(/\s*```$/, '');
+      }
+      
+      // 尝试JSON解析
+      const result = JSON.parse(cleanedContent);
+      
+      // 优先使用AI检测到的题型，如果没有则使用预期题型
+      const finalType = result.detectedType || expectedType;
       
       const processedQuestion: OptimizedProcessedQuestion = {
-        type: expectedType,
+        type: finalType,
         number: questionNumber,
         content: result.processedContent || originalContent,
-        rawContent: originalContent
+        rawContent: originalContent,
+        detectedType: result.detectedType
       };
 
-      // 根据题型添加特定字段
-      if (expectedType === 'choice' && result.options && Array.isArray(result.options)) {
+      // 根据最终题型添加特定字段
+      if (finalType === 'choice' && result.options && Array.isArray(result.options)) {
         processedQuestion.options = result.options;
-      } else if (expectedType === 'fill' && result.blankCount && typeof result.blankCount === 'number') {
+      } else if (finalType === 'fill' && result.blankCount && typeof result.blankCount === 'number') {
         // 生成填空位置数组
         processedQuestion.blanks = Array.from({ length: result.blankCount }, (_, i) => i + 1);
       }
@@ -204,6 +187,7 @@ ${questionContent}
       return processedQuestion;
     } catch (error) {
       console.error(`解析题目 ${questionNumber} 结果失败:`, error);
+      console.error('原始内容:', content);
       
       // 解析失败时，尝试提取处理后的内容
       const contentMatch = content.match(/"processedContent"\s*:\s*"([^"]*)"/);
@@ -334,44 +318,26 @@ export async function processTeXWithOptimizedDeepSeek(texContent: string): Promi
   const preprocessedContent = preprocessTeXContent(texContent);
   console.log('预处理后的TeX内容长度:', preprocessedContent.length);
   
-  const prompt = `你是一个专业的数学题目解析专家。请解析以下TeX文件内容，识别并提取所有题目。
+  const prompt = `请解析以下TeX文本，按最精简规则输出题目：
 
-解析规则：
-1. 识别题目类型：
-   - 题目有选项即为选择题
-   - 题目有类似于\\underlines 或下划线便为填空题. 提取时去掉\\underlines，换成\\fill 
-   - 有遇到小问，或者说求...值，证明之类的问题便为解答题. 
-   - 其他格式的题目按内容判断类型
+【题型识别】
+- 选择题：含A/B/C/D或"下列说法正确的是/选择正确选项"等
+- 填空题：含下划线"_"、括号"()/[]"或"\\fill"（注意：填空题必须包含\\fill标记）
+- 解答题：含"求…值/证明/计算/解"或"\\subp/\\subsubp"
 
-2. 题目提取要求：
-   - 保留所有LaTeX公式和数学符号
-   - \\choice 表示选择的括号，不代表选项的A，B，C，D（如：下列正确的是 \\choice ）
-   - 选择题需要提取选项（A、B、C、D等）
-   - 填空题的空需要用\\fill 表示（用 ___ 表示）
-   - 解答题需要保留完整的题目内容，如果有分值，则去掉分值. 小问用\\subp 表示，小小问用\\subsubp 表示.
-   - 不要添加图片引用（如\\\\includegraphics）
-   - 不要包含网页不支持的环境（如\\\\begin{figure}、\\\\begin{table}等）
+【语法与数学】
+- \\choice 作为选择括号；\\fill 表示空（注意：\\fill 绝对不要用$...$包裹，直接使用\\fill）；小问 \\subp，小小问 \\subsubp
+- 数学：$...$/$$...$$；一律\\dfrac；\\displaystyle用于\\sum/\\prod；新定义\\textit{...}；cases→\\left\\{\\begin{aligned}...\\end{aligned}\\right.
+- 去除分值与题号；移除图片/\\tikz
 
-3. 输出格式：
-   返回JSON数组，每个题目包含：
-   {
-     "type": "choice|fill|solution",
-     "number": "题目编号",
-     "content": "题目内容（包含LaTeX公式）",
-     "options": ["选项A", "选项B", "选项C", "选项D"], // 仅选择题
-     "blanks": [1, 2, 3] // 仅填空题，表示空白数量
-   }
+【输出】
+- 返回JSON数组：
+  { "type": "choice|fill|solution", "number": "编号", "content": "题干", "options": [..], "blanks": [..] }
 
-4. 特殊处理：
-   - 不要使用cases环境，而是使用 \\left\{\\begin{aligned} \\end{aligned}\\right. 的环境.  
-   - 分数严格使用\\dfrac，上标或下标可用 \\frac. 
-   - 虚数用 \\mathbf{i}表示，自然底数用 \\mathbb{e}表示. 
-   - 所有的数学环境用 $...$ 或 $$...$$ 包裹. 
-
-TeX文件内容：
+文本：
 ${preprocessedContent}
 
-请严格按照上述规则解析，只返回JSON格式的题目数组，不要包含其他说明文字。`;
+仅返回JSON数组，无额外文字。`;
 
   try {
     // 验证API密钥
@@ -405,8 +371,21 @@ ${preprocessedContent}
     console.log('DeepSeek返回的原始内容:', content);
     
     // 尝试解析JSON
+    let cleanedContent = content.trim();
+    
+    // 移除可能的 ```json 和 ``` 标记
+    if (cleanedContent.startsWith('```json')) {
+      cleanedContent = cleanedContent.replace(/^```json\s*/, '');
+    }
+    if (cleanedContent.startsWith('```')) {
+      cleanedContent = cleanedContent.replace(/^```\s*/, '');
+    }
+    if (cleanedContent.endsWith('```')) {
+      cleanedContent = cleanedContent.replace(/\s*```$/, '');
+    }
+    
     try {
-      const questions = JSON.parse(content);
+      const questions = JSON.parse(cleanedContent);
       if (Array.isArray(questions)) {
         console.log('JSON解析成功，提取到题目数量:', questions.length);
         return questions.map((q, index) => ({
@@ -420,6 +399,7 @@ ${preprocessedContent}
       }
     } catch (parseError) {
       console.error('JSON解析失败，尝试智能提取:', parseError);
+      console.error('清理后的内容:', cleanedContent);
     }
     
     // 如果JSON解析失败，尝试智能提取题目

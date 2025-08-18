@@ -107,14 +107,6 @@ const LaTeXHighlightInput: React.FC<LaTeXHighlightInputProps> = ({
           const scrollHeight = Math.max(textarea.scrollHeight, contentHeight);
           highlighterContent.style.height = `${scrollHeight}px`;
         }
-        
-        console.log('Debug alignment updated:', {
-          textareaClientWidth: textarea.clientWidth,
-          textareaClientHeight: textarea.clientHeight,
-          contentWidth,
-          contentHeight,
-          padding: { paddingLeft, paddingRight, paddingTop, paddingBottom }
-        });
       }
     }
   }, []);

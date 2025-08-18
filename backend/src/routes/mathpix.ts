@@ -2,9 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import { authMiddleware } from '../middleware/auth';
 import { 
-  validateConfig,
   processPDFDocument,
-  processWordDocument,
   processBatchContent,
   processTeXDocument
 } from '../controllers/simplifiedMathpixController';
@@ -20,16 +18,8 @@ const upload = multer({
   }
 });
 
-// 验证Mathpix API配置
-router.get('/validate-config', authMiddleware, validateConfig);
-
-
-
 // PDF文档处理API
 router.post('/process-pdf', authMiddleware, upload.single('pdf'), processPDFDocument);
-
-// Word文档处理API
-router.post('/process-word', authMiddleware, upload.single('word'), processWordDocument);
 
 // TeX文档处理API
 router.post('/process-tex', authMiddleware, upload.single('tex'), processTeXDocument);

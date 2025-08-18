@@ -22,7 +22,7 @@ import { useModal } from '../../hooks/useModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import Button from '../../components/ui/Button';
 import { useQuestionPreviewStore } from '../../stores/questionPreviewStore';
-import { questionBankAPI, questionAPI } from '../../services/api';
+import { questionBankAPI, questionAPI, questionAnalysisAPI } from '../../services/api';
 import type { Question, SimilarityResult } from '../../types';
 import QuestionPreviewHeader from '../../components/preview/QuestionPreviewHeader';
 import QuestionPreviewToolbar from '../../components/preview/QuestionPreviewToolbar';
@@ -110,6 +110,7 @@ const QuestionPreviewPage: React.FC = () => {
   const [detectedSimilarQuestions, setDetectedSimilarQuestions] = useState<Map<string, SimilarityResult[]>>(new Map());
   const [currentSimilarityQuestionIndex, setCurrentSimilarityQuestionIndex] = useState(0);
   const [similarityQuestionIds, setSimilarityQuestionIds] = useState<string[]>([]);
+  const [hasTriggeredSimilarityDetection, setHasTriggeredSimilarityDetection] = useState(false);
 
   // 拖拽传感器
   const sensors = useSensors(
@@ -346,13 +347,16 @@ const QuestionPreviewPage: React.FC = () => {
           setQuestions(processedQuestions);
           // 移除直接设置filteredQuestions，让筛选逻辑处理
           
-          // 自动进行相似度检测
-          setTimeout(() => {
-            autoDetectSimilarity(processedQuestions);
-          }, 1000); // 1秒后开始检测
+          // 只在首次进入时进行相似度检测
+          if (!hasTriggeredSimilarityDetection) {
+            setTimeout(() => {
+              autoDetectSimilarity(processedQuestions);
+              setHasTriggeredSimilarityDetection(true);
+            }, 1000); // 1秒后开始检测
+          }
           
-          // 如果不是来自草稿，延迟显示草稿提醒
-          if (!routeData.isFromDraft) {
+          // 如果不是来自草稿且用户还没有保存过草稿，延迟显示草稿提醒
+          if (!routeData.isFromDraft && !hasUserSavedDraft) {
             setTimeout(() => {
               setShowDraftReminder(true);
             }, 2000); // 2秒后显示提醒
@@ -364,14 +368,11 @@ const QuestionPreviewPage: React.FC = () => {
           const response = await questionBankAPI.getQuestionBanks();
           if (response.data?.success && response.data.questionBanks) {
             setQuestionBanks(response.data.questionBanks);
-          } else {
-            console.warn('题库API响应格式异常:', response.data);
           }
         } catch (error) {
-          console.error('加载题库列表失败:', error);
+          // 加载题库列表失败
         }
       } catch (error) {
-        console.error('初始化页面失败:', error);
         showErrorRightSlide('初始化失败', '页面初始化失败，请刷新重试');
       }
     };
@@ -436,7 +437,6 @@ const QuestionPreviewPage: React.FC = () => {
       showSuccessRightSlide('设置成功', `已为 ${selectedQuestions.length} 道题目设置来源`);
       setShowSourcePanel(false);
     } catch (error) {
-      console.error('批量设置来源失败:', error);
       showErrorRightSlide('设置失败', '批量设置来源失败');
     }
   }, [selectedQuestions, batchUpdateQuestions, setShowSourcePanel]);
@@ -452,21 +452,53 @@ const QuestionPreviewPage: React.FC = () => {
       setAnalyzingQuestions(selectedQuestions.map(q => q.id!).filter(Boolean));
       const results = await batchAnalyzeQuestions(selectedQuestions);
       
-      // 将AI分析结果应用到题目上
-      const updatedQuestions = questions.map(question => {
+      // 将AI分析结果应用到题目上，并为低难度题目生成答案
+      const updatedQuestions = await Promise.all(questions.map(async (question) => {
         const resultIndex = selectedQuestions.findIndex(q => q.id === question.id);
         if (resultIndex !== -1 && results[resultIndex]) {
           const result = results[resultIndex];
-          return {
+          let updatedQuestion = {
             ...question,
             category: result.category,
             tags: result.tags,
             difficulty: result.difficulty,
             type: result.questionType
           };
+          
+          // 如果难度为3星及以下，自动生成答案和解析
+          if (result.difficulty <= 3) {
+            try {
+              
+              const answerResult = await questionAnalysisAPI.generateAnswer({
+                content: question.content.stem,
+                type: result.questionType,
+                difficulty: result.difficulty,
+                category: result.category,
+                tags: result.tags
+              });
+              
+              if (answerResult.data?.data) {
+                const answerData = answerResult.data.data;
+                
+                // 更新题目的答案和解析（完全覆盖，不保留旧数据）
+                updatedQuestion.content = {
+                  ...updatedQuestion.content,
+                  answer: answerData.answer || '',
+                  solution: answerData.solution || '',
+                  fillAnswers: answerData.fillAnswers || [],
+                  solutionAnswers: answerData.solutionAnswers || []
+                };
+                
+              }
+            } catch (answerError) {
+              // 自动生成答案和解析失败，但不影响AI分析结果
+            }
+          }
+          
+          return updatedQuestion;
         }
         return question;
-      });
+      }));
       
       // 更新题目列表
       setQuestions(updatedQuestions);
@@ -484,9 +516,13 @@ const QuestionPreviewPage: React.FC = () => {
       // 自动保存草稿以持久化AI分析结果
       autoSaveDraft();
 
-      showSuccessRightSlide("操作成功", `已完成 ${selectedQuestions.length} 道题目的AI分析，已应用到题目`);
+      // 统计低难度题目数量
+      const lowDifficultyCount = results.filter(result => result.difficulty <= 3).length;
+      const message = lowDifficultyCount > 0 
+        ? `已完成 ${selectedQuestions.length} 道题目的AI分析，其中 ${lowDifficultyCount} 道低难度题目已自动生成答案和解析`
+        : `已完成 ${selectedQuestions.length} 道题目的AI分析，已应用到题目`;
+      showSuccessRightSlide("操作成功", message);
     } catch (error) {
-      console.error('批量AI分析失败:', error);
       showErrorRightSlide("操作失败", '批量AI分析失败');
     } finally {
       setAnalyzingQuestions([]);
@@ -511,6 +547,35 @@ const QuestionPreviewPage: React.FC = () => {
         type: result.questionType
       };
       
+      // 如果难度为3星及以下，自动生成答案和解析
+      if (result.difficulty <= 3) {
+        try {
+          
+          const answerResult = await questionAnalysisAPI.generateAnswer({
+            content: question.content.stem,
+            type: result.questionType,
+            difficulty: result.difficulty,
+            category: result.category,
+            tags: result.tags
+          });
+          
+          if (answerResult.data?.data) {
+            const answerData = answerResult.data.data;
+            
+            // 更新题目的答案和解析（完全覆盖，不保留旧数据）
+            updatedQuestion.content = {
+              ...updatedQuestion.content,
+              answer: answerData.answer || '',
+              solution: answerData.solution || '',
+              fillAnswers: answerData.fillAnswers || [],
+              solutionAnswers: answerData.solutionAnswers || []
+            };
+            
+          }
+        } catch (answerError) {
+        }
+      }
+      
       // 更新题目列表
       const updatedQuestions = questions.map(q => 
         q.id === questionId ? updatedQuestion : q
@@ -527,9 +592,11 @@ const QuestionPreviewPage: React.FC = () => {
       // 自动保存草稿以持久化AI分析结果
       autoSaveDraft();
 
-      showSuccessRightSlide("操作成功", 'AI分析完成，已应用到题目');
+      const message = result.difficulty <= 3 
+        ? 'AI分析完成，已应用到题目，并自动生成了答案和解析'
+        : 'AI分析完成，已应用到题目';
+      showSuccessRightSlide("操作成功", message);
     } catch (error) {
-      console.error('AI分析失败:', error);
       showErrorRightSlide("操作失败", 'AI分析失败');
     } finally {
       setAnalyzingQuestions(analyzingQuestions.filter(id => id !== questionId));
@@ -561,7 +628,7 @@ const QuestionPreviewPage: React.FC = () => {
             newDetectedSimilarQuestions.set(question.id || question._id, response.data.similarQuestions);
           }
         } catch (error) {
-          console.error(`题目 ${question.id} 相似度检测失败:`, error);
+          // 题目相似度检测失败
         }
       });
 
@@ -603,7 +670,7 @@ const QuestionPreviewPage: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('自动相似度检测失败:', error);
+      // 自动相似度检测失败
     }
   }, [questions]);
 
@@ -673,7 +740,7 @@ const QuestionPreviewPage: React.FC = () => {
 
   // 处理题目编辑
   const handleEditQuestion = useCallback((questionId: string) => {
-    if (!isDraftMode) {
+    if (!isDraftMode && !hasUserSavedDraft) {
       // 显示草稿提醒而不是简单的toast
       setIsEditModeReminder(true);
       setShowDraftReminder(true);
@@ -688,7 +755,7 @@ const QuestionPreviewPage: React.FC = () => {
 
   // 处理题目分割
   const handleSplitQuestion = useCallback((questionId: string) => {
-    if (!isDraftMode) {
+    if (!isDraftMode && !hasUserSavedDraft) {
       // 显示草稿提醒
       setIsEditModeReminder(true);
       setShowDraftReminder(true);
@@ -721,7 +788,6 @@ const QuestionPreviewPage: React.FC = () => {
       
       showSuccessRightSlide("操作成功", `已将题目分割为 ${newQuestions.length} 道新题目`);
     } catch (error) {
-      console.error('分割题目失败:', error);
       showErrorRightSlide("操作失败", '分割题目失败');
     } finally {
       setSplittingQuestion(null);
@@ -735,20 +801,23 @@ const QuestionPreviewPage: React.FC = () => {
         // 使用本地ID进行更新
         const questionId = editingQuestion.id || editingQuestion._id;
         if (questionId) {
-          console.log('本地保存题目:', questionId, updatedQuestion);
           await updateQuestion(questionId, updatedQuestion);
-          showSuccessRightSlide("操作成功", '题目更新成功');
+          
+          // 如果已经保存过试卷，显示自动保存提示
+          if (isDraftMode) {
+            showSuccessRightSlide("操作成功", '题目更新成功，已自动保存');
+          } else {
+            showSuccessRightSlide("操作成功", '题目更新成功');
+          }
         } else {
-          console.error('题目ID不存在');
           showErrorRightSlide("操作失败", '题目ID不存在，无法保存');
         }
       }
       setEditingQuestion(null);
     } catch (error) {
-      console.error('保存编辑失败:', error);
       showErrorRightSlide("操作失败", '保存编辑失败');
     }
-  }, [editingQuestion, updateQuestion, autoSaveDraft]);
+  }, [editingQuestion, updateQuestion, isDraftMode]);
 
   // 处理编辑取消
   const handleCancelEdit = useCallback(() => {
@@ -777,7 +846,7 @@ const QuestionPreviewPage: React.FC = () => {
 
   // 处理题目删除
   const handleQuestionDelete = useCallback(async (questionId: string) => {
-    if (!isDraftMode) {
+    if (!isDraftMode && !hasUserSavedDraft) {
       setIsEditModeReminder(true);
       setShowDraftReminder(true);
       return;
@@ -787,14 +856,13 @@ const QuestionPreviewPage: React.FC = () => {
       await deleteQuestion(questionId);
       showSuccessRightSlide("操作成功", '题目删除成功');
     } catch (error) {
-      console.error('题目删除失败:', error);
       showErrorRightSlide("操作失败", '题目删除失败');
     }
   }, [deleteQuestion, isDraftMode]);
 
   // 处理批量删除
   const handleBatchDelete = useCallback(async () => {
-    if (!isDraftMode) {
+    if (!isDraftMode && !hasUserSavedDraft) {
       setIsEditModeReminder(true);
       setShowDraftReminder(true);
       return;
@@ -811,14 +879,13 @@ const QuestionPreviewPage: React.FC = () => {
       setSelectedQuestions([]);
       setShowConfirmDelete(false);
     } catch (error) {
-      console.error('批量删除失败:', error);
       showErrorRightSlide("操作失败", '批量删除失败');
     }
   }, [selectedQuestions, batchDeleteQuestions, setSelectedQuestions, setShowConfirmDelete, isDraftMode]);
 
   // 处理批量移动
   const handleBatchMove = useCallback((targetIndex: number, moveAfter: boolean) => {
-    if (!isDraftMode) {
+    if (!isDraftMode && !hasUserSavedDraft) {
       setIsEditModeReminder(true);
       setShowDraftReminder(true);
       return;
@@ -868,7 +935,6 @@ const QuestionPreviewPage: React.FC = () => {
       
       showSuccessRightSlide("操作成功", `已移动 ${selectedQuestions.length} 道题目`);
     } catch (error) {
-      console.error('批量移动失败:', error);
       showErrorRightSlide("操作失败", '批量移动失败');
     }
   }, [selectedQuestions, questions, setQuestions, setSelectedQuestions, isDraftMode, setIsEditModeReminder, setShowDraftReminder]);
@@ -900,7 +966,6 @@ const QuestionPreviewPage: React.FC = () => {
       // 跳转到题库详情页
       navigate(`/question-banks/${targetBankId}`);
     } catch (error) {
-      console.error('保存题目失败:', error);
       showErrorRightSlide("操作失败", '保存题目失败');
     } finally {
       setSavingQuestions([]);
@@ -942,7 +1007,9 @@ const QuestionPreviewPage: React.FC = () => {
   // 处理用户主动保存草稿
   const handleUserSaveDraft = () => {
     setHasUserSavedDraft(true);
-    // 这里可以调用草稿保存逻辑
+    // 关闭草稿提醒
+    setShowDraftReminder(false);
+    setIsEditModeReminder(false);
   };
 
   // 处理草稿保存成功

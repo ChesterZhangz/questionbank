@@ -47,6 +47,9 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
       }, 100);
       return () => clearTimeout(timer);
     } else {
+      // 关闭时立即恢复页面滚动
+      document.body.style.overflow = 'unset';
+      
       // 关闭时先隐藏内容，然后延迟关闭模态框
       setIsVisible(false);
       const timer = setTimeout(() => {
@@ -56,17 +59,10 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
     }
   }, [isOpen]);
 
-  // 清理函数：模态框关闭时恢复页面滚动
-  useEffect(() => {
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, []);
-
   // 处理关闭
   const handleClose = () => {
     setIsVisible(false);
-    // 恢复页面滚动
+    // 立即恢复页面滚动
     document.body.style.overflow = 'unset';
     setTimeout(() => {
       onClose();
@@ -288,13 +284,21 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
               <div className="flex items-center space-x-3">
                 <Button
                   variant="outline"
-                  onClick={onCancel}
+                  onClick={() => {
+                    // 立即恢复页面滚动
+                    document.body.style.overflow = 'unset';
+                    onCancel();
+                  }}
                   className="px-4 py-2"
                 >
                   取消创建
                 </Button>
                 <Button
-                  onClick={onContinue}
+                  onClick={() => {
+                    // 立即恢复页面滚动
+                    document.body.style.overflow = 'unset';
+                    onContinue();
+                  }}
                   className="px-4 py-2 bg-orange-600 hover:bg-orange-700"
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />

@@ -150,7 +150,6 @@ gameAPI.interceptors.response.use(
     
     // 处理401未授权错误
     if (error.response?.status === 401) {
-      console.log('游戏API 401错误：用户未认证或token无效');
       // 清理认证状态
       localStorage.removeItem('auth-storage');
       // 重定向到登录页面

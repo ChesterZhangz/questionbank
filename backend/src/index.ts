@@ -18,8 +18,10 @@ import mathpixRoutes from './routes/mathpix';
 import optimizedMathpixRoutes from './routes/optimizedMathpix';
 import questionAnalysisRoutes from './routes/questionAnalysis';
 import documentParserRoutes from './routes/document-parser';
+import answerGenerationRoutes from './routes/answerGeneration';
 import dashboardRoutes from './routes/dashboard';
 import searchRoutes from './routes/search';
+
 
 import similarityRoutes from './routes/similarity';
 import gameRoutes from './routes/games';
@@ -66,11 +68,14 @@ app.use(cors({
     'http://43.160.253.32',
     'https://43.160.253.32',
     'http://localhost:5173',  // 开发环境
-    'http://localhost:3001'   // 开发环境
+    'http://localhost:3001',  // 开发环境
+    'http://127.0.0.1:5173', // 开发环境备用
+    'http://127.0.0.1:3001'  // 开发环境备用
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Content-Length', 'X-Doc-Id'],
+  exposedHeaders: ['Content-Length', 'Content-Type']
 }));
 
 // 限流中间件 - 开发环境禁用
@@ -287,8 +292,10 @@ app.use('/api/users', authMiddleware, userRoutes);
 app.use('/api/ocr', ocrRoutes); // OCR路由 - 暂时移除认证进行测试
 app.use('/api/mathpix', mathpixRoutes); // Mathpix API路由
 app.use('/api/mathpix-optimized', optimizedMathpixRoutes); // 优化版Mathpix API路由
+ // Word转PDF路由
 app.use('/api/question-analysis', authMiddleware, questionAnalysisRoutes); // 题目分析路由
 app.use('/api/document-parser', documentParserRoutes); // 文档解析路由
+app.use('/api/answer-generation', authMiddleware, answerGenerationRoutes); // 答案生成路由
 
 app.use('/api/similarity', authMiddleware, similarityRoutes); // 相似度检测路由
 app.use('/api/dashboard', authMiddleware, dashboardRoutes); // 仪表板路由

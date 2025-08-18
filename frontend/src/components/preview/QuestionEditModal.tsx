@@ -946,21 +946,6 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
                       </div>
                     )}
 
-                    {/* Answer Preview */}
-                    {editedQuestion.content?.answer && (
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">答案</h4>
-                        <div className="p-3 bg-white dark:bg-gray-700 rounded border shadow-sm">
-                          <LaTeXPreview
-                            content={editedQuestion.content.answer}
-                            variant="compact"
-                            className="text-sm"
-                            maxHeight="max-h-48"
-                          />
-                        </div>
-                      </div>
-                    )}
-
                     {/* Solution Preview */}
                     {editedQuestion.content?.solution && (
                       <div>

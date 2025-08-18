@@ -430,15 +430,17 @@ export const useQuestionPreviewStore = create<QuestionPreviewState & QuestionPre
 
       // 业务方法
       updateQuestion: async (id, updates) => {
-        const { questions } = get();
+        const { questions, isDraftMode } = get();
         const updatedQuestions = questions.map(q => 
           q.id === id ? { ...q, ...updates } : q
         );
         
         set({ questions: updatedQuestions });
         
-        // 只有在用户主动保存后才自动保存草稿
-        // get().autoSaveDraft();
+        // 如果已经保存过试卷（草稿模式或用户已保存），则自动保存
+        if (isDraftMode) {
+          get().autoSaveDraft();
+        }
       },
 
       deleteQuestion: async (id) => {

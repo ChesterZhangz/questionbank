@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Card from '../../components/ui/Card';
@@ -12,6 +12,7 @@ import PaperHistoryDetail from '../../components/preview/PaperHistoryDetail';
 import ErrorDisplay from '../../components/ui/ErrorDisplay';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
+
 import { useModal } from '../../hooks/useModal';
 
 import { 
@@ -29,44 +30,54 @@ import {
   Database
 } from 'lucide-react';
 
-// 文档接口定义
-interface DocumentItem {
-  id: string;
-  fileName: string;
-  fileSize: number;
-  fileType: 'pdf' | 'docx' | 'tex';
-  status: 'uploading' | 'processing' | 'completed' | 'failed' | 'waiting' | 'paused' | 'retrying' | 'cancelled';
-  uploadTime: Date;
-  processTime?: Date;
-  questions: Question[];
-  originalContent?: string;
-  processedContent?: string;
-  confidence?: number;
-  error?: string;
-  
-  // 增强的进度跟踪
-  uploadProgress?: number;
-  processingProgress?: number;
-  currentStep?: string;
-  estimatedTime?: number; // 预估剩余时间（秒）
-  startTime?: Date;
-  lastUpdateTime?: Date;
-  
-  // 处理步骤详情
-  processingSteps?: {
-    step: string;
-    status: 'pending' | 'processing' | 'completed' | 'failed';
-    progress: number;
-    startTime?: Date;
-    endTime?: Date;
+  // 文档接口定义
+  interface DocumentItem {
+    id: string;
+    fileName: string;
+    fileSize: number;
+    fileType: 'pdf' | 'tex';
+    status: 'uploading' | 'processing' | 'completed' | 'failed' | 'waiting' | 'paused' | 'retrying' | 'cancelled';
+    uploadTime: Date;
+    processTime?: Date;
+    questions: Question[];
+    originalContent?: string;
+    processedContent?: string;
+    confidence?: number;
     error?: string;
-  }[];
-  
-  // 重试相关
-  retryCount?: number;
-  maxRetries?: number;
-  retryDelay?: number;
-}
+    
+    // 增强的进度跟踪
+    uploadProgress?: number;
+    processingProgress?: number;
+    currentStep?: string;
+    estimatedTime?: number; // 预估剩余时间（秒）
+    startTime?: Date;
+    lastUpdateTime?: Date;
+    
+    // 处理步骤详情
+    processingSteps?: {
+      step: string;
+      status: 'pending' | 'processing' | 'completed' | 'failed';
+      progress: number;
+      startTime?: Date;
+      endTime?: Date;
+      error?: string;
+    }[];
+    
+    // 重试相关
+    retryCount?: number;
+    maxRetries?: number;
+    retryDelay?: number;
+    
+    // 实时处理信息
+    processingInfo?: {
+      totalTime: number;
+      questionsCount: number;
+      choiceCount: number;
+      fillCount: number;
+      solutionCount: number;
+      averageTimePerQuestion: number;
+    };
+  }
 
 // 题目接口定义
 interface Question {
@@ -130,6 +141,9 @@ const BatchUploadPage: React.FC = () => {
     failedDocuments: 0,
     estimatedTotalTime: 0
   });
+  
+  // 事件源映射：用于订阅后端SSE实时进度
+  const progressEventSourcesRef = useRef<Record<string, EventSource>>({});
 
 
   // 新增：格式化时间显示
@@ -139,27 +153,32 @@ const BatchUploadPage: React.FC = () => {
     return `${Math.round(seconds / 3600)}小时${Math.round((seconds % 3600) / 60)}分钟`;
   };
 
-  // 新增：计算预估时间
+  // 优化：计算预估时间（基于实际处理数据）
   const calculateEstimatedTime = (fileSize: number, fileType: string): number => {
-    // 基于文件大小和类型估算处理时间
-    const baseTime = fileSize / (1024 * 1024); // 转换为MB
+    // 基于实际测试数据的更精确预估
+    const fileSizeMB = fileSize / (1024 * 1024);
     
-    // 根据文档类型和大小计算预估时间
     let estimatedTime = 0;
     
     if (fileType === 'pdf') {
-      // PDF处理时间：基础时间 + 文件大小影响
-      estimatedTime = Math.max(15, Math.round(baseTime * 25 + 20));
+      // PDF处理时间：Mathpix提取(10-30s) + AI处理(每道题2-5s)
+      const estimatedQuestions = Math.max(5, Math.round(fileSizeMB * 2)); // 预估题目数量
+      const mathpixTime = Math.max(10, Math.min(30, fileSizeMB * 8)); // Mathpix提取时间
+      const aiTime = estimatedQuestions * 3; // AI处理时间（每道题平均3秒）
+      estimatedTime = mathpixTime + aiTime;
     } else if (fileType === 'tex') {
-      // TeX处理时间：相对较快，主要看内容复杂度
-      estimatedTime = Math.max(8, Math.round(baseTime * 15 + 10));
-    } else if (fileType === 'docx') {
-      // Word处理时间：中等复杂度
-      estimatedTime = Math.max(12, Math.round(baseTime * 20 + 15));
+      // TeX处理时间：AI解析(5-15s) + 题目识别(每道题1-3s)
+      const estimatedQuestions = Math.max(3, Math.round(fileSizeMB * 3)); // 预估题目数量
+      const parseTime = Math.max(5, Math.min(15, fileSizeMB * 5)); // 解析时间
+      const aiTime = estimatedQuestions * 2; // AI处理时间（每道题平均2秒）
+      estimatedTime = parseTime + aiTime;
     }
     
-    // 限制最大预估时间
-    return Math.min(estimatedTime, 300); // 最多5分钟
+    // 添加网络延迟和缓冲时间
+    estimatedTime += 10;
+    
+    // 限制预估时间范围
+    return Math.max(15, Math.min(estimatedTime, 600)); // 最少15秒，最多10分钟
   };
 
   // 新增：更新文档进度
@@ -190,7 +209,7 @@ const BatchUploadPage: React.FC = () => {
     }));
   }, []);
 
-  // 新增：处理步骤更新
+  // 优化：处理步骤更新（基于实际处理时间）
   const updateProcessingStep = useCallback((
     docId: string,
     stepName: string,
@@ -216,19 +235,58 @@ const BatchUploadPage: React.FC = () => {
           ? steps.map((s, i) => i === stepIndex ? updatedStep : s)
           : [...steps, updatedStep];
         
-        // 计算总体进度
+        // 基于实际处理时间计算更精确的进度
+        let overallProgress = 0;
         const totalSteps = updatedSteps.length;
         const completedSteps = updatedSteps.filter(s => s.status === 'completed').length;
         const processingSteps = updatedSteps.filter(s => s.status === 'processing');
-        const totalProgress = updatedSteps.reduce((sum, step) => sum + step.progress, 0);
-        const averageProgress = totalSteps > 0 ? totalProgress / totalSteps : 0;
         
-        // 根据步骤状态计算总体进度
-        let overallProgress = 0;
         if (completedSteps === totalSteps) {
           overallProgress = 100;
         } else if (processingSteps.length > 0) {
-          overallProgress = Math.min(90, (completedSteps / totalSteps) * 100 + averageProgress * 0.1);
+          // 基于实际处理时间计算进度
+          const currentStep = processingSteps[0];
+          const stepProgress = currentStep.progress || 0;
+          
+          // 根据步骤类型分配不同的权重
+          let stepWeight = 1;
+          if (doc.fileType === 'pdf') {
+            // PDF处理步骤权重
+            const stepWeights: Record<string, number> = {
+              '文件上传': 0.05,
+              'Mathpix提取': 0.25,
+              '题目分割': 0.15,
+              'AI处理': 0.45,
+              '结果优化': 0.10
+            };
+            stepWeight = stepWeights[currentStep.step] || 1;
+          } else if (doc.fileType === 'tex') {
+            // TeX处理步骤权重
+            const stepWeights: Record<string, number> = {
+              '文件上传': 0.05,
+              'DeepSeek AI解析': 0.60,
+              '题目识别': 0.25,
+              '结果优化': 0.10
+            };
+            stepWeight = stepWeights[currentStep.step] || 1;
+          }
+          
+          // 计算总体进度
+          const completedWeight = updatedSteps
+            .filter(s => s.status === 'completed')
+            .reduce((sum, s) => {
+              let weight = 1;
+              if (doc.fileType === 'pdf') {
+                const pdfWeights: Record<string, number> = { '文件上传': 0.05, 'Mathpix提取': 0.25, '题目分割': 0.15, 'AI处理': 0.45, '结果优化': 0.10 };
+                weight = pdfWeights[s.step] || 1;
+              } else if (doc.fileType === 'tex') {
+                const texWeights: Record<string, number> = { '文件上传': 0.05, 'DeepSeek AI解析': 0.60, '题目识别': 0.25, '结果优化': 0.10 };
+                weight = texWeights[s.step] || 1;
+              }
+              return sum + weight;
+            }, 0);
+          
+          overallProgress = Math.min(95, (completedWeight + stepWeight * (stepProgress / 100)) * 100);
         } else {
           overallProgress = (completedSteps / totalSteps) * 100;
         }
@@ -421,11 +479,11 @@ const BatchUploadPage: React.FC = () => {
 
   // 新增：文件名长度检测和优化建议
   const checkFileNameLength = (fileName: string) => {
-    const maxLength = 50; // 建议的最大长度
+    const maxLength = 100; // 建议的最大长度
     if (fileName.length > maxLength) {
       return {
         isLong: true,
-        suggestion: `建议将文件名缩短到${maxLength}个字符以内，当前长度：${fileName.length}个字符`
+        suggestion: `文件名较长(${fileName.length}字符)，建议缩短到${maxLength}字符以内以获得最佳体验`
       };
     }
     return { isLong: false, suggestion: '' };
@@ -433,12 +491,10 @@ const BatchUploadPage: React.FC = () => {
 
   // 新增：智能JSON解析函数
   const parseResponseJSON = (responseText: string, apiName: string) => {
-    console.log(`${apiName} 响应原始内容:`, responseText.substring(0, 200) + '...');
 
     // 1. 尝试直接解析JSON
     try {
       const result = JSON.parse(responseText);
-      console.log(`${apiName} JSON解析成功`);
       return result;
     } catch (parseError) {
       console.warn(`${apiName} 直接JSON解析失败:`, parseError);
@@ -460,7 +516,6 @@ const BatchUploadPage: React.FC = () => {
         try {
           const jsonStr = match[1] || match[0];
           const result = JSON.parse(jsonStr);
-          console.log(`${apiName} 使用模式 ${pattern} 成功提取JSON`);
           return result;
         } catch (extractError) {
           console.warn(`${apiName} 模式 ${pattern} 提取失败:`, extractError);
@@ -480,7 +535,6 @@ const BatchUploadPage: React.FC = () => {
 
       if (cleanedText) {
         const result = JSON.parse(cleanedText);
-        console.log(`${apiName} 清理后JSON解析成功`);
         return result;
       }
     } catch (cleanError) {
@@ -498,8 +552,13 @@ const BatchUploadPage: React.FC = () => {
     // 检查文件名长度
     const fileNameCheck = checkFileNameLength(file.name);
     if (fileNameCheck.isLong) {
-      console.warn('文件名过长:', fileNameCheck.suggestion);
-      // 可以选择显示警告或继续处理
+    }
+
+    // 检查文件大小 (50MB限制)
+    const maxFileSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxFileSize) {
+      showErrorRightSlide('文件过大', `文件大小不能超过 ${(maxFileSize / 1024 / 1024).toFixed(0)}MB，当前文件大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+      return;
     }
 
     const estimatedTime = calculateEstimatedTime(file.size, getFileType(file));
@@ -513,8 +572,8 @@ const BatchUploadPage: React.FC = () => {
       progress: number;
     }[] = [];
     
-    if (fileType === 'pdf' || fileType === 'docx') {
-      // PDF和Word文档使用6步流程
+    if (fileType === 'pdf') {
+      // PDF文档使用6步流程
       processingSteps = [
         { step: '文件上传', status: 'pending', progress: 0 },
         { step: 'Mathpix提取', status: 'pending', progress: 0 },
@@ -571,12 +630,11 @@ const BatchUploadPage: React.FC = () => {
       if (file.type.includes('pdf')) {
         formData.append('pdf', file);
         await processPDFFile(newDocument, formData);
-      } else if (file.type.includes('word') || file.type.includes('doc')) {
-        formData.append('word', file);
-        await processWordFile(newDocument, formData);
       } else if (newDocument.fileType === 'tex') {
         formData.append('tex', file);
         await processTeXFile(newDocument, formData);
+      } else {
+        throw new Error('不支持的文件类型，仅支持PDF和TeX文件');
       }
     } catch (error: any) {
       console.error('文件处理失败:', error);
@@ -588,10 +646,10 @@ const BatchUploadPage: React.FC = () => {
   }, [updateDocumentProgress, updateProcessingStep, checkFileNameLength]);
 
   // 获取文件类型
-  const getFileType = (file: File): 'pdf' | 'docx' | 'tex' => {
+  const getFileType = (file: File): 'pdf' | 'tex' => {
     if (file.type.includes('pdf')) return 'pdf';
     if (file.name.toLowerCase().endsWith('.tex')) return 'tex';
-    return 'docx';
+    throw new Error('不支持的文件类型，仅支持PDF和TeX文件');
   };
 
   // 处理PDF文件
@@ -619,21 +677,105 @@ const BatchUploadPage: React.FC = () => {
       }
     }
     
+    if (!token) {
+      console.warn('⚠️ 没有认证token，尝试使用测试路由');
+      // 在开发环境中，如果没有token，尝试使用测试路由
+      if (import.meta.env.DEV) {
+      } else {
+        throw new Error('需要登录才能处理文件，请先登录');
+      }
+    }
+    
     try {
       // 步骤1: Mathpix提取MMD内容并分割
-      console.log('🔄 步骤1: Mathpix提取和分割...');
-      updateProcessingStep(document.id, 'Mathpix提取', 'processing', 20);
+      updateProcessingStep(document.id, 'Mathpix提取', 'processing', 10);
       
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'}/mathpix-optimized/process-pdf-optimized`, {
+      // 在开发环境中使用本地后端，生产环境使用远程API
+      const apiBaseUrl = import.meta.env.DEV 
+        ? 'http://localhost:3001/api' 
+        : (import.meta.env.VITE_API_URL || 'https://www.mareate.com/api');
+      
+      // 记录开始时间
+      const startTime = Date.now();
+      
+      // 打开SSE进度订阅
+      try {
+        const es = new EventSource(`${apiBaseUrl}/mathpix-optimized/progress/${document.id}`);
+        progressEventSourcesRef.current[document.id] = es;
+        es.onmessage = (evt) => {
+          try {
+            const data = JSON.parse(evt.data);
+            console.log('SSE收到事件:', data); // 调试日志
+            
+            if (data?.type === 'status') {
+              const step = data.step || '';
+              const p = typeof data.progress === 'number' ? data.progress : 0;
+              
+              // 精确匹配后端发送的步骤名称
+              if (step === '开始处理PDF') {
+                updateProcessingStep(document.id, '文件上传', 'completed', 100);
+              } else if (step === 'Mathpix提取') {
+                updateProcessingStep(document.id, 'Mathpix提取', 'processing', p);
+              } else if (step === 'Mathpix提取完成') {
+                updateProcessingStep(document.id, 'Mathpix提取', 'completed', 100);
+              } else if (step === '题目分割完成') {
+                updateProcessingStep(document.id, '题目分割', 'completed', 100);
+              } else if (step === 'AI处理开始') {
+                updateProcessingStep(document.id, 'AI处理', 'processing', p);
+              } else if (step === 'AI处理完成') {
+                updateProcessingStep(document.id, 'AI处理', 'completed', 100);
+              } else if (step === '开始处理TeX') {
+                updateProcessingStep(document.id, '文件上传', 'completed', 100);
+              } else if (step === 'AI解析') {
+                updateProcessingStep(document.id, 'DeepSeek AI解析', 'processing', p);
+              } else if (step === 'AI解析完成') {
+                updateProcessingStep(document.id, 'DeepSeek AI解析', 'completed', 100);
+                updateProcessingStep(document.id, '题目识别', 'completed', 100);
+                updateProcessingStep(document.id, '结果优化', 'completed', 100);
+              }
+            } else if (data?.type === 'completed') {
+              updateProcessingStep(document.id, '结果优化', 'completed', 100);
+            } else if (data?.type === 'cancelled') {
+              updateDocumentProgress(document.id, { status: 'cancelled' });
+              try { es.close(); } catch {}
+              delete progressEventSourcesRef.current[document.id];
+            }
+          } catch (error) {
+            console.error('SSE事件解析失败:', error);
+          }
+        };
+        es.onerror = () => {
+          try { es.close(); } catch {}
+          delete progressEventSourcesRef.current[document.id];
+        };
+      } catch {}
+
+      const response = await fetch(`${apiBaseUrl}/mathpix-optimized/process-pdf-optimized`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'X-Doc-Id': document.id
         },
         body: formData
       });
       
       if (!response.ok) {
-        throw new Error(`PDF处理失败: ${response.status} ${response.statusText}`);
+        let errorMessage = `PDF处理失败: ${response.status} ${response.statusText}`;
+        
+        // 根据状态码提供更友好的错误信息
+        if (response.status === 413) {
+          errorMessage = '文件过大，请压缩PDF文件或选择较小的文件';
+        } else if (response.status === 401) {
+          errorMessage = '认证失败，请重新登录';
+        } else if (response.status === 403) {
+          errorMessage = '权限不足，无法处理此文件';
+        } else if (response.status === 429) {
+          errorMessage = '请求过于频繁，请稍后再试';
+        } else if (response.status >= 500) {
+          errorMessage = '服务器内部错误，请稍后再试';
+        }
+        
+        throw new Error(errorMessage);
       }
 
       // 检查响应内容类型
@@ -651,39 +793,36 @@ const BatchUploadPage: React.FC = () => {
         throw new Error('后端返回的数据格式不正确');
       }
 
-      // 步骤2: 精确分割题目
-      console.log('✂️ 步骤2: 精确分割题目...');
-      updateProcessingStep(document.id, 'Mathpix提取', 'completed', 100);
-      updateProcessingStep(document.id, '题目分割', 'processing', 30);
+      // 计算实际处理时间
+      const processingTime = Date.now() - startTime;
       
-      // 模拟题目分割进度
-      setTimeout(() => updateProcessingStep(document.id, '题目分割', 'processing', 60), 200);
-      setTimeout(() => updateProcessingStep(document.id, '题目分割', 'processing', 90), 400);
+      // 注意：进度更新现在完全由SSE事件控制，不再在这里强制更新
       
-      // 步骤3: 准备并行处理
-      console.log('🚀 步骤3: 准备并行处理...');
-      updateProcessingStep(document.id, '题目分割', 'completed', 100);
-      updateProcessingStep(document.id, 'AI处理', 'processing', 20);
+      // 更新预估时间（基于实际处理时间）
+      if (result.processingTime) {
+        updateDocumentProgress(document.id, {
+          estimatedTime: Math.round(result.processingTime / 1000) // 转换为秒
+        });
+      }
       
-      // 步骤4: 并行处理所有题目
-      console.log('⚡ 步骤4: 并行处理题目...');
-      setTimeout(() => updateProcessingStep(document.id, 'AI处理', 'processing', 50), 300);
-      setTimeout(() => updateProcessingStep(document.id, 'AI处理', 'processing', 80), 600);
-      
-      // 步骤5: 统计结果
-      console.log('📊 步骤5: 统计结果...');
-      updateProcessingStep(document.id, 'AI处理', 'completed', 100);
-      updateProcessingStep(document.id, '结果优化', 'processing', 50);
-      
-      // 步骤6: 返回结果
-      console.log('🎯 步骤6: 返回结果...');
-      updateProcessingStep(document.id, '结果优化', 'completed', 100);
+      // 显示实时处理信息
+      const processingInfo = {
+        totalTime: Math.round(processingTime / 1000),
+        questionsCount: result.totalCount || 0,
+        choiceCount: result.choiceCount || 0,
+        fillCount: result.fillCount || 0,
+        solutionCount: result.solutionCount || 0,
+        averageTimePerQuestion: result.averageTimePerQuestion ? Math.round(result.averageTimePerQuestion / 1000) : 0
+      };
       
       updateDocumentProgress(document.id, { 
         status: 'completed', 
         processingProgress: 100,
-        processTime: new Date()
+        processTime: new Date(),
+        processingInfo
       });
+      try { progressEventSourcesRef.current[document.id]?.close(); } catch {}
+      delete progressEventSourcesRef.current[document.id];
       
       // 处理后端返回的真实题目数据
       const questions = (result.questions || []).map((q: any, index: number) => ({
@@ -738,157 +877,13 @@ const BatchUploadPage: React.FC = () => {
         status: 'failed', 
         error: error.message || 'PDF处理失败'
       });
+      try { progressEventSourcesRef.current[document.id]?.close(); } catch {}
+      delete progressEventSourcesRef.current[document.id];
       throw error;
     }
   };
 
-  // 处理Word文件
-  const processWordFile = async (document: DocumentItem, formData: FormData) => {
-    updateDocumentProgress(document.id, { status: 'processing' });
-    
-    // 初始化所有处理步骤
-    updateProcessingStep(document.id, '文件上传', 'completed', 100);
-    updateProcessingStep(document.id, 'Mathpix提取', 'processing', 0);
-    updateProcessingStep(document.id, '题目分割', 'processing', 0);
-    updateProcessingStep(document.id, 'AI处理', 'processing', 0);
-    updateProcessingStep(document.id, '结果优化', 'processing', 0);
-    
-    // 从Zustand持久化数据中获取token
-    const authStorage = localStorage.getItem('auth-storage');
-    let token = '';
-    if (authStorage) {
-      try {
-        const authData = JSON.parse(authStorage);
-        if (authData.state && authData.state.token) {
-          token = authData.state.token;
-        }
-      } catch (error) {
-        console.error('Failed to parse auth storage:', error);
-      }
-    }
-    
-    try {
-      // 步骤1: Mathpix提取MMD内容并分割
-      console.log('🔄 步骤1: Mathpix提取和分割...');
-      updateProcessingStep(document.id, 'Mathpix提取', 'processing', 20);
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'}/mathpix-optimized/process-word-optimized`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
 
-      if (!response.ok) {
-        throw new Error(`Word文件处理失败: ${response.status} ${response.statusText}`);
-      }
-
-      // 检查响应内容类型
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        console.warn('响应内容类型不是JSON:', contentType);
-      }
-
-      // 获取响应文本并使用智能解析
-      const responseText = await response.text();
-      const result = parseResponseJSON(responseText, 'Word处理API');
-
-      // 验证结果格式
-      if (!result || typeof result !== 'object') {
-        throw new Error('后端返回的数据格式不正确');
-      }
-
-      // 步骤2: 精确分割题目
-      console.log('✂️ 步骤2: 精确分割题目...');
-      updateProcessingStep(document.id, 'Mathpix提取', 'completed', 100);
-      updateProcessingStep(document.id, '题目分割', 'processing', 30);
-      
-      // 模拟题目分割进度
-      setTimeout(() => updateProcessingStep(document.id, '题目分割', 'processing', 60), 200);
-      setTimeout(() => updateProcessingStep(document.id, '题目分割', 'processing', 90), 400);
-      
-      // 步骤3: 准备并行处理
-      console.log('🚀 步骤3: 准备并行处理...');
-      updateProcessingStep(document.id, '题目分割', 'completed', 100);
-      updateProcessingStep(document.id, 'AI处理', 'processing', 20);
-      
-      // 步骤4: 并行处理所有题目
-      console.log('⚡ 步骤4: 并行处理题目...');
-      setTimeout(() => updateProcessingStep(document.id, 'AI处理', 'processing', 50), 300);
-      setTimeout(() => updateProcessingStep(document.id, 'AI处理', 'processing', 80), 600);
-      
-      // 步骤5: 统计结果
-      console.log('📊 步骤5: 统计结果...');
-      updateProcessingStep(document.id, 'AI处理', 'completed', 100);
-      updateProcessingStep(document.id, '结果优化', 'processing', 50);
-      
-      // 步骤6: 返回结果
-      console.log('🎯 步骤6: 返回结果...');
-      updateProcessingStep(document.id, '结果优化', 'completed', 100);
-      
-      updateDocumentProgress(document.id, { 
-        status: 'completed', 
-        processingProgress: 100,
-        processTime: new Date()
-      });
-      
-      // 处理后端返回的真实题目数据
-      const questions = (result.questions || []).map((q: any, index: number) => ({
-        id: `${document.id}-Q${index + 1}`,
-        documentId: document.id,
-        title: `T${index + 1}`,
-        content: q.content || q.stem || '',
-        type: q.type || 'solution',
-        options: q.options || [],
-        blanks: q.blanks || [],
-        source: document.fileName,
-        confidence: q.confidence || 0.95,
-        difficulty: q.difficulty || 3,
-        tags: q.tags || ['待分类'],
-        category: q.category || [],
-        isSelected: false,
-        isEditing: false
-      }));
-
-      // 使用后端返回的真实数据
-      updateDocumentProgress(document.id, { 
-        questions,
-        confidence: result.confidence || (result.totalCount > 0 ? 0.95 : 0.5),
-        originalContent: result.sections?.originalContent,
-        processedContent: result.sections?.processedContent
-      });
-
-      // 添加题目到全局列表
-      setAllQuestions(prev => [...prev, ...questions]);
-
-      // 保存到历史记录
-      saveToHistory({
-        ...document,
-        questions,
-        confidence: result.confidence || (result.totalCount > 0 ? 0.95 : 0.5),
-        processTime: new Date(),
-        originalContent: result.sections?.originalContent,
-        processedContent: result.sections?.processedContent
-      });
-
-      // 如果有题目，延迟显示草稿提醒
-      if (questions.length > 0) {
-        setTimeout(() => {
-          setShowDraftReminder(true);
-        }, 3000);
-      }
-      
-    } catch (error: any) {
-      console.error('Word处理失败:', error);
-      updateProcessingStep(document.id, '文档解析', 'failed', 0, error.message);
-      updateDocumentProgress(document.id, { 
-        status: 'failed', 
-        error: error.message || 'Word文件处理失败'
-      });
-      throw error;
-    }
-  };
 
   // 处理TeX文件
   const processTeXFile = async (document: DocumentItem, formData: FormData) => {
@@ -915,14 +910,67 @@ const BatchUploadPage: React.FC = () => {
     }
     
     try {
-      // 步骤1: 使用优化版DeepSeek AI处理TeX文件
-      console.log('🚀 步骤1: 使用优化版DeepSeek AI处理TeX文件...');
-      updateProcessingStep(document.id, 'DeepSeek AI解析', 'processing', 20);
+      // 打开SSE进度订阅
+      try {
+        const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://www.mareate.com/api';
+        const es = new EventSource(`${apiBaseUrl}/mathpix-optimized/progress/${document.id}`);
+        progressEventSourcesRef.current[document.id] = es;
+        es.onmessage = (evt) => {
+          try {
+            const data = JSON.parse(evt.data);
+            console.log('SSE收到事件:', data); // 调试日志
+            
+            if (data?.type === 'status') {
+              const step = data.step || '';
+              const p = typeof data.progress === 'number' ? data.progress : 0;
+              
+              // 精确匹配后端发送的步骤名称
+              if (step === '开始处理PDF') {
+                updateProcessingStep(document.id, '文件上传', 'completed', 100);
+              } else if (step === 'Mathpix提取') {
+                updateProcessingStep(document.id, 'Mathpix提取', 'processing', p);
+              } else if (step === 'Mathpix提取完成') {
+                updateProcessingStep(document.id, 'Mathpix提取', 'completed', 100);
+              } else if (step === '题目分割完成') {
+                updateProcessingStep(document.id, '题目分割', 'completed', 100);
+              } else if (step === 'AI处理开始') {
+                updateProcessingStep(document.id, 'AI处理', 'processing', p);
+              } else if (step === 'AI处理完成') {
+                updateProcessingStep(document.id, 'AI处理', 'completed', 100);
+              } else if (step === '开始处理TeX') {
+                updateProcessingStep(document.id, '文件上传', 'completed', 100);
+              } else if (step === 'AI解析') {
+                updateProcessingStep(document.id, 'DeepSeek AI解析', 'processing', p);
+              } else if (step === 'AI解析完成') {
+                updateProcessingStep(document.id, 'DeepSeek AI解析', 'completed', 100);
+                updateProcessingStep(document.id, '题目识别', 'completed', 100);
+                updateProcessingStep(document.id, '结果优化', 'completed', 100);
+              }
+            } else if (data?.type === 'completed') {
+              updateProcessingStep(document.id, '结果优化', 'completed', 100);
+            } else if (data?.type === 'cancelled') {
+              updateDocumentProgress(document.id, { status: 'cancelled' });
+              try { es.close(); } catch {}
+              delete progressEventSourcesRef.current[document.id];
+            }
+          } catch (error) {
+            console.error('SSE事件解析失败:', error);
+          }
+        };
+        es.onerror = () => {
+          try { es.close(); } catch {}
+          delete progressEventSourcesRef.current[document.id];
+        };
+      } catch {}
+      
+      // 记录开始时间
+      const startTime = Date.now();
       
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'}/mathpix-optimized/process-tex`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'X-Doc-Id': document.id
         },
         body: formData
       });
@@ -946,31 +994,36 @@ const BatchUploadPage: React.FC = () => {
         throw new Error('后端返回的数据格式不正确');
       }
       
-      // 步骤2: 智能识别题目类型和结构
-      console.log('🎯 步骤2: 智能识别题目类型和结构...');
-      updateProcessingStep(document.id, 'DeepSeek AI解析', 'completed', 100);
-      updateProcessingStep(document.id, '题目识别', 'processing', 50);
+      // 计算实际处理时间
+      const processingTime = Date.now() - startTime;
       
-      // 模拟题目识别进度
-      setTimeout(() => updateProcessingStep(document.id, '题目识别', 'processing', 80), 200);
+      // 注意：进度更新现在完全由SSE事件控制，不再在这里强制更新
       
-      // 步骤3: 保留所有LaTeX公式和数学符号
-      console.log('📐 步骤3: 保留所有LaTeX公式和数学符号...');
-      updateProcessingStep(document.id, '题目识别', 'completed', 100);
-      updateProcessingStep(document.id, '结果优化', 'processing', 60);
+      // 更新预估时间（基于实际处理时间）
+      if (result.processingTime) {
+        updateDocumentProgress(document.id, {
+          estimatedTime: Math.round(result.processingTime / 1000) // 转换为秒
+        });
+      }
       
-      // 模拟结果优化进度
-      setTimeout(() => updateProcessingStep(document.id, '结果优化', 'processing', 90), 300);
-      
-      // 完成处理
-      console.log('✅ TeX处理完成');
-      updateProcessingStep(document.id, '结果优化', 'completed', 100);
+      // 显示实时处理信息
+      const processingInfo = {
+        totalTime: Math.round(processingTime / 1000),
+        questionsCount: result.totalCount || 0,
+        choiceCount: result.choiceCount || 0,
+        fillCount: result.fillCount || 0,
+        solutionCount: result.solutionCount || 0,
+        averageTimePerQuestion: result.averageTimePerQuestion ? Math.round(result.averageTimePerQuestion / 1000) : 0
+      };
       
       updateDocumentProgress(document.id, { 
         status: 'completed', 
         processingProgress: 100,
-        processTime: new Date()
+        processTime: new Date(),
+        processingInfo
       });
+      try { progressEventSourcesRef.current[document.id]?.close(); } catch {}
+      delete progressEventSourcesRef.current[document.id];
       
       // 处理后端返回的真实题目数据
       const questions = (result.questions || []).map((q: any, index: number) => ({
@@ -1025,6 +1078,8 @@ const BatchUploadPage: React.FC = () => {
         status: 'failed', 
         error: error.message || 'TeX文件处理失败'
       });
+      try { progressEventSourcesRef.current[document.id]?.close(); } catch {}
+      delete progressEventSourcesRef.current[document.id];
       throw error;
     }
   };
@@ -1054,8 +1109,8 @@ const BatchUploadPage: React.FC = () => {
     
     const files = Array.from(e.dataTransfer.files);
     files.forEach(file => {
-      const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword', 'text/plain'];
-      const validExtensions = ['.pdf', '.docx', '.doc', '.tex'];
+      const validTypes = ['application/pdf', 'text/plain'];
+      const validExtensions = ['.pdf', '.tex'];
       
       if (validTypes.some(type => file.type.includes(type)) || 
           validExtensions.some(ext => file.name.toLowerCase().endsWith(ext))) {
@@ -1098,7 +1153,7 @@ const BatchUploadPage: React.FC = () => {
 
           // 发送取消请求到后端
           try {
-            await fetch(`${import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'}/document-parser/cancel/${docId}`, {
+            await fetch(`${import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'}/mathpix-optimized/cancel/${docId}`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${token}`,
@@ -1109,6 +1164,9 @@ const BatchUploadPage: React.FC = () => {
             console.error('取消后端处理失败:', error);
             // 即使后端取消失败，也要继续删除本地状态
           }
+          // 关闭事件源
+          try { progressEventSourcesRef.current[docId]?.close(); } catch {}
+          delete progressEventSourcesRef.current[docId];
         }
 
         // 删除本地状态
@@ -1121,8 +1179,11 @@ const BatchUploadPage: React.FC = () => {
         setDocuments(prev => prev.filter(doc => doc.id !== docId));
         setAllQuestions(prev => prev.filter(q => q.documentId !== docId));
       }
+      
+      // 关闭确认弹窗
+      closeConfirm();
     });
-  }, [documents]);
+  }, [documents, closeConfirm]);
 
 
 
@@ -1170,6 +1231,7 @@ const BatchUploadPage: React.FC = () => {
   }, [documents, updateDocumentProgress, updateProcessingStep]);
 
 
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* 头部标题栏 */}
@@ -1180,7 +1242,7 @@ const BatchUploadPage: React.FC = () => {
               <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 dark:from-gray-100 to-blue-600 dark:to-blue-400 bg-clip-text text-transparent">
                 智能批量上传
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">AI驱动的文档智能解析，支持PDF、Word、TeX一键识别题目并批量导入题库</p>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">AI驱动的文档智能解析，支持PDF、TeX一键识别题目并批量导入题库</p>
             </div>
             <motion.div 
               className="flex items-center space-x-4"
@@ -1373,6 +1435,8 @@ const BatchUploadPage: React.FC = () => {
 
 
 
+
+
         {/* 文件上传区域 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1386,7 +1450,7 @@ const BatchUploadPage: React.FC = () => {
                 <Upload className="h-10 w-10 text-white" />
               </div>
               <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">文档上传</h2>
-              <p className="text-gray-600 dark:text-gray-400">支持 PDF、Word、TeX 格式，拖拽或点击上传</p>
+              <p className="text-gray-600 dark:text-gray-400">支持 PDF、TeX 格式，拖拽或点击上传</p>
             </div>
             
             <div
@@ -1406,7 +1470,7 @@ const BatchUploadPage: React.FC = () => {
                     {isDragging ? '释放文件开始上传' : '拖拽文件到这里或点击上传'}
                   </h3>
                   <p className="text-gray-500 dark:text-gray-400">
-                    支持 PDF、DOCX、TeX 格式，单文件最大 10MB
+                    支持 PDF、TeX 格式，单文件最大 50MB
                   </p>
                 </div>
                 
@@ -1415,10 +1479,7 @@ const BatchUploadPage: React.FC = () => {
                     <FileText className="h-5 w-5 text-red-500" />
                     <span>PDF</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <FileText className="h-5 w-5 text-blue-500" />
-                    <span>Word</span>
-                  </div>
+
                   <div className="flex items-center space-x-2">
                     <FileText className="h-5 w-5 text-green-500" />
                     <span>TeX</span>
@@ -1428,7 +1489,7 @@ const BatchUploadPage: React.FC = () => {
                 <input
                   type="file"
                   multiple
-                  accept=".pdf,.docx,.doc,.tex"
+                  accept=".pdf,.tex"
                   onChange={(e) => {
                     const files = Array.from(e.target.files || []);
                     files.forEach(handleFileUpload);
@@ -1626,10 +1687,10 @@ const BatchUploadPage: React.FC = () => {
                             '清空历史记录',
                             '确定要清空所有历史记录和当前会话吗？这将清除所有上传的文件和题目。',
                             () => {
-                              // 先关闭模态框
-                              closeConfirm();
+                              // 用户确认后才执行清空操作
                               clearHistory();
                               clearCurrentSession();
+                              closeConfirm();
                             }
                           );
                         }}
@@ -1673,7 +1734,7 @@ const BatchUploadPage: React.FC = () => {
                                         {historyDoc.fileName}
                                       </span>
                                       {/* 悬停显示完整文件名 */}
-                                      <div className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white dark:text-gray-100 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 max-w-xs break-words">
+                                      <div className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white dark:text-gray-100 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[9999] max-w-xs break-words">
                                         {historyDoc.fileName}
                                         <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
                                       </div>

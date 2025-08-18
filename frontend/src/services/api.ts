@@ -617,7 +617,6 @@ export const ocrAPI = {
   // 单张图片OCR识别 - 使用专门的OCR API实例，超时时间3分钟
   recognizeImage: async (imageFile: File) => {
     try {
-      console.log('开始OCR识别，预计可能需要较长时间...');
       
       const formData = new FormData();
       formData.append('image', imageFile);
@@ -638,7 +637,6 @@ export const ocrAPI = {
         },
       });
       
-      console.log('OCR识别完成');
       return response;
     } catch (error: any) {
       // 如果是超时错误，提供更友好的错误信息
@@ -656,7 +654,6 @@ export const ocrAPI = {
   // 批量图片OCR识别 - 使用专门的OCR API实例，超时时间3分钟
   recognizeImages: async (imageFiles: File[]) => {
     try {
-      console.log('开始批量OCR识别，预计可能需要较长时间...');
       
       const formData = new FormData();
       imageFiles.forEach((file) => {
@@ -670,7 +667,6 @@ export const ocrAPI = {
         },
       });
       
-      console.log('批量OCR识别完成');
       return response;
     } catch (error: any) {
       // 如果是超时错误，提供更友好的错误信息
@@ -694,7 +690,6 @@ export const questionAnalysisAPI = {
   // 分析题目内容 - 使用专门的AI分析API实例，超时时间3分钟
   analyzeQuestion: async (content: string) => {
     try {
-      console.log('开始AI分析，预计可能需要较长时间...');
       
       // 使用专门的AI分析API实例，超时时间3分钟
       const response = await aiAnalysisApi.post<{ success: boolean; analysis: {
@@ -705,17 +700,39 @@ export const questionAnalysisAPI = {
         questionType: 'choice' | 'multiple-choice' | 'fill' | 'solution';
       } }>('/question-analysis/analyze', { content });
       
-      console.log('AI分析完成');
       return response;
     } catch (error: any) {
       // 如果是超时错误，提供更友好的错误信息
       if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-        console.error('AI分析超时（超过3分钟）:', error.message);
         throw new Error('AI分析超时，请稍后重试或尝试简化题目内容');
       }
       
       // 其他错误正常抛出
-      console.error('AI分析失败:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // 生成答案和解析
+  generateAnswer: async (request: {
+    content: string;
+    type: 'choice' | 'multiple-choice' | 'fill' | 'solution';
+    difficulty: number;
+    category?: string;
+    tags?: string[];
+  }) => {
+    try {
+      
+             const response = await aiAnalysisApi.post<{ success: boolean; data: {
+         answer: string;
+         solution?: string;
+         fillAnswers?: string[];
+         solutionAnswers?: string[];
+         reasoning?: string;
+       } }>('/answer-generation/generate', request);
+      
+      return response;
+    } catch (error: any) {
+      console.error('答案生成失败:', error.response?.data || error.message);
       throw error;
     }
   },
@@ -723,7 +740,6 @@ export const questionAnalysisAPI = {
   // 文档解析 - 使用专门的AI分析API实例，超时时间5分钟
   parseDocument: async (formData: FormData) => {
     try {
-      console.log('开始文档解析，预计可能需要较长时间...');
       
       // 使用专门的AI分析API实例，超时时间5分钟
       const response = await aiAnalysisApi.post<{ 
@@ -773,17 +789,14 @@ export const questionAnalysisAPI = {
         timeout: 300000, // 5分钟
       });
       
-      console.log('文档解析完成');
       return response;
     } catch (error: any) {
       // 如果是超时错误，提供更友好的错误信息
       if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-        console.error('文档解析超时（超过5分钟）:', error.message);
         throw new Error('文档解析超时，请稍后重试或尝试上传较小的文件');
       }
       
       // 其他错误正常抛出
-      console.error('文档解析失败:', error.response?.data || error.message);
       throw error;
     }
   },

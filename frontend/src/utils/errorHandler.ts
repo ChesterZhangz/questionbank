@@ -97,11 +97,10 @@ export const logError = (error: AppError | Error): void => {
 };
 
 // 发送错误报告到服务器（可选）
-export const reportError = async (error: AppError): Promise<void> => {
+export const reportError = async (_error: AppError): Promise<void> => {
   try {
     // 这里可以发送错误报告到服务器
-    // await api.post('/error-reports', error);
-    console.log('Error reported:', error);
+    // await api.post('/error-reports', _error);
   } catch (reportError) {
     console.error('Failed to report error:', reportError);
   }
