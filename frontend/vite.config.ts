@@ -25,7 +25,9 @@ export default defineConfig(({ mode }) => ({
     // 调整分块大小警告限制
     chunkSizeWarningLimit: 1000,
     // 确保字体文件被正确复制
-    copyPublicDir: true
+    copyPublicDir: true,
+    // 确保字体文件不被hash处理
+    assetsInlineLimit: 0
   },
   server: {
     host: '0.0.0.0',
