@@ -1,7 +1,7 @@
 /* 导入自定义字体 - 使用正确的路径 */
 @font-face {
   font-family: 'WenYuan';
-  src: url('../../../public/font/WenYuanSerifSC-Regular.ttf') format('truetype');
+  src: url('../../../../public/font/WenYuanSerifSC-Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -9,7 +9,7 @@
 
 @font-face {
   font-family: 'WenYuan';
-  src: url('../../../public/font/WenYuanSerifSC-Bold.ttf') format('truetype');
+  src: url('../../../../public/font/WenYuanSerifSC-Bold.ttf') format('truetype');
   font-weight: bold;
   font-style: normal;
   font-display: swap;

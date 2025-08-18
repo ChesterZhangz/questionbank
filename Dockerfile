@@ -74,9 +74,9 @@ COPY --from=backend-builder --chown=nextjs:nodejs /app/backend/public ./backend/
 # 复制前端构建结果
 COPY --from=frontend-builder --chown=nextjs:nodejs /app/frontend/dist ./frontend/dist
 # 确保图标文件被复制
-COPY --from=frontend-builder --chown=nextjs:nodejs /app/frontend/src/public ./frontend/public
+COPY --from=frontend-builder --chown=nextjs:nodejs /app/frontend/public ./frontend/public
 # 复制静态文件到nginx可访问的位置
-COPY --from=frontend-builder --chown=nextjs:nodejs /app/frontend/src/public ./static
+COPY --from=frontend-builder --chown=nextjs:nodejs /app/frontend/public ./static
 
 # 复制环境配置文件
 COPY .env ./
