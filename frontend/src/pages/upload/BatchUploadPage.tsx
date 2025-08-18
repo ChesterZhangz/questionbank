@@ -305,8 +305,9 @@ const BatchUploadPage: React.FC = () => {
 
   // 保存当前会话状态
   const saveCurrentSession = useCallback(() => {
-    // 始终保存状态，即使为空数组也要保存，这样可以清除之前的状态
-    localStorage.setItem('batchUploadCurrentDocuments', JSON.stringify(documents));
+    // 只保存未完成的文档到当前会话
+    const activeDocuments = documents.filter(doc => doc.status !== 'completed');
+    localStorage.setItem('batchUploadCurrentDocuments', JSON.stringify(activeDocuments));
     localStorage.setItem('batchUploadCurrentQuestions', JSON.stringify(allQuestions));
     localStorage.setItem('batchUploadGlobalStatus', JSON.stringify(globalProcessingStatus));
   }, [documents, allQuestions, globalProcessingStatus]);
@@ -320,19 +321,21 @@ const BatchUploadPage: React.FC = () => {
     if (savedDocuments) {
       try {
         const documents = JSON.parse(savedDocuments);
-        // 恢复Date对象
-        const restoredDocuments = documents.map((doc: any) => ({
-          ...doc,
-          uploadTime: new Date(doc.uploadTime),
-          processTime: doc.processTime ? new Date(doc.processTime) : undefined,
-          startTime: doc.startTime ? new Date(doc.startTime) : undefined,
-          lastUpdateTime: doc.lastUpdateTime ? new Date(doc.lastUpdateTime) : undefined,
-          processingSteps: doc.processingSteps?.map((step: any) => ({
-            ...step,
-            startTime: step.startTime ? new Date(step.startTime) : undefined,
-            endTime: step.endTime ? new Date(step.endTime) : undefined
-          }))
-        }));
+        // 恢复Date对象，但只保留未完成的文档
+        const restoredDocuments = documents
+          .filter((doc: any) => doc.status !== 'completed') // 过滤掉已完成的文档
+          .map((doc: any) => ({
+            ...doc,
+            uploadTime: new Date(doc.uploadTime),
+            processTime: doc.processTime ? new Date(doc.processTime) : undefined,
+            startTime: doc.startTime ? new Date(doc.startTime) : undefined,
+            lastUpdateTime: doc.lastUpdateTime ? new Date(doc.lastUpdateTime) : undefined,
+            processingSteps: doc.processingSteps?.map((step: any) => ({
+              ...step,
+              startTime: step.startTime ? new Date(step.startTime) : undefined,
+              endTime: step.endTime ? new Date(step.endTime) : undefined
+            }))
+          }));
         setDocuments(restoredDocuments);
       } catch (error) {
         console.error('加载当前文档状态失败:', error);
