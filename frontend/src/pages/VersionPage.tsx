@@ -36,6 +36,46 @@ interface VersionUpdate {
 
 const versionUpdates: VersionUpdate[] = [
   {
+    version: 'v0.68',
+    date: '2025-01-27',
+    title: '全面升级：DarkMode支持、游戏优化、AI分析改进',
+    description: '为所有小游戏组件添加完整的DarkMode支持，修复游戏倒计时bug，优化AI分析机制，重构截图功能，全面提升用户体验。',
+    features: [
+      '所有小游戏组件完整DarkMode支持：MathGame、MemoryGame、PuzzleGame、ReactionGame',
+      '游戏设置、排行榜、历史记录、错误页面游戏区域DarkMode适配',
+      'AI分析机制优化：标签优先返回，答案异步生成，提升响应速度',
+      'LaTeX表格渲染重构：支持数学公式嵌套，提升复杂内容显示质量',
+      '相关题目检测算法优化：排除当前题目，限制结果数量，提高准确性',
+      '题库成员管理完善：支持批量操作，权限控制，用户搜索过滤',
+      '截图功能重构：提升渲染质量，优化用户体验，支持自定义配置',
+      '仪表盘题库区域DarkMode支持：网格和列表视图完美适配',
+      '游戏每日限制刷新机制修复：确保限制正确重置',
+      '错误处理和用户反馈机制完善：提升系统稳定性',
+    ],
+    improvements: [
+      '游戏倒计时bug修复：解决用户输入时倒计时暂停的问题',
+      'LaTeX渲染性能优化：表格和数学公式渲染速度提升',
+      '用户界面一致性改进：所有页面DarkMode风格统一',
+      '批量操作体验优化：进度显示、结果反馈、错误处理',
+      '搜索功能增强：支持LaTeX预览，智能结果分类',
+      '响应式设计优化：各种屏幕尺寸下的显示效果',
+      '动画效果流畅性提升：页面切换和交互更加自然',
+      '代码结构优化：移除冗余代码，提升维护性',
+    ],
+    fixes: [
+      '修复游戏倒计时在用户输入时暂停的严重bug',
+      '解决LaTeX表格中数学公式渲染不正确的问题',
+      '修复相关题目检测显示当前题目的问题',
+      '解决题库成员添加时已存在用户仍可搜索的问题',
+      '修复游戏每日限制不会刷新的问题',
+      '解决截图功能中LaTeX渲染位置偏移问题',
+      '修复部分页面DarkMode下元素显示异常',
+      '优化错误处理，提升系统稳定性',
+    ],
+    icon: Sparkles,
+    color: 'from-purple-500 to-pink-500'
+  },
+  {
     version: 'v0.67',
     date: '2025-08-15',
     title: '成员管理与密码安全升级',
@@ -504,10 +544,10 @@ const VersionPage: React.FC = () => {
               <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Star className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">当前版本 v0.67</h2>
-              <p className="text-blue-100 text-lg mb-4">用户体验全面升级</p>
+              <h2 className="text-2xl font-bold mb-2">当前版本 v0.68</h2>
+              <p className="text-blue-100 text-lg mb-4">全面升级：DarkMode支持、游戏优化、AI分析改进</p>
               <p className="text-blue-200">
-                将注册界面重构、邮箱页面重设计、支持忘记密码界面！
+                为所有小游戏组件添加完整的DarkMode支持，修复游戏倒计时bug，优化AI分析机制，重构截图功能！
               </p>
             </div>
           </Card>
