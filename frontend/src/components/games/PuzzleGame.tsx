@@ -157,6 +157,8 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
 
       setPieces(newPieces);
       setMoves(prev => prev + 1);
+      // 每走一步时间减少0.15秒
+      setTimeLeft(prev => Math.max(0, prev - 0.15));
       checkCompletion(newPieces);
     }
   }, [pieces, isGameActive, gridSize, emptyValue, checkCompletion]);
@@ -167,7 +169,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
 
     const timer = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev <= 1) {
+        if (prev <= 0.1) {
           setIsGameActive(false);
           const baseScore = gridSize === 3 ? 100 : 200;
           const finalScore = Math.max(0, baseScore - moves * 2);
@@ -175,7 +177,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
           onGameEnd();
           return 0;
         }
-        return prev - 1;
+        return Math.max(0, prev - 1);
       });
     }, 1000);
 
@@ -244,7 +246,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
           className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-xl border border-green-200 dark:border-green-700"
           whileHover={{ scale: 1.05 }}
         >
-          <div className="text-xl font-bold text-green-600 dark:text-green-400">{timeLeft}</div>
+          <div className="text-xl font-bold text-green-600 dark:text-green-400">{Math.max(0, Math.ceil(timeLeft))}</div>
           <div className="text-xs text-green-500 dark:text-green-300 font-medium">时间</div>
         </motion.div>
         <motion.div 

@@ -155,6 +155,8 @@ const MathGame: React.FC<MathGameProps> = ({
     } else {
       setStreak(0);
       setFeedback('incorrect');
+      // 答错题目时间减少1.5秒
+      setTimeLeft(prev => Math.max(0, prev - 1.5));
     }
 
     setUserAnswer('');
@@ -182,7 +184,7 @@ const MathGame: React.FC<MathGameProps> = ({
 
     const timer = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev <= 1) {
+        if (prev <= 0.1) {
           setIsGameActive(false);
           // 直接在这里处理游戏结束，避免依赖submitScoreForTimer
           const finalScore = score;
@@ -210,7 +212,7 @@ const MathGame: React.FC<MathGameProps> = ({
           onGameEnd();
           return 0;
         }
-        return prev - 1;
+        return Math.max(0, prev - 1);
       });
     }, 1000);
 
@@ -259,7 +261,7 @@ const MathGame: React.FC<MathGameProps> = ({
           className="text-center p-3 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-xl border border-orange-200 dark:border-orange-700"
           whileHover={{ scale: 1.05 }}
         >
-          <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{timeLeft}</div>
+          <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{Math.max(0, Math.ceil(timeLeft))}</div>
           <div className="text-xs text-orange-500 dark:text-orange-300 font-medium">剩余时间</div>
         </motion.div>
       </div>

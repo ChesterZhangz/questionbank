@@ -22,5 +22,9 @@
     "Node.js"
   ],
   "author": "Viquard Team",
-  "license": "ISC"
-} 
+  "license": "ISC",
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.3.1"
+  }
+}
