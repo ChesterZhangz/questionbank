@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Target, Move } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Target, Move, Play, Pause, RotateCcw, Eye } from 'lucide-react';
 import GameAPIService from '../../services/gameAPI';
 
 interface PuzzleGameProps {
@@ -31,6 +31,13 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
   const [isGameActive, setIsGameActive] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
+  
+  // 答案走法相关状态
+  const [showSolution, setShowSolution] = useState(false);
+  const [solutionSteps, setSolutionSteps] = useState<PuzzlePiece[][]>([]);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isPlayingSolution, setIsPlayingSolution] = useState(false);
+  const [originalPuzzle, setOriginalPuzzle] = useState<PuzzlePiece[]>([]);
 
   const totalPieces = gridSize * gridSize;
   const emptyValue = totalPieces - 1;
@@ -69,6 +76,119 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
     }
   }, [gridSize, emptyValue]);
 
+  // 计算曼哈顿距离
+  const manhattanDistance = useCallback((puzzle: PuzzlePiece[]): number => {
+    return puzzle.reduce((total, piece) => {
+      if (piece.value === emptyValue) return total;
+      const currentRow = Math.floor(piece.currentPosition / gridSize);
+      const currentCol = piece.currentPosition % gridSize;
+      const targetRow = Math.floor(piece.correctPosition / gridSize);
+      const targetCol = piece.correctPosition % gridSize;
+      return total + Math.abs(currentRow - targetRow) + Math.abs(currentCol - targetCol);
+    }, 0);
+  }, [gridSize, emptyValue]);
+
+  // 获取可能的移动
+  const getPossibleMoves = useCallback((puzzle: PuzzlePiece[]): number[] => {
+    const emptyPiece = puzzle.find(p => p.value === emptyValue);
+    if (!emptyPiece) return [];
+    
+    const emptyRow = Math.floor(emptyPiece.currentPosition / gridSize);
+    const emptyCol = emptyPiece.currentPosition % gridSize;
+    const moves: number[] = [];
+    
+    // 检查上下左右四个方向
+    const directions = [
+      { row: emptyRow - 1, col: emptyCol }, // 上
+      { row: emptyRow + 1, col: emptyCol }, // 下
+      { row: emptyRow, col: emptyCol - 1 }, // 左
+      { row: emptyRow, col: emptyCol + 1 }  // 右
+    ];
+    
+    directions.forEach(({ row, col }) => {
+      if (row >= 0 && row < gridSize && col >= 0 && col < gridSize) {
+        const position = row * gridSize + col;
+        const piece = puzzle.find(p => p.currentPosition === position);
+        if (piece) {
+          moves.push(piece.id);
+        }
+      }
+    });
+    
+    return moves;
+  }, [gridSize, emptyValue]);
+
+  // 执行移动
+  const executeMove = useCallback((puzzle: PuzzlePiece[], pieceId: number): PuzzlePiece[] => {
+    const piece = puzzle.find(p => p.id === pieceId);
+    const emptyPiece = puzzle.find(p => p.value === emptyValue);
+    
+    if (!piece || !emptyPiece) return puzzle;
+    
+    return puzzle.map(p => {
+      if (p.id === pieceId) {
+        return { ...p, currentPosition: emptyPiece.currentPosition };
+      }
+      if (p.value === emptyValue) {
+        return { ...p, currentPosition: piece.currentPosition };
+      }
+      return p;
+    });
+  }, [emptyValue]);
+
+  // 使用A*算法计算最优解
+  const calculateOptimalSolution = useCallback((puzzle: PuzzlePiece[]): PuzzlePiece[][] => {
+    const visited = new Set<string>();
+    const queue: Array<{
+      state: PuzzlePiece[];
+      path: PuzzlePiece[][];
+      cost: number;
+      heuristic: number;
+    }> = [{
+      state: puzzle,
+      path: [puzzle],
+      cost: 0,
+      heuristic: manhattanDistance(puzzle)
+    }];
+    
+    while (queue.length > 0) {
+      queue.sort((a, b) => (a.cost + a.heuristic) - (b.cost + b.heuristic));
+      const current = queue.shift()!;
+      
+      const stateKey = current.state.map(p => p.currentPosition).join(',');
+      if (visited.has(stateKey)) continue;
+      visited.add(stateKey);
+      
+      // 检查是否达到目标状态
+      if (current.state.every(p => p.currentPosition === p.correctPosition)) {
+        return current.path;
+      }
+      
+      // 获取可能的移动
+      const possibleMoves = getPossibleMoves(current.state);
+      
+      for (const pieceId of possibleMoves) {
+        const newState = executeMove(current.state, pieceId);
+        const newStateKey = newState.map(p => p.currentPosition).join(',');
+        
+        if (!visited.has(newStateKey)) {
+          const newPath = [...current.path, newState];
+          const newCost = current.cost + 1;
+          const newHeuristic = manhattanDistance(newState);
+          
+          queue.push({
+            state: newState,
+            path: newPath,
+            cost: newCost,
+            heuristic: newHeuristic
+          });
+        }
+      }
+    }
+    
+    return [];
+  }, [totalPieces, manhattanDistance, getPossibleMoves, executeMove]);
+
   // 开始游戏
   const startGame = useCallback(() => {
     let newPuzzle: PuzzlePiece[];
@@ -77,10 +197,15 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
     } while (!isSolvable(newPuzzle));
     
     setPieces(newPuzzle);
+    setOriginalPuzzle([...newPuzzle]); // 保存原始状态
     setMoves(0);
     setTimeLeft(timeLimit);
     setIsGameActive(true);
     setIsCompleted(false);
+    setShowSolution(false);
+    setSolutionSteps([]);
+    setCurrentStep(0);
+    setIsPlayingSolution(false);
     setStartTime(Date.now());
   }, [generatePuzzle, isSolvable, timeLimit]);
 
@@ -105,6 +230,51 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
       console.error('提交分数失败:', error);
     }
   }, [timeLimit, gridSize, moves, timeLeft, isCompleted]);
+
+  // 显示答案走法
+  const showSolutionSteps = useCallback(() => {
+    if (originalPuzzle.length === 0) return;
+    
+    const solution = calculateOptimalSolution(originalPuzzle);
+    if (solution.length > 0) {
+      setSolutionSteps(solution);
+      setCurrentStep(0);
+      setShowSolution(true);
+      setIsPlayingSolution(false);
+    }
+  }, [originalPuzzle, calculateOptimalSolution]);
+
+  // 播放答案走法
+  const playSolution = useCallback(() => {
+    if (solutionSteps.length === 0) return;
+    
+    setIsPlayingSolution(true);
+    setCurrentStep(0);
+    
+    const interval = setInterval(() => {
+      setCurrentStep(prev => {
+        if (prev >= solutionSteps.length - 1) {
+          setIsPlayingSolution(false);
+          clearInterval(interval);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 500); // 每步0.5秒
+    
+    return () => clearInterval(interval);
+  }, [solutionSteps]);
+
+  // 暂停答案走法
+  const pauseSolution = useCallback(() => {
+    setIsPlayingSolution(false);
+  }, []);
+
+  // 重置答案走法
+  const resetSolution = useCallback(() => {
+    setCurrentStep(0);
+    setIsPlayingSolution(false);
+  }, []);
 
   // 检查是否完成
   const checkCompletion = useCallback((currentPieces: PuzzlePiece[]) => {
@@ -184,6 +354,23 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
     return () => clearInterval(timer);
   }, [isGameActive, onGameEnd, submitScore]);
 
+  // 播放答案走法
+  useEffect(() => {
+    if (!isPlayingSolution || solutionSteps.length === 0) return;
+
+    const interval = setInterval(() => {
+      setCurrentStep(prev => {
+        if (prev >= solutionSteps.length - 1) {
+          setIsPlayingSolution(false);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [isPlayingSolution, solutionSteps]);
+
   // 响应游戏状态变化
   useEffect(() => {
     if (isActive && !isGameActive) {
@@ -220,6 +407,32 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
       >
         {piece.value === emptyValue ? '' : piece.value + 1}
       </motion.button>
+    );
+  };
+
+  // 渲染答案走法中的拼图块
+  const renderSolutionPiece = (piece: PuzzlePiece) => {
+    const row = Math.floor(piece.currentPosition / gridSize);
+    const col = piece.currentPosition % gridSize;
+    const isCorrect = piece.currentPosition === piece.correctPosition;
+
+    return (
+      <motion.div
+        key={piece.id}
+        className={`w-16 h-16 rounded-xl font-bold text-lg flex items-center justify-center transition-all duration-300 ${
+          piece.value === emptyValue
+            ? 'bg-transparent border-2 border-dashed border-gray-400'
+            : isCorrect
+            ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg'
+            : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md'
+        }`}
+        style={{
+          gridRow: row + 1,
+          gridColumn: col + 1
+        }}
+      >
+        {piece.value === emptyValue ? '' : piece.value + 1}
+      </motion.div>
     );
   };
 
@@ -312,6 +525,90 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
         </div>
       </div>
 
+      {/* 游戏结束后的答案走法按钮 */}
+      {isCompleted && !showSolution && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <button
+            onClick={showSolutionSteps}
+            className="flex items-center justify-center mx-auto px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+          >
+            <Eye className="w-5 h-5 mr-2" />
+            查看答案走法
+          </button>
+        </motion.div>
+      )}
+
+      {/* 答案走法展示 */}
+      <AnimatePresence>
+        {showSolution && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mt-6 p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600"
+          >
+            <div className="text-center mb-4">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">答案走法</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                最优解：{solutionSteps.length - 1} 步
+              </p>
+            </div>
+
+            {/* 控制按钮 */}
+            <div className="flex justify-center gap-3 mb-4">
+              <button
+                onClick={isPlayingSolution ? pauseSolution : playSolution}
+                className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                {isPlayingSolution ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
+                {isPlayingSolution ? '暂停' : '播放'}
+              </button>
+              <button
+                onClick={resetSolution}
+                className="flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                <RotateCcw className="w-4 h-4 mr-1" />
+                重置
+              </button>
+            </div>
+
+            {/* 进度显示 */}
+            <div className="text-center mb-4">
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                步骤 {currentStep + 1} / {solutionSteps.length}
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
+                <motion.div
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full"
+                  initial={{ width: '0%' }}
+                  animate={{ width: `${((currentStep + 1) / solutionSteps.length) * 100}%` }}
+                  transition={{ duration: 0.3 }}
+                />
+              </div>
+            </div>
+
+            {/* 当前状态展示 */}
+            {solutionSteps.length > 0 && (
+              <div className="flex justify-center">
+                <div 
+                  className="grid gap-1 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 p-4 rounded-2xl border border-gray-200 dark:border-gray-600"
+                  style={{ 
+                    gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
+                    gridTemplateRows: `repeat(${gridSize}, 1fr)`,
+                    maxWidth: `${gridSize * 80 + 32}px`
+                  }}
+                >
+                  {solutionSteps[currentStep]?.map(renderSolutionPiece)}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </motion.div>
   );
