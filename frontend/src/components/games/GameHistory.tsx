@@ -402,38 +402,149 @@ const PuzzleSolutionViewer: React.FC<PuzzleSolutionViewerProps> = ({ record }) =
   // 获取初始位置
   const initialPositions: PuzzlePosition[] = record.gameData?.initialPositions || [];
   
+  // 辅助函数：比较两个数组是否相等
+  const arraysEqual = (a: number[], b: number[]): boolean => {
+    return a.length === b.length && a.every((val, i) => val === b[i]);
+  };
+
   // 生成解决步骤
   const solutionSteps = React.useMemo(() => {
     if (!initialPositions || initialPositions.length === 0) return [];
     
-    // 简化的解决方案展示
-    const steps: PuzzleStep[] = [];
-    const currentState = Array(totalPieces).fill(0);
+    // 创建初始状态
+    const initialState = Array(totalPieces).fill(emptyValue);
+    initialPositions.forEach(pos => {
+      initialState[pos.position] = pos.id;
+    });
     
-    // 初始化状态
+    // 目标状态
+    const targetState = Array.from({ length: totalPieces }, (_, i) => i === totalPieces - 1 ? emptyValue : i);
+    
+    // 检查是否已经完成
+    if (JSON.stringify(initialState) === JSON.stringify(targetState)) {
+      return [];
+    }
+    
+    // 简化的解决步骤生成
+    const steps: PuzzleStep[] = [];
+    const currentState = [...initialState];
+    
+    // 找到空位置
+    const getEmptyPosition = (state: number[]) => state.indexOf(emptyValue);
+    
+    // 获取可移动的位置
+    const getMovablePositions = (emptyPos: number): number[] => {
+      const row = Math.floor(emptyPos / gridSize);
+      const col = emptyPos % gridSize;
+      const positions: number[] = [];
+      
+      // 上下左右
+      if (row > 0) positions.push((row - 1) * gridSize + col); // 上
+      if (row < gridSize - 1) positions.push((row + 1) * gridSize + col); // 下
+      if (col > 0) positions.push(row * gridSize + (col - 1)); // 左
+      if (col < gridSize - 1) positions.push(row * gridSize + (col + 1)); // 右
+      
+      return positions;
+    };
+    
+    // 计算曼哈顿距离
+    const manhattanDistance = (pos1: number, pos2: number) => {
+      const row1 = Math.floor(pos1 / gridSize);
+      const col1 = pos1 % gridSize;
+      const row2 = Math.floor(pos2 / gridSize);
+      const col2 = pos2 % gridSize;
+      return Math.abs(row1 - row2) + Math.abs(col1 - col2);
+    };
+    
+    // 生成解决步骤（简化版本）
+    let attempts = 0;
+    const maxAttempts = 30;
+    
+    while (!arraysEqual(currentState, targetState) && attempts < maxAttempts) {
+      const emptyPos = getEmptyPosition(currentState);
+      const movablePositions = getMovablePositions(emptyPos);
+      
+      // 找到最需要移动的块
+      let bestMove = -1;
+      let bestScore = -Infinity;
+      
+      for (const pos of movablePositions) {
+        const piece = currentState[pos];
+        if (piece === emptyValue) continue;
+        
+        // 计算这个块到目标位置的距离
+        const targetPos = piece === emptyValue ? totalPieces - 1 : piece;
+        const currentDistance = manhattanDistance(pos, targetPos);
+        const newDistance = manhattanDistance(emptyPos, targetPos);
+        
+        // 如果移动后更接近目标位置，或者这个位置应该放正确的块
+        const score = currentDistance - newDistance;
+        if (score > bestScore) {
+          bestScore = score;
+          bestMove = pos;
+        }
+      }
+      
+      if (bestMove !== -1) {
+        const piece = currentState[bestMove];
+        steps.push({
+          from: bestMove,
+          to: emptyPos,
+          piece: piece
+        });
+        
+        // 执行移动
+        currentState[emptyPos] = piece;
+        currentState[bestMove] = emptyValue;
+      } else {
+        // 如果没有找到好的移动，随机选择一个
+        const randomPos = movablePositions[Math.floor(Math.random() * movablePositions.length)];
+        const piece = currentState[randomPos];
+        if (piece !== emptyValue) {
+          steps.push({
+            from: randomPos,
+            to: emptyPos,
+            piece: piece
+          });
+          currentState[emptyPos] = piece;
+          currentState[randomPos] = emptyValue;
+        }
+      }
+      
+      attempts++;
+    }
+    
+    return steps.slice(0, 15); // 限制步骤数
+  }, [initialPositions, totalPieces, gridSize, emptyValue]);
+  
+  // 渲染当前步骤的拼图状态
+  const renderCurrentStepGrid = () => {
+    if (currentStep === 0) {
+      return renderPuzzleGrid(initialPositions);
+    }
+    
+    // 计算当前步骤的状态
+    const currentState = Array(totalPieces).fill(emptyValue);
     initialPositions.forEach(pos => {
       currentState[pos.position] = pos.id;
     });
     
-    // 找到需要移动的块
-    for (let i = 0; i < totalPieces - 1; i++) {
-      if (currentState[i] !== i) {
-        // 找到正确的块在哪里
-        const correctPiece = currentState.findIndex(piece => piece === i);
-        if (correctPiece !== -1 && correctPiece !== i) {
-          steps.push({
-            from: correctPiece,
-            to: i,
-            piece: i
-          });
-          // 交换
-          [currentState[i], currentState[correctPiece]] = [currentState[correctPiece], currentState[i]];
-        }
-      }
+    // 应用之前的步骤
+    for (let i = 0; i < currentStep; i++) {
+      const step = solutionSteps[i];
+      const temp = currentState[step.from];
+      currentState[step.from] = currentState[step.to];
+      currentState[step.to] = temp;
     }
     
-    return steps.slice(0, 10); // 限制步骤数
-  }, [initialPositions, totalPieces]);
+    // 转换为位置数组格式
+    const currentPositions: PuzzlePosition[] = currentState.map((piece, index) => ({
+      id: piece,
+      position: index
+    }));
+    
+    return renderPuzzleGrid(currentPositions);
+  };
   
   // 渲染拼图块
   const renderPuzzleGrid = (positions: PuzzlePosition[]) => {
@@ -558,14 +669,24 @@ const PuzzleSolutionViewer: React.FC<PuzzleSolutionViewerProps> = ({ record }) =
             </div>
           </div>
           
-          {/* 当前步骤描述 */}
+          {/* 当前步骤描述和状态 */}
           {currentStep > 0 && currentStep <= solutionSteps.length && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-700 mb-4">
-              <div className="flex items-center space-x-2">
-                <ArrowRight className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <span className="text-blue-800 dark:text-blue-200">
-                  步骤 {currentStep}: 移动数字 {solutionSteps[currentStep - 1].piece + 1}
-                </span>
+            <div className="space-y-4">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-700">
+                <div className="flex items-center space-x-2">
+                  <ArrowRight className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <span className="text-blue-800 dark:text-blue-200">
+                    步骤 {currentStep}: 移动数字 {solutionSteps[currentStep - 1].piece + 1}
+                  </span>
+                </div>
+              </div>
+              
+              {/* 当前步骤的拼图状态 */}
+              <div className="text-center">
+                <h4 className="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3">当前状态</h4>
+                <div className="flex justify-center">
+                  {renderCurrentStepGrid()}
+                </div>
               </div>
             </div>
           )}
