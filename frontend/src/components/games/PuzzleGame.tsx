@@ -26,6 +26,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
   timeLimit 
 }) => {
   const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
+  const [initialPieces, setInitialPieces] = useState<PuzzlePiece[]>([]);
   const [moves, setMoves] = useState(0);
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [isGameActive, setIsGameActive] = useState(false);
@@ -77,6 +78,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
     } while (!isSolvable(newPuzzle));
     
     setPieces(newPuzzle);
+    setInitialPieces([...newPuzzle]); // 保存初始位置
     setMoves(0);
     setTimeLeft(timeLimit);
     setIsGameActive(true);
@@ -98,13 +100,15 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
         gameData: {
           moves,
           timeUsed: timeLimit - timeLeft,
-          accuracy: isCompleted ? 100 : 0
+          accuracy: isCompleted ? 100 : 0,
+          initialPositions: initialPieces.map(p => ({ id: p.id, position: p.currentPosition })),
+          finalPositions: pieces.map(p => ({ id: p.id, position: p.currentPosition }))
         }
       });
     } catch (error) {
       console.error('提交分数失败:', error);
     }
-  }, [timeLimit, gridSize, moves, timeLeft, isCompleted]);
+  }, [timeLimit, gridSize, moves, timeLeft, isCompleted, initialPieces, pieces]);
 
   // 检查是否完成
   const checkCompletion = useCallback((currentPieces: PuzzlePiece[]) => {

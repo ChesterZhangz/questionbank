@@ -19,6 +19,8 @@ export interface GameRecord {
     bestTime?: number;
     averageTime?: number;
     rounds?: number;
+    initialPositions?: Array<{ id: number; position: number }>;
+    finalPositions?: Array<{ id: number; position: number }>;
   };
 }
 
@@ -37,6 +39,8 @@ export interface LeaderboardEntry {
     bestTime?: number;
     averageTime?: number;
     rounds?: number;
+    initialPositions?: Array<{ id: number; position: number }>;
+    finalPositions?: Array<{ id: number; position: number }>;
   };
   createdAt: string;
 }
@@ -91,6 +95,8 @@ export interface GameHistoryRecord {
     bestTime?: number;
     averageTime?: number;
     rounds?: number;
+    initialPositions?: Array<{ id: number; position: number }>;
+    finalPositions?: Array<{ id: number; position: number }>;
   };
   createdAt: string;
 }

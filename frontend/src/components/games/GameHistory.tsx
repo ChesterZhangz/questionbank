@@ -8,9 +8,11 @@ import {
   Calculator,
   Brain,
   Target,
-  Zap
+  Zap,
+  Eye
 } from 'lucide-react';
 import GameAPIService, { type GameHistoryRecord } from '../../services/gameAPI';
+import PuzzleSolutionModal from './PuzzleSolutionModal';
 
 interface GameHistoryProps {
   isOpen: boolean;
@@ -28,6 +30,8 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
   const [selectedGameType, setSelectedGameType] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showPuzzleSolution, setShowPuzzleSolution] = useState(false);
+  const [selectedPuzzleRecord, setSelectedPuzzleRecord] = useState<GameHistoryRecord | null>(null);
 
   const gameTypes = [
     { value: '', label: '全部游戏' },
@@ -99,6 +103,19 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
 
   const handleGameTypeChange = (gameType: string) => {
     setSelectedGameType(gameType);
+    fetchHistory(1, gameType);
+  };
+
+  // 查看拼图答案
+  const handleViewPuzzleSolution = (record: GameHistoryRecord) => {
+    setSelectedPuzzleRecord(record);
+    setShowPuzzleSolution(true);
+  };
+
+  // 关闭拼图答案模态框
+  const handleClosePuzzleSolution = () => {
+    setShowPuzzleSolution(false);
+    setSelectedPuzzleRecord(null);
   };
 
   return (
@@ -261,6 +278,17 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400">时间</div>
                         </div>
+                        
+                        {/* 拼图游戏查看答案按钮 */}
+                        {record.gameType === 'puzzle' && record.gameData?.initialPositions && record.gameData?.finalPositions && (
+                          <button
+                            onClick={() => handleViewPuzzleSolution(record)}
+                            className="px-3 py-1 bg-purple-500 hover:bg-purple-600 text-white text-xs rounded-lg transition-colors flex items-center space-x-1"
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>查看答案</span>
+                          </button>
+                        )}
                       </div>
                     </motion.div>
                   ))}
@@ -296,6 +324,18 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
             )}
           </motion.div>
         </motion.div>
+      )}
+      
+      {/* 拼图答案模态框 */}
+      {selectedPuzzleRecord && (
+        <PuzzleSolutionModal
+          isOpen={showPuzzleSolution}
+          onClose={handleClosePuzzleSolution}
+          initialPositions={selectedPuzzleRecord.gameData?.initialPositions || []}
+          finalPositions={selectedPuzzleRecord.gameData?.finalPositions || []}
+          gridSize={3} // 默认3x3，实际应该从settings中获取
+          userMoves={selectedPuzzleRecord.gameData?.moves || 0}
+        />
       )}
     </AnimatePresence>
   );
