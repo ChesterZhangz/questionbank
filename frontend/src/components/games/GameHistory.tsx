@@ -221,7 +221,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
                 <div className="space-y-4">
                   {history.map((record, index) => (
                     <motion.div
-                      key={record.id || `${record.gameType}-${record.createdAt}-${index}`}
+                      key={`${record.gameType}-${record.createdAt}-${index}-${record.score}`}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}

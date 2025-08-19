@@ -1326,7 +1326,7 @@ const MyEnterprisePage: React.FC = () => {
                                       <span className="text-xs text-gray-500 dark:text-gray-400">已读:</span>
                                       {msg.isRead.map((reader, index) => (
                                         <span 
-                                          key={reader._id || `reader-${index}`} 
+                                          key={`${reader.name || 'unknown'}-${index}-${reader._id || 'no-id'}`} 
                                           className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full"
                                         >
                                           {reader.name || '未知用户'}

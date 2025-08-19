@@ -183,7 +183,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                 <div className="space-y-3">
                   {leaderboard.map((entry, index) => (
                     <motion.div
-                      key={entry.userId || `${entry.username}-${entry.score}-${index}`}
+                      key={`${entry.username}-${entry.score}-${index}-${entry.rank}`}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}

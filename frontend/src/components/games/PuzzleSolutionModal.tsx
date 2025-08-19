@@ -224,12 +224,38 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
 
   // 下一步
   const nextStep = () => {
-    setCurrentStep(prev => Math.min(prev + 1, solutionSteps.length - 1));
+    setCurrentStep(prev => {
+      const next = Math.min(prev + 1, solutionSteps.length - 1);
+      if (next !== prev) {
+        // 添加步骤切换的视觉反馈
+        const puzzleContainer = document.querySelector('.puzzle-container');
+        if (puzzleContainer) {
+          puzzleContainer.classList.add('step-transition');
+          setTimeout(() => {
+            puzzleContainer.classList.remove('step-transition');
+          }, 300);
+        }
+      }
+      return next;
+    });
   };
 
   // 上一步
   const prevStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 0));
+    setCurrentStep(prev => {
+      const next = Math.max(prev - 1, 0);
+      if (next !== prev) {
+        // 添加步骤切换的视觉反馈
+        const puzzleContainer = document.querySelector('.puzzle-container');
+        if (puzzleContainer) {
+          puzzleContainer.classList.add('step-transition');
+          setTimeout(() => {
+            puzzleContainer.classList.remove('step-transition');
+          }, 300);
+        }
+      }
+      return next;
+    });
   };
 
   // 渲染拼图块
@@ -237,11 +263,41 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
     const row = Math.floor(piece.currentPosition / gridSize);
     const col = piece.currentPosition % gridSize;
     const isCorrect = piece.currentPosition === piece.correctPosition;
+    
+    // 计算移动距离，用于动画
+    const prevStep = currentStep > 0 ? solutionSteps[currentStep - 1] : null;
+    const prevPiece = prevStep?.find(p => p.id === piece.id);
+    const hasMoved = prevPiece && prevPiece.currentPosition !== piece.currentPosition;
+    
+    // 获取前一步的位置
+    const prevRow = prevPiece ? Math.floor(prevPiece.currentPosition / gridSize) : row;
+    const prevCol = prevPiece ? prevPiece.currentPosition % gridSize : col;
+    
+
 
     return (
-      <div
-        key={piece.id}
-        className={`w-12 h-12 rounded-lg font-bold text-sm transition-all duration-300 ${
+      <motion.div
+        key={`${piece.id}-${currentStep}`}
+        layout
+        initial={hasMoved ? {
+          x: (prevCol - col) * 48, // 48px = 12 * 4 (w-12 + gap)
+          y: (prevRow - row) * 48,
+          scale: 1.1,
+          zIndex: 10
+        } : false}
+        animate={{
+          x: 0,
+          y: 0,
+          scale: 1,
+          zIndex: 1
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 300,
+          damping: 25,
+          duration: 0.5
+        }}
+        className={`w-12 h-12 rounded-lg font-bold text-sm ${
           piece.value === emptyValue
             ? 'bg-transparent border-2 border-dashed border-gray-400'
             : isCorrect
@@ -250,13 +306,35 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
         }`}
         style={{
           gridRow: row + 1,
-          gridColumn: col + 1
+          gridColumn: col + 1,
+          position: 'relative'
+        }}
+        whileHover={{
+          scale: 1.05,
+          zIndex: 5
         }}
       >
         <div className="w-full h-full flex items-center justify-center">
           {piece.value === emptyValue ? '' : piece.value + 1}
         </div>
-      </div>
+        
+        {/* 移动指示器 */}
+        {hasMoved && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0 }}
+            className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center"
+            transition={{ delay: 0.3, duration: 0.2 }}
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              className="w-1 h-1 bg-white rounded-full"
+            />
+          </motion.div>
+        )}
+      </motion.div>
     );
   };
 
@@ -315,15 +393,84 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
             {/* 拼图显示 */}
             {solutionSteps.length > 0 && (
               <div className="flex justify-center mb-6">
-                <div 
-                  className="grid gap-1 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 p-4 rounded-2xl border border-gray-200 dark:border-gray-600"
+                <motion.div 
+                  key={`puzzle-${currentStep}`}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="puzzle-container grid gap-1 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 p-4 rounded-2xl border border-gray-200 dark:border-gray-600 relative"
                   style={{ 
                     gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
                     gridTemplateRows: `repeat(${gridSize}, 1fr)`,
                   }}
                 >
                   {solutionSteps[currentStep]?.map(renderPiece)}
-                </div>
+                  
+                  {/* 移动路径指示器 */}
+                  {solutionSteps[currentStep]?.map(piece => {
+                    const prevStep = currentStep > 0 ? solutionSteps[currentStep - 1] : null;
+                    const prevPiece = prevStep?.find(p => p.id === piece.id);
+                    const hasMoved = prevPiece && prevPiece.currentPosition !== piece.currentPosition;
+                    
+                    if (!hasMoved) return null;
+                    
+                    const prevRow = Math.floor(prevPiece!.currentPosition / gridSize);
+                    const prevCol = prevPiece!.currentPosition % gridSize;
+                    const currentRow = Math.floor(piece.currentPosition / gridSize);
+                    const currentCol = piece.currentPosition % gridSize;
+                    
+                    return (
+                      <motion.div
+                        key={`path-${piece.id}-${currentStep}`}
+                        initial={{ opacity: 0, pathLength: 0 }}
+                        animate={{ opacity: 0.6, pathLength: 1 }}
+                        transition={{ duration: 0.8, delay: 0.2 }}
+                        className="absolute pointer-events-none"
+                        style={{
+                          left: `${(Math.min(prevCol, currentCol) + 0.5) * (100 / gridSize)}%`,
+                          top: `${(Math.min(prevRow, currentRow) + 0.5) * (100 / gridSize)}%`,
+                          width: `${Math.abs(currentCol - prevCol) * (100 / gridSize)}%`,
+                          height: `${Math.abs(currentRow - prevRow) * (100 / gridSize)}%`,
+                          border: '2px dashed #fbbf24',
+                          borderRadius: '4px',
+                          zIndex: 1
+                        }}
+                      />
+                    );
+                  })}
+                  
+                  {/* 网格背景线 */}
+                  <div className="absolute inset-0 pointer-events-none">
+                    {Array.from({ length: gridSize - 1 }, (_, i) => (
+                      <React.Fragment key={i}>
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 0.1 }}
+                          transition={{ delay: 0.2 + i * 0.1 }}
+                          className="absolute bg-gray-300 dark:bg-gray-600"
+                          style={{
+                            left: `${((i + 1) / gridSize) * 100}%`,
+                            top: 0,
+                            bottom: 0,
+                            width: 1
+                          }}
+                        />
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 0.1 }}
+                          transition={{ delay: 0.2 + i * 0.1 }}
+                          className="absolute bg-gray-300 dark:bg-gray-600"
+                          style={{
+                            top: `${((i + 1) / gridSize) * 100}%`,
+                            left: 0,
+                            right: 0,
+                            height: 1
+                          }}
+                        />
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </motion.div>
               </div>
             )}
 
