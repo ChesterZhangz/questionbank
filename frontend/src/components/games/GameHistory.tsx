@@ -27,14 +27,14 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
     total: 0,
     pages: 0
   });
-  const [selectedGameType, setSelectedGameType] = useState<string>('');
+  const [selectedGameType, setSelectedGameType] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPuzzleSolution, setShowPuzzleSolution] = useState(false);
   const [selectedPuzzleRecord, setSelectedPuzzleRecord] = useState<GameHistoryRecord | null>(null);
 
   const gameTypes = [
-    { value: '', label: '全部游戏' },
+    { value: 'all', label: '全部游戏' },
     { value: 'math', label: '数学计算' },
     { value: 'memory', label: '记忆游戏' },
     { value: 'puzzle', label: '数字拼图' },
@@ -42,12 +42,12 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
   ];
 
   // 获取游戏历史
-  const fetchHistory = async (page: number = 1, gameType: string = '') => {
+  const fetchHistory = async (page: number = 1, gameType: string = 'all') => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const response = await GameAPIService.getGameHistory(gameType || undefined, page, 20);
+      const response = await GameAPIService.getGameHistory(gameType === 'all' ? undefined : gameType, page, 20);
       setHistory(response.records);
       setPagination(response.pagination);
       
