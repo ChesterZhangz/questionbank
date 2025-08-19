@@ -88,6 +88,11 @@ export interface GameHistoryRecord {
   gameType: string;
   score: number;
   difficulty: string;
+  settings?: {
+    timeLimit?: number;
+    gridSize?: number;
+    difficulty?: string;
+  };
   gameData?: {
     moves?: number;
     timeUsed?: number;

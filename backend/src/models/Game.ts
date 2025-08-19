@@ -18,8 +18,6 @@ export interface IGameRecord extends Document {
     bestTime?: number;
     averageTime?: number;
     rounds?: number;
-    initialPositions?: Array<{ id: number; position: number }>;
-    finalPositions?: Array<{ id: number; position: number }>;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -45,8 +43,6 @@ export interface ILeaderboard extends Document {
     bestTime?: number;
     averageTime?: number;
     rounds?: number;
-    initialPositions?: Array<{ id: number; position: number }>;
-    finalPositions?: Array<{ id: number; position: number }>;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -125,15 +121,7 @@ const GameRecordSchema = new Schema<IGameRecord>({
     accuracy: Number,
     bestTime: Number,
     averageTime: Number,
-    rounds: Number,
-    initialPositions: [{
-      id: Number,
-      position: Number
-    }],
-    finalPositions: [{
-      id: Number,
-      position: Number
-    }]
+    rounds: Number
   }
 }, {
   timestamps: true
@@ -192,15 +180,7 @@ const LeaderboardSchema = new Schema<ILeaderboard>({
     accuracy: Number,
     bestTime: Number,
     averageTime: Number,
-    rounds: Number,
-    initialPositions: [{
-      id: Number,
-      position: Number
-    }],
-    finalPositions: [{
-      id: Number,
-      position: Number
-    }]
+    rounds: Number
   }
 }, {
   timestamps: true

@@ -9,14 +9,26 @@ import {
   Brain,
   Target,
   Zap,
-  Eye
+  Eye,
+  ArrowRight
 } from 'lucide-react';
 import GameAPIService, { type GameHistoryRecord } from '../../services/gameAPI';
-import PuzzleSolutionModal from './PuzzleSolutionModal';
 
 interface GameHistoryProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+// 拼图求解器接口
+interface PuzzlePosition {
+  id: number;
+  position: number;
+}
+
+interface PuzzleStep {
+  from: number;
+  to: number;
+  piece: number;
 }
 
 const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
@@ -27,14 +39,14 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
     total: 0,
     pages: 0
   });
-  const [selectedGameType, setSelectedGameType] = useState<string>('all');
+  const [selectedGameType, setSelectedGameType] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showPuzzleSolution, setShowPuzzleSolution] = useState(false);
+  const [showSolutionModal, setShowSolutionModal] = useState(false);
   const [selectedPuzzleRecord, setSelectedPuzzleRecord] = useState<GameHistoryRecord | null>(null);
 
   const gameTypes = [
-    { value: 'all', label: '全部游戏' },
+    { value: '', label: '全部游戏' },
     { value: 'math', label: '数学计算' },
     { value: 'memory', label: '记忆游戏' },
     { value: 'puzzle', label: '数字拼图' },
@@ -42,12 +54,12 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
   ];
 
   // 获取游戏历史
-  const fetchHistory = async (page: number = 1, gameType: string = 'all') => {
+  const fetchHistory = async (page: number = 1, gameType: string = '') => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const response = await GameAPIService.getGameHistory(gameType === 'all' ? undefined : gameType, page, 20);
+      const response = await GameAPIService.getGameHistory(gameType || undefined, page, 20);
       setHistory(response.records);
       setPagination(response.pagination);
       
@@ -103,19 +115,14 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
 
   const handleGameTypeChange = (gameType: string) => {
     setSelectedGameType(gameType);
-    fetchHistory(1, gameType);
   };
 
-  // 查看拼图答案
-  const handleViewPuzzleSolution = (record: GameHistoryRecord) => {
+
+
+  // 显示拼图解决方案
+  const showPuzzleSolution = (record: GameHistoryRecord) => {
     setSelectedPuzzleRecord(record);
-    setShowPuzzleSolution(true);
-  };
-
-  // 关闭拼图答案模态框
-  const handleClosePuzzleSolution = () => {
-    setShowPuzzleSolution(false);
-    setSelectedPuzzleRecord(null);
+    setShowSolutionModal(true);
   };
 
   return (
@@ -221,7 +228,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
                 <div className="space-y-4">
                   {history.map((record, index) => (
                     <motion.div
-                      key={`${record.gameType}-${record.createdAt}-${index}-${record.score}`}
+                      key={record.id || `${record.gameType}-${record.createdAt}-${index}`}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
@@ -279,14 +286,14 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
                           <div className="text-xs text-gray-500 dark:text-gray-400">时间</div>
                         </div>
                         
-                        {/* 拼图游戏查看答案按钮 */}
-                        {record.gameType === 'puzzle' && (
+                        {/* 拼图游戏显示解决方案按钮 */}
+                        {record.gameType === 'puzzle' && record.gameData?.initialPositions && (
                           <button
-                            onClick={() => handleViewPuzzleSolution(record)}
-                            className="px-3 py-1 bg-purple-500 hover:bg-purple-600 text-white text-xs rounded-lg transition-colors flex items-center space-x-1"
+                            onClick={() => showPuzzleSolution(record)}
+                            className="flex items-center space-x-1 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-800/40 transition-colors"
                           >
-                            <Eye className="w-3 h-3" />
-                            <span>查看答案</span>
+                            <Eye className="w-4 h-4" />
+                            <span className="text-sm font-medium">查看解答</span>
                           </button>
                         )}
                       </div>
@@ -326,18 +333,276 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
         </motion.div>
       )}
       
-      {/* 拼图答案模态框 */}
-      {selectedPuzzleRecord && (
-        <PuzzleSolutionModal
-          isOpen={showPuzzleSolution}
-          onClose={handleClosePuzzleSolution}
-          initialPositions={selectedPuzzleRecord.gameData?.initialPositions || []}
-          finalPositions={selectedPuzzleRecord.gameData?.finalPositions || []}
-          gridSize={3} // 默认3x3，实际应该从settings中获取
-          userMoves={selectedPuzzleRecord.gameData?.moves || 0}
-        />
+      {/* 拼图解决方案模态框 */}
+      {showSolutionModal && selectedPuzzleRecord && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-60"
+          onClick={() => setShowSolutionModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 头部 */}
+            <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-white bg-opacity-20 rounded-lg">
+                    <Target className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">拼图解决方案</h2>
+                    <p className="text-sm text-white opacity-90">最佳路径步骤展示</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowSolutionModal(false)}
+                  className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* 内容区域 */}
+            <div className="p-6 max-h-[70vh] overflow-y-auto">
+              <PuzzleSolutionViewer 
+                record={selectedPuzzleRecord}
+                onClose={() => setShowSolutionModal(false)}
+              />
+            </div>
+          </motion.div>
+        </motion.div>
       )}
     </AnimatePresence>
+  );
+};
+
+// 拼图解决方案查看器组件
+interface PuzzleSolutionViewerProps {
+  record: GameHistoryRecord;
+  onClose: () => void;
+}
+
+const PuzzleSolutionViewer: React.FC<PuzzleSolutionViewerProps> = ({ record }) => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  
+  // 获取网格大小
+  const gridSize = record.settings?.gridSize || 3;
+  const totalPieces = gridSize * gridSize;
+  const emptyValue = totalPieces - 1;
+  
+  // 获取初始位置
+  const initialPositions: PuzzlePosition[] = record.gameData?.initialPositions || [];
+  
+  // 生成解决步骤
+  const solutionSteps = React.useMemo(() => {
+    if (!initialPositions || initialPositions.length === 0) return [];
+    
+    // 简化的解决方案展示
+    const steps: PuzzleStep[] = [];
+    const currentState = Array(totalPieces).fill(0);
+    
+    // 初始化状态
+    initialPositions.forEach(pos => {
+      currentState[pos.position] = pos.id;
+    });
+    
+    // 找到需要移动的块
+    for (let i = 0; i < totalPieces - 1; i++) {
+      if (currentState[i] !== i) {
+        // 找到正确的块在哪里
+        const correctPiece = currentState.findIndex(piece => piece === i);
+        if (correctPiece !== -1 && correctPiece !== i) {
+          steps.push({
+            from: correctPiece,
+            to: i,
+            piece: i
+          });
+          // 交换
+          [currentState[i], currentState[correctPiece]] = [currentState[correctPiece], currentState[i]];
+        }
+      }
+    }
+    
+    return steps.slice(0, 10); // 限制步骤数
+  }, [initialPositions, totalPieces]);
+  
+  // 渲染拼图块
+  const renderPuzzleGrid = (positions: PuzzlePosition[]) => {
+    const grid = Array(totalPieces).fill(emptyValue);
+    positions.forEach(pos => {
+      grid[pos.position] = pos.id;
+    });
+    
+    return (
+      <div 
+        className="grid gap-1 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 p-3 rounded-xl border border-gray-300 dark:border-gray-600"
+        style={{ 
+          gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
+          gridTemplateRows: `repeat(${gridSize}, 1fr)`,
+        }}
+      >
+        {grid.map((piece, index) => (
+          <div
+            key={index}
+            className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm transition-all ${
+              piece === emptyValue
+                ? 'bg-transparent border-2 border-dashed border-gray-400 dark:border-gray-500'
+                : piece === index
+                ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-md'
+                : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md'
+            }`}
+          >
+            {piece === emptyValue ? '' : piece + 1}
+          </div>
+        ))}
+      </div>
+    );
+  };
+  
+  // 自动播放
+  useEffect(() => {
+    if (isPlaying && currentStep < solutionSteps.length) {
+      const timer = setTimeout(() => {
+        setCurrentStep(prev => prev + 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (isPlaying && currentStep >= solutionSteps.length) {
+      setIsPlaying(false);
+    }
+  }, [isPlaying, currentStep, solutionSteps.length]);
+  
+  if (initialPositions.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-600 dark:text-gray-400">暂无解决方案数据</p>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="space-y-6">
+      {/* 游戏信息 */}
+      <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl border border-purple-200 dark:border-purple-700">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div>
+            <div className="text-lg font-bold text-purple-600 dark:text-purple-400">{gridSize}×{gridSize}</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">网格大小</div>
+          </div>
+          <div>
+            <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{record.gameData?.moves || 0}</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">实际步数</div>
+          </div>
+          <div>
+            <div className="text-lg font-bold text-green-600 dark:text-green-400">{solutionSteps.length}</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">建议步数</div>
+          </div>
+          <div>
+            <div className="text-lg font-bold text-orange-600 dark:text-orange-400">{record.score}</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">得分</div>
+          </div>
+        </div>
+      </div>
+      
+      {/* 初始状态 */}
+      <div className="text-center">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">初始状态</h3>
+        <div className="flex justify-center">
+          {renderPuzzleGrid(initialPositions)}
+        </div>
+      </div>
+      
+      {/* 解决步骤 */}
+      {solutionSteps.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">解决步骤</h3>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setIsPlaying(!isPlaying)}
+                className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                {isPlaying ? '暂停' : '播放'}
+              </button>
+              <button
+                onClick={() => setCurrentStep(0)}
+                className="px-3 py-1 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                重置
+              </button>
+            </div>
+          </div>
+          
+          {/* 步骤进度 */}
+          <div className="mb-4">
+            <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300 mb-2">
+              <span>步骤 {currentStep} / {solutionSteps.length}</span>
+              <span>{Math.round((currentStep / solutionSteps.length) * 100)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <motion.div
+                className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full"
+                initial={{ width: '0%' }}
+                animate={{ width: `${(currentStep / solutionSteps.length) * 100}%` }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+          </div>
+          
+          {/* 当前步骤描述 */}
+          {currentStep > 0 && currentStep <= solutionSteps.length && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-700 mb-4">
+              <div className="flex items-center space-x-2">
+                <ArrowRight className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <span className="text-blue-800 dark:text-blue-200">
+                  步骤 {currentStep}: 移动数字 {solutionSteps[currentStep - 1].piece + 1}
+                </span>
+              </div>
+            </div>
+          )}
+          
+          {/* 步骤控制 */}
+          <div className="flex justify-center space-x-2 mb-4">
+            <button
+              onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+              disabled={currentStep === 0}
+              className="px-3 py-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              上一步
+            </button>
+            <button
+              onClick={() => setCurrentStep(Math.min(solutionSteps.length, currentStep + 1))}
+              disabled={currentStep >= solutionSteps.length}
+              className="px-3 py-1 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              下一步
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* 目标状态 */}
+      <div className="text-center">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">目标状态</h3>
+        <div className="flex justify-center">
+          {renderPuzzleGrid(
+            Array.from({ length: totalPieces }, (_, i) => ({
+              id: i === totalPieces - 1 ? emptyValue : i,
+              position: i
+            }))
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 
