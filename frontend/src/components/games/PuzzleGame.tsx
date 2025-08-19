@@ -42,52 +42,6 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
   const totalPieces = gridSize * gridSize;
   const emptyValue = totalPieces - 1;
 
-  // 生成拼图
-  const generatePuzzle = useCallback((): PuzzlePiece[] => {
-    const values = Array.from({ length: totalPieces - 1 }, (_, i) => i);
-    const shuffled = [...values, emptyValue].sort(() => Math.random() - 0.5);
-    
-    return shuffled.map((value, index) => ({
-      id: value,
-      value,
-      currentPosition: index,
-      correctPosition: value
-    }));
-  }, [totalPieces, emptyValue]);
-
-  // 检查是否可解
-  const isSolvable = useCallback((puzzle: PuzzlePiece[]): boolean => {
-    let inversions = 0;
-    const flatPuzzle = puzzle.map(p => p.value);
-    
-    for (let i = 0; i < flatPuzzle.length - 1; i++) {
-      for (let j = i + 1; j < flatPuzzle.length; j++) {
-        if (flatPuzzle[i] !== emptyValue && flatPuzzle[j] !== emptyValue && flatPuzzle[i] > flatPuzzle[j]) {
-          inversions++;
-        }
-      }
-    }
-    
-    if (gridSize % 2 === 1) {
-      return inversions % 2 === 0;
-    } else {
-      const emptyRow = Math.floor(puzzle.find(p => p.value === emptyValue)!.currentPosition / gridSize);
-      return (inversions + emptyRow) % 2 === 0;
-    }
-  }, [gridSize, emptyValue]);
-
-  // 计算曼哈顿距离
-  const manhattanDistance = useCallback((puzzle: PuzzlePiece[]): number => {
-    return puzzle.reduce((total, piece) => {
-      if (piece.value === emptyValue) return total;
-      const currentRow = Math.floor(piece.currentPosition / gridSize);
-      const currentCol = piece.currentPosition % gridSize;
-      const targetRow = Math.floor(piece.correctPosition / gridSize);
-      const targetCol = piece.correctPosition % gridSize;
-      return total + Math.abs(currentRow - targetRow) + Math.abs(currentCol - targetCol);
-    }, 0);
-  }, [gridSize, emptyValue]);
-
   // 获取可能的移动
   const getPossibleMoves = useCallback((puzzle: PuzzlePiece[]): number[] => {
     const emptyPiece = puzzle.find(p => p.value === emptyValue);
@@ -135,6 +89,43 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
       return p;
     });
   }, [emptyValue]);
+
+  // 生成拼图
+  const generatePuzzle = useCallback((): PuzzlePiece[] => {
+    // 先生成正确的拼图状态
+    const correctPuzzle = Array.from({ length: totalPieces }, (_, i) => ({
+      id: i,
+      value: i,
+      currentPosition: i,
+      correctPosition: i
+    }));
+    
+    // 随机移动100步来打乱拼图
+    let currentPuzzle = [...correctPuzzle];
+    for (let i = 0; i < 100; i++) {
+      const possibleMoves = getPossibleMoves(currentPuzzle);
+      if (possibleMoves.length > 0) {
+        const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+        currentPuzzle = executeMove(currentPuzzle, randomMove);
+      }
+    }
+    
+    return currentPuzzle;
+  }, [totalPieces, getPossibleMoves, executeMove]);
+
+
+
+  // 计算曼哈顿距离
+  const manhattanDistance = useCallback((puzzle: PuzzlePiece[]): number => {
+    return puzzle.reduce((total, piece) => {
+      if (piece.value === emptyValue) return total;
+      const currentRow = Math.floor(piece.currentPosition / gridSize);
+      const currentCol = piece.currentPosition % gridSize;
+      const targetRow = Math.floor(piece.correctPosition / gridSize);
+      const targetCol = piece.correctPosition % gridSize;
+      return total + Math.abs(currentRow - targetRow) + Math.abs(currentCol - targetCol);
+    }, 0);
+  }, [gridSize, emptyValue]);
 
   // 使用A*算法计算最优解
   const calculateOptimalSolution = useCallback((puzzle: PuzzlePiece[]): PuzzlePiece[][] => {
@@ -191,10 +182,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
 
   // 开始游戏
   const startGame = useCallback(() => {
-    let newPuzzle: PuzzlePiece[];
-    do {
-      newPuzzle = generatePuzzle();
-    } while (!isSolvable(newPuzzle));
+    const newPuzzle = generatePuzzle();
     
     setPieces(newPuzzle);
     setOriginalPuzzle([...newPuzzle]); // 保存原始状态
@@ -207,7 +195,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
     setCurrentStep(0);
     setIsPlayingSolution(false);
     setStartTime(Date.now());
-  }, [generatePuzzle, isSolvable, timeLimit]);
+  }, [generatePuzzle, timeLimit]);
 
   // 提交分数到后端
   const submitScore = useCallback(async (finalScore: number) => {
@@ -525,20 +513,29 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
         </div>
       </div>
 
-      {/* 游戏结束后的答案走法按钮 */}
+      {/* 游戏结束后的按钮组 */}
       {isCompleted && !showSolution && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center"
+          className="text-center space-y-3"
         >
-          <button
-            onClick={showSolutionSteps}
-            className="flex items-center justify-center mx-auto px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl"
-          >
-            <Eye className="w-5 h-5 mr-2" />
-            查看答案走法
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={showSolutionSteps}
+              className="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+            >
+              <Eye className="w-5 h-5 mr-2" />
+              查看答案走法
+            </button>
+            <button
+              onClick={startGame}
+              className="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+            >
+              <RotateCcw className="w-5 h-5 mr-2" />
+              重新开始
+            </button>
+          </div>
         </motion.div>
       )}
 
@@ -573,6 +570,13 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
               >
                 <RotateCcw className="w-4 h-4 mr-1" />
                 重置
+              </button>
+              <button
+                onClick={startGame}
+                className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              >
+                <RotateCcw className="w-4 h-4 mr-1" />
+                重新开始
               </button>
             </div>
 
