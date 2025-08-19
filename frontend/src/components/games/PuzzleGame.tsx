@@ -100,9 +100,11 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
       correctPosition: i
     }));
     
-    // 随机移动100步来打乱拼图
+    // 根据网格大小调整打乱步数：3x3用100步，4x4用200步
+    const shuffleSteps = gridSize === 3 ? 100 : 200;
     let currentPuzzle = [...correctPuzzle];
-    for (let i = 0; i < 100; i++) {
+    
+    for (let i = 0; i < shuffleSteps; i++) {
       const possibleMoves = getPossibleMoves(currentPuzzle);
       if (possibleMoves.length > 0) {
         const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
@@ -111,7 +113,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
     }
     
     return currentPuzzle;
-  }, [totalPieces, getPossibleMoves, executeMove]);
+  }, [totalPieces, gridSize, getPossibleMoves, executeMove]);
 
 
 
@@ -129,6 +131,11 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
 
   // 使用A*算法计算最优解
   const calculateOptimalSolution = useCallback((puzzle: PuzzlePiece[]): PuzzlePiece[][] => {
+    console.log('开始计算答案走法...');
+    const startTime = Date.now();
+    const maxSearchTime = gridSize === 3 ? 5000 : 10000; // 3x3限制5秒，4x4限制10秒
+    const maxStates = gridSize === 3 ? 10000 : 50000; // 限制最大搜索状态数
+    
     const visited = new Set<string>();
     const queue: Array<{
       state: PuzzlePiece[];
@@ -142,9 +149,18 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
       heuristic: manhattanDistance(puzzle)
     }];
     
-    while (queue.length > 0) {
+    let searchCount = 0;
+    
+    while (queue.length > 0 && searchCount < maxStates) {
+      // 检查超时
+      if (Date.now() - startTime > maxSearchTime) {
+        console.log('搜索超时，返回空解');
+        return [];
+      }
+      
       queue.sort((a, b) => (a.cost + a.heuristic) - (b.cost + b.heuristic));
       const current = queue.shift()!;
+      searchCount++;
       
       const stateKey = current.state.map(p => p.currentPosition).join(',');
       if (visited.has(stateKey)) continue;
@@ -152,8 +168,12 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
       
       // 检查是否达到目标状态
       if (current.state.every(p => p.currentPosition === p.correctPosition)) {
+        console.log(`找到解！用时: ${Date.now() - startTime}ms, 搜索状态数: ${searchCount}, 步数: ${current.path.length - 1}`);
         return current.path;
       }
+      
+      // 限制搜索深度，避免无限搜索
+      if (current.cost > 50) continue;
       
       // 获取可能的移动
       const possibleMoves = getPossibleMoves(current.state);
@@ -177,8 +197,9 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
       }
     }
     
+    console.log(`搜索结束，没有找到解。用时: ${Date.now() - startTime}ms, 搜索状态数: ${searchCount}`);
     return [];
-  }, [totalPieces, manhattanDistance, getPossibleMoves, executeMove]);
+  }, [gridSize, manhattanDistance, getPossibleMoves, executeMove]);
 
   // 开始游戏
   const startGame = useCallback(() => {
@@ -221,14 +242,30 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
 
   // 显示答案走法
   const showSolutionSteps = useCallback(() => {
-    if (originalPuzzle.length === 0) return;
+    console.log('showSolutionSteps 被调用');
+    console.log('originalPuzzle:', originalPuzzle);
+    console.log('originalPuzzle.length:', originalPuzzle.length);
     
+    if (originalPuzzle.length === 0) {
+      console.log('originalPuzzle 为空，返回');
+      return;
+    }
+    
+    console.log('开始计算最优解...');
     const solution = calculateOptimalSolution(originalPuzzle);
+    console.log('计算结果:', solution);
+    console.log('solution.length:', solution.length);
+    
     if (solution.length > 0) {
+      console.log('设置答案走法显示');
       setSolutionSteps(solution);
       setCurrentStep(0);
       setShowSolution(true);
       setIsPlayingSolution(false);
+    } else {
+      console.log('没有找到解，可能是算法超时或复杂度太高');
+      // 如果没找到解，至少告诉用户
+      alert('抱歉，当前拼图太复杂，无法在合理时间内计算出最优解。请尝试重新开始游戏。');
     }
   }, [originalPuzzle, calculateOptimalSolution]);
 
@@ -267,7 +304,10 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
   // 检查是否完成
   const checkCompletion = useCallback((currentPieces: PuzzlePiece[]) => {
     const isComplete = currentPieces.every(piece => piece.currentPosition === piece.correctPosition);
+    console.log('检查完成状态:', { isComplete, isCompleted, isGameActive });
+    
     if (isComplete && !isCompleted && isGameActive) {
+      console.log('游戏完成！设置 isCompleted = true');
       setIsCompleted(true);
       setIsGameActive(false);
       const completionTime = Date.now() - startTime;
@@ -278,9 +318,12 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
       const finalScore = baseScore + timeBonus + moveBonus;
       onScoreUpdate(finalScore);
       submitScore(finalScore);
-      onGameEnd();
+      // 使用setTimeout延迟调用onGameEnd，避免在渲染过程中调用
+      setTimeout(() => {
+        onGameEnd();
+      }, 0);
     }
-  }, [isCompleted, startTime, timeLimit, moves, onScoreUpdate, submitScore, isGameActive, onGameEnd]);
+  }, [isCompleted, startTime, timeLimit, moves, onScoreUpdate, submitScore, isGameActive, onGameEnd, gridSize]);
 
   // 移动拼图块
   const movePiece = useCallback((pieceId: number) => {
@@ -332,7 +375,10 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
           const baseScore = gridSize === 3 ? 100 : 200;
           const finalScore = Math.max(0, baseScore - moves * 2);
           submitScore(finalScore);
-          onGameEnd();
+          // 使用setTimeout延迟调用onGameEnd，避免在渲染过程中调用
+          setTimeout(() => {
+            onGameEnd();
+          }, 0);
           return 0;
         }
         return Math.max(0, prev - 1);
