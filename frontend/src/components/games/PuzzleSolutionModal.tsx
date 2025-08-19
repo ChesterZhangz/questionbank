@@ -68,6 +68,73 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
     return Math.ceil(totalDistance / 2); // 每次移动可以同时移动两个位置
   }, [gridSize]);
 
+  // 生成示例拼图（当没有位置数据时）
+  const generateExamplePuzzle = useCallback(() => {
+    const exampleInitial: PuzzlePiece[] = [];
+    const exampleFinal: PuzzlePiece[] = [];
+    
+    for (let i = 0; i < totalPieces; i++) {
+      const piece: PuzzlePiece = {
+        id: i,
+        value: i,
+        currentPosition: i === emptyValue ? totalPieces - 1 : i,
+        correctPosition: i
+      };
+      
+      exampleInitial.push({ ...piece, currentPosition: i === emptyValue ? totalPieces - 1 : i });
+      exampleFinal.push({ ...piece, currentPosition: i });
+    }
+    
+    // 打乱初始状态
+    const shuffled = [...exampleInitial];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i].currentPosition, shuffled[j].currentPosition] = [shuffled[j].currentPosition, shuffled[i].currentPosition];
+    }
+    
+    const optimal = calculateOptimalMoves(shuffled, exampleFinal);
+    setOptimalMoves(optimal);
+    
+    // 生成示例步骤
+    const steps: PuzzlePiece[][] = [shuffled];
+    let current = [...shuffled];
+    
+    for (let i = 0; i < Math.min(optimal, 15); i++) {
+      const next = current.map(piece => {
+        if (piece.currentPosition !== piece.correctPosition) {
+          // 随机移动一步
+          const currentRow = Math.floor(piece.currentPosition / gridSize);
+          const currentCol = piece.currentPosition % gridSize;
+          const directions = [
+            [currentRow - 1, currentCol],
+            [currentRow + 1, currentCol],
+            [currentRow, currentCol - 1],
+            [currentRow, currentCol + 1]
+          ].filter(([r, c]) => r >= 0 && r < gridSize && c >= 0 && c < gridSize);
+          
+          if (directions.length > 0) {
+            const [newRow, newCol] = directions[Math.floor(Math.random() * directions.length)];
+            const newPosition = newRow * gridSize + newCol;
+            
+            // 检查位置是否被占用
+            const isOccupied = current.some(p => p.currentPosition === newPosition);
+            if (!isOccupied) {
+              return { ...piece, currentPosition: newPosition };
+            }
+          }
+        }
+        return piece;
+      });
+      
+      current = next;
+      steps.push([...next]);
+    }
+    
+    // 添加最终状态
+    steps.push(exampleFinal);
+    setSolutionSteps(steps);
+  }, [totalPieces, emptyValue, gridSize, calculateOptimalMoves]);
+
   // 生成解决方案步骤
   const generateSolutionSteps = useCallback(() => {
     const initial = generatePuzzleState(initialPositions);
@@ -134,10 +201,15 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
 
   // 当模态框打开时生成解决方案
   useEffect(() => {
-    if (isOpen && initialPositions.length > 0) {
-      generateSolutionSteps();
+    if (isOpen) {
+      if (initialPositions.length > 0 && finalPositions.length > 0) {
+        generateSolutionSteps();
+      } else {
+        // 如果没有位置数据，生成一个示例拼图
+        generateExamplePuzzle();
+      }
     }
-  }, [isOpen, initialPositions, generateSolutionSteps]);
+  }, [isOpen, initialPositions, finalPositions, generateSolutionSteps]);
 
   // 重置播放
   const resetPlayback = () => {
@@ -306,6 +378,11 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
                 {currentStep === 0 ? '初始状态' : 
                  currentStep === solutionSteps.length - 1 ? '完成状态' : 
                  `第 ${currentStep} 步：移动拼图块到目标位置`}
+                {(!initialPositions.length || !finalPositions.length) && (
+                  <span className="block mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    (示例拼图，用于演示功能)
+                  </span>
+                )}
               </p>
             </div>
           </div>

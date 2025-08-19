@@ -280,7 +280,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
                         </div>
                         
                         {/* 拼图游戏查看答案按钮 */}
-                        {record.gameType === 'puzzle' && record.gameData?.initialPositions && record.gameData?.finalPositions && (
+                        {record.gameType === 'puzzle' && (
                           <button
                             onClick={() => handleViewPuzzleSolution(record)}
                             className="px-3 py-1 bg-purple-500 hover:bg-purple-600 text-white text-xs rounded-lg transition-colors flex items-center space-x-1"
