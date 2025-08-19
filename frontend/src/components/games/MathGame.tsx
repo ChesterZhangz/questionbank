@@ -155,8 +155,8 @@ const MathGame: React.FC<MathGameProps> = ({
     } else {
       setStreak(0);
       setFeedback('incorrect');
-      // 答错题目时间减少1.5秒
-      setTimeLeft(prev => Math.max(0, prev - 1.5));
+      // 答错时间减少1.5秒
+      setTimeLeft(prev => Math.max(1, prev - 1.5));
     }
 
     setUserAnswer('');
@@ -184,7 +184,7 @@ const MathGame: React.FC<MathGameProps> = ({
 
     const timer = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev <= 0.1) {
+        if (prev <= 1) {
           setIsGameActive(false);
           // 直接在这里处理游戏结束，避免依赖submitScoreForTimer
           const finalScore = score;
@@ -212,7 +212,7 @@ const MathGame: React.FC<MathGameProps> = ({
           onGameEnd();
           return 0;
         }
-        return Math.max(0, prev - 1);
+        return prev - 1;
       });
     }, 1000);
 

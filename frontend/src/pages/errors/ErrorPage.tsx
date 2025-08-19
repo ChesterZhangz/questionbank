@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Home, 
@@ -14,7 +14,8 @@ import {
   Play,
   BarChart3,
   History,
-  AlertTriangle
+  AlertTriangle,
+  RotateCcw
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/ui/Button';
@@ -92,30 +93,40 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
   });
 
   // 更新分数
-  const updateScore = useCallback((game: keyof GameScore, score: number) => {
+  const updateScore = (game: keyof GameScore, score: number) => {
     setScores(prev => {
       const newScores = { ...prev, [game]: score };
       const newTotal = Object.values(newScores).reduce((sum, s) => sum + s, 0);
       setTotalScore(newTotal);
       return newScores;
     });
-  }, []);
+  };
 
   // 获取当前游戏状态
   const getCurrentGameState = () => gameStates[currentGame];
   const isGameActive = getCurrentGameState().isActive;
   
-
+  // 检查是否有任何游戏已经结束
+  const isAnyGameEnded = Object.values(gameStates).some(state => state.isEnded);
 
   // 处理游戏结束
-  const handleGameEnd = useCallback(() => {
+  const handleGameEnd = () => {
     setGameStates(prev => ({
       ...prev,
       [currentGame]: { isActive: false, isEnded: true }
     }));
-  }, [currentGame]);
+  };
 
-
+  // 处理全局重新开始所有游戏
+  const handleRestartAllGames = () => {
+    setGameStates({
+      math: { isActive: false, isEnded: false },
+      memory: { isActive: false, isEnded: false },
+      puzzle: { isActive: false, isEnded: false },
+      reaction: { isActive: false, isEnded: false }
+    });
+    setIsGameStarted(false);
+  };
 
   // 检查游戏状态
   const checkGameStatus = async () => {
@@ -194,23 +205,22 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
         '游戏提醒',
         warning + '\n\n是否继续游戏？',
         () => {
-          startNewGame();
+          setIsGameStarted(true);
+          setGameStates(prev => ({
+            ...prev,
+            [currentGame]: { isActive: true, isEnded: false }
+          }));
         }
       );
       return;
     }
     
-    startNewGame();
-  };
-
-  // 开始新游戏（重置所有状态）
-  const startNewGame = useCallback(() => {
     setIsGameStarted(true);
     setGameStates(prev => ({
-      ...prev,
+        ...prev,
       [currentGame]: { isActive: true, isEnded: false }
     }));
-  }, [currentGame]);
+  };
 
   // 组件加载时检查游戏状态
   useEffect(() => {
@@ -531,6 +541,28 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                       )}
                         </Button>
                   </motion.div>
+                ) : isAnyGameEnded ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center"
+                  >
+                    <div className="mb-6">
+                      <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Trophy className="w-10 h-10 text-white" />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">本次游戏已结束</h3>
+                      <p className="text-gray-600 dark:text-gray-300 mb-6">所有游戏都已结束，点击重新开始按钮重新挑战</p>
+                    </div>
+                    <Button
+                      onClick={handleRestartAllGames}
+                      variant="primary"
+                      className="px-8 py-3 text-lg font-semibold"
+                    >
+                      <RotateCcw className="w-5 h-5 mr-2" />
+                      点击重新开始
+                    </Button>
+                  </motion.div>
                 ) : (
                   <AnimatePresence mode="wait">
                         <motion.div
@@ -545,7 +577,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                         <MathGame
                           onScoreUpdate={(score) => updateScore('math', score)}
                           onGameEnd={handleGameEnd}
-                          isActive={isGameActive || getCurrentGameState().isEnded}
+                          isActive={isGameActive}
                           difficulty={gameConfigs.math.difficulty}
                           timeLimit={gameConfigs.math.timeLimit}
                         />
@@ -554,7 +586,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                         <MemoryGame
                           onScoreUpdate={(score) => updateScore('memory', score)}
                           onGameEnd={handleGameEnd}
-                          isActive={isGameActive || getCurrentGameState().isEnded}
+                          isActive={isGameActive}
                           gridSize={gameConfigs.memory.gridSize}
                           timeLimit={gameConfigs.memory.timeLimit}
                         />
@@ -563,7 +595,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                         <PuzzleGame
                           onScoreUpdate={(score) => updateScore('puzzle', score)}
                           onGameEnd={handleGameEnd}
-                          isActive={isGameActive || getCurrentGameState().isEnded}
+                          isActive={isGameActive}
                           gridSize={gameConfigs.puzzle.gridSize}
                           timeLimit={gameConfigs.puzzle.timeLimit}
                         />
@@ -572,7 +604,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                         <ReactionGame
                           onScoreUpdate={(score) => updateScore('reaction', score)}
                           onGameEnd={handleGameEnd}
-                          isActive={isGameActive || getCurrentGameState().isEnded}
+                          isActive={isGameActive}
                           timeLimit={gameConfigs.reaction.timeLimit}
                           difficulty={gameConfigs.reaction.difficulty}
                         />
