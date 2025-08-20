@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calculator, Target, Trophy } from 'lucide-react';
 import Button from '../ui/Button';
 import GameAPIService from '../../services/gameAPI';
+import { LaTeXRenderer } from '../../lib/latex/renderer/LaTeXRenderer';
 
 interface MathGameProps {
   onScoreUpdate: (score: number) => void;
@@ -17,7 +18,7 @@ interface MathProblem {
   answer: number;
   options?: number[];
   difficulty: 'easy' | 'medium' | 'hard';
-  type: 'addition' | 'subtraction' | 'multiplication' | 'division' | 'mixed';
+  type: 'addition' | 'subtraction' | 'multiplication' | 'division' | 'mixed' | 'power' | 'square_root' | 'complex_arithmetic' | 'triple_arithmetic' | 'mixed_operations';
 }
 
 const MathGame: React.FC<MathGameProps> = ({ 
@@ -36,88 +37,154 @@ const MathGame: React.FC<MathGameProps> = ({
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
   const [totalAnswered, setTotalAnswered] = useState(0);
   const [correctAnswered, setCorrectAnswered] = useState(0);
+  const [latexRenderer] = useState(() => new LaTeXRenderer());
 
   // 生成数学题目
   const generateProblem = useCallback((): MathProblem => {
-    const types = ['addition', 'subtraction', 'multiplication', 'division'];
-    const type = types[Math.floor(Math.random() * types.length)] as any;
-    
-    let a: number, b: number, answer: number, question: string;
-    
-    switch (type) {
-      case 'addition':
-        if (difficulty === 'easy') {
+    if (difficulty === 'hard') {
+      // 困难模式：纯粹的计算题，避免简单运算
+      const complexTypes = ['power', 'square_root', 'complex_arithmetic', 'triple_arithmetic', 'mixed_operations'];
+      const type = complexTypes[Math.floor(Math.random() * complexTypes.length)] as any;
+      
+      let answer: number, question: string;
+      
+      switch (type) {
+        case 'power':
+          // 幂运算：避免简单如2^2=4
+          const base = Math.floor(Math.random() * 12) + 3; // 3-14
+          const exp = Math.floor(Math.random() * 3) + 3;   // 3-5
+          answer = Math.pow(base, exp);
+          question = `$$${base}^{${exp}} = ?$$`;
+          break;
+          
+        case 'square_root':
+          // 完全平方数开方：避免简单如√16=4
+          const perfectSquares = [121, 144, 169, 196, 225, 256, 289, 324, 361, 400, 441, 484, 529, 576, 625, 676, 729, 784, 841, 900, 961];
+          const square = perfectSquares[Math.floor(Math.random() * perfectSquares.length)];
+          answer = Math.sqrt(square);
+          question = `$$\\sqrt{${square}} = ?$$`;
+          break;
+          
+        case 'complex_arithmetic':
+          // 复合运算：(a × b) + (c × d)，确保不是简单运算
+          const a1 = Math.floor(Math.random() * 30) + 15; // 15-44
+          const b1 = Math.floor(Math.random() * 20) + 8;  // 8-27
+          const c1 = Math.floor(Math.random() * 25) + 12; // 12-36
+          const d1 = Math.floor(Math.random() * 18) + 6;  // 6-23
+          answer = (a1 * b1) + (c1 * d1);
+          question = `$$(${a1} \\times ${b1}) + (${c1} \\times ${d1}) = ?$$`;
+          break;
+          
+        
+          
+        case 'triple_arithmetic':
+          // 三重运算：(a × b) + (c × d) - (e × f)
+          const a2 = Math.floor(Math.random() * 25) + 12; // 12-36
+          const b2 = Math.floor(Math.random() * 15) + 7;  // 7-21
+          const c2 = Math.floor(Math.random() * 20) + 10; // 10-29
+          const d2 = Math.floor(Math.random() * 12) + 5;  // 5-16
+          const e2 = Math.floor(Math.random() * 18) + 8;  // 8-25
+          const f2 = Math.floor(Math.random() * 10) + 4;  // 4-13
+          answer = (a2 * b2) + (c2 * d2) - (e2 * f2);
+          question = `$$(${a2} \\times ${b2}) + (${c2} \\times ${d2}) - (${e2} \\times ${f2}) = ?$$`;
+          break;
+          
+        case 'mixed_operations':
+          // 混合运算：a × b + c ÷ d
+          const a3 = Math.floor(Math.random() * 35) + 18; // 18-52
+          const b3 = Math.floor(Math.random() * 22) + 9;  // 9-30
+          const c3 = Math.floor(Math.random() * 300) + 100; // 100-399
+          const d3 = Math.floor(Math.random() * 15) + 6;  // 6-20
+          // 确保c能被d整除
+          const adjustedC = Math.floor(c3 / d3) * d3;
+          answer = (a3 * b3) + (adjustedC / d3);
+          question = `$$${a3} \\times ${b3} + ${adjustedC} \\div ${d3} = ?$$`;
+          break;
+          
+        default:
+          // 如果出现未处理的类型，生成一个复杂的乘法
+          const a4 = Math.floor(Math.random() * 60) + 25; // 25-84
+          const b4 = Math.floor(Math.random() * 45) + 18; // 18-62
+          answer = a4 * b4;
+          question = `$$${a4} \\times ${b4} = ?$$`;
+      }
+      
+      return {
+        question,
+        answer,
+        difficulty,
+        type: type as any
+      };
+    } else {
+      // 简单和中等模式保持原有逻辑
+      const types = ['addition', 'subtraction', 'multiplication', 'division'];
+      const type = types[Math.floor(Math.random() * types.length)] as any;
+      
+      let a: number, b: number, answer: number, question: string;
+      
+      switch (type) {
+        case 'addition':
+          if (difficulty === 'easy') {
+            a = Math.floor(Math.random() * 20) + 1;
+            b = Math.floor(Math.random() * 20) + 1;
+          } else {
+            a = Math.floor(Math.random() * 100) + 10;
+            b = Math.floor(Math.random() * 100) + 10;
+          }
+          answer = a + b;
+          question = `$$${a} + ${b} = ?$$`;
+          break;
+          
+        case 'subtraction':
+          if (difficulty === 'easy') {
+            a = Math.floor(Math.random() * 20) + 10;
+            b = Math.floor(Math.random() * a) + 1;
+          } else {
+            a = Math.floor(Math.random() * 200) + 50;
+            b = Math.floor(Math.random() * a) + 10;
+          }
+          answer = a - b;
+          question = `$$${a} - ${b} = ?$$`;
+          break;
+          
+        case 'multiplication':
+          if (difficulty === 'easy') {
+            a = Math.floor(Math.random() * 12) + 1;
+            b = Math.floor(Math.random() * 12) + 1;
+          } else {
+            a = Math.floor(Math.random() * 25) + 5;
+            b = Math.floor(Math.random() * 25) + 5;
+          }
+          answer = a * b;
+          question = `$$${a} \\times ${b} = ?$$`;
+          break;
+          
+        case 'division':
+          if (difficulty === 'easy') {
+            b = Math.floor(Math.random() * 12) + 1;
+            a = b * (Math.floor(Math.random() * 10) + 1);
+          } else {
+            b = Math.floor(Math.random() * 20) + 2;
+            a = b * (Math.floor(Math.random() * 15) + 2);
+          }
+          answer = a / b;
+          question = `$$${a} \\div ${b} = ?$$`;
+          break;
+          
+        default:
           a = Math.floor(Math.random() * 20) + 1;
           b = Math.floor(Math.random() * 20) + 1;
-        } else if (difficulty === 'medium') {
-          a = Math.floor(Math.random() * 100) + 10;
-          b = Math.floor(Math.random() * 100) + 10;
-        } else {
-          a = Math.floor(Math.random() * 500) + 100;
-          b = Math.floor(Math.random() * 500) + 100;
-        }
-        answer = a + b;
-        question = `${a} + ${b} = ?`;
-        break;
-        
-      case 'subtraction':
-        if (difficulty === 'easy') {
-          a = Math.floor(Math.random() * 20) + 10;
-          b = Math.floor(Math.random() * a) + 1;
-        } else if (difficulty === 'medium') {
-          a = Math.floor(Math.random() * 200) + 50;
-          b = Math.floor(Math.random() * a) + 10;
-        } else {
-          a = Math.floor(Math.random() * 1000) + 200;
-          b = Math.floor(Math.random() * a) + 50;
-        }
-        answer = a - b;
-        question = `${a} - ${b} = ?`;
-        break;
-        
-      case 'multiplication':
-        if (difficulty === 'easy') {
-          a = Math.floor(Math.random() * 12) + 1;
-          b = Math.floor(Math.random() * 12) + 1;
-        } else if (difficulty === 'medium') {
-          a = Math.floor(Math.random() * 25) + 5;
-          b = Math.floor(Math.random() * 25) + 5;
-        } else {
-          a = Math.floor(Math.random() * 50) + 10;
-          b = Math.floor(Math.random() * 50) + 10;
-        }
-        answer = a * b;
-        question = `${a} × ${b} = ?`;
-        break;
-        
-      case 'division':
-        if (difficulty === 'easy') {
-          b = Math.floor(Math.random() * 12) + 1;
-          a = b * (Math.floor(Math.random() * 10) + 1);
-        } else if (difficulty === 'medium') {
-          b = Math.floor(Math.random() * 20) + 2;
-          a = b * (Math.floor(Math.random() * 15) + 2);
-        } else {
-          b = Math.floor(Math.random() * 30) + 5;
-          a = b * (Math.floor(Math.random() * 20) + 3);
-        }
-        answer = a / b;
-        question = `${a} ÷ ${b} = ?`;
-        break;
-        
-      default:
-        a = Math.floor(Math.random() * 20) + 1;
-        b = Math.floor(Math.random() * 20) + 1;
-        answer = a + b;
-        question = `${a} + ${b} = ?`;
-    }
+          answer = a + b;
+          question = `$$${a} + ${b} = ?$$`;
+      }
 
-    return {
-      question,
-      answer,
-      difficulty,
-      type
-    };
+      return {
+        question,
+        answer,
+        difficulty,
+        type
+      };
+    }
   }, [difficulty]);
 
   // 开始游戏
@@ -297,7 +364,14 @@ const MathGame: React.FC<MathGameProps> = ({
           </div>
           
           <div className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-6">
-            {currentProblem?.question}
+            {currentProblem?.question && (
+              <div 
+                className="inline-block text-5xl"
+                dangerouslySetInnerHTML={{
+                  __html: latexRenderer.render(currentProblem.question).html
+                }}
+              />
+            )}
           </div>
           
           <div className="flex items-center justify-center space-x-3">
@@ -346,7 +420,7 @@ const MathGame: React.FC<MathGameProps> = ({
             {feedback === 'correct' ? (
               <div className="flex items-center justify-center">
                 <Trophy className="w-6 h-6 mr-2" />
-                <span>正确！+{Math.floor((difficulty === 'easy' ? 10 : difficulty === 'medium' ? 15 : 25) * (1 + streak * 0.1))}分</span>
+                <span>正确！+{Math.floor((difficulty === 'easy' ? 10 : difficulty === 'medium' ? 15 : 35) * (1 + streak * 0.1))}分</span>
               </div>
             ) : (
               <div className="flex items-center justify-center">

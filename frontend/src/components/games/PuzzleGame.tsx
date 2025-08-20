@@ -34,50 +34,117 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
   const [startTime, setStartTime] = useState<number>(0);
   const [initialBoard, setInitialBoard] = useState<number[]>([]);
   const [moveSequence, setMoveSequence] = useState<PuzzleMove[]>([]);
+  const [hasSubmittedScore, setHasSubmittedScore] = useState<boolean>(false);
 
   const totalPieces = gridSize * gridSize;
-  const emptyValue = totalPieces - 1;
+  const emptyValue = 0; // 修复：按照Python代码逻辑，空格值应该是0
 
   // 生成拼图
   const generatePuzzle = useCallback((): PuzzlePiece[] => {
-    const values = Array.from({ length: totalPieces - 1 }, (_, i) => i);
-    const shuffled = [...values, emptyValue].sort(() => Math.random() - 0.5);
-    
-    return shuffled.map((value, index) => ({
-      id: value,
-      value,
-      currentPosition: index,
-      correctPosition: value
+    // 修复：按照Python代码逻辑，空格应该是0，目标状态是[0,1,2,3,4,5,6,7,8]
+    // 其中0是空格，其他数字在对应位置
+    const correctPuzzle = Array.from({ length: totalPieces }, (_, i) => ({
+      id: i,
+      value: i === 0 ? 0 : i,  // 第0个位置是空格(0)，其他位置是对应数字
+      currentPosition: i,
+      correctPosition: i
     }));
-  }, [totalPieces, emptyValue]);
-
-  // 检查是否可解
-  const isSolvable = useCallback((puzzle: PuzzlePiece[]): boolean => {
-    let inversions = 0;
-    const flatPuzzle = puzzle.map(p => p.value);
     
-    for (let i = 0; i < flatPuzzle.length - 1; i++) {
-      for (let j = i + 1; j < flatPuzzle.length; j++) {
-        if (flatPuzzle[i] !== emptyValue && flatPuzzle[j] !== emptyValue && flatPuzzle[i] > flatPuzzle[j]) {
-          inversions++;
+    // 然后通过随机移动来打乱拼图，确保可解性
+    const shuffledPuzzle = [...correctPuzzle];
+    const randomMoves = Math.floor(Math.random() * 100) + 100; // 100-200次随机移动
+    
+    for (let i = 0; i < randomMoves; i++) {
+      // 找到空格位置
+      const emptyIndex = shuffledPuzzle.findIndex(p => p.value === emptyValue);
+      const emptyRow = Math.floor(emptyIndex / gridSize);
+      const emptyCol = emptyIndex % gridSize;
+      
+      // 生成可能的移动方向
+      const possibleMoves = [];
+      if (emptyRow > 0) possibleMoves.push(emptyIndex - gridSize); // 上
+      if (emptyRow < gridSize - 1) possibleMoves.push(emptyIndex + gridSize); // 下
+      if (emptyCol > 0) possibleMoves.push(emptyIndex - 1); // 左
+      if (emptyCol < gridSize - 1) possibleMoves.push(emptyIndex + 1); // 右
+      
+      // 增加随机性：有时候优先选择某个方向
+      if (possibleMoves.length > 0) {
+        let selectedMoveIndex;
+        
+        // 20%的概率进行"智能"移动，避免立即回到上一个位置
+        if (i > 0 && Math.random() < 0.2) {
+          // 尝试避免与上一次移动相反的方向
+          const filteredMoves = possibleMoves.filter(() => {
+            // 简单的过滤逻辑，避免完全相反的移动
+            return Math.random() > 0.3;
+          });
+          selectedMoveIndex = filteredMoves.length > 0 
+            ? filteredMoves[Math.floor(Math.random() * filteredMoves.length)]
+            : possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+        } else {
+          // 80%的概率完全随机选择
+          selectedMoveIndex = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+        }
+        
+        const pieceToMove = shuffledPuzzle[selectedMoveIndex];
+        
+        // 交换位置
+        shuffledPuzzle[emptyIndex].currentPosition = pieceToMove.currentPosition;
+        shuffledPuzzle[selectedMoveIndex].currentPosition = emptyIndex;
+        
+        // 更新数组中的位置
+        [shuffledPuzzle[emptyIndex], shuffledPuzzle[selectedMoveIndex]] = 
+        [shuffledPuzzle[selectedMoveIndex], shuffledPuzzle[emptyIndex]];
+      }
+      
+      // 每隔一定次数增加额外的随机性
+      if (i % 10 === 0 && i > 0) {
+        // 随机交换两个非空格的相邻位置（保持可解性）
+        const nonEmptyPieces = shuffledPuzzle.filter(p => p.value !== emptyValue);
+        if (nonEmptyPieces.length >= 2 && Math.random() < 0.1) {
+          // 找到两个相邻的非空格位置进行小幅调整
+          for (let attempt = 0; attempt < 5; attempt++) {
+            const piece1 = nonEmptyPieces[Math.floor(Math.random() * nonEmptyPieces.length)];
+            const piece1Row = Math.floor(piece1.currentPosition / gridSize);
+            const piece1Col = piece1.currentPosition % gridSize;
+            
+            // 找相邻的位置
+            const adjacentPositions: number[] = [];
+            if (piece1Row > 0) adjacentPositions.push((piece1Row - 1) * gridSize + piece1Col);
+            if (piece1Row < gridSize - 1) adjacentPositions.push((piece1Row + 1) * gridSize + piece1Col);
+            if (piece1Col > 0) adjacentPositions.push(piece1Row * gridSize + piece1Col - 1);
+            if (piece1Col < gridSize - 1) adjacentPositions.push(piece1Row * gridSize + piece1Col + 1);
+            
+            const adjacentPiece = shuffledPuzzle.find(p => 
+              adjacentPositions.includes(p.currentPosition) && p.value !== emptyValue
+            );
+            
+            if (adjacentPiece) {
+              // 交换这两个相邻的非空格位置
+              const tempPos = piece1.currentPosition;
+              piece1.currentPosition = adjacentPiece.currentPosition;
+              adjacentPiece.currentPosition = tempPos;
+              
+              // 更新数组中的位置
+              const index1 = shuffledPuzzle.findIndex(p => p.id === piece1.id);
+              const index2 = shuffledPuzzle.findIndex(p => p.id === adjacentPiece.id);
+              [shuffledPuzzle[index1], shuffledPuzzle[index2]] = [shuffledPuzzle[index2], shuffledPuzzle[index1]];
+              break;
+            }
+          }
         }
       }
     }
     
-    if (gridSize % 2 === 1) {
-      return inversions % 2 === 0;
-    } else {
-      const emptyRow = Math.floor(puzzle.find(p => p.value === emptyValue)!.currentPosition / gridSize);
-      return (inversions + emptyRow) % 2 === 0;
-    }
-  }, [gridSize, emptyValue]);
+    return shuffledPuzzle;
+  }, [totalPieces, emptyValue, gridSize]);
+
+
 
   // 开始游戏
   const startGame = useCallback(() => {
-    let newPuzzle: PuzzlePiece[];
-    do {
-      newPuzzle = generatePuzzle();
-    } while (!isSolvable(newPuzzle));
+    // 直接生成拼图，因为generatePuzzle已经确保可解性
+    const newPuzzle = generatePuzzle();
     
     // 记录初始棋盘状态
     const initialBoardState = newPuzzle.map(piece => piece.value);
@@ -90,10 +157,17 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
     setIsGameActive(true);
     setIsCompleted(false);
     setStartTime(Date.now());
-  }, [generatePuzzle, isSolvable, timeLimit]);
+    setHasSubmittedScore(false);
+  }, [generatePuzzle, timeLimit]);
 
   // 提交分数到后端
-  const submitScore = useCallback(async (finalScore: number) => {
+  const submitScore = useCallback(async (finalScore: number, timeUsed: number, accuracy: number) => {
+    // 防止重复提交分数
+    if (hasSubmittedScore) {
+      console.log('分数已经提交过，跳过重复提交');
+      return;
+    }
+    
     try {
       await GameAPIService.submitGameRecord({
         gameType: 'puzzle',
@@ -105,16 +179,20 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
         },
         gameData: {
           moves,
-          timeUsed: timeLimit - timeLeft,
-          accuracy: isCompleted ? 100 : 0,
+          timeUsed,
+          accuracy,
           initialBoard,
           moveSequence
         }
       });
+      
+      // 标记分数已提交
+      setHasSubmittedScore(true);
+      console.log('分数提交成功');
     } catch (error) {
       console.error('提交分数失败:', error);
     }
-  }, [timeLimit, gridSize, moves, timeLeft, isCompleted, initialBoard, moveSequence]);
+  }, [timeLimit, gridSize, moves, initialBoard, moveSequence, hasSubmittedScore]);
 
   // 检查是否完成
   const checkCompletion = useCallback((currentPieces: PuzzlePiece[]) => {
@@ -128,11 +206,13 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
       const timeBonus = Math.max(0, Math.floor((timeLimit * 1000 - completionTime) / 1000) * 2);
       const moveBonus = Math.max(0, (baseScore - moves * 5));
       const finalScore = baseScore + timeBonus + moveBonus;
+      const timeUsed = timeLimit - timeLeft;
       onScoreUpdate(finalScore);
-      submitScore(finalScore);
+      // 游戏完成时提交分数
+      submitScore(finalScore, timeUsed, 100);
       onGameEnd();
     }
-  }, [isCompleted, startTime, timeLimit, moves, onScoreUpdate, submitScore, isGameActive, onGameEnd]);
+  }, [isCompleted, startTime, timeLimit, moves, onScoreUpdate, isGameActive, onGameEnd, timeLeft, gridSize]);
 
   // 移动拼图块
   const movePiece = useCallback((pieceId: number) => {
@@ -181,7 +261,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
       setTimeLeft(prev => Math.max(1, prev - 0.2));
       checkCompletion(newPieces);
     }
-  }, [pieces, isGameActive, gridSize, emptyValue, checkCompletion, moves]);
+  }, [pieces, isGameActive, gridSize, emptyValue, checkCompletion]);
 
   // 时间倒计时
   useEffect(() => {
@@ -191,9 +271,13 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
       setTimeLeft(prev => {
         if (prev <= 1) {
           setIsGameActive(false);
-          const baseScore = gridSize === 3 ? 100 : 200;
-          const finalScore = Math.max(0, baseScore - moves * 2);
-          submitScore(finalScore);
+          // 只有在游戏未完成且未提交过分数时才提交分数（时间耗尽）
+          if (!isCompleted) {
+            const baseScore = gridSize === 3 ? 100 : 200;
+            const finalScore = Math.max(0, baseScore - moves * 2);
+            // 时间耗尽时提交分数
+            submitScore(finalScore, timeLimit, 0);
+          }
           onGameEnd();
           return 0;
         }
@@ -202,7 +286,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isGameActive, onGameEnd, submitScore]);
+  }, [isGameActive, onGameEnd, isCompleted, moves, gridSize, timeLimit]);
 
   // 响应游戏状态变化
   useEffect(() => {
@@ -238,7 +322,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
           gridColumn: col + 1
         }}
       >
-        {piece.value === emptyValue ? '' : piece.value + 1}
+        {piece.value === emptyValue ? '' : piece.value}
       </motion.button>
     );
   };

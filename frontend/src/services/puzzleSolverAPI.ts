@@ -52,9 +52,26 @@ export class PuzzleSolverService {
         };
       }
       
+      // 先运行测试
+      PuzzleSolver.testSolver();
+      
       // 创建解题器并求解
       const solver = new PuzzleSolver(gridSize);
+      
+      // 添加调试信息
+      console.log('开始求解拼图:', {
+        gridSize,
+        initialBoard,
+        boardLength: initialBoard.length,
+        expectedLength: gridSize * gridSize
+      });
+      
       const solution = solver.solve(initialBoard);
+      
+      console.log('求解结果:', {
+        solutionLength: solution.length,
+        hasSolution: solution.length > 0
+      });
       
       if (solution.length === 0) {
         return {
@@ -89,7 +106,9 @@ export class PuzzleSolverService {
   static isPuzzleSolvable(board: number[], gridSize: number): boolean {
     try {
       const solver = new PuzzleSolver(gridSize);
-      return solver['isSolvable'](board); // 调用私有方法进行验证
+      // 直接尝试求解，如果能找到解就说明可解
+      const solution = solver.solve(board);
+      return solution.length > 0;
     } catch (error) {
       console.error('验证拼图可解性失败:', error);
       return false;
