@@ -19,8 +19,13 @@ export interface GameRecord {
     bestTime?: number;
     averageTime?: number;
     rounds?: number;
-    initialPositions?: Array<{ id: number; position: number }>;
-    finalPositions?: Array<{ id: number; position: number }>;
+    initialBoard?: number[];
+    moveSequence?: Array<{
+      from: number;
+      to: number;
+      piece: number;
+      step: number;
+    }>;
   };
 }
 
@@ -39,8 +44,6 @@ export interface LeaderboardEntry {
     bestTime?: number;
     averageTime?: number;
     rounds?: number;
-    initialPositions?: Array<{ id: number; position: number }>;
-    finalPositions?: Array<{ id: number; position: number }>;
   };
   createdAt: string;
 }
@@ -100,8 +103,13 @@ export interface GameHistoryRecord {
     bestTime?: number;
     averageTime?: number;
     rounds?: number;
-    initialPositions?: Array<{ id: number; position: number }>;
-    finalPositions?: Array<{ id: number; position: number }>;
+    initialBoard?: number[];
+    moveSequence?: Array<{
+      from: number;
+      to: number;
+      piece: number;
+      step: number;
+    }>;
   };
   createdAt: string;
 }

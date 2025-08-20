@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Target, Move } from 'lucide-react';
 import GameAPIService from '../../services/gameAPI';
+import { type Move as PuzzleMove } from '../../lib/puzzle/PuzzleSolver';
 
 interface PuzzleGameProps {
   onScoreUpdate: (score: number) => void;
@@ -26,12 +27,13 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
   timeLimit 
 }) => {
   const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
-  const [initialPieces, setInitialPieces] = useState<PuzzlePiece[]>([]);
   const [moves, setMoves] = useState(0);
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [isGameActive, setIsGameActive] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
+  const [initialBoard, setInitialBoard] = useState<number[]>([]);
+  const [moveSequence, setMoveSequence] = useState<PuzzleMove[]>([]);
 
   const totalPieces = gridSize * gridSize;
   const emptyValue = totalPieces - 1;
@@ -77,9 +79,13 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
       newPuzzle = generatePuzzle();
     } while (!isSolvable(newPuzzle));
     
+    // 记录初始棋盘状态
+    const initialBoardState = newPuzzle.map(piece => piece.value);
+    setInitialBoard(initialBoardState);
+    
     setPieces(newPuzzle);
-    setInitialPieces([...newPuzzle]); // 保存初始位置
     setMoves(0);
+    setMoveSequence([]);
     setTimeLeft(timeLimit);
     setIsGameActive(true);
     setIsCompleted(false);
@@ -101,14 +107,14 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
           moves,
           timeUsed: timeLimit - timeLeft,
           accuracy: isCompleted ? 100 : 0,
-          initialPositions: initialPieces.map(p => ({ id: p.id, position: p.currentPosition })),
-          finalPositions: pieces.map(p => ({ id: p.id, position: p.currentPosition }))
+          initialBoard,
+          moveSequence
         }
       });
     } catch (error) {
       console.error('提交分数失败:', error);
     }
-  }, [timeLimit, gridSize, moves, timeLeft, isCompleted, initialPieces, pieces]);
+  }, [timeLimit, gridSize, moves, timeLeft, isCompleted, initialBoard, moveSequence]);
 
   // 检查是否完成
   const checkCompletion = useCallback((currentPieces: PuzzlePiece[]) => {
@@ -161,11 +167,21 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
 
       setPieces(newPieces);
       setMoves(prev => prev + 1);
+      
+      // 记录移动
+      const move: PuzzleMove = {
+        from: piece.currentPosition,
+        to: emptyPiece.currentPosition,
+        piece: piece.value,
+        step: moves + 1
+      };
+      setMoveSequence(prev => [...prev, move]);
+      
       // 每走一步时间减少0.2秒
       setTimeLeft(prev => Math.max(1, prev - 0.2));
       checkCompletion(newPieces);
     }
-  }, [pieces, isGameActive, gridSize, emptyValue, checkCompletion]);
+  }, [pieces, isGameActive, gridSize, emptyValue, checkCompletion, moves]);
 
   // 时间倒计时
   useEffect(() => {

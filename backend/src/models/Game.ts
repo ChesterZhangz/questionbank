@@ -18,6 +18,13 @@ export interface IGameRecord extends Document {
     bestTime?: number;
     averageTime?: number;
     rounds?: number;
+    initialBoard?: number[];
+    moveSequence?: Array<{
+      from: number;
+      to: number;
+      piece: number;
+      step: number;
+    }>;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -121,7 +128,14 @@ const GameRecordSchema = new Schema<IGameRecord>({
     accuracy: Number,
     bestTime: Number,
     averageTime: Number,
-    rounds: Number
+    rounds: Number,
+    initialBoard: [Number],
+    moveSequence: [{
+      from: Number,
+      to: Number,
+      piece: Number,
+      step: Number
+    }]
   }
 }, {
   timestamps: true
