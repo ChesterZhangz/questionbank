@@ -78,7 +78,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, isOpen, onClose, on
       });
       onClose();
     } catch (error) {
-      console.error('更新用户失败:', error);
+      // 错误日志已清理
     } finally {
       setIsSubmitting(false);
     }
@@ -256,7 +256,7 @@ const UserManagementPage: React.FC = () => {
           setError('获取用户列表失败');
         }
       } catch (error: any) {
-        console.error('获取用户列表失败:', error);
+        // 错误日志已清理
         setError(error.response?.data?.error || '获取用户列表失败');
       } finally {
         setLoading(false);
@@ -287,7 +287,7 @@ const UserManagementPage: React.FC = () => {
             setError('删除用户失败');
           }
         } catch (error: any) {
-          console.error('删除用户失败:', error);
+          // 错误日志已清理
           setError(error.response?.data?.error || '删除用户失败');
         }
       }
@@ -318,7 +318,7 @@ const UserManagementPage: React.FC = () => {
         setError('更新用户失败');
       }
     } catch (error: any) {
-      console.error('更新用户失败:', error);
+      // 错误日志已清理
       setError(error.response?.data?.error || '更新用户失败');
     }
   };
@@ -338,7 +338,7 @@ const UserManagementPage: React.FC = () => {
         setError('更新用户状态失败');
       }
     } catch (error: any) {
-      console.error('更新用户状态失败:', error);
+      // 错误日志已清理
       setError(error.response?.data?.error || '更新用户状态失败');
     }
   };

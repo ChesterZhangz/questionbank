@@ -95,7 +95,7 @@ const QuestionBankDetailPage: React.FC = () => {
         setQuestions(questionsData);
       }
     } catch (error: any) {
-      console.error('获取题目列表失败:', error);
+      // 错误日志已清理
     }
   };
 
@@ -173,7 +173,7 @@ const QuestionBankDetailPage: React.FC = () => {
         showErrorRightSlide('收藏失败', '收藏操作失败，请重试');
       }
     } catch (error: any) {
-      console.error('收藏操作失败:', error);
+      // 错误日志已清理
       showErrorRightSlide('收藏失败', '收藏操作失败，请重试');
     }
   };

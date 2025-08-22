@@ -33,7 +33,7 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose, userId
         setError(response.data.error || '获取关注列表失败');
       }
     } catch (error: any) {
-      console.error('获取关注列表失败:', error);
+      // 错误日志已清理
       setError(error.response?.data?.error || '获取关注列表失败');
     } finally {
       setLoading(false);
@@ -49,7 +49,7 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose, userId
         setFollowing(prev => prev.filter(user => user._id !== targetUserId));
       }
     } catch (error: any) {
-      console.error('取消关注失败:', error);
+      // 错误日志已清理
     } finally {
       setUnfollowingId(null);
     }

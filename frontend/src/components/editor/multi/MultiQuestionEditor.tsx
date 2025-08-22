@@ -123,7 +123,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
     try {
 
       
-      const analysisPromises = questions.map(async (question, index) => {
+      const analysisPromises = questions.map(async (question) => {
         try {
           const response = await questionAnalysisAPI.analyzeQuestion(question.stem);
 
@@ -145,7 +145,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
             throw new Error('分析失败');
           }
         } catch (err) {
-          console.error(`题目 ${index + 1} 分析失败:`, err);
+          // 错误日志已清理
           return question; // 返回原题目，不中断整个流程
         }
       });
@@ -161,7 +161,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
       }, 500);
       
     } catch (err: any) {
-      console.error('批量智能分析失败:', err);
+      // 错误日志已清理
       const errorMsg = err.response?.data?.error || err.message || '批量智能分析失败';
       setError(errorMsg);
     } finally {
@@ -196,7 +196,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
     try {
       
       
-      const savePromises = questions.map(async (question, index) => {
+      const savePromises = questions.map(async (question) => {
         try {
           // 准备保存数据
           let answerContent = question.answer || '';
@@ -239,7 +239,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
             throw new Error('保存失败');
           }
         } catch (err) {
-          console.error(`题目 ${index + 1} 保存失败:`, err);
+          // 错误日志已清理
           return { success: false, error: err };
         }
       });
@@ -262,7 +262,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
       }
       
     } catch (err: any) {
-      console.error('批量保存失败:', err);
+      // 错误日志已清理
       const errorMsg = err.response?.data?.error || err.message || '批量保存失败';
       setError(errorMsg);
     } finally {

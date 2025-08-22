@@ -102,7 +102,7 @@ const DashboardPage: React.FC = () => {
         setQuestionBanks(banks);
         setSystemStatus(status);
       } catch (err: any) {
-        console.error('加载仪表板数据失败:', err);
+        // 错误日志已清理
         setError(err.message || '加载数据失败');
       } finally {
         setLoading(false);
@@ -244,7 +244,7 @@ const DashboardPage: React.FC = () => {
       setSearchResults(suggestions);
       setShowSearchResults(true);
     } catch (error) {
-      console.error('搜索失败:', error);
+      // 错误日志已清理
       setSearchResults([]);
     } finally {
       setSearchLoading(false);

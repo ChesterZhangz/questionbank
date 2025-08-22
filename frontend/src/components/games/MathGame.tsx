@@ -272,8 +272,8 @@ const MathGame: React.FC<MathGameProps> = ({
               accuracy: finalAccuracy,
               timeUsed: timeLimit
             }
-          }).catch((error: any) => {
-            console.error('提交分数失败:', error);
+          }).catch(() => {
+            // 错误日志已清理
           });
           
           onGameEnd();

@@ -108,7 +108,7 @@ const ReactionGame: React.FC<ReactionGameProps> = ({
         }
       });
     } catch (error) {
-      console.error('提交分数失败:', error);
+      // 错误日志已清理
     }
   }, [score, timeLimit, rounds, bestTime, averageTime, totalReactionTime]);
 
@@ -129,7 +129,7 @@ const ReactionGame: React.FC<ReactionGameProps> = ({
         }
       });
     } catch (error) {
-      console.error('提交分数失败:', error);
+      // 错误日志已清理
     }
   }, [timeLimit, rounds, bestTime, averageTime, totalReactionTime]);
 

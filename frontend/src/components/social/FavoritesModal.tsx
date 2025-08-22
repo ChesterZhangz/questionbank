@@ -44,7 +44,7 @@ const FavoritesModal: React.FC<FavoritesModalProps> = ({ isOpen, onClose }) => {
         setError(response.data.error || '获取收藏失败');
       }
     } catch (error: any) {
-      console.error('获取收藏失败:', error);
+      // 错误日志已清理
       setError(error.response?.data?.error || '获取收藏失败');
     } finally {
       setLoading(false);
@@ -62,7 +62,7 @@ const FavoritesModal: React.FC<FavoritesModalProps> = ({ isOpen, onClose }) => {
         }
       }
     } catch (error: any) {
-      console.error('收藏操作失败:', error);
+      // 错误日志已清理
     }
   };
 

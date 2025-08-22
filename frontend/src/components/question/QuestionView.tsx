@@ -24,6 +24,7 @@ import { useModal } from '../../hooks/useModal';
 import MagicTextTransition from '../animations/MagicTextTransition';
 // 导入LaTeXPreview组件，使用与QuestionCard相同的渲染逻辑
 import LaTeXPreview from '../editor/preview/LaTeXPreview';
+import TikZPreview from '../tikz/core/TikZPreview';
 import './QuestionView.css';
 
 interface QuestionViewProps {
@@ -76,8 +77,8 @@ const QuestionView: React.FC<QuestionViewProps> = ({
       fetchRelatedQuestions();
       // 增加访问量
       if (currentQuestion?.qid) {
-        questionAPI.addView(currentQuestion.qid).catch(error => {
-          console.warn('更新访问量失败:', error);
+        questionAPI.addView(currentQuestion.qid).catch(() => {
+          // 警告日志已清理
         });
       }
     } else {
@@ -104,7 +105,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
         setRelatedError('获取相关题目失败');
       }
     } catch (error) {
-      console.error('获取相关题目失败:', error);
+      // 错误日志已清理
       setRelatedError('获取相关题目失败');
     } finally {
       setLoadingRelated(false);
@@ -123,8 +124,8 @@ const QuestionView: React.FC<QuestionViewProps> = ({
       
       // 增加访问量
       if (questions[newIndex]?.qid) {
-        questionAPI.addView(questions[newIndex].qid).catch(error => {
-          console.warn('更新访问量失败:', error);
+        questionAPI.addView(questions[newIndex].qid).catch(() => {
+          // 警告日志已清理
         });
       }
       
@@ -147,8 +148,8 @@ const QuestionView: React.FC<QuestionViewProps> = ({
       
       // 增加访问量
       if (questions[newIndex]?.qid) {
-        questionAPI.addView(questions[newIndex].qid).catch(error => {
-          console.warn('更新访问量失败:', error);
+        questionAPI.addView(questions[newIndex].qid).catch(() => {
+          // 警告日志已清理
         });
       }
       
@@ -220,7 +221,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
         showSuccessRightSlide('复制成功', '题目信息已复制到剪贴板');
       }
     } catch (error) {
-      console.error('分享失败:', error);
+      // 错误日志已清理
       showErrorRightSlide('分享失败', '分享失败，请重试');
     } finally {
       setIsSharing(false);
@@ -235,7 +236,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
     try {
       await onFavorite(currentQuestion.qid, !isFavorite);
     } catch (error) {
-      console.error('收藏操作失败:', error);
+      // 错误日志已清理
     } finally {
       setIsFavoriting(false);
     }
@@ -627,6 +628,53 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                             maxWidth="max-w-none"
                                           />
                                         </MagicTextTransition>
+                                        
+                                                                         {/* 题目图片和TikZ显示 */}
+                                 {((currentQuestion?.images && currentQuestion.images.length > 0) || (currentQuestion?.tikzCodes && currentQuestion.tikzCodes.length > 0)) && (
+                                          <div className="mt-4 space-y-3">
+                                                                                 {/* 图片显示 */}
+                                     {currentQuestion.images && currentQuestion.images.length > 0 && (
+                                              <div>
+                                                <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">题目图片</h4>
+                                                <div className="flex space-x-3 overflow-x-auto pb-2">
+                                                  {currentQuestion.images.map((image) => (
+                                                    <div key={image.id} className="flex-shrink-0">
+                                                      <img
+                                                        src={image.url}
+                                                        alt={image.filename}
+                                                        className="w-24 h-18 object-contain rounded border border-gray-200 dark:border-gray-600"
+                                                      />
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                            )}
+                                            
+                                                                                 {/* TikZ显示 */}
+                                     {currentQuestion.tikzCodes && currentQuestion.tikzCodes.length > 0 && (
+                                              <div>
+                                                <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">题目图形</h4>
+                                                <div className="flex space-x-3 overflow-x-auto pb-2">
+                                                  {currentQuestion.tikzCodes.map((tikz) => (
+                                                    <div key={tikz.id} className="flex-shrink-0">
+                                                      <div className="w-24 h-18 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600 flex items-center justify-center">
+                                                        <TikZPreview
+                                                          code={tikz.code}
+                                                          format={tikz.format}
+                                                          width={96}
+                                                          height={72}
+                                                          showGrid={false}
+                                                          showTitle={false}
+                                                          className="max-w-full max-h-full"
+                                                        />
+                                                      </div>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
                                       </div>
 
                                       {/* 选项 */}

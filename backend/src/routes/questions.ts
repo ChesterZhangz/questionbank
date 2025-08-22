@@ -303,7 +303,7 @@ router.get('/', async (req: Request, res: Response): Promise<any> => {
     
     // 只选择需要的字段，减少数据传输 - 包含所有必要字段
     const questionsQuery = Question.find(query)
-      .select('qid type difficulty tags status views createdAt bid content source category updatedAt')
+      .select('qid type difficulty tags status views createdAt bid content source category updatedAt images tikzCodes')
       .sort(sort)
       .skip(skip)
       .limit(limitNum)
@@ -851,7 +851,7 @@ router.post('/bank/:bid', [
     }
 
     const { bid } = req.params;
-    const { type, content, category, tags, difficulty, source } = req.body;
+    const { type, content, category, tags, difficulty, source, images, tikzCodes } = req.body;
 
     // 检查题库是否存在
     const questionBank = await QuestionBank.findOne({ bid, status: 'active' });
@@ -911,7 +911,9 @@ router.post('/bank/:bid', [
       difficulty,
       source,
       creator: req.user!._id,
-      status: 'published'
+      status: 'published',
+      images: images || [],
+      tikzCodes: tikzCodes || []
     });
 
     await question.save();

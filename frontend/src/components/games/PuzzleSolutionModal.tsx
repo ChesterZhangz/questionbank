@@ -88,7 +88,7 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
       }
     } catch (err) {
       setError('解题算法执行失败');
-      console.error('解题失败:', err);
+      // 错误日志已清理
     } finally {
       setIsLoading(false);
     }

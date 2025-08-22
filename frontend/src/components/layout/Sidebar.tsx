@@ -328,6 +328,33 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
               )}
             </AnimatePresence>
           </button>
+
+                  <button
+          onClick={() => navigate('/LaTeXGuide')}
+          className={`w-full flex items-center gap-4 text-sm rounded-xl transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
+            activeSection === 'LaTeXGuide'
+              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 hover:text-gray-900 dark:hover:text-gray-100'
+          } ${
+            collapsed ? 'justify-center px-3 py-3' : 'px-4 py-3'
+          }`}
+        >
+          <BookOpen className={`w-4 h-4 transition-colors duration-300 ${
+            activeSection === 'LaTeXGuide' ? 'text-white' : 'text-gray-300'
+          }`} />
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="font-medium"
+              >
+                LaTeX指导
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </button>
           
           <button
             onClick={handleLogout}

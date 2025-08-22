@@ -47,7 +47,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
       }
       
     } catch (error) {
-      console.error('获取排行榜失败:', error);
+      // 错误日志已清理
       setError('获取排行榜失败，请稍后重试');
     } finally {
       setIsLoading(false);

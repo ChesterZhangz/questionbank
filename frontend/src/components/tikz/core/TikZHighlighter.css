@@ -1,0 +1,263 @@
+/* 
+ * TikZ语法高亮样式 - 编辑器专用
+ * 
+ * 本文件包含：
+ * - TikZ编辑器语法高亮规则
+ * - 不同语法类别的颜色定义
+ * - Dark Mode适配
+ * - 编辑器专用样式
+ */
+
+.tikz-highlighter {
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  letter-spacing: 0px;
+  tab-size: 4;
+  color: #374151;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  word-spacing: normal; /* 确保单词间距一致 */
+  text-align: left; /* 确保文本对齐一致 */
+  font-variant-ligatures: none; /* 禁用连字 */
+  font-feature-settings: normal; /* 确保字体特性一致 */
+}
+
+/* 完全隐藏高亮层的滚动条，确保与textarea布局一致 */
+.tikz-highlighter::-webkit-scrollbar,
+.tikz-highlight-container::-webkit-scrollbar {
+  display: none;
+}
+
+.tikz-highlight-container {
+  scrollbar-width: none !important; /* Firefox - 强制隐藏 */
+  -ms-overflow-style: none !important; /* Internet Explorer 10+ - 强制隐藏 */
+  overflow: hidden !important; /* 强制隐藏所有滚动 */
+}
+
+/* 确保高亮层内容不会产生滚动条 */
+.tikz-highlighter {
+  overflow: hidden !important;
+}
+
+/* 强制禁用外层容器的滚动条 */
+.tikz-highlight-input {
+  overflow: hidden !important;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* Internet Explorer 10+ */
+}
+
+.tikz-highlight-input::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* 确保普通文本（没有高亮类的文本）有正确的颜色 */
+.tikz-highlighter span:not([class*="tikz-"]) {
+  color: #374151 !important;
+}
+
+/* 普通文本样式 */
+.tikz-text {
+  color: #374151;
+}
+
+/* 确保所有span不影响布局 */
+.tikz-highlighter span {
+  display: inline;
+  white-space: inherit;
+  word-break: inherit;
+  overflow-wrap: inherit;
+  word-wrap: inherit;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-weight: normal;
+  font-style: normal;
+  background: none;
+}
+
+/* 1. 注释 - 灰色 */
+.tikz-comment {
+  color: #6a737d;
+}
+
+/* 2. 绘制命令 - 深蓝色 */
+.tikz-draw-command {
+  color: #005cc5;
+}
+
+/* 3. 图形命令 - 深绿色 */
+.tikz-shape-command {
+  color: #22863a;
+}
+
+/* 4. 节点和坐标命令 - 紫色 */
+.tikz-node-command {
+  color: #6f42c1;
+}
+
+/* 5. 样式命令 - 橙色 */
+.tikz-style-command {
+  color: #e36209;
+}
+
+/* 6. 变换命令 - 蓝色 */
+.tikz-transform-command {
+  color: #005cc5;
+}
+
+/* 7. 数学函数 - 深绿色 */
+.tikz-math-function {
+  color: #22863a;
+}
+
+/* 8. 希腊字母 - 深紫色 */
+.tikz-greek-letter {
+  color: #6f42c1;
+}
+
+/* 9. 数学符号 - 紫红色 */
+.tikz-math-symbol {
+  color: #d73a49;
+}
+
+/* 10. 箭头 - 蓝色 */
+.tikz-arrow {
+  color: #005cc5;
+}
+
+/* 11. 坐标 - 绿色 */
+.tikz-coordinate {
+  color: #22863a;
+}
+
+/* 12. 大括号内容 - 绿色 */
+.tikz-braces-content {
+  color: #22863a;
+}
+
+/* 13. 可选参数 - 灰色 */
+.tikz-optional-param {
+  color: #6a737d;
+}
+
+/* 14. 数字 - 红色 */
+.tikz-number {
+  color: #d73a49;
+}
+
+/* 15. 基本运算符 - 灰色 */
+.tikz-basic-operator {
+  color: #6a737d;
+}
+
+/* 16. 特殊字符 - 橙色 */
+.tikz-special-char {
+  color: #e36209;
+}
+
+/* 17. 一般命令 - 蓝色 */
+.tikz-command {
+  color: #005cc5;
+}
+
+/* 悬停效果 */
+.tikz-highlighter span:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-radius: 2px;
+}
+
+/* 选择文本样式 */
+.tikz-highlighter ::selection {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: inherit;
+}
+
+/* Dark Mode支持 - 使用.dark选择器 */
+.dark .tikz-highlighter {
+  color: #f6f8fa;
+}
+
+.dark .tikz-highlighter span:not([class*="tikz-"]) {
+  color: #f6f8fa !important;
+}
+
+.dark .tikz-text {
+  color: #f6f8fa;
+}
+
+.dark .tikz-comment {
+  color: #8b949e;
+}
+
+.dark .tikz-draw-command {
+  color: #79c0ff;
+}
+
+.dark .tikz-shape-command {
+  color: #7ee787;
+}
+
+.dark .tikz-node-command {
+  color: #d2a8ff;
+}
+
+.dark .tikz-style-command {
+  color: #ffa657;
+}
+
+.dark .tikz-transform-command {
+  color: #79c0ff;
+}
+
+.dark .tikz-math-function {
+  color: #7ee787;
+}
+
+.dark .tikz-greek-letter {
+  color: #d2a8ff;
+}
+
+.dark .tikz-math-symbol {
+  color: #ffa198;
+}
+
+.dark .tikz-arrow {
+  color: #79c0ff;
+}
+
+.dark .tikz-coordinate {
+  color: #7ee787;
+}
+
+.dark .tikz-braces-content {
+  color: #7ee787;
+}
+
+.dark .tikz-optional-param {
+  color: #8b949e;
+}
+
+.dark .tikz-number {
+  color: #ff7b72;
+}
+
+.dark .tikz-basic-operator {
+  color: #8b949e;
+}
+
+.dark .tikz-special-char {
+  color: #ffa657;
+}
+
+.dark .tikz-command {
+  color: #79c0ff;
+}

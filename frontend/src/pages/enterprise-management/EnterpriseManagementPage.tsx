@@ -99,7 +99,7 @@ const EnterpriseManagementPage: React.FC = () => {
         setError('获取企业列表失败');
       }
     } catch (error: any) {
-      console.error('获取企业列表失败:', error);
+      // 错误日志已清理
       setError(error.response?.data?.error || '获取企业列表失败');
     } finally {
       setLoading(false);
@@ -130,7 +130,7 @@ const EnterpriseManagementPage: React.FC = () => {
         showErrorRightSlide('创建失败', '企业创建失败');
       }
     } catch (error: any) {
-      console.error('创建企业失败:', error);
+      // 错误日志已清理
       showErrorRightSlide('创建失败', error.response?.data?.error || '企业创建失败');
     }
   };
@@ -182,7 +182,7 @@ const EnterpriseManagementPage: React.FC = () => {
         showErrorRightSlide('更新失败', '企业信息更新失败');
       }
     } catch (error: any) {
-      console.error('更新企业失败:', error);
+      // 错误日志已清理
       showErrorRightSlide('更新失败', error.response?.data?.error || '企业信息更新失败');
     }
   };
@@ -204,7 +204,7 @@ const EnterpriseManagementPage: React.FC = () => {
         showErrorRightSlide('删除失败', '企业删除失败');
       }
     } catch (error: any) {
-      console.error('删除企业失败:', error);
+      // 错误日志已清理
       showErrorRightSlide('删除失败', error.response?.data?.error || '企业删除失败');
     }
   };

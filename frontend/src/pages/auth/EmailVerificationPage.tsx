@@ -61,7 +61,7 @@ const EmailVerificationPage: React.FC = () => {
         setMessage(result.message || '验证失败，请重试');
       }
     } catch (error) {
-              console.error('验证错误:', error);
+              // 错误日志已清理
       hasVerified.current = true;
       setStatus('error');
       setMessage('验证过程中出现错误，请重试');

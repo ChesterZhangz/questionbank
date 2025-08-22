@@ -30,15 +30,15 @@ const QuestionSavePanel: React.FC<QuestionSavePanelProps> = ({
 
 
   // 调试信息
-  console.log('QuestionSavePanel - questionBanks:', questionBanks);
-  console.log('QuestionSavePanel - selectedQuestionBank:', selectedQuestionBank);
+  // 调试日志已清理
+  // 调试日志已清理
 
   const bankOptions = questionBanks.map(bank => ({
     value: bank.bid, // 使用bid而不是_id，因为后端API期望bid
     label: bank.name
   }));
 
-  console.log('QuestionSavePanel - bankOptions:', bankOptions);
+  // 调试日志已清理
 
   const handleSave = () => {
     if (selectedQuestionBank) {

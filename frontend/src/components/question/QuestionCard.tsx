@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Star, 
   Eye, 
@@ -7,7 +7,14 @@ import {
   MoreVertical,
   BookOpen,
   Calendar,
-  Trash2
+  Trash2,
+  X,
+  RotateCw,
+  RotateCcw,
+  ZoomIn,
+  ZoomOut,
+  Download,
+  Maximize
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Question } from '../../types';
@@ -15,6 +22,7 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 // 导入LaTeXPreview组件，使用与编辑区相同的渲染逻辑
 import LaTeXPreview from '../editor/preview/LaTeXPreview';
+import TikZPreview from '../tikz/core/TikZPreview';
 
 import { useModal } from '../../hooks/useModal';
 import ConfirmModal from '../ui/ConfirmModal';
@@ -60,6 +68,17 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
   // 弹窗状态管理
   const { showConfirm, showErrorRightSlide, confirmModal, closeConfirm } = useModal();
   
+  // 图片预览状态
+  const [previewImage, setPreviewImage] = useState<{ url: string; filename: string } | null>(null);
+  const [previewTikZ, setPreviewTikZ] = useState<{ code: string; format: 'svg' | 'png' } | null>(null);
+  
+  // 图片操作状态
+  const [imageRotation, setImageRotation] = useState(0);
+  const [imageScale, setImageScale] = useState(1);
+  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  
 
   // 格式化题库名称显示
   const formatBankName = (name?: string) => {
@@ -96,6 +115,68 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
       month: '2-digit', 
       day: '2-digit' 
     });
+  };
+
+  // 图片预览处理
+  const handleImagePreview = (image: { url: string; filename: string }) => {
+    setPreviewImage(image);
+    // 重置图片状态
+    setImageRotation(0);
+    setImageScale(1);
+    setImagePosition({ x: 0, y: 0 });
+  };
+
+  // TikZ预览处理
+  const handleTikZPreview = (tikz: { code: string; format: 'svg' | 'png' }) => {
+    setPreviewTikZ(tikz);
+  };
+
+  // 图片操作函数
+  const rotateImage = (direction: 'left' | 'right') => {
+    setImageRotation(prev => prev + (direction === 'right' ? 90 : -90));
+  };
+
+  const zoomImage = (type: 'in' | 'out') => {
+    setImageScale(prev => {
+      const newScale = type === 'in' ? prev * 1.2 : prev / 1.2;
+      return Math.max(0.1, Math.min(5, newScale)); // 限制缩放范围
+    });
+  };
+
+  const resetImageTransform = () => {
+    setImageRotation(0);
+    setImageScale(1);
+    setImagePosition({ x: 0, y: 0 });
+  };
+
+  const downloadImage = () => {
+    if (previewImage) {
+      const link = document.createElement('a');
+      link.href = previewImage.url;
+      link.download = previewImage.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  // 图片拖拽函数
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - imagePosition.x, y: e.clientY - imagePosition.y });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      setImagePosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
   };
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
@@ -202,7 +283,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
     try {
       await onFavorite(question.qid, !isFavorite);
     } catch (error) {
-      console.error('收藏操作失败:', error);
+      // 错误日志已清理
     } finally {
       setIsFavoriting(false);
     }
@@ -242,7 +323,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
         try {
           await onDelete(question._id);
         } catch (error) {
-          console.error('删除题目失败:', error);
+          // 错误日志已清理
           showErrorRightSlide('删除失败', '删除题目失败，请重试');
         }
       }
@@ -410,34 +491,92 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
               </div>
             </div>
 
-            {/* 题目内容区域 - 可滚动 */}
-            <div className="flex-1 overflow-hidden min-w-0 flex flex-col">
-              {/* 题目主干 - 可滚动 */}
-              <div className="flex-1 min-w-0 question-card-content-scroll mb-2">
-                <h3 className="text-base font-medium text-gray-900 dark:text-gray-100 mb-3 leading-relaxed min-w-0">
-                  <LaTeXPreview 
-                    content={question.content.stem} 
-                    config={{ 
-                      mode: 'full',
-                      features: {
-                        markdown: true,
-                        questionSyntax: true,
-                        autoNumbering: true,
-                        errorHandling: 'lenient'
-                      },
-                      styling: {
-                        fontSize: '1rem',
-                        lineHeight: '1.6',
-                        maxWidth: '100%'
-                      }
-                    }}
-                    variant="compact"
-                    showTitle={false}
-                    className="question-card-latex-content"
-                    maxWidth="max-w-none"
-                  />
-                </h3>
-              </div>
+                          {/* 题目内容区域 - 可滚动 */}
+              <div className="flex-1 overflow-hidden min-w-0 flex flex-col">
+                {/* 题目主干 - 可滚动 */}
+                <div className="flex-1 min-w-0 question-card-content-scroll mb-2">
+                  <h3 className="text-base font-medium text-gray-900 dark:text-gray-100 mb-3 leading-relaxed min-w-0">
+                    <LaTeXPreview 
+                      content={question.content.stem} 
+                      config={{ 
+                        mode: 'full',
+                        features: {
+                          markdown: true,
+                          questionSyntax: true,
+                          autoNumbering: true,
+                          errorHandling: 'lenient'
+                        },
+                        styling: {
+                          fontSize: '1rem',
+                          lineHeight: '1.6',
+                          maxWidth: '100%'
+                        }
+                      }}
+                      variant="compact"
+                      showTitle={false}
+                      className="question-card-latex-content"
+                      maxWidth="max-w-none"
+                    />
+                  </h3>
+                  
+                                    {/* 题目图片和TikZ显示 */}
+                  {((question.images && question.images.length > 0) || (question.tikzCodes && question.tikzCodes.length > 0)) && (
+                    <div className="mt-3">
+
+                      
+                      {/* 媒体内容 */}
+                      <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                        {/* 图片显示 */}
+                        {question.images && question.images.length > 0 && (
+                          question.images.map((image) => (
+                            <div key={image.id} className="flex-shrink-0 group relative">
+                              <div className="w-24 h-20 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden bg-gray-50 dark:bg-gray-700 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
+                                <img
+                                  src={image.url}
+                                  alt={image.filename}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                  onClick={() => handleImagePreview(image)}
+                                />
+                              </div>
+                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-white text-xs font-medium">
+                                  查看
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                        
+                        {/* TikZ显示 */}
+                        {question.tikzCodes && question.tikzCodes.length > 0 && (
+                          question.tikzCodes.map((tikz) => (
+                            <div key={tikz.id} className="flex-shrink-0 group relative">
+                              <div 
+                                className="w-24 h-20 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer"
+                                onClick={() => handleTikZPreview(tikz)}
+                              >
+                                <TikZPreview
+                                  code={tikz.code}
+                                  format={tikz.format}
+                                  width={96}
+                                  height={80}
+                                  showGrid={false}
+                                  showTitle={false}
+                                  className="w-full h-full group-hover:scale-105 transition-transform duration-200"
+                                />
+                              </div>
+                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-white text-xs font-medium">
+                                  查看
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
               {/* 选项区域 - 可滚动 */}
               {question.content.options && question.content.options.length > 0 && (
@@ -516,6 +655,62 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                         maxWidth="max-w-none"
                       />
                     </div>
+                    
+                    {/* 题目图片和TikZ显示 - 列表模式 */}
+                    {((question.images && question.images.length > 0) || (question.tikzCodes && question.tikzCodes.length > 0)) && (
+                      <div className="mt-2">
+                        {/* 媒体内容 */}
+                        <div className="flex space-x-3 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                          {/* 图片显示 */}
+                          {question.images && question.images.length > 0 && (
+                            question.images.map((image) => (
+                              <div key={image.id} className="flex-shrink-0 group relative">
+                                <div className="w-20 h-16 rounded-md border border-gray-200 dark:border-gray-600 overflow-hidden bg-gray-50 dark:bg-gray-700 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
+                                  <img
+                                    src={image.url}
+                                    alt={image.filename}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                    onClick={() => handleImagePreview(image)}
+                                  />
+                                </div>
+                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-md flex items-center justify-center">
+                                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-white text-xs font-medium">
+                                    查看
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                          
+                          {/* TikZ显示 */}
+                          {question.tikzCodes && question.tikzCodes.length > 0 && (
+                            question.tikzCodes.map((tikz) => (
+                              <div key={tikz.id} className="flex-shrink-0 group relative">
+                                <div 
+                                  className="w-20 h-16 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer"
+                                  onClick={() => handleTikZPreview(tikz)}
+                                >
+                                  <TikZPreview
+                                    code={tikz.code}
+                                    format={tikz.format}
+                                    width={80}
+                                    height={64}
+                                    showGrid={false}
+                                    showTitle={false}
+                                    className="w-full h-full group-hover:scale-105 transition-transform duration-200"
+                                  />
+                                </div>
+                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-md flex items-center justify-center">
+                                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-white text-xs font-medium">
+                                    查看
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </h3>
                   <div className="flex items-center space-x-1">
                     {/* 收藏按钮 */}
@@ -645,6 +840,203 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
           </div>
         </div>
       )}
+
+      {/* 图片预览模态框 */}
+      <AnimatePresence>
+        {previewImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black bg-opacity-90"
+            onClick={() => setPreviewImage(null)}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          >
+            {/* 顶部工具栏 */}
+            <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
+              {/* 左侧信息 */}
+              <div className="flex items-center space-x-4">
+                <div className="bg-black/50 backdrop-blur-sm rounded-lg px-3 py-2">
+                  <p className="text-white text-sm font-medium">{previewImage.filename}</p>
+                </div>
+                <div className="bg-black/50 backdrop-blur-sm rounded-lg px-3 py-2">
+                  <p className="text-white text-xs">缩放: {Math.round(imageScale * 100)}%</p>
+                </div>
+              </div>
+              
+              {/* 右侧操作按钮 */}
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadImage();
+                  }}
+                  className="bg-black/50 backdrop-blur-sm border-white/20 text-white hover:bg-black/70"
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPreviewImage(null)}
+                  className="bg-black/50 backdrop-blur-sm border-white/20 text-white hover:bg-black/70"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* 左侧工具面板 */}
+            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 flex flex-col space-y-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  rotateImage('left');
+                }}
+                className="bg-black/50 backdrop-blur-sm border-white/20 text-white hover:bg-black/70"
+                title="逆时针旋转"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  rotateImage('right');
+                }}
+                className="bg-black/50 backdrop-blur-sm border-white/20 text-white hover:bg-black/70"
+                title="顺时针旋转"
+              >
+                <RotateCw className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  zoomImage('in');
+                }}
+                className="bg-black/50 backdrop-blur-sm border-white/20 text-white hover:bg-black/70"
+                title="放大"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  zoomImage('out');
+                }}
+                className="bg-black/50 backdrop-blur-sm border-white/20 text-white hover:bg-black/70"
+                title="缩小"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  resetImageTransform();
+                }}
+                className="bg-black/50 backdrop-blur-sm border-white/20 text-white hover:bg-black/70"
+                title="重置"
+              >
+                <Maximize className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            {/* 图片内容 */}
+            <div className="flex items-center justify-center w-full h-full p-16">
+              <motion.img
+                src={previewImage.url}
+                alt={previewImage.filename}
+                className={`max-w-none max-h-none select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                style={{
+                  transform: `translate(${imagePosition.x}px, ${imagePosition.y}px) rotate(${imageRotation}deg) scale(${imageScale})`,
+                  transformOrigin: 'center'
+                }}
+                onMouseDown={handleMouseDown}
+                onClick={(e) => e.stopPropagation()}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                draggable={false}
+              />
+            </div>
+
+            {/* 底部提示 */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+              <div className="bg-black/50 backdrop-blur-sm rounded-lg px-4 py-2">
+                <p className="text-white text-xs text-center">
+                  拖拽图片移动位置 • 使用左侧工具进行操作 • 点击背景关闭
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* TikZ预览模态框 */}
+      <AnimatePresence>
+        {previewTikZ && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4"
+            onClick={() => setPreviewTikZ(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="relative max-w-4xl max-h-full bg-white dark:bg-gray-800 rounded-lg shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 工具栏 */}
+              <div className="absolute top-4 right-4 z-10 flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPreviewTikZ(null)}
+                  className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              {/* TikZ内容 */}
+              <div className="p-6">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">TikZ 图形预览</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">格式: {previewTikZ.format.toUpperCase()}</p>
+                </div>
+                <div className="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4">
+                  <TikZPreview
+                    code={previewTikZ.code}
+                    format={previewTikZ.format}
+                    width={600}
+                    height={400}
+                    showGrid={false}
+                    showTitle={false}
+                    className="w-full h-full"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 确认弹窗 */}
       <ConfirmModal

@@ -58,20 +58,8 @@ export class PuzzleSolverService {
       // 创建解题器并求解
       const solver = new PuzzleSolver(gridSize);
       
-      // 添加调试信息
-      console.log('开始求解拼图:', {
-        gridSize,
-        initialBoard,
-        boardLength: initialBoard.length,
-        expectedLength: gridSize * gridSize
-      });
       
       const solution = solver.solve(initialBoard);
-      
-      console.log('求解结果:', {
-        solutionLength: solution.length,
-        hasSolution: solution.length > 0
-      });
       
       if (solution.length === 0) {
         return {

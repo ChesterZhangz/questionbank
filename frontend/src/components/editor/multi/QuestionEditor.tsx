@@ -334,7 +334,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                               const result = renderer.render(localQuestion.stem);
                               return result.html;
                             } catch (error) {
-                              console.error('LaTeX渲染错误:', error);
+                              // 错误日志已清理
                               return localQuestion.stem;
                             }
                           })() : ''

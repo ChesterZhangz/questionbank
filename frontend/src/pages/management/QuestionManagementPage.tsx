@@ -277,7 +277,7 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
         setError('收藏操作失败');
       }
     } catch (error) {
-      console.error('收藏操作失败:', error);
+      // 错误日志已清理
       setError('收藏操作失败');
     }
   };
@@ -326,7 +326,7 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
       // 可选：显示成功提示
       // toast.success('题目删除成功');
     } catch (error) {
-      console.error('删除题目失败:', error);
+      // 错误日志已清理
       setError('删除题目失败，请重试');
     }
   };
@@ -350,7 +350,7 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
         setFavorites(favoriteIds);
       }
     } catch (error: any) {
-      console.error('获取收藏状态失败:', error);
+      // 错误日志已清理
       // 不影响页面正常显示，只记录错误
     }
   };

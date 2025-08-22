@@ -337,27 +337,27 @@ const BatchUploadPage: React.FC = () => {
             }))
           }));
         setDocuments(restoredDocuments);
-      } catch (error) {
-        console.error('加载当前文档状态失败:', error);
-      }
+              } catch (error) {
+          showErrorRightSlide('加载失败', '加载当前文档状态失败');
+        }
     }
     
     if (savedQuestions) {
       try {
         const questions = JSON.parse(savedQuestions);
         setAllQuestions(questions);
-      } catch (error) {
-        console.error('加载当前题目状态失败:', error);
-      }
+              } catch (error) {
+          showErrorRightSlide('加载失败', '加载当前题目状态失败');
+        }
     }
     
     if (savedGlobalStatus) {
       try {
         const globalStatus = JSON.parse(savedGlobalStatus);
         setGlobalProcessingStatus(globalStatus);
-      } catch (error) {
-        console.error('加载全局处理状态失败:', error);
-      }
+              } catch (error) {
+          showErrorRightSlide('加载失败', '加载全局处理状态失败');
+        }
     }
   }, []);
 
@@ -406,9 +406,9 @@ const BatchUploadPage: React.FC = () => {
       try {
         const history = JSON.parse(savedHistory);
         setUploadHistory(history);
-      } catch (error) {
-        console.error('加载历史记录失败:', error);
-      }
+              } catch (error) {
+          showErrorRightSlide('加载失败', '加载历史记录失败');
+        }
     }
   }, []);
 
@@ -500,7 +500,7 @@ const BatchUploadPage: React.FC = () => {
       const result = JSON.parse(responseText);
       return result;
     } catch (parseError) {
-      console.warn(`${apiName} 直接JSON解析失败:`, parseError);
+              // 直接JSON解析失败
     }
 
     // 2. 尝试提取JSON部分（处理流式响应或包含其他内容的响应）
@@ -521,7 +521,7 @@ const BatchUploadPage: React.FC = () => {
           const result = JSON.parse(jsonStr);
           return result;
         } catch (extractError) {
-          console.warn(`${apiName} 模式 ${pattern} 提取失败:`, extractError);
+          // 模式提取失败
         }
       }
     }
@@ -541,12 +541,8 @@ const BatchUploadPage: React.FC = () => {
         return result;
       }
     } catch (cleanError) {
-      console.warn(`${apiName} 清理后解析失败:`, cleanError);
+              // 清理后解析失败
     }
-
-    // 4. 如果都失败了，抛出详细错误
-    console.error(`${apiName} 所有JSON解析方法都失败了`);
-    console.error('完整响应内容:', responseText);
     throw new Error(`无法解析${apiName}响应数据，响应格式不正确`);
   };
 
@@ -640,7 +636,7 @@ const BatchUploadPage: React.FC = () => {
         throw new Error('不支持的文件类型，仅支持PDF和TeX文件');
       }
     } catch (error: any) {
-      console.error('文件处理失败:', error);
+      showErrorRightSlide('处理失败', '文件处理失败，请重试');
       updateDocumentProgress(newDocument.id, { 
         status: 'failed', 
         error: error.message || '文件处理失败'
@@ -682,7 +678,6 @@ const BatchUploadPage: React.FC = () => {
     
     if (!token) {
       console.warn('⚠️ 没有认证token，尝试使用测试路由');
-      // 在开发环境中，如果没有token，尝试使用测试路由
       if (import.meta.env.DEV) {
       } else {
         throw new Error('需要登录才能处理文件，请先登录');
@@ -708,7 +703,7 @@ const BatchUploadPage: React.FC = () => {
         es.onmessage = (evt) => {
           try {
             const data = JSON.parse(evt.data);
-            console.log('SSE收到事件:', data); // 调试日志
+            // SSE收到事件
             
             if (data?.type === 'status') {
               const step = data.step || '';
@@ -921,7 +916,7 @@ const BatchUploadPage: React.FC = () => {
         es.onmessage = (evt) => {
           try {
             const data = JSON.parse(evt.data);
-            console.log('SSE收到事件:', data); // 调试日志
+            // SSE收到事件
             
             if (data?.type === 'status') {
               const step = data.step || '';

@@ -168,7 +168,7 @@ const QuestionBankStatsPage: React.FC = () => {
         setError('获取统计数据失败');
       }
     } catch (error: any) {
-      console.error('获取统计数据失败:', error);
+      // 错误日志已清理
       setError(error.response?.data?.error || '获取统计数据失败，请稍后重试');
     } finally {
       setLoading(false);

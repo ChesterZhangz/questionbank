@@ -67,7 +67,7 @@ export const BackgroundTaskProvider: React.FC<BackgroundTaskProviderProps> = ({ 
         );
         setTasks(activeTasks);
       } catch (error) {
-        console.error('Failed to restore background tasks:', error);
+        // 错误日志已清理
       }
     }
   }, []);

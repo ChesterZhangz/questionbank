@@ -9,6 +9,7 @@ import Input from '../../components/ui/Input';
 import LaTeXEditor from '../../components/editor/latex/LaTeXEditor';
 import LoadingPage from '../../components/ui/LoadingPage';
 import { HoverTooltip, QuestionTypeSelector, KnowledgeTagSelector, QuestionSourceSelector } from '../../components/editor';
+import { IntegratedMediaEditor, MediaContentPreview, SimpleMediaPreview } from '../../components/question';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import { useModal } from '../../hooks/useModal';
@@ -40,7 +41,23 @@ const EditQuestionPage: React.FC = () => {
   // 导航相关状态
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
-  const [activeTab, setActiveTab] = useState<'stem' | 'solution'>('stem');
+  const [activeTab, setActiveTab] = useState<'stem' | 'solution' | 'media'>('stem');
+
+  // 图片相关状态
+  const [images, setImages] = useState<Array<{
+    id: string;
+    url: string;
+    filename: string;
+    order: number;
+  }>>([]);
+  
+  // TikZ 图形相关状态
+  const [tikzCodes, setTikzCodes] = useState<Array<{
+    id: string;
+    code: string;
+    format: 'svg' | 'png';
+    order: number;
+  }>>([]);
 
   const fetchQuestion = useCallback(async () => {
     try {
@@ -65,7 +82,7 @@ const EditQuestionPage: React.FC = () => {
         setQuestionBank(response.data.questionBank);
       }
     } catch (error: any) {
-      console.error('获取题库信息失败:', error);
+      // 错误日志已清理
     }
   }, [bid]);
 
@@ -79,7 +96,7 @@ const EditQuestionPage: React.FC = () => {
         setCurrentIndex(index);
       }
     } catch (error: any) {
-      console.error('获取题目列表失败:', error);
+      // 错误日志已清理
     }
   }, [bid, qid]);
 
@@ -91,6 +108,30 @@ const EditQuestionPage: React.FC = () => {
       fetchAllQuestions();
     }
   }, [bid, qid]); // 移除函数依赖，避免无限循环
+
+  // 同步题目数据到媒体状态
+  useEffect(() => {
+    if (question) {
+      setImages(question.images || []);
+      setTikzCodes(question.tikzCodes || []);
+    }
+  }, [question]);
+
+  // 监听媒体状态变化，设置 hasChanges
+  useEffect(() => {
+    if (question) {
+      const originalImages = question.images || [];
+      const originalTikzCodes = question.tikzCodes || [];
+      
+      // 检查是否有变化
+      const imagesChanged = JSON.stringify(images) !== JSON.stringify(originalImages);
+      const tikzChanged = JSON.stringify(tikzCodes) !== JSON.stringify(originalTikzCodes);
+      
+      if (imagesChanged || tikzChanged) {
+        setHasChanges(true);
+      }
+    }
+  }, [images, tikzCodes, question]);
 
   // 处理题目内容变化
   const handleQuestionChange = useCallback((updatedQuestion: Partial<Question>) => {
@@ -104,7 +145,14 @@ const EditQuestionPage: React.FC = () => {
 
     try {
       setSaving(true);
-      const response = await questionAPI.updateQuestion(qid!, question);
+      // 合并最新的媒体数据到题目对象
+      const updatedQuestion = {
+        ...question,
+        images: images,
+        tikzCodes: tikzCodes
+      };
+      
+      const response = await questionAPI.updateQuestion(qid!, updatedQuestion);
       
       if (response.data.success) {
         setHasChanges(false);
@@ -448,6 +496,16 @@ const EditQuestionPage: React.FC = () => {
                     题干
                   </button>
                   <button
+                    onClick={() => setActiveTab('media')}
+                    className={`px-4 py-2 rounded-lg transition-colors ${
+                      activeTab === 'media'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    图形
+                  </button>
+                  <button
                     onClick={() => setActiveTab('solution')}
                     className={`px-4 py-2 rounded-lg transition-colors ${
                       activeTab === 'solution'
@@ -476,7 +534,7 @@ const EditQuestionPage: React.FC = () => {
                        />
                      </div>
                   </div>
-                                 ) : (
+                ) : activeTab === 'solution' ? (
                    <div className="space-y-4">
                      {/* 题目内容显示 */}
                      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
@@ -517,6 +575,13 @@ const EditQuestionPage: React.FC = () => {
                              })() : '暂无题目内容'
                          }}
                        />
+                       
+                       {/* 题目图形预览 */}
+                       {(tikzCodes.length > 0 || images.length > 0) && (
+                         <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-600">
+                           <SimpleMediaPreview tikzCodes={tikzCodes} images={images} />
+                         </div>
+                       )}
                      </div>
 
 
@@ -535,9 +600,21 @@ const EditQuestionPage: React.FC = () => {
                          questionType="solution"
                          displayType="solution"
                        />
+                       {/* 媒体内容预览在解析中 */}
+                       <MediaContentPreview tikzCodes={tikzCodes} images={images} />
                      </div>
                    </div>
-                 )}
+                 ) : activeTab === 'media' ? (
+                   <div className="space-y-4">
+                     <h4 className="font-medium text-gray-700 dark:text-gray-200">图形管理</h4>
+                     <IntegratedMediaEditor
+                       tikzCodes={tikzCodes}
+                       onTikzCodesChange={setTikzCodes}
+                       images={images}
+                       onImagesChange={setImages}
+                     />
+                   </div>
+                 ) : null}
               </div>
             </Card>
 

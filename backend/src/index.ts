@@ -21,6 +21,9 @@ import documentParserRoutes from './routes/document-parser';
 import answerGenerationRoutes from './routes/answerGeneration';
 import dashboardRoutes from './routes/dashboard';
 import searchRoutes from './routes/search';
+// 题目扩展路由
+import questionImagesRoutes from './routes/questionImages';
+import questionTikZRoutes from './routes/questionTikZ';
 
 
 import similarityRoutes from './routes/similarity';
@@ -319,6 +322,8 @@ app.get('/api/images/:imageId', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/question-banks', questionBankRoutes); // 题库路由
 app.use('/api/questions', authMiddleware, questionRoutes); // 题目路由独立注册
+app.use('/api/questions', questionImagesRoutes); // 题目图片路由
+app.use('/api/questions', questionTikZRoutes); // 题目TikZ路由
 app.use('/api/users', authMiddleware, userRoutes);
 app.use('/api/ocr', ocrRoutes); // OCR路由 - 暂时移除认证进行测试
 app.use('/api/mathpix', mathpixRoutes); // Mathpix API路由

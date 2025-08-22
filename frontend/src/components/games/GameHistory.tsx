@@ -52,7 +52,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
       setPagination(response.pagination);
       
     } catch (error) {
-      console.error('获取游戏历史失败:', error);
+      // 错误日志已清理
       setError('获取游戏历史失败，请稍后重试');
     } finally {
       setIsLoading(false);

@@ -32,7 +32,7 @@ const FollowersModal: React.FC<FollowersModalProps> = ({ isOpen, onClose, userId
         setError(response.data.error || '获取粉丝列表失败');
       }
     } catch (error: any) {
-      console.error('获取粉丝列表失败:', error);
+      // 错误日志已清理
       setError(error.response?.data?.error || '获取粉丝列表失败');
     } finally {
       setLoading(false);

@@ -552,7 +552,7 @@ const QuestionPreviewPage: React.FC = () => {
             completedCount++;
           }
         } catch (answerError) {
-          console.error(`题目 ${question.id} 答案生成失败:`, answerError);
+          // 错误日志已清理
           // 失败也移除等待状态，避免卡住
           setAnswerGeneratingQuestions(prev => prev.filter(id => id !== question.id));
         }
@@ -565,7 +565,7 @@ const QuestionPreviewPage: React.FC = () => {
         autoSaveDraft();
       }
     } catch (error) {
-      console.error('后台答案生成失败:', error);
+      // 错误日志已清理
     }
   }, [selectedQuestions, setQuestions, questions]);
 
@@ -655,7 +655,7 @@ const QuestionPreviewPage: React.FC = () => {
         showSuccessRightSlide("答案生成完成", '已为题目生成答案和解析');
       }
     } catch (answerError) {
-      console.error(`题目 ${questionId} 答案生成失败:`, answerError);
+      // 错误日志已清理
       // 答案生成失败不影响标签分析结果，不显示错误消息
     } finally {
       // 无论成功或失败，移除等待状态

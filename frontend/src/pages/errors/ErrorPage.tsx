@@ -141,7 +141,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
             token = authData.state.token;
           }
         } catch (error) {
-          console.error('Failed to parse auth storage:', error);
+          // 错误日志已清理
         }
       }
       
@@ -158,7 +158,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
       const status = await GameAPIService.getGameStatus();
       setGameStatus(status);
     } catch (error) {
-      console.error('检查游戏状态失败:', error);
+      // 错误日志已清理
       // 如果检查失败，设置默认状态
       setGameStatus({
         canPlay: false,
@@ -180,7 +180,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
           token = authData.state.token;
         }
       } catch (error) {
-        console.error('Failed to parse auth storage:', error);
+        // 错误日志已清理
       }
     }
     

@@ -16,6 +16,7 @@ import {
   MultiQuestionUploader,
   MultiQuestionEditor
 } from '../../components/editor';
+import { IntegratedMediaEditor, MediaContentPreview, SimpleMediaPreview } from '../../components/question';
 import OCRUploader from '../../components/math/OCRUploader';
 import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
@@ -42,7 +43,7 @@ interface QuestionContent {
 const CreateQuestionPage: React.FC = () => {
   const { bid } = useParams<{ bid: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const [questionType, setQuestionType] = useState<'choice' | 'multiple-choice' | 'fill' | 'solution'>('choice');
   const [content, setContent] = useState<QuestionContent>({
       stem: '',
@@ -54,8 +55,24 @@ const CreateQuestionPage: React.FC = () => {
     category: [],
     source: ''
   });
+  
+  // 图片相关状态
+  const [images, setImages] = useState<Array<{
+    id: string;
+    url: string;
+    filename: string;
+    order: number;
+  }>>([]);
+  
+  // TikZ 图形相关状态
+  const [tikzCodes, setTikzCodes] = useState<Array<{
+    id: string;
+    code: string;
+    format: 'svg' | 'png';
+    order: number;
+  }>>([]);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'stem' | 'solution'>('stem');
+  const [activeTab, setActiveTab] = useState<'stem' | 'solution' | 'media'>('stem');
   const [questionBanks, setQuestionBanks] = useState<QuestionBank[]>([]);
   const [selectedBankId, setSelectedBankId] = useState<string>('');
   const [showBankDropdown, setShowBankDropdown] = useState(false);
@@ -159,7 +176,7 @@ const CreateQuestionPage: React.FC = () => {
         navigate('/questions');
       }
     } catch (error) {
-      console.error('创建题目失败:', error);
+      // 创建题目失败
       showErrorRightSlide('创建失败', '创建题目时发生错误，请重试');
     } finally {
       setIsSaving(false);
@@ -204,7 +221,7 @@ const CreateQuestionPage: React.FC = () => {
         setSimilarityWarning(null);
       }
     } catch (error) {
-      console.error('实时相似度检测失败:', error);
+      // 实时相似度检测失败
       setSimilarityWarning(null);
       showErrorRightSlide('检测失败', '相似度检测失败，请稍后重试');
     } finally {
@@ -257,7 +274,7 @@ const CreateQuestionPage: React.FC = () => {
         setPendingQuestionData(null);
       }
     } catch (error) {
-      console.error('获取详细相似度检测失败:', error);
+      // 获取详细相似度检测失败
       // 错误时关闭模态框
       setShowSimilarityModal(false);
       setPendingQuestionData(null);
@@ -325,7 +342,7 @@ const CreateQuestionPage: React.FC = () => {
         const response = await questionBankAPI.getQuestionBanks();
         setQuestionBanks(response.data.questionBanks || []);
       } catch (error) {
-        console.error('获取题库列表失败:', error);
+        // 获取题库列表失败
         showErrorRightSlide('加载失败', '获取题库列表失败，请刷新页面重试');
       } finally {
         setLoadingBanks(false);
@@ -450,7 +467,7 @@ const CreateQuestionPage: React.FC = () => {
         setAnalysisError('智能分析失败，请稍后重试');
       }
     } catch (error: any) {
-      console.error('智能分析失败:', error);
+      // 智能分析失败
       const errorMessage = error.response?.data?.error || '智能分析失败，请稍后重试';
       setAnalysisError(errorMessage);
       showErrorRightSlide('分析失败', errorMessage);
@@ -720,7 +737,20 @@ const CreateQuestionPage: React.FC = () => {
         category: content.category?.join(', ') || '',
         tags: content.tags,
         difficulty: content.difficulty || 3,
-        source: content.source
+        source: content.source,
+        images: images.length > 0 ? images.map(img => ({
+          ...img,
+          bid: selectedBankId,
+          format: 'png', // 默认格式
+          uploadedAt: new Date(),
+          uploadedBy: user?._id || 'unknown-user'
+        })) : undefined,
+        tikzCodes: tikzCodes.length > 0 ? tikzCodes.map(tikz => ({
+          ...tikz,
+          bid: selectedBankId,
+          createdAt: new Date(),
+          createdBy: user?._id || 'unknown-user'
+        })) : undefined
       };
 
       await questionAPI.createQuestion(selectedBankId, questionData);
@@ -737,7 +767,7 @@ const CreateQuestionPage: React.FC = () => {
         navigate('/questions');
       }
     } catch (error) {
-      console.error('保存题目失败:', error);
+      // 保存题目失败
       showErrorRightSlide('保存失败', '保存题目时发生错误，请重试');
     } finally {
       setIsSaving(false);
@@ -1115,7 +1145,6 @@ const CreateQuestionPage: React.FC = () => {
               // 上传阶段
               <MultiQuestionUploader
                 onQuestionsGenerated={handleMultiQuestionsGenerated}
-                onError={(error) => console.error('上传失败:', error)}
               />
             ) : (
               // 编辑阶段
@@ -1151,6 +1180,16 @@ const CreateQuestionPage: React.FC = () => {
                         }`}
                       >
                         题干
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('media')}
+                        className={`px-4 py-2 rounded-lg transition-colors ${
+                          activeTab === 'media'
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        图形
                       </button>
                       <button
                         onClick={() => setActiveTab('solution')}
@@ -1255,7 +1294,7 @@ const CreateQuestionPage: React.FC = () => {
                         questionType={questionType === 'multiple-choice' ? 'choice' : questionType}
                       />
                     </div>
-                  ) : (
+                  ) : activeTab === 'solution' ? (
                     <div className="space-y-4">
                       {/* 题目预览 */}
                       <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -1266,6 +1305,13 @@ const CreateQuestionPage: React.FC = () => {
                             __html: content.stem ? renderContent(content.stem) : ''
                           }}
                         />
+                        
+                        {/* 题目图形预览 */}
+                        {tikzCodes.length > 0 && (
+                          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                                                            <SimpleMediaPreview tikzCodes={tikzCodes} images={images} />
+                          </div>
+                        )}
                       </div>
 
                       {/* 解析编辑器 */}
@@ -1281,8 +1327,20 @@ const CreateQuestionPage: React.FC = () => {
                           displayType="solution"
                         />
                       </div>
+                      {/* 媒体内容预览在解析中 */}
+                      <MediaContentPreview tikzCodes={tikzCodes} images={images} />
                     </div>
-                  )}
+                  ) : activeTab === 'media' ? (
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-gray-700 dark:text-gray-200">图形管理</h4>
+                      <IntegratedMediaEditor
+                        tikzCodes={tikzCodes}
+                        onTikzCodesChange={setTikzCodes}
+                        images={images}
+                        onImagesChange={setImages}
+                      />
+                    </div>
+                  ) : null}
                 </div>
               </Card>
 

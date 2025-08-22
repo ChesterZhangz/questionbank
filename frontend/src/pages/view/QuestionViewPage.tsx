@@ -18,6 +18,7 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import { useModal } from '../../hooks/useModal';
 import LaTeXPreview from '../../components/editor/preview/LaTeXPreview';
+import TikZPreview from '../../components/tikz/core/TikZPreview';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const QuestionViewPage: React.FC = () => {
@@ -80,15 +81,15 @@ const QuestionViewPage: React.FC = () => {
             setCurrentQuestionIndex(0);
           }
         } catch (relatedError) {
-          console.warn('获取相关题目失败:', relatedError);
+          // 警告日志已清理
           // 如果获取相关题目失败，只显示当前题目
           setQuestions([currentQ]);
           setCurrentQuestionIndex(0);
         }
         
         // 增加访问量
-        questionAPI.addView(qid!).catch(error => {
-          console.warn('更新访问量失败:', error);
+        questionAPI.addView(qid!).catch(() => {
+          // 警告日志已清理
         });
       } else {
         setError(response.data.error || '获取题目失败');
@@ -118,8 +119,8 @@ const QuestionViewPage: React.FC = () => {
       
       // 增加访问量
       if (newQuestion?.qid) {
-        questionAPI.addView(newQuestion.qid).catch(error => {
-          console.warn('更新访问量失败:', error);
+        questionAPI.addView(newQuestion.qid).catch(() => {
+          // 警告日志已清理
         });
       }
       
@@ -146,8 +147,8 @@ const QuestionViewPage: React.FC = () => {
       
       // 增加访问量
       if (newQuestion?.qid) {
-        questionAPI.addView(newQuestion.qid).catch(error => {
-          console.warn('更新访问量失败:', error);
+        questionAPI.addView(newQuestion.qid).catch(() => {
+          // 警告日志已清理
         });
       }
       
@@ -406,6 +407,68 @@ const QuestionViewPage: React.FC = () => {
                   />
                 </div>
               </Card>
+
+              {/* 题目图片与图形 */}
+              {((currentQuestion.images && currentQuestion.images.length > 0) || (currentQuestion.tikzCodes && currentQuestion.tikzCodes.length > 0)) && (
+                <Card className="overflow-hidden shadow-lg border-0 dark:bg-gray-800">
+                  <div className="p-6">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">题目图片与图形</h2>
+                    </div>
+                    <div className="space-y-4">
+                      {/* 图片显示 */}
+                      {currentQuestion.images && currentQuestion.images.length > 0 && (
+                        <div>
+                          <h3 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">图片</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {currentQuestion.images.map((image) => (
+                              <div key={image.id} className="group relative">
+                                <img
+                                  src={image.url}
+                                  alt={image.filename}
+                                  className="w-full h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+                                  onClick={() => {
+                                    // 这里可以添加图片预览功能
+                                    window.open(image.url, '_blank');
+                                  }}
+                                />
+                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-white text-sm font-medium">
+                                    点击查看大图
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* TikZ显示 */}
+                      {currentQuestion.tikzCodes && currentQuestion.tikzCodes.length > 0 && (
+                        <div>
+                          <h3 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">图形</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {currentQuestion.tikzCodes.map((tikz) => (
+                              <div key={tikz.id} className="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm p-3">
+                                <TikZPreview
+                                  code={tikz.code}
+                                  format={tikz.format}
+                                  width={200}
+                                  height={150}
+                                  showGrid={false}
+                                  showTitle={false}
+                                  className="w-full h-full"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              )}
 
               {/* 题目选项 */}
               {(currentQuestion.type === 'choice' || currentQuestion.type === 'multiple-choice') && currentQuestion.content.options && (

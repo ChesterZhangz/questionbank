@@ -275,7 +275,7 @@ const MultiQuestionUploader: React.FC<MultiQuestionUploaderProps> = ({
         throw new Error(response.data.error || '批量OCR识别失败');
       }
     } catch (err: any) {
-      console.error('批量OCR识别失败:', err);
+      // 错误日志已清理
       const errorMsg = err.response?.data?.error || err.message || '批量OCR识别失败';
       setError(errorMsg);
       onError?.(errorMsg);

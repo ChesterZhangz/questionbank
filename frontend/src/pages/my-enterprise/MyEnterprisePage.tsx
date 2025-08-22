@@ -240,7 +240,7 @@ const MyEnterprisePage: React.FC = () => {
         setLoading(true);
         await fetchEnterpriseInfo();
       } catch (error) {
-        console.error('初始化数据失败:', error);
+        // 错误日志已清理
       } finally {
         setLoading(false);
       }
@@ -269,19 +269,19 @@ const MyEnterprisePage: React.FC = () => {
         
         // 处理加载结果
         if (membersResult.status === 'rejected') {
-          console.error('获取成员列表失败:', membersResult.reason);
+          // 错误日志已清理
         }
         if (departmentsResult.status === 'rejected') {
-          console.error('获取部门列表失败:', departmentsResult.reason);
+          // 错误日志已清理
         }
         if (messagesResult.status === 'rejected') {
-          console.error('获取消息列表失败:', messagesResult.reason);
+          // 错误日志已清理
         }
       } else {
         setError('获取企业信息失败');
       }
     } catch (error: any) {
-      console.error('获取企业信息失败:', error);
+      // 错误日志已清理
       setError(error.response?.data?.error || '获取企业信息失败');
     }
   };
@@ -308,7 +308,7 @@ const MyEnterprisePage: React.FC = () => {
         setTotalPages(1);
       }
     } catch (error: any) {
-      console.error('获取成员列表失败:', error);
+      // 错误日志已清理
       setMembers([]);
       setTotalPages(1);
     }
@@ -329,7 +329,7 @@ const MyEnterprisePage: React.FC = () => {
         setDepartments([]);
       }
     } catch (error: any) {
-      console.error('获取部门列表失败:', error);
+      // 错误日志已清理
       setDepartments([]);
     }
   };
@@ -358,7 +358,7 @@ const MyEnterprisePage: React.FC = () => {
         setMessages([]);
       }
     } catch (error: any) {
-      console.error('获取消息列表失败:', error);
+      // 错误日志已清理
       setMessages([]);
     }
   };
@@ -387,7 +387,7 @@ const MyEnterprisePage: React.FC = () => {
         showSuccessRightSlide('创建成功', '部门已成功创建');
       }
     } catch (error: any) {
-      console.error('创建部门失败:', error);
+      // 错误日志已清理
       showErrorRightSlide('创建失败', error.response?.data?.error || '创建部门失败');
     } finally {
       setConfirmLoading(false);
@@ -409,7 +409,7 @@ const MyEnterprisePage: React.FC = () => {
         showSuccessRightSlide('更新成功', '部门信息已成功更新');
       }
     } catch (error: any) {
-      console.error('更新部门失败:', error);
+      // 错误日志已清理
       showErrorRightSlide('更新失败', error.response?.data?.error || '更新部门失败');
     } finally {
       setConfirmLoading(false);
@@ -434,7 +434,7 @@ const MyEnterprisePage: React.FC = () => {
             closeConfirm();
           }
         } catch (error: any) {
-          console.error('删除部门失败:', error);
+          // 错误日志已清理
           showErrorRightSlide('删除失败', error.response?.data?.error || '删除部门失败');
         } finally {
           setConfirmLoading(false);
@@ -526,7 +526,7 @@ const MyEnterprisePage: React.FC = () => {
           setMessages(prev => prev.filter(m => m._id !== optimisticMessage._id));
         }
       }).catch((error) => {
-        console.error('发送消息失败:', error);
+        // 错误日志已清理
         showErrorRightSlide('发送失败', error.response?.data?.error || '发送失败');
         // 移除乐观更新的消息
         setMessages(prev => prev.filter(m => m._id !== optimisticMessage._id));
@@ -534,7 +534,7 @@ const MyEnterprisePage: React.FC = () => {
         setSendingMessage(false);
       });
     } catch (error: any) {
-      console.error('发送消息失败:', error);
+      // 错误日志已清理
       showErrorRightSlide('发送失败', error.response?.data?.error || '发送失败');
       setSendingMessage(false);
     }
@@ -574,14 +574,14 @@ const MyEnterprisePage: React.FC = () => {
       }).then(() => {
         // 静默刷新，不显示加载状态
         fetchMembers();
-      }).catch((error) => {
-        console.error('API调用失败:', error);
+      }).catch(() => {
+        // 错误日志已清理
         // 如果失败，回滚UI更改
         fetchMembers();
       });
       
     } catch (error: any) {
-      console.error('更新成员职位失败:', error);
+      // 错误日志已清理
       showErrorRightSlide('更新失败', error.response?.data?.error || '更新成员职位失败');
     }
   };
@@ -614,7 +614,7 @@ const MyEnterprisePage: React.FC = () => {
         showSuccessRightSlide('发送成功', '回复已成功发送');
       }
     } catch (error: any) {
-      console.error('回复消息失败:', error);
+      // 错误日志已清理
       showErrorRightSlide('回复失败', error.response?.data?.error || error.message);
     } finally {
       setConfirmLoading(false);
@@ -645,8 +645,8 @@ const MyEnterprisePage: React.FC = () => {
         );
       }
     } catch (error: any) {
-      console.error('❌ 转让超级管理员身份失败:', error);
-      console.error('❌ 错误详情:', error.response?.data);
+      // 错误日志已清理
+      // 错误日志已清理
       
       // 显示详细的错误信息
       let errorMessage = '转让失败';
@@ -724,7 +724,7 @@ const MyEnterprisePage: React.FC = () => {
         showErrorRightSlide('删除失败', response.data.message || '删除失败');
       }
     } catch (error: any) {
-      console.error('删除消息失败:', error);
+      // 错误日志已清理
       const errorMessage = error.response?.data?.error || '删除消息失败';
       showErrorRightSlide('删除失败', errorMessage);
     } finally {
@@ -845,7 +845,7 @@ const MyEnterprisePage: React.FC = () => {
         )
       );
     } catch (error) {
-      console.error('标记消息已读失败:', error);
+      // 错误日志已清理
     }
   };
 

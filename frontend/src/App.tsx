@@ -30,6 +30,12 @@ const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
 const QuestionViewPage = lazy(() => import('./pages/view/QuestionViewPage'));
 const MyEnterprisePage = lazy(() => import('./pages/my-enterprise/MyEnterprisePage'));
 const EnterpriseManagementPage = lazy(() => import('./pages/enterprise-management/EnterpriseManagementPage'));
+const QuestionMediaDemo = lazy(() => import('./pages/QuestionMediaDemo'));
+const TikZSupport = lazy(() => import('./pages/TikZHighlightDemo'));
+const TikZFeaturesDemo = lazy(() => import('./pages/TikZFeaturesDemo'));
+const LaTeXGuide = lazy(() => import('./pages/LaTeXGuide'));
+const FunctionPlottingTestPage = lazy(() => import('./pages/FunctionPlottingTestPage'));
+
 import { useAuthStore } from './stores/authStore';
 import { BackgroundTaskProvider } from './contexts/BackgroundTaskContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -381,6 +387,63 @@ const App: React.FC = () => {
                 <ProtectedRoute>
                   <AppLayout>
                     <VersionPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/QuestionMediaDemo" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <QuestionMediaDemo />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/TikZSupport" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <TikZSupport />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+
+
+
+            <Route 
+              path="/TikZFeaturesDemo" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <TikZFeaturesDemo />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+
+                                <Route 
+              path="/LaTeXGuide" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <LaTeXGuide />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/FunctionPlottingTest" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <FunctionPlottingTestPage />
                   </AppLayout>
                 </ProtectedRoute>
               } 

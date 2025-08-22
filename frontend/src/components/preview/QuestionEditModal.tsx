@@ -8,6 +8,7 @@ import LaTeXPreview from '../editor/preview/LaTeXPreview';
 import QuestionTypeSelector from '../editor/question/QuestionTypeSelector';
 import KnowledgeTagSelector from '../editor/question/KnowledgeTagSelector';
 import RightSlideModal from '../ui/RightSlideModal';
+import { BatchEditMediaEditor, SimpleMediaPreview } from '../question';
 import type { Question, QuestionBank } from '../../types';
 import { useModal } from '../../hooks/useModal';
 
@@ -31,6 +32,20 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
   const [editedQuestion, setEditedQuestion] = useState<Partial<Question>>({});
   const [showPreview, setShowPreview] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  
+  // 媒体相关状态
+  const [images, setImages] = useState<Array<{
+    id: string;
+    url: string;
+    filename: string;
+    order: number;
+  }>>([]);
+  const [tikzCodes, setTikzCodes] = useState<Array<{
+    id: string;
+    code: string;
+    format: 'svg' | 'png';
+    order: number;
+  }>>([]);
 
   // 管理背景滚动
   useEffect(() => {
@@ -66,6 +81,10 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
         category: question.category || '',
         source: question.source || ''
       });
+      
+      // 初始化媒体数据
+      setImages(question.images || []);
+      setTikzCodes(question.tikzCodes || []);
     }
   }, [question]);
 
@@ -139,7 +158,14 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
       return;
     }
     
-    onSave(editedQuestion);
+    // 保存数据，包含媒体信息
+    const updatedQuestion = {
+      ...editedQuestion,
+      images: images,
+      tikzCodes: tikzCodes
+    };
+    
+    onSave(updatedQuestion);
     onClose();
   };
 
@@ -543,6 +569,34 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
                     )}
                   </div>
 
+                  {/* 题目图片与图形组 */}
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div 
+                      className="p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between"
+                      onClick={() => toggleSection('media')}
+                    >
+                      <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center">
+                        <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                        题目图片与图形
+                      </h3>
+                      {collapsedSections['media'] ? (
+                        <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                      ) : (
+                        <ChevronUp className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                      )}
+                    </div>
+                    {!collapsedSections['media'] && (
+                      <div className="p-4 pt-0">
+                        <BatchEditMediaEditor
+                          images={images}
+                          onImagesChange={setImages}
+                          tikzCodes={tikzCodes}
+                          onTikzCodesChange={setTikzCodes}
+                        />
+                      </div>
+                    )}
+                  </div>
+
                   {/* 答案和解析组 */}
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div 
@@ -787,6 +841,8 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
                     )}
                   </div>
                 </motion.div>
+
+
               </div>
 
               {/* 右侧实时预览区域 */}
@@ -867,6 +923,19 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
                         />
                       </div>
                     </div>
+
+                    {/* 媒体预览 */}
+                    {((images && images.length > 0) || (tikzCodes && tikzCodes.length > 0)) && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">题目图片与图形</h4>
+                        <div className="p-3 bg-white dark:bg-gray-700 rounded border shadow-sm">
+                          <SimpleMediaPreview
+                            images={images}
+                            tikzCodes={tikzCodes}
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     {/* 选择题选项预览 */}
                     {(editedQuestion.type || question?.type) === 'choice' && editedQuestion.content?.options && (

@@ -164,7 +164,7 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
   const submitScore = useCallback(async (finalScore: number, timeUsed: number, accuracy: number) => {
     // 防止重复提交分数
     if (hasSubmittedScore) {
-      console.log('分数已经提交过，跳过重复提交');
+      // 调试日志已清理
       return;
     }
     
@@ -188,9 +188,9 @@ const PuzzleGame: React.FC<PuzzleGameProps> = ({
       
       // 标记分数已提交
       setHasSubmittedScore(true);
-      console.log('分数提交成功');
+      // 调试日志已清理
     } catch (error) {
-      console.error('提交分数失败:', error);
+      // 错误日志已清理
     }
   }, [timeLimit, gridSize, moves, initialBoard, moveSequence, hasSubmittedScore]);
 

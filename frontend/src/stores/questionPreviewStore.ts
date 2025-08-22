@@ -551,7 +551,7 @@ export const useQuestionPreviewStore = create<QuestionPreviewState & QuestionPre
               processedSource = `${processedSource} T${questionIndex}`;
             }
             
-            // 确保数据格式正确
+            // 确保数据格式正确，补充媒体数据的必要字段
             const questionData = {
               type: question.type,
               content: {
@@ -565,7 +565,21 @@ export const useQuestionPreviewStore = create<QuestionPreviewState & QuestionPre
               category: Array.isArray(question.category) ? question.category.join(', ') : (typeof question.category === 'string' ? question.category : ''),
               tags: question.tags || [],
               source: processedSource, // 使用处理后的来源（包含序号）
-              difficulty: question.difficulty || 3
+              difficulty: question.difficulty || 3,
+              images: question.images?.map(img => ({
+                ...img,
+                bid: targetBankId, // 补充题库ID
+                format: img.format || 'png', // 默认格式
+                uploadedAt: img.uploadedAt || new Date(), // 默认上传时间
+                uploadedBy: img.uploadedBy || 'unknown-user' // 默认上传者
+              })) || [],
+              tikzCodes: question.tikzCodes?.map(tikz => ({
+                ...tikz,
+                bid: targetBankId, // 补充题库ID
+                format: tikz.format || 'svg', // 默认格式
+                createdAt: tikz.createdAt || new Date(), // 默认创建时间
+                createdBy: tikz.createdBy || 'unknown-user' // 默认创建者
+              })) || []
             };
             
             await questionAPI.createQuestion(targetBankId, questionData);

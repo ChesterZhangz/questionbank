@@ -138,7 +138,7 @@ const MemoryGame: React.FC<MemoryGameProps> = ({
         }
       });
     } catch (error) {
-      console.error('提交分数失败:', error);
+      // 错误日志已清理
     }
   }, [score, timeLimit, gridSize, moves, timeLeft, matchedPairs, totalPairs]);
 
@@ -172,8 +172,8 @@ const MemoryGame: React.FC<MemoryGameProps> = ({
               timeUsed: timeLimit,
               accuracy: finalTotalPairs > 0 ? Math.round((finalMatchedPairs / finalTotalPairs) * 100) : 0
             }
-          }).catch((error: any) => {
-            console.error('提交分数失败:', error);
+          }).catch(() => {
+            // 错误日志已清理
           });
           
           onGameEnd();

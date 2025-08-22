@@ -193,7 +193,7 @@ const QuestionBankMembersPage: React.FC = () => {
         setMembers([]);
       }
     } catch (error: any) {
-      console.error('获取成员列表失败:', error);
+      // 错误日志已清理
       setMembers([]); // 确保在错误时设置为空数组
     }
   };
@@ -334,7 +334,7 @@ const QuestionBankMembersPage: React.FC = () => {
         setSearchResults(response.data.users || []);
       }
     } catch (error) {
-      console.error('搜索用户失败:', error);
+      // 错误日志已清理
       setSearchResults([]);
     }
   };

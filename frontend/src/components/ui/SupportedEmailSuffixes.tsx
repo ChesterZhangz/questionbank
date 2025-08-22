@@ -29,7 +29,7 @@ const SupportedEmailSuffixes: React.FC<SupportedEmailSuffixesProps> = ({
         setAllowedEnterprises(response.data.enterprises || []);
       }
     } catch (error) {
-      console.error('获取支持的企业邮箱后缀失败:', error);
+      // 错误日志已清理
     } finally {
       setLoading(false);
     }

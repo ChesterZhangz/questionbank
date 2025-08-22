@@ -449,7 +449,7 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
                       variant="outline"
                       onClick={() => {
                         // 这里可以添加导出功能
-                        console.log('导出文档:', historyDoc.fileName);
+                        // 调试日志已清理
                       }}
                       className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                     >
@@ -460,7 +460,7 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
                       variant="outline"
                       onClick={() => {
                         // 这里可以添加分享功能
-                        console.log('分享文档:', historyDoc.fileName);
+                        // 调试日志已清理
                       }}
                       className="text-green-600 dark:text-green-400 border-green-200 dark:border-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
                     >

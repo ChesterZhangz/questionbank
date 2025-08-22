@@ -129,6 +129,26 @@ export interface Question {
   difficulty: number; // 1-5星难度
   views: number;
   favorites?: string[]; // 收藏用户ID列表
+  // 新增字段
+  images?: Array<{
+    id: string;
+    url: string;
+    filename: string;
+    order: number;
+    bid?: string;
+    format?: string;
+    uploadedAt?: Date;
+    uploadedBy?: string;
+  }>;
+  tikzCodes?: Array<{
+    id: string;
+    code: string;
+    format: 'svg' | 'png';
+    order: number;
+    bid?: string;
+    createdAt?: Date;
+    createdBy?: string;
+  }>;
   createdAt: string;
   updatedAt: string;
   relevanceScore?: number; // 相关度分数（0-1）
@@ -263,6 +283,25 @@ export interface CreateQuestionRequest {
   tags?: string[];
   source?: string;
   difficulty?: number;
+  images?: Array<{
+    id: string;
+    url: string;
+    filename: string;
+    order: number;
+    bid?: string;
+    format?: string;
+    uploadedAt?: Date;
+    uploadedBy?: string;
+  }>;
+  tikzCodes?: Array<{
+    id: string;
+    code: string;
+    format: 'svg' | 'png';
+    order: number;
+    bid?: string;
+    createdAt?: Date;
+    createdBy?: string;
+  }>;
 }
 
 export interface UpdateQuestionRequest {
@@ -283,6 +322,25 @@ export interface UpdateQuestionRequest {
   source?: string;
   difficulty?: number;
   status?: 'draft' | 'published' | 'archived';
+  images?: Array<{
+    id: string;
+    url: string;
+    filename: string;
+    order: number;
+    bid?: string;
+    format?: string;
+    uploadedAt?: Date;
+    uploadedBy?: string;
+  }>;
+  tikzCodes?: Array<{
+    id: string;
+    code: string;
+    format: 'svg' | 'png';
+    order: number;
+    bid?: string;
+    createdAt?: Date;
+    createdBy?: string;
+  }>;
 }
 
 // API响应类型

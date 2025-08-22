@@ -99,7 +99,7 @@ const LoginPage: React.FC = () => {
         setErrors({ forgotPassword: response.data.message || '发送失败' });
       }
     } catch (error: any) {
-      console.error('发送重置密码邮件失败:', error);
+      // 错误日志已清理
       setErrors({ 
         forgotPassword: error.response?.data?.message || '发送失败，请稍后重试'
       });

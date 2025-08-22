@@ -226,7 +226,7 @@ const ProfilePage: React.FC = () => {
           useAuthStore.getState().login(response.data.user, useAuthStore.getState().token!);
         }
       } catch (error: any) {
-        console.error('获取用户信息失败:', error);
+        // 错误日志已清理
         // 如果获取用户信息失败，不要重定向到404，而是继续使用本地存储的用户信息
         if (error.response?.status === 401) {
           // 如果是认证错误，重定向到登录页
@@ -320,7 +320,7 @@ const ProfilePage: React.FC = () => {
           showErrorRightSlide('上传失败', response.data.error || '头像上传失败');
         }
       } catch (error: any) {
-        console.error('头像上传失败:', error);
+        // 错误日志已清理
         showErrorRightSlide('上传失败', error.response?.data?.error || '头像上传失败');
       }
     }
@@ -362,7 +362,7 @@ const ProfilePage: React.FC = () => {
         showErrorRightSlide('更新失败', response.data.error || '更新失败');
       }
     } catch (error: any) {
-      console.error('保存个人信息失败:', error);
+      // 错误日志已清理
       if (error.response?.data?.details) {
         const errorDetails = error.response.data.details.map((err: any) => `${err.param}: ${err.msg}`).join('\n');
         showErrorRightSlide('保存失败', `保存失败:\n${errorDetails}`);
@@ -409,7 +409,7 @@ const ProfilePage: React.FC = () => {
         showErrorRightSlide('修改失败', response.data.error || '修改失败');
       }
     } catch (error: any) {
-      console.error('修改密码失败:', error);
+      // 错误日志已清理
       showErrorRightSlide('修改失败', error.response?.data?.error || '修改失败');
     } finally {
       setIsChangingPassword(false);
@@ -429,7 +429,7 @@ const ProfilePage: React.FC = () => {
         showErrorRightSlide('获取失败', response.data.error || '获取登录历史失败');
       }
     } catch (error: any) {
-      console.error('获取登录历史失败:', error);
+      // 错误日志已清理
       showErrorRightSlide('获取失败', error.response?.data?.error || '获取登录历史失败');
     } finally {
       setLoadingHistory(false);
@@ -446,7 +446,7 @@ const ProfilePage: React.FC = () => {
         showErrorRightSlide('导出失败', response.data.error || '导出失败');
       }
     } catch (error: any) {
-      console.error('导出数据失败:', error);
+      // 错误日志已清理
       showErrorRightSlide('导出失败', error.response?.data?.error || '导出失败');
     }
   };
@@ -466,7 +466,7 @@ const ProfilePage: React.FC = () => {
             showErrorRightSlide('删除失败', response.data.error || '删除失败');
           }
         }).catch(error => {
-          console.error('删除账户失败:', error);
+          // 错误日志已清理
           showErrorRightSlide('删除失败', error.response?.data?.error || '删除失败');
         });
       }

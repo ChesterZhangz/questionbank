@@ -46,8 +46,8 @@ const QuestionBankListPage: React.FC = () => {
 
   // 监听题目删除事件，更新统计数据
   useEffect(() => {
-    const handleQuestionDeleted = (event: CustomEvent) => {
-      console.log('题库列表页面收到题目删除事件:', event.detail);
+    const handleQuestionDeleted = () => {
+      // 调试日志已清理
       // 当题目被删除时，重新获取题库数据以更新统计数据
       fetchQuestionBanks();
     };

@@ -89,7 +89,7 @@ const ResetPasswordPage: React.FC = () => {
         setErrors({ general: response.data.message || '密码重置失败' });
       }
     } catch (error: any) {
-      console.error('密码重置失败:', error);
+      // 错误日志已清理
       setErrors({ 
         general: error.response?.data?.message || '密码重置失败，请稍后重试'
       });

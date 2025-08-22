@@ -1,5 +1,28 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+// 图片接口
+export interface IQuestionImage {
+  id: string;           // 图片唯一标识
+  bid: string;          // 图片所属题库ID
+  order: number;        // 图片显示顺序
+  format: string;       // 图片格式(jpg, png, gif等)
+  uploadedAt: Date;     // 上传时间
+  uploadedBy: string;   // 上传者ID
+  filename: string;     // 原始文件名
+  url: string;          // 图片访问URL
+}
+
+// TikZ代码接口
+export interface ITikZCode {
+  id: string;           // 图代码唯一标识
+  bid: string;          // 图代码所属题库ID
+  code: string;         // TikZ代码内容
+  order: number;        // 显示顺序
+  format: string;       // 输出格式(svg, png等)
+  createdAt: Date;      // 创建时间
+  createdBy: string;    // 创建者ID
+}
+
 export interface IQuestion extends Document {
   qid: string;
   bid: string; // 所属题库ID
@@ -28,6 +51,9 @@ export interface IQuestion extends Document {
   lastUsed?: Date;
   views?: number; // 浏览量
   favorites?: mongoose.Types.ObjectId[]; // 收藏用户列表
+  // 新增字段
+  images?: IQuestionImage[];      // 图片数组
+  tikzCodes?: ITikZCode[];       // TikZ图代码数组
   createdAt: Date;
   updatedAt: Date;
 }
@@ -152,7 +178,87 @@ const questionSchema = new Schema<IQuestion>({
   favorites: [{
     type: Schema.Types.ObjectId,
     ref: 'User'
-  }]
+  }],
+  // 图片数组
+  images: {
+    type: [{
+      id: {
+        type: String,
+        required: true
+      },
+      bid: {
+        type: String,
+        required: true
+      },
+      order: {
+        type: Number,
+        required: true,
+        default: 0
+      },
+      format: {
+        type: String,
+        required: true,
+        enum: ['jpg', 'jpeg', 'png', 'gif']
+      },
+      uploadedAt: {
+        type: Date,
+        default: Date.now
+      },
+      uploadedBy: {
+        type: String,
+        required: true
+      },
+      filename: {
+        type: String,
+        required: true
+      },
+      url: {
+        type: String,
+        required: true
+      }
+    }],
+    default: []
+  },
+  // TikZ代码数组
+  tikzCodes: {
+    type: [{
+      id: {
+        type: String,
+        required: true
+      },
+      bid: {
+        type: String,
+        required: true
+      },
+      code: {
+        type: String,
+        required: true
+      },
+      order: {
+        type: Number,
+        required: true,
+        default: 0
+      },
+      format: {
+        type: String,
+        required: true,
+        enum: ['svg', 'png'],
+        default: 'svg'
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now
+      },
+      createdBy: {
+        type: String,
+        required: true
+      },
+      preview: {
+        type: String
+      }
+    }],
+    default: []
+  }
 }, {
   timestamps: true
 });
@@ -201,5 +307,13 @@ questionSchema.index({
   category: 'text',
   tags: 'text'
 });
+
+// 图片和TikZ代码索引（分别创建，避免并行数组索引问题）
+questionSchema.index({ 'images.id': 1 }); // 图片ID索引
+questionSchema.index({ 'tikzCodes.id': 1 }); // TikZ代码ID索引
+questionSchema.index({ 'images.bid': 1 }); // 图片题库索引
+questionSchema.index({ 'tikzCodes.bid': 1 }); // TikZ代码题库索引
+questionSchema.index({ 'images.order': 1 }); // 图片顺序索引
+questionSchema.index({ 'tikzCodes.order': 1 }); // TikZ代码顺序索引
 
 export const Question = mongoose.model<IQuestion>('Question', questionSchema); 
