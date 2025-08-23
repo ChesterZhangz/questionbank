@@ -4,7 +4,8 @@ import TikZHighlighter from './TikZHighlighter';
 import TikZAutoComplete from './TikZAutoComplete';
 import { 
   searchTikZSymbols, 
-  getStyleParameterSuggestions,
+  getContextualParameters,
+  filterSuggestions,
   COLOR_VALUES,
   LINE_WIDTH_VALUES,
   LINE_STYLE_VALUES,
@@ -133,16 +134,71 @@ const TikZHighlightInput: React.FC<TikZHighlightInputProps> = ({
     onCursorPositionChange?.(newPosition);
   };
 
-  // 检查自动补全
+  // 增强的自动补全检查 - 支持上下文识别和实时筛选
   const checkAutoComplete = (content: string, position: number) => {
+    if (!enableAutoComplete) return;
+    
     const beforeCursor = content.substring(0, position);
     
-    // 检查是否在TikZ命令中
-    const tikzCommandMatch = beforeCursor.match(/\\[a-zA-Z]*$/);
+    // 1. 检查是否在TikZ命令中（以\开头）
+    const commandMatch = beforeCursor.match(/\\([a-zA-Z]*)$/);
+    if (commandMatch) {
+      const query = commandMatch[1];
+      
+      // 如果查询为空（用户只输入了\），提供精选的常用命令、图形和函数
+      if (query === '') {
+        const commonCommands = [
+          // 基础绘图命令
+          { latex: '\\draw', name: '绘制路径', description: '绘制路径或图形', category: 'draw' },
+          { latex: '\\fill', name: '填充图形', description: '填充封闭图形', category: 'draw' },
+          { latex: '\\node', name: '节点', description: '创建文本或图形节点', category: 'node' },
+          { latex: '\\path', name: '路径命令', description: '定义路径但不绘制', category: 'draw' },
+          { latex: '\\clip', name: '裁剪区域', description: '裁剪后续绘制内容', category: 'draw' },
+          
+          // 常用图形
+          { latex: '\\draw (0,0) rectangle (2,2);', name: '矩形', description: '绘制矩形', category: 'shape', completeExample: '\\draw (0,0) rectangle (2,2);' },
+          { latex: '\\draw (0,0) circle (1cm);', name: '圆形', description: '绘制圆形', category: 'shape', completeExample: '\\draw (0,0) circle (1cm);' },
+          { latex: '\\draw (0,0) ellipse (2cm and 1cm);', name: '椭圆', description: '绘制椭圆', category: 'shape', completeExample: '\\draw (0,0) ellipse (2cm and 1cm);' },
+          
+          // 常用函数
+          { latex: '\\draw plot {sin(x)};', name: '正弦函数', description: '绘制正弦函数', category: 'math', completeExample: '\\draw[red, thick] plot[domain=0:6.28, samples=100] {sin(x)};' },
+          { latex: '\\draw plot {x^2};', name: '二次函数', description: '绘制二次函数', category: 'math', completeExample: '\\draw[blue, thick] plot[domain=-2:2, samples=100] {x^2};' },
+          { latex: '\\draw plot {x^3};', name: '三次函数', description: '绘制三次函数', category: 'math', completeExample: '\\draw[green, thick] plot[domain=-2:2, samples=100] {x^3};' }
+        ];
+        setAutoCompleteSuggestions(commonCommands);
+        setShowAutoComplete(true);
+        setSelectedSuggestionIndex(0);
+        updateAutoCompletePosition(position);
+        return;
+      }
+      
+      // 如果有具体查询内容，进行正常搜索和筛选
+      const suggestions = searchTikZSymbols(query);
+      const filteredSuggestions = filterSuggestions(suggestions, query);
+      
+      if (filteredSuggestions.length > 0) {
+        setAutoCompleteSuggestions(filteredSuggestions);
+        setShowAutoComplete(true);
+        setSelectedSuggestionIndex(0);
+        updateAutoCompletePosition(position);
+      } else {
+        setShowAutoComplete(false);
+      }
+      return;
+    }
     
-    if (tikzCommandMatch) {
-      const currentCommand = tikzCommandMatch[0];
-      const suggestions = searchTikZSymbols(currentCommand.slice(1)); // 去掉反斜杠
+    // 2. 检查是否在样式参数中（[]内）- 增强上下文识别
+    const styleParamMatch = beforeCursor.match(/\\(draw|node|fill|path|shade|clip)\s*\[([^\]]*)$/);
+    if (styleParamMatch) {
+      const command = styleParamMatch[1];
+      const currentParam = styleParamMatch[2];
+      
+      // 获取当前输入的参数（最后一个逗号后的内容）
+      const paramParts = currentParam.split(',');
+      const currentInput = paramParts[paramParts.length - 1].trim();
+      
+      // 根据命令类型和当前输入获取上下文相关建议
+      const suggestions = getContextualParameters(command, currentInput);
       
       if (suggestions.length > 0) {
         setAutoCompleteSuggestions(suggestions);
@@ -152,13 +208,22 @@ const TikZHighlightInput: React.FC<TikZHighlightInputProps> = ({
       } else {
         setShowAutoComplete(false);
       }
-    } else {
-      // 检查是否在样式参数中（[]内）
-      const styleParamMatch = beforeCursor.match(/\[([^\]]*)$/);
-      if (styleParamMatch) {
-        const currentParam = styleParamMatch[1];
-        // 获取样式参数建议
-        const suggestions = getStyleParameterSuggestions(currentParam);
+      return;
+    }
+    
+    // 2.5. 检查是否在特定命令的[]内，但不在参数值中
+    const inSpecificBracketsMatch = beforeCursor.match(/\\(draw|node|fill|path|shade|clip)\s*\[([^\]]*?)([^,\]]*?)$/);
+    if (inSpecificBracketsMatch) {
+      const command = inSpecificBracketsMatch[1];
+      const fullParams = inSpecificBracketsMatch[2];
+      const currentInput = inSpecificBracketsMatch[3];
+      
+      // 检查是否在参数值中（如 color=red 中的 red）
+      const isInParamValue = fullParams.includes('=');
+      
+      if (!isInParamValue) {
+        // 不在参数值中，提供该命令的专用参数建议
+        const suggestions = getContextualParameters(command, currentInput);
         
         if (suggestions.length > 0) {
           setAutoCompleteSuggestions(suggestions);
@@ -168,57 +233,102 @@ const TikZHighlightInput: React.FC<TikZHighlightInputProps> = ({
         } else {
           setShowAutoComplete(false);
         }
-      } else if (beforeCursor.includes('[') && !beforeCursor.includes(']')) {
-        // 如果在[之后但还没有]，检查是否在逗号后的样式参数中
-        const commaParamMatch = beforeCursor.match(/,\s*([^,\]]*)$/);
-        if (commaParamMatch) {
-          const currentParam = commaParamMatch[1];
-          const suggestions = getStyleParameterSuggestions(currentParam);
-          
-          if (suggestions.length > 0) {
-            setAutoCompleteSuggestions(suggestions);
-            setShowAutoComplete(true);
-            setSelectedSuggestionIndex(0);
-            updateAutoCompletePosition(position);
-          } else {
-            setShowAutoComplete(false);
-          }
+        return;
+      }
+    }
+    
+    // 3. 检查是否在已有的[]参数中继续输入
+    const inBracketsMatch = beforeCursor.match(/\[([^\]]*?)([^,\]]*?)$/);
+    if (inBracketsMatch) {
+      const currentInput = inBracketsMatch[2];
+      
+      // 尝试从前面的内容中识别命令类型
+      const commandInLineMatch = beforeCursor.match(/\\(draw|node|fill|path|shade|clip)\s*\[[^\]]*$/);
+      if (commandInLineMatch) {
+        const command = commandInLineMatch[1];
+        const suggestions = getContextualParameters(command, currentInput);
+        
+        if (suggestions.length > 0) {
+          setAutoCompleteSuggestions(suggestions);
+          setShowAutoComplete(true);
+          setSelectedSuggestionIndex(0);
+          updateAutoCompletePosition(position);
+        } else {
+          setShowAutoComplete(false);
+        }
+        return;
+      }
+    }
+    
+    // 4. 检查是否在样式参数值中（如 color=red 中的 red）
+    const styleValueMatch = beforeCursor.match(/([a-zA-Z\s]+)=([^,\]]*)$/);
+    if (styleValueMatch) {
+      const styleName = styleValueMatch[1].trim();
+      const currentValue = styleValueMatch[2];
+      
+      let suggestions: any[] = [];
+      
+      // 根据样式名称提供相应的建议并应用筛选
+      if (styleName === 'color' || styleName === 'fill' || styleName === 'draw') {
+        suggestions = filterSuggestions(COLOR_VALUES, currentValue);
+      } else if (styleName === 'line width' || styleName.includes('thick') || styleName.includes('thin')) {
+        suggestions = filterSuggestions(LINE_WIDTH_VALUES, currentValue);
+      } else if (styleName.includes('dash') || styleName.includes('dotted')) {
+        suggestions = filterSuggestions(LINE_STYLE_VALUES, currentValue);
+      } else if (styleName === 'opacity') {
+        suggestions = filterSuggestions(OPACITY_VALUES, currentValue);
+      } else if (styleName.includes('color')) {
+        // 处理复合颜色属性如 "left color", "right color"
+        suggestions = filterSuggestions(COLOR_VALUES, currentValue);
+      }
+      
+      if (suggestions.length > 0) {
+        setAutoCompleteSuggestions(suggestions);
+        setShowAutoComplete(true);
+        setSelectedSuggestionIndex(0);
+        updateAutoCompletePosition(position);
+      } else {
+        setShowAutoComplete(false);
+      }
+      return;
+    }
+    
+    // 5. 检查是否在逗号后的新参数中
+    const commaParamMatch = beforeCursor.match(/,\s*([^,\]]*)$/);
+    if (commaParamMatch && beforeCursor.includes('[') && !beforeCursor.includes(']')) {
+      const currentInput = commaParamMatch[1];
+      
+      // 尝试识别命令类型
+      const commandMatch = beforeCursor.match(/\\(draw|node|fill|path|shade|clip)\s*\[[^\]]*$/);
+      if (commandMatch) {
+        const command = commandMatch[1];
+        const suggestions = getContextualParameters(command, currentInput);
+        
+        if (suggestions.length > 0) {
+          setAutoCompleteSuggestions(suggestions);
+          setShowAutoComplete(true);
+          setSelectedSuggestionIndex(0);
+          updateAutoCompletePosition(position);
         } else {
           setShowAutoComplete(false);
         }
       } else {
-        // 检查是否在样式参数值中（如 color=red 中的 red）
-        const styleValueMatch = beforeCursor.match(/([a-zA-Z]+)=([^,\]]*)$/);
-        if (styleValueMatch) {
-          const styleName = styleValueMatch[1];
-          // const currentValue = styleValueMatch[2]; // 暂时不使用，但保留匹配组
-          
-          let suggestions: any[] = [];
-          
-          // 根据样式名称提供相应的建议
-          if (styleName === 'color' || styleName === 'fill' || styleName === 'draw') {
-            suggestions = COLOR_VALUES;
-          } else if (styleName === 'line width' || styleName.includes('thick') || styleName.includes('thin')) {
-            suggestions = LINE_WIDTH_VALUES;
-          } else if (styleName.includes('dash') || styleName.includes('dotted')) {
-            suggestions = LINE_STYLE_VALUES;
-          } else if (styleName === 'opacity') {
-            suggestions = OPACITY_VALUES;
-          }
-          
-          if (suggestions.length > 0) {
-            setAutoCompleteSuggestions(suggestions);
-            setShowAutoComplete(true);
-            setSelectedSuggestionIndex(0);
-            updateAutoCompletePosition(position);
-          } else {
-            setShowAutoComplete(false);
-          }
+        // 如果无法识别命令，提供通用建议
+        const suggestions = getContextualParameters('', currentInput);
+        if (suggestions.length > 0) {
+          setAutoCompleteSuggestions(suggestions);
+          setShowAutoComplete(true);
+          setSelectedSuggestionIndex(0);
+          updateAutoCompletePosition(position);
         } else {
           setShowAutoComplete(false);
         }
       }
+      return;
     }
+    
+    // 6. 其他情况关闭自动补全
+    setShowAutoComplete(false);
   };
 
   // 更新自动补全位置 - 考虑文本自动换行
@@ -384,18 +494,34 @@ const TikZHighlightInput: React.FC<TikZHighlightInputProps> = ({
         const beforeCommand = value.substring(0, commandStart);
         const afterCursor = value.substring(cursorPosition);
         
-        const newValue = beforeCommand + suggestion.latex + afterCursor;
+        let newValue: string;
+        
+        // 检查是否是图形命令，如果是则提供完整示例
+        if (suggestion.category === 'shape' && suggestion.completeExample) {
+          // 对于图形命令，插入完整的绘图示例
+          newValue = beforeCommand + suggestion.completeExample + afterCursor;
+        } else {
+          // 对于其他命令，使用标准的latex
+          newValue = beforeCommand + suggestion.latex + afterCursor;
+        }
+        
         onChange(newValue);
         setShowAutoComplete(false);
         
         // 智能光标定位
         setTimeout(() => {
           if (textareaRef.current) {
-            let newPosition = beforeCommand.length + suggestion.latex.length;
+            let newPosition: number;
             
-            // 对于带括号的命令，将光标放在第一个括号内
-            if (suggestion.latex.includes('{}')) {
+            if (suggestion.category === 'shape' && suggestion.completeExample) {
+              // 对于图形命令，将光标放在示例代码的末尾，方便用户修改
+              newPosition = beforeCommand.length + suggestion.completeExample.length;
+            } else if (suggestion.latex.includes('{}')) {
+              // 对于带括号的命令，将光标放在第一个括号内
               newPosition = beforeCommand.length + suggestion.latex.indexOf('{') + 1;
+            } else {
+              // 其他情况，光标放在命令末尾
+              newPosition = beforeCommand.length + suggestion.latex.length;
             }
             
             textareaRef.current.setSelectionRange(newPosition, newPosition);

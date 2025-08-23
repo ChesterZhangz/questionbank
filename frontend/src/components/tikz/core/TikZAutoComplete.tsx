@@ -42,6 +42,11 @@ const TikZAutoComplete = forwardRef<HTMLDivElement, TikZAutoCompleteProps>(({
           <div className="flex items-center space-x-2">
             <span className="font-mono">{suggestion.latex}</span>
             <span className="text-gray-500 dark:text-gray-400 text-xs">{suggestion.description}</span>
+            {suggestion.completeExample && (
+              <span className="text-xs px-2 py-1 rounded bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300">
+                完整示例
+              </span>
+            )}
           </div>
           <span className={`text-xs px-2 py-1 rounded ${
             suggestion.category === 'draw' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300' :

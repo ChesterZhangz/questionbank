@@ -36,6 +36,50 @@ interface VersionUpdate {
 
 const versionUpdates: VersionUpdate[] = [
   {
+    version: 'v0.7',
+    date: '2025-01-27',
+    title: 'TikZ画图系统全面升级：渲染引擎重构、DarkMode适配、用户体验优化',
+    description: '重构TikZ渲染系统，移除PGFPlots依赖，实现纯TikZ函数绘制，全面支持DarkMode，优化图形预览和编辑体验，大幅提升TikZ图形的显示质量和交互体验。',
+    features: [
+      'TikZ渲染引擎重构：移除PGFPlots依赖，实现纯TikZ函数绘制系统',
+      '纯TikZ函数绘制：支持数学函数、三角函数、多项式等复杂函数图像',
+      '智能坐标轴系统：标准数学坐标系，支持箭头、网格线、刻度显示',
+      'TikZ语法解析器：支持\\draw、\\node、\\plot等核心命令',
+      '图形元素支持：直线、矩形、圆形、椭圆、圆弧、箭头等基础图形',
+      '节点标签系统：支持位置标注、文本标签、数学公式嵌套',
+      '自动缩放系统：智能计算图形边界，自动调整SVG视口适配内容',
+      'DarkMode完美适配：透明背景、自适应线条颜色、主题切换支持',
+      'TikZ代码编辑器：语法高亮、智能补全、实时预览、错误提示',
+      '图形预览优化：QuestionCard、QuestionView中TikZ图片点击放大预览',
+      'LaTeX数学公式渲染：完美支持数学符号、公式、特殊字符',
+      '响应式设计：各种屏幕尺寸下的完美显示效果',
+    ],
+    improvements: [
+      'TikZ代码自动补全：上下文感知提示、智能过滤、完整示例生成',
+      '图形预览区域：透明背景设计、无边框显示、完美居中布局',
+      '编辑体验优化：移除编辑/预览切换、对齐编辑窗口和预览区域',
+      'TikZ图片显示：QuestionCard和QuestionView中支持点击放大预览',
+      '渲染性能提升：前端模拟渲染、无需后端、实时响应',
+      '用户界面一致性：所有TikZ相关组件统一设计风格',
+      '错误处理机制：友好的错误提示、语法验证、渲染状态反馈',
+      '代码结构优化：模块化设计、可维护性提升、扩展性增强',
+    ],
+    fixes: [
+      '修复TikZ图形与边框间隔过大的问题：移除内边距，完全填充容器',
+      '解决TikZ图片在QuestionCard中偏移显示的问题：添加居中对齐',
+      '修复TikZ图片点击无法预览的问题：实现完整的模态框预览系统',
+      '解决TikZ渲染中箭头方向错误的问题：重新设计箭头绘制算法',
+      '修复\\draw命令中节点位置解析错误：支持节点在路径中间的位置',
+      '解决TikZ代码中空格敏感问题：优化正则表达式，支持灵活空格',
+      '修复TikZ图形超出边框的问题：实现智能自动缩放系统',
+      '解决DarkMode下线条颜色不适配的问题：实现动态颜色切换',
+      '优化TikZ预览模态框：提升z-index、支持滚动、防止被侧边栏遮挡',
+      '修复TikZ图片尺寸显示问题：区分容器尺寸和渲染尺寸，提升清晰度',
+    ],
+    icon: Sparkles,
+    color: 'from-purple-500 to-pink-500'
+  },
+  {
     version: 'v0.68',
     date: '2025-01-27',
     title: '全面升级：DarkMode支持、游戏优化、AI分析改进',
@@ -544,10 +588,10 @@ const VersionPage: React.FC = () => {
               <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Star className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">当前版本 v0.68</h2>
-              <p className="text-blue-100 text-lg mb-4">全面升级：DarkMode支持、游戏优化、AI分析改进</p>
+              <h2 className="text-2xl font-bold mb-2">当前版本 v0.7</h2>
+              <p className="text-blue-100 text-lg mb-4">TikZ画图系统全面升级：渲染引擎重构、DarkMode适配、用户体验优化</p>
               <p className="text-blue-200">
-                为所有小游戏组件添加完整的DarkMode支持，修复游戏倒计时bug，优化AI分析机制，重构截图功能！
+                重构TikZ渲染系统，移除PGFPlots依赖，实现纯TikZ函数绘制，全面支持DarkMode，优化图形预览和编辑体验！
               </p>
             </div>
           </Card>

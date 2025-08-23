@@ -10,15 +10,15 @@ export function createSVGElement(tagName: string): SVGElement {
 
 // 设置SVG属性
 export function setSVGAttribute(element: SVGElement, name: string, value: string | number): void {
-  if (value !== undefined && value !== null && value !== '') {
-    element.setAttributeNS(null, name, String(value));
+  if (value !== undefined && value !== null) {
+    element.setAttribute(name, String(value));
   }
 }
 
 // 设置多个SVG属性
 export function setSVGAttributes(element: SVGElement, attributes: Record<string, string | number>): void {
   Object.entries(attributes).forEach(([name, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
+    if (value !== undefined && value !== null) {
       setSVGAttribute(element, name, value);
     }
   });

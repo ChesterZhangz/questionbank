@@ -320,14 +320,7 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
                           图形 {index + 1}
                         </h4>
                         <div className="flex items-center space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setEditingTikzId(editingTikzId === tikz.id ? null : tikz.id)}
-                            className="text-xs"
-                          >
-                            {editingTikzId === tikz.id ? '预览' : '编辑'}
-                          </Button>
+
                           <Button
                             variant="outline"
                             size="sm"
@@ -339,7 +332,7 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                         {/* 左侧：代码编辑 */}
                         <div className="space-y-3">
                           <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -349,9 +342,9 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
                             value={tikz.code}
                             onChange={(code: string) => handleUpdateTikZCode(tikz.id, code)}
                             placeholder="输入TikZ代码..."
-                            rows={8}
+                            rows={12}
                             enableAutoComplete={true}
-                            className="border border-gray-300 dark:border-gray-600 rounded-md w-full"
+                            className="w-full"
                             style={{
                               fontFamily: 'monospace',
                               fontSize: '14px',
@@ -360,20 +353,20 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
                           />
                         </div>
                         
-                        {/* 右侧：实时预览 */}
+                        {/* 右侧：实时预览 - 与编辑区域对齐 */}
                         <div className="space-y-3">
                           <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             图形预览：
                           </h5>
-                          <div className="flex justify-center items-center h-full min-h-[200px]">
+                          <div className="flex justify-center items-start h-full">
                             <TikZPreview
                               code={tikz.code}
                               format={tikz.format}
                               width={280}
-                              height={200}
+                              height={300}
                               showGrid={false}
                               showTitle={false}
-                              className="border border-gray-200 dark:border-gray-600 rounded"
+                              className="w-full"
                             />
                           </div>
                         </div>

@@ -52,8 +52,7 @@ export class PuzzleSolverService {
         };
       }
       
-      // 先运行测试
-      PuzzleSolver.testSolver();
+
       
       // 创建解题器并求解
       const solver = new PuzzleSolver(gridSize);

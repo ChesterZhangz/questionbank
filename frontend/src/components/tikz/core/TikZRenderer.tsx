@@ -278,14 +278,14 @@ export const TikZRenderer: React.FC<TikZRendererProps> = ({
         {renderStatusIndicator()}
       </div>
 
-      {/* 渲染区域 */}
+      {/* 渲染区域 - 透明背景设计 */}
       <div className={cn(
-        "border border-gray-200 rounded-lg overflow-hidden bg-white",
-        isFullscreen && "fixed inset-0 z-50 bg-white"
+        "border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-transparent",
+        isFullscreen && "fixed inset-0 z-50 bg-white dark:bg-gray-900"
       )}>
-        {/* 头部工具栏 */}
+        {/* 头部工具栏 - 半透明背景 */}
         {showControls && (
-          <div className="flex items-center justify-between p-3 bg-gray-50 border-b border-gray-200">
+          <div className="flex items-center justify-between p-3 bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-600">
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium text-gray-700">
                 TikZ #{tikzCode.order + 1}
@@ -341,25 +341,42 @@ export const TikZRenderer: React.FC<TikZRendererProps> = ({
           </div>
         )}
 
-        {/* 图片显示区域 */}
-        <div className="p-4">
+        {/* 图片显示区域 - 完全透明背景 */}
+        <div className="p-4 bg-transparent">
           {tikzCode.preview ? (
-            <div className="flex justify-center">
+            <div className="flex justify-center bg-transparent">
               <img
                 src={tikzCode.preview}
                 alt={`TikZ图形 ${tikzCode.id}`}
                 className={cn(
-                  "max-w-full object-contain",
+                  "max-w-full object-contain bg-transparent",
                   isFullscreen ? "max-h-screen" : "max-h-96"
                 )}
               />
             </div>
           ) : (
-            <div className="h-64 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
-              <div className="text-center text-gray-400">
-                <Code className="mx-auto h-12 w-12 mb-2" />
-                <p className="text-sm">点击渲染按钮生成图形</p>
-                <p className="text-xs mt-1">支持模拟渲染和真实渲染</p>
+            <div className="h-64 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center bg-transparent">
+              <div className="text-center text-gray-400 dark:text-gray-500">
+                <div className="relative mb-4">
+                  <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-50/50 to-indigo-100/50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-full flex items-center justify-center">
+                    <Code className="w-8 h-8 text-blue-500 dark:text-blue-400" />
+                  </div>
+                  {/* 装饰性圆点 */}
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
+                  <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-indigo-400 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
+                </div>
+                <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  等待渲染
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  点击渲染按钮生成图形
+                </p>
+                <div className="flex items-center justify-center space-x-2 text-xs text-gray-400 dark:text-gray-500">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  <span>模拟渲染</span>
+                  <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+                  <span>真实渲染</span>
+                </div>
               </div>
             </div>
           )}
@@ -368,10 +385,10 @@ export const TikZRenderer: React.FC<TikZRendererProps> = ({
         {/* 错误信息 */}
         {error && (
           <div className="px-4 pb-4">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <div className="bg-red-50/80 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-3 backdrop-blur-sm">
               <div className="flex items-center space-x-2">
-                <AlertCircle className="w-4 h-4 text-red-600" />
-                <span className="text-sm text-red-700">{error}</span>
+                <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                <span className="text-sm text-red-700 dark:text-red-300">{error}</span>
               </div>
             </div>
           </div>

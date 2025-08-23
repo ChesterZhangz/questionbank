@@ -6,6 +6,7 @@ export interface TikZSymbol {
   description: string;
   category: string;
   examples?: string[];
+  completeExample?: string; // 完整的绘图示例代码
 }
 
 // 绘制命令
@@ -47,42 +48,63 @@ export const DRAW_COMMANDS: TikZSymbol[] = [
   }
 ];
 
-// 图形命令
+// 图形命令 - 包含完整的绘图示例
 export const SHAPE_COMMANDS: TikZSymbol[] = [
   {
     latex: '\\circle',
     name: '圆形',
     description: '绘制圆形',
     category: 'shape',
-    examples: ['\\draw (0,0) circle (1cm);', '\\fill [red] (0,0) circle (0.5cm);']
+    examples: ['\\draw (0,0) circle (1cm);', '\\fill [red] (0,0) circle (0.5cm);'],
+    completeExample: '\\draw (0,0) circle (1cm);'
   },
   {
     latex: '\\rectangle',
     name: '矩形',
     description: '绘制矩形',
     category: 'shape',
-    examples: ['\\draw (0,0) rectangle (2,1);', '\\fill [blue] (0,0) rectangle (1,1);']
+    examples: ['\\draw (0,0) rectangle (2,1);', '\\fill [blue] (0,0) rectangle (1,1);'],
+    completeExample: '\\draw (0,0) rectangle (2,2);'
   },
   {
     latex: '\\ellipse',
     name: '椭圆',
     description: '绘制椭圆',
     category: 'shape',
-    examples: ['\\draw (0,0) ellipse (2cm and 1cm);']
+    examples: ['\\draw (0,0) ellipse (2cm and 1cm);'],
+    completeExample: '\\draw (0,0) ellipse (2cm and 1cm);'
   },
   {
     latex: '\\arc',
     name: '圆弧',
     description: '绘制圆弧',
     category: 'shape',
-    examples: ['\\draw (0,0) arc (0:180:1cm);']
+    examples: ['\\draw (0,0) arc (0:180:1cm);'],
+    completeExample: '\\draw (0,0) arc (0:180:1cm);'
   },
   {
     latex: '\\parabola',
     name: '抛物线',
     description: '绘制抛物线',
     category: 'shape',
-    examples: ['\\draw (0,0) parabola (1,1);']
+    examples: ['\\draw (0,0) parabola (1,1);'],
+    completeExample: '\\draw (0,0) parabola (1,1);'
+  },
+  {
+    latex: '\\line',
+    name: '直线',
+    description: '绘制直线',
+    category: 'shape',
+    examples: ['\\draw (0,0) -- (2,2);'],
+    completeExample: '\\draw (0,0) -- (2,2);'
+  },
+  {
+    latex: '\\grid',
+    name: '网格',
+    description: '绘制网格',
+    category: 'shape',
+    examples: ['\\draw[step=0.5cm] (0,0) grid (2,2);'],
+    completeExample: '\\draw[step=0.5cm] (0,0) grid (2,2);'
   }
 ];
 
@@ -273,56 +295,87 @@ export const TRANSFORM_COMMANDS: TikZSymbol[] = [
   }
 ];
 
-// 数学函数
+// 数学函数 - 包含完整的绘图示例（使用正确的TikZ plot语法）
 export const MATH_FUNCTIONS: TikZSymbol[] = [
   {
     latex: '\\sin',
     name: '正弦函数',
     description: '计算正弦值',
     category: 'math',
-    examples: ['\\draw plot (\\x,{sin(\\x r)});']
+    examples: ['\\draw plot[domain=0:6.28, samples=100] {sin(x)};'],
+    completeExample: '\\draw[red, thick] plot[domain=0:6.28, samples=100] {sin(x)};'
   },
   {
     latex: '\\cos',
     name: '余弦函数',
     description: '计算余弦值',
     category: 'math',
-    examples: ['\\draw plot (\\x,{cos(\\x r)});']
+    examples: ['\\draw plot[domain=0:6.28, samples=100] {cos(x)};'],
+    completeExample: '\\draw[blue, thick] plot[domain=0:6.28, samples=100] {cos(x)};'
   },
   {
     latex: '\\tan',
     name: '正切函数',
     description: '计算正切值',
     category: 'math',
-    examples: ['\\draw plot (\\x,{tan(\\x r)});']
+    examples: ['\\draw plot[domain=-1.5:1.5, samples=100] {tan(x)};'],
+    completeExample: '\\draw[green, thick] plot[domain=-1.5:1.5, samples=100] {tan(x)};'
   },
   {
     latex: '\\sqrt',
     name: '平方根',
     description: '计算平方根',
     category: 'math',
-    examples: ['\\draw plot (\\x,{sqrt(\\x)});']
+    examples: ['\\draw plot[domain=0:4, samples=100] {sqrt(x)};'],
+    completeExample: '\\draw[purple, thick] plot[domain=0:4, samples=100] {sqrt(x)};'
   },
   {
     latex: '\\exp',
     name: '指数函数',
     description: '计算指数值',
     category: 'math',
-    examples: ['\\draw plot (\\x,{exp(\\x)});']
+    examples: ['\\draw plot[domain=-2:2, samples=100] {exp(x)};'],
+    completeExample: '\\draw[orange, thick] plot[domain=-2:2, samples=100] {exp(x)};'
   },
   {
     latex: '\\log',
     name: '对数函数',
     description: '计算对数值',
     category: 'math',
-    examples: ['\\draw plot (\\x,{log(\\x)});']
+    examples: ['\\draw plot[domain=0.1:2, samples=100] {log10(x)};'],
+    completeExample: '\\draw[brown, thick] plot[domain=0.1:2, samples=100] {log10(x)};'
   },
   {
     latex: '\\ln',
     name: '自然对数',
     description: '计算自然对数值',
     category: 'math',
-    examples: ['\\draw plot (\\x,{ln(\\x)});']
+    examples: ['\\draw plot[domain=0.1:2, samples=100] {ln(x)};'],
+    completeExample: '\\draw[teal, thick] plot[domain=0.1:2, samples=100] {ln(x)};'
+  },
+  {
+    latex: 'x^2',
+    name: '二次函数',
+    description: '二次函数 y=x²',
+    category: 'math',
+    examples: ['\\draw plot[domain=-2:2, samples=100] {x^2};'],
+    completeExample: '\\draw[red, thick] plot[domain=-2:2, samples=100] {x^2};'
+  },
+  {
+    latex: 'x^3',
+    name: '三次函数',
+    description: '三次函数 y=x³',
+    category: 'math',
+    examples: ['\\draw plot[domain=-2:2, samples=100] {x^3};'],
+    completeExample: '\\draw[blue, thick] plot[domain=-2:2, samples=100] {x^3};'
+  },
+  {
+    latex: '1/x',
+    name: '反比例函数',
+    description: '反比例函数 y=1/x',
+    category: 'math',
+    examples: ['\\draw plot[domain=0.1:3, samples=100] {1/x};'],
+    completeExample: '\\draw[green, thick] plot[domain=0.1:3, samples=100] {1/x};'
   }
 ];
 
@@ -396,15 +449,33 @@ export const getTikZSymbolsByCategory = (category: string): TikZSymbol[] => {
 
 // 搜索符号
 export const searchTikZSymbols = (query: string): TikZSymbol[] => {
-  if (!query) return getAllTikZSymbols();
+  // 如果查询为空，只返回常用的TikZ命令，而不是所有符号
+  if (!query || query.trim() === '') {
+    return [
+      ...DRAW_COMMANDS,
+      ...SHAPE_COMMANDS.slice(0, 4), // 只显示前4个常用图形
+      ...NODE_COMMANDS.slice(0, 2)   // 只显示前2个节点命令
+    ];
+  }
   
   const lowerQuery = query.toLowerCase();
-  return getAllTikZSymbols().filter(symbol => 
-    symbol.name.toLowerCase().includes(lowerQuery) ||
-    symbol.latex.toLowerCase().includes(lowerQuery) ||
-    symbol.description.toLowerCase().includes(lowerQuery) ||
-    symbol.category.toLowerCase().includes(lowerQuery)
+  
+  // 严格匹配：只显示以查询开头的命令
+  const exactMatches = getAllTikZSymbols().filter(symbol => 
+    symbol.latex.toLowerCase().startsWith('\\' + lowerQuery)
   );
+  
+  // 如果有精确匹配，只返回精确匹配，最多5个
+  if (exactMatches.length > 0) {
+    return exactMatches.slice(0, 5);
+  }
+  
+  // 如果没有精确匹配，返回名称开头匹配的，最多3个
+  const nameMatches = getAllTikZSymbols().filter(symbol => 
+    symbol.name.toLowerCase().startsWith(lowerQuery)
+  );
+  
+  return nameMatches.slice(0, 3);
 };
 
 // 获取常用符号（用于快速访问）
@@ -416,6 +487,217 @@ export const getCommonTikZSymbols = (): TikZSymbol[] => {
     ...STYLE_COMMANDS.slice(0, 4),
     ...GREEK_LETTERS.slice(0, 5)
   ];
+};
+
+// \draw 命令专用参数 - 包含完整的绘图选项
+export const DRAW_PARAMETERS: TikZSymbol[] = [
+  // 箭头样式
+  { latex: '->', name: '右箭头', description: '线条末端添加箭头', category: 'arrow' },
+  { latex: '<-', name: '左箭头', description: '线条起始添加箭头', category: 'arrow' },
+  { latex: '<->', name: '双箭头', description: '线条两端添加箭头', category: 'arrow' },
+  { latex: '->>', name: '双线右箭头', description: '双线指向右侧的箭头', category: 'arrow' },
+  { latex: '<<-', name: '双线左箭头', description: '双线指向左侧的箭头', category: 'arrow' },
+  { latex: '<->>', name: '双向双线箭头', description: '双向双线箭头', category: 'arrow' },
+  
+  // 线宽
+  { latex: 'ultra thin', name: '极细', description: '极细线条', category: 'linewidth' },
+  { latex: 'very thin', name: '很细', description: '很细线条', category: 'linewidth' },
+  { latex: 'thin', name: '细', description: '细线条', category: 'linewidth' },
+  { latex: 'semithick', name: '中等', description: '中等粗细线条', category: 'linewidth' },
+  { latex: 'thick', name: '粗', description: '粗线条', category: 'linewidth' },
+  { latex: 'very thick', name: '很粗', description: '很粗线条', category: 'linewidth' },
+  { latex: 'ultra thick', name: '极粗', description: '极粗线条', category: 'linewidth' },
+  
+  // 线型
+  { latex: 'solid', name: '实线', description: '实线样式', category: 'linestyle' },
+  { latex: 'dashed', name: '虚线', description: '虚线样式', category: 'linestyle' },
+  { latex: 'dotted', name: '点线', description: '点线样式', category: 'linestyle' },
+  { latex: 'loosely dashed', name: '疏松虚线', description: '疏松虚线样式', category: 'linestyle' },
+  { latex: 'densely dashed', name: '密集虚线', description: '密集虚线样式', category: 'linestyle' },
+  { latex: 'loosely dotted', name: '疏松点线', description: '疏松点线样式', category: 'linestyle' },
+  { latex: 'densely dotted', name: '密集点线', description: '密集点线样式', category: 'linestyle' },
+  
+  // 颜色
+  { latex: 'red', name: '红色', description: '红色线条', category: 'color' },
+  { latex: 'blue', name: '蓝色', description: '蓝色线条', category: 'color' },
+  { latex: 'green', name: '绿色', description: '绿色线条', category: 'color' },
+  { latex: 'black', name: '黑色', description: '黑色线条', category: 'color' },
+  { latex: 'gray', name: '灰色', description: '灰色线条', category: 'color' },
+  { latex: 'purple', name: '紫色', description: '紫色线条', category: 'color' },
+  { latex: 'orange', name: '橙色', description: '橙色线条', category: 'color' },
+  { latex: 'brown', name: '棕色', description: '棕色线条', category: 'color' },
+  
+  // 透明度
+  { latex: 'opacity=0.3', name: '30%透明度', description: '30% 透明度', category: 'opacity' },
+  { latex: 'opacity=0.5', name: '50%透明度', description: '50% 透明度', category: 'opacity' },
+  { latex: 'opacity=0.7', name: '70%透明度', description: '70% 透明度', category: 'opacity' },
+  { latex: 'opacity=0.9', name: '90%透明度', description: '90% 透明度', category: 'opacity' }
+];
+
+// \node 命令专用参数
+export const NODE_PARAMETERS: TikZSymbol[] = [
+  { latex: 'above', name: '上方', description: '节点位于上方', category: 'position' },
+  { latex: 'below', name: '下方', description: '节点位于下方', category: 'position' },
+  { latex: 'left', name: '左侧', description: '节点位于左侧', category: 'position' },
+  { latex: 'right', name: '右侧', description: '节点位于右侧', category: 'position' },
+  { latex: 'above left', name: '左上', description: '节点位于左上方', category: 'position' },
+  { latex: 'above right', name: '右上', description: '节点位于右上方', category: 'position' },
+  { latex: 'below left', name: '左下', description: '节点位于左下方', category: 'position' },
+  { latex: 'below right', name: '右下', description: '节点位于右下方', category: 'position' },
+  { latex: 'circle', name: '圆形', description: '圆形节点', category: 'shape' },
+  { latex: 'rectangle', name: '矩形', description: '矩形节点', category: 'shape' },
+  { latex: 'ellipse', name: '椭圆', description: '椭圆节点', category: 'shape' },
+  { latex: 'minimum size', name: '最小尺寸', description: '设置节点最小尺寸', category: 'size' },
+  { latex: 'text width', name: '文本宽度', description: '设置文本宽度', category: 'size' }
+];
+
+// \fill 命令专用参数 - 包含完整的填充选项
+export const FILL_PARAMETERS: TikZSymbol[] = [
+  // 基础颜色
+  { latex: 'red', name: '红色填充', description: '红色填充', category: 'color' },
+  { latex: 'blue', name: '蓝色填充', description: '蓝色填充', category: 'color' },
+  { latex: 'green', name: '绿色填充', description: '绿色填充', category: 'color' },
+  { latex: 'yellow', name: '黄色填充', description: '黄色填充', category: 'color' },
+  { latex: 'purple', name: '紫色填充', description: '紫色填充', category: 'color' },
+  { latex: 'orange', name: '橙色填充', description: '橙色填充', category: 'color' },
+  { latex: 'brown', name: '棕色填充', description: '棕色填充', category: 'color' },
+  { latex: 'pink', name: '粉色填充', description: '粉色填充', category: 'color' },
+  { latex: 'cyan', name: '青色填充', description: '青色填充', category: 'color' },
+  { latex: 'magenta', name: '洋红色填充', description: '洋红色填充', category: 'color' },
+  { latex: 'black', name: '黑色填充', description: '黑色填充', category: 'color' },
+  { latex: 'white', name: '白色填充', description: '白色填充', category: 'color' },
+  { latex: 'gray', name: '灰色填充', description: '灰色填充', category: 'color' },
+  
+  // 混合颜色
+  { latex: 'red!30', name: '浅红色', description: '30% 红色填充', category: 'color' },
+  { latex: 'blue!50', name: '中蓝色', description: '50% 蓝色填充', category: 'color' },
+  { latex: 'green!70', name: '深绿色', description: '70% 绿色填充', category: 'color' },
+  { latex: 'red!50!blue', name: '红蓝混合', description: '红色和蓝色混合填充', category: 'color' },
+  { latex: 'blue!20!green', name: '蓝绿混合', description: '蓝色和绿色混合填充', category: 'color' },
+  
+  // 透明度
+  { latex: 'opacity=0.1', name: '10%透明度', description: '10% 透明度', category: 'opacity' },
+  { latex: 'opacity=0.3', name: '30%透明度', description: '30% 透明度', category: 'opacity' },
+  { latex: 'opacity=0.5', name: '50%透明度', description: '50% 透明度', category: 'opacity' },
+  { latex: 'opacity=0.7', name: '70%透明度', description: '70% 透明度', category: 'opacity' },
+  { latex: 'opacity=0.9', name: '90%透明度', description: '90% 透明度', category: 'opacity' },
+  
+  // 特殊填充
+  { latex: 'none', name: '无填充', description: '无填充', category: 'fill' },
+  { latex: 'pattern=north east lines', name: '东北线条图案', description: '东北方向的线条图案', category: 'pattern' },
+  { latex: 'pattern=north west lines', name: '西北线条图案', description: '西北方向的线条图案', category: 'pattern' },
+  { latex: 'pattern=crosshatch', name: '交叉阴影图案', description: '交叉阴影图案', category: 'pattern' },
+  { latex: 'pattern=dots', name: '点状图案', description: '点状图案', category: 'pattern' }
+];
+
+// \path 命令专用参数
+export const PATH_PARAMETERS: TikZSymbol[] = [
+  { latex: 'name path', name: '命名路径', description: '为路径命名', category: 'path' },
+  { latex: 'clip', name: '裁剪', description: '用作裁剪路径', category: 'path' },
+  { latex: 'use as bounding box', name: '边界框', description: '用作边界框', category: 'path' }
+];
+
+// 智能筛选函数
+export const filterSuggestions = (suggestions: TikZSymbol[], query: string): TikZSymbol[] => {
+  if (!query.trim()) return suggestions;
+  
+  const lowerQuery = query.toLowerCase();
+  
+  return suggestions.filter(symbol => {
+    // 优先匹配 latex 命令开头
+    if (symbol.latex.toLowerCase().startsWith(lowerQuery)) return true;
+    
+    // 然后匹配名称开头
+    if (symbol.name.toLowerCase().startsWith(lowerQuery)) return true;
+    
+    // 最后匹配包含关系
+    return symbol.latex.toLowerCase().includes(lowerQuery) ||
+           symbol.name.toLowerCase().includes(lowerQuery) ||
+           symbol.description.toLowerCase().includes(lowerQuery);
+  }).sort((a, b) => {
+    // 排序：latex开头 > 名称开头 > 其他匹配
+    const aLatexStart = a.latex.toLowerCase().startsWith(lowerQuery);
+    const bLatexStart = b.latex.toLowerCase().startsWith(lowerQuery);
+    const aNameStart = a.name.toLowerCase().startsWith(lowerQuery);
+    const bNameStart = b.name.toLowerCase().startsWith(lowerQuery);
+    
+    if (aLatexStart && !bLatexStart) return -1;
+    if (!aLatexStart && bLatexStart) return 1;
+    if (aNameStart && !bNameStart) return -1;
+    if (!aNameStart && bNameStart) return 1;
+    
+    return a.latex.localeCompare(b.latex);
+  });
+};
+
+// 函数专用参数 - 包含samples等函数相关选项
+export const FUNCTION_PARAMETERS: TikZSymbol[] = [
+  // samples参数（最高200）
+  { latex: 'samples=50', name: '50个采样点', description: '50个采样点（适合简单函数）', category: 'function' },
+  { latex: 'samples=100', name: '100个采样点', description: '100个采样点（推荐值）', category: 'function' },
+  { latex: 'samples=150', name: '150个采样点', description: '150个采样点（高精度）', category: 'function' },
+  { latex: 'samples=200', name: '200个采样点', description: '200个采样点（最高精度）', category: 'function' },
+  
+  // domain参数
+  { latex: 'domain=-5:5', name: '定义域[-5,5]', description: 'x轴范围从-5到5', category: 'function' },
+  { latex: 'domain=0:10', name: '定义域[0,10]', description: 'x轴范围从0到10', category: 'function' },
+  { latex: 'domain=-10:10', name: '定义域[-10,10]', description: 'x轴范围从-10到10', category: 'function' },
+  { latex: 'domain=0:2*pi', name: '定义域[0,2π]', description: 'x轴范围从0到2π（三角函数）', category: 'function' },
+  
+  // 平滑参数
+  { latex: 'smooth', name: '平滑曲线', description: '生成平滑的曲线', category: 'function' },
+  { latex: 'tension=0.5', name: '张力0.5', description: '设置曲线张力为0.5', category: 'function' },
+  { latex: 'tension=1.0', name: '张力1.0', description: '设置曲线张力为1.0', category: 'function' },
+  
+  // 颜色和样式
+  { latex: 'red', name: '红色函数', description: '红色函数曲线', category: 'color' },
+  { latex: 'blue', name: '蓝色函数', description: '蓝色函数曲线', category: 'color' },
+  { latex: 'green', name: '绿色函数', description: '绿色函数曲线', category: 'color' },
+  { latex: 'thick', name: '粗线', description: '粗线条函数', category: 'linewidth' },
+  { latex: 'dashed', name: '虚线', description: '虚线函数', category: 'linestyle' }
+];
+
+// 获取上下文相关的参数建议
+export const getContextualParameters = (command: string, currentInput: string = ''): TikZSymbol[] => {
+  let suggestions: TikZSymbol[] = [];
+  
+  // 根据命令类型提供不同的参数建议
+  switch (command.toLowerCase()) {
+    case 'draw':
+      suggestions = [...DRAW_PARAMETERS]; // 显示完整的绘图选项
+      break;
+    case 'node':
+      suggestions = [...NODE_PARAMETERS, ...COLOR_VALUES.slice(0, 4)];
+      break;
+    case 'fill':
+      suggestions = [...FILL_PARAMETERS]; // 显示完整的填充选项
+      break;
+    case 'path':
+      suggestions = [...PATH_PARAMETERS, ...DRAW_PARAMETERS.slice(0, 5)];
+      break;
+    case 'shade':
+      suggestions = [
+        { latex: 'left color', name: '左侧颜色', description: '渐变左侧颜色', category: 'gradient' },
+        { latex: 'right color', name: '右侧颜色', description: '渐变右侧颜色', category: 'gradient' },
+        { latex: 'top color', name: '顶部颜色', description: '渐变顶部颜色', category: 'gradient' },
+        { latex: 'bottom color', name: '底部颜色', description: '渐变底部颜色', category: 'gradient' },
+        ...COLOR_VALUES.slice(0, 8)
+      ];
+      break;
+    case 'plot':
+      suggestions = [...FUNCTION_PARAMETERS]; // 函数专用参数
+      break;
+    default:
+      // 通用参数
+      suggestions = [
+        ...DRAW_PARAMETERS.slice(0, 6),
+        ...COLOR_VALUES.slice(0, 8),
+        ...LINE_WIDTH_VALUES.slice(0, 4)
+      ];
+  }
+  
+  // 应用实时筛选
+  return filterSuggestions(suggestions, currentInput);
 };
 
 // 获取样式参数建议（用于 [] 中的自动补全）

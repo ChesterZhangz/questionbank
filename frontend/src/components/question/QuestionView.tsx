@@ -65,6 +65,8 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   const [scrollProgress, setScrollProgress] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [animationKey, setAnimationKey] = useState(0);
+  // TikZ预览状态
+  const [previewTikZ, setPreviewTikZ] = useState<{ code: string; format: 'svg' | 'png' } | null>(null);
 
   // 获取当前题目
   const currentQuestion = questions[currentQuestionIndex];
@@ -304,6 +306,11 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   // 难度星级
   const getDifficultyStars = (difficulty: number) => {
     return '★'.repeat(difficulty) + '☆'.repeat(5 - difficulty);
+  };
+
+  // TikZ预览处理
+  const handleTikZPreview = (tikz: { code: string; format: 'svg' | 'png' }) => {
+    setPreviewTikZ(tikz);
   };
 
   // 查看相关题目
@@ -657,15 +664,18 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                                 <div className="flex space-x-3 overflow-x-auto pb-2">
                                                   {currentQuestion.tikzCodes.map((tikz) => (
                                                     <div key={tikz.id} className="flex-shrink-0">
-                                                      <div className="w-24 h-18 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600 flex items-center justify-center">
+                                                      <div 
+                                                        className="w-50 h-38 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200"
+                                                        onClick={() => handleTikZPreview(tikz)}
+                                                      >
                                                         <TikZPreview
                                                           code={tikz.code}
                                                           format={tikz.format}
-                                                          width={96}
-                                                          height={72}
+                                                          width={400}
+                                                          height={300}
                                                           showGrid={false}
                                                           showTitle={false}
-                                                          className="max-w-full max-h-full"
+                                                          className="max-w-full max-h-full flex items-center justify-center"
                                                         />
                                                       </div>
                                                     </div>
@@ -1041,6 +1051,55 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                 {(userRole === 'creator' || userRole === 'manager' || userRole === 'collaborator') && '，Ctrl+E 编辑题目'}
                 ，ESC 键关闭弹窗
               </p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* TikZ预览模态框 */}
+      {previewTikZ && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-75"
+          onClick={() => setPreviewTikZ(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            className="relative max-w-[90vw] max-h-[90vh] bg-white dark:bg-gray-800 rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 关闭按钮 */}
+            <button
+              onClick={() => setPreviewTikZ(null)}
+              className="absolute top-4 right-4 z-10 p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+            </button>
+            
+            {/* 标题 */}
+            <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                TikZ 图形预览
+              </span>
+            </div>
+            
+            {/* 内容 - 可滚动区域 */}
+            <div className="p-4 overflow-auto max-h-[calc(90vh-120px)]">
+              <div className="flex items-center justify-center min-h-[400px]">
+                <TikZPreview
+                  code={previewTikZ.code}
+                  format={previewTikZ.format}
+                  width={800}
+                  height={600}
+                  showGrid={false}
+                  showTitle={false}
+                  className="max-w-full max-h-full"
+                />
+              </div>
             </div>
           </motion.div>
         </motion.div>

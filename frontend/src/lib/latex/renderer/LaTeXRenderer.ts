@@ -127,7 +127,6 @@ export class LaTeXRenderer {
   private renderTablesWithPlaceholders(content: string, placeholders: string[]): string {
     return content.replace(/\\begin\{tabular\}(\[[^\]]*\])?\{([^}]*)\}([\s\S]*?)\\end\{tabular\}/g, (_, options, columnSpec, tableContent) => {
       try {
-        console.log('找到表格:', { options, columnSpec, tableContent: tableContent.substring(0, 100) + '...' });
         const tableHTML = this.parseTable(tableContent, columnSpec, options);
         const placeholder = `__TABLE_PLACEHOLDER_${placeholders.length}__`;
         placeholders.push(tableHTML);
@@ -466,7 +465,6 @@ export class LaTeXRenderer {
    * 解析表格内容
    */
   private parseTable(tableContent: string, columnSpec: string, options?: string): string {
-    console.log('开始解析表格:', { columnSpec, options, tableContentLength: tableContent.length });
     
     // 解析列规格
     const columns = this.parseColumnSpec(columnSpec);
@@ -474,7 +472,6 @@ export class LaTeXRenderer {
     // 解析表格行
     const rows = this.parseTableRows(tableContent);
     
-    console.log('表格解析结果:', { columns: columns.length, rows: rows.length });
     
     // 生成HTML表格
     return this.generateTableHTML(rows, columns, options);
@@ -524,7 +521,6 @@ export class LaTeXRenderer {
       columns[columns.length - 1].border = true;
     }
     
-    console.log('解析列规格:', columnSpec, '结果:', columns);
     return columns;
   }
 
@@ -536,20 +532,17 @@ export class LaTeXRenderer {
     
     // 按行分割
     const lines = tableContent.split('\\\\');
-    console.log('表格内容行数:', lines.length);
     
     for (const line of lines) {
       if (!line.trim()) continue;
       
       // 按&分割单元格
       const cells = line.split('&').map(cell => cell.trim());
-      console.log('行内容:', line.substring(0, 50) + '...', '单元格数:', cells.length);
       if (cells.length > 0) {
         rows.push(cells);
       }
     }
     
-    console.log('解析到的行数:', rows.length);
     return rows;
   }
 

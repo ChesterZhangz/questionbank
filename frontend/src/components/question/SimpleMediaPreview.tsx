@@ -125,7 +125,7 @@ const SimpleMediaPreview: React.FC<SimpleMediaPreviewProps> = ({
                           height={130}
                           showGrid={false}
                           showTitle={false}
-                          className="max-w-full max-h-full"
+                          className="max-w-full max-h-full flex items-center justify-center"
                         />
                       </div>
                     )}
@@ -144,7 +144,7 @@ const SimpleMediaPreview: React.FC<SimpleMediaPreviewProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-75"
             onClick={() => setPreviewMedia(null)}
           >
             <motion.div
@@ -169,24 +169,28 @@ const SimpleMediaPreview: React.FC<SimpleMediaPreviewProps> = ({
                 </span>
               </div>
               
-              {/* 内容 */}
-              <div className="p-4">
+              {/* 内容 - 可滚动区域 */}
+              <div className="p-4 overflow-auto max-h-[calc(90vh-120px)]">
                 {previewMedia.type === 'image' ? (
-                  <img
-                    src={previewMedia.url}
-                    alt={previewMedia.filename}
-                    className="max-w-full max-h-full object-contain"
-                  />
+                  <div className="flex items-center justify-center min-h-[400px]">
+                    <img
+                      src={previewMedia.url}
+                      alt={previewMedia.filename}
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  </div>
                 ) : (
-                  <TikZPreview
-                    code={previewMedia.code || ''}
-                    format={previewMedia.format || 'svg'}
-                    width={800}
-                    height={600}
-                    showGrid={false}
-                    showTitle={false}
-                    className="max-w-full max-h-full"
-                  />
+                  <div className="flex items-center justify-center min-h-[400px]">
+                    <TikZPreview
+                      code={previewMedia.code || ''}
+                      format={previewMedia.format || 'svg'}
+                      width={800}
+                      height={600}
+                      showGrid={false}
+                      showTitle={false}
+                      className="max-w-full max-h-full"
+                    />
+                  </div>
                 )}
               </div>
             </motion.div>

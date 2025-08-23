@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TikZ Function Test</title>
+</head>
+<body>
+    <h1>TikZ Function Rendering Test</h1>
+    <div id="test-output"></div>
+    
+    <script type="module">
+        // 简单的测试代码
+        const testCode = `
+\\tikzset{xmin=-3, xmax=3, ymin=-2, ymax=6, grid, ticks}
+\\draw[blue, thick] plot[domain=-3:3, samples=100] {x^2 - 2*x + 1};
+\\draw[red, dashed] plot[domain=-3:3, samples=100] {x^2 + 1};
+        `;
+        
+        console.log('Test code:', testCode);
+        
+        // 检查代码是否包含函数绘制
+        const hasDrawPlot = (testCode.includes('\\draw') || testCode.includes('\\\\draw')) && testCode.includes('plot');
+        console.log('Has draw+plot:', hasDrawPlot);
+        
+        // 测试正则表达式匹配
+        const lines = testCode.split('\n');
+        for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (!trimmedLine) continue;
+            
+            console.log('Testing line:', trimmedLine);
+            
+            // 测试 tikzset 匹配
+            const axisMatch = trimmedLine.match(/\\\\?tikzset\s*\{([^}]+)\}/);
+            if (axisMatch) {
+                console.log('Axis match:', axisMatch[1]);
+            }
+            
+            // 测试 plot 匹配
+            const plotMatch = trimmedLine.match(/\\\\?draw\s*(?:\[([^\]]*)\])?\s*plot\s*(?:\[([^\]]*)\])?\s*\{([^}]+)\}/);
+            if (plotMatch) {
+                console.log('Plot match:', {
+                    drawOptions: plotMatch[1] || '',
+                    plotOptions: plotMatch[2] || '',
+                    expression: plotMatch[3]
+                });
+            }
+        }
+        
+        document.getElementById('test-output').innerHTML = '<p>Check console for test results</p>';
+    </script>
+</body>
+</html>

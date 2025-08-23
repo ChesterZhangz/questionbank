@@ -558,11 +558,11 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                                 <TikZPreview
                                   code={tikz.code}
                                   format={tikz.format}
-                                  width={96}
-                                  height={80}
+                                  width={480}
+                                  height={360}
                                   showGrid={false}
                                   showTitle={false}
-                                  className="w-full h-full group-hover:scale-105 transition-transform duration-200"
+                                  className="w-full h-full group-hover:scale-105 transition-transform duration-200 flex items-center justify-center"
                                 />
                               </div>
                               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
@@ -693,11 +693,11 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                                   <TikZPreview
                                     code={tikz.code}
                                     format={tikz.format}
-                                    width={80}
-                                    height={64}
+                                    width={400}
+                                    height={300}
                                     showGrid={false}
                                     showTitle={false}
-                                    className="w-full h-full group-hover:scale-105 transition-transform duration-200"
+                                    className="w-full h-full group-hover:scale-105 transition-transform duration-200 flex items-center justify-center"
                                   />
                                 </div>
                                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-md flex items-center justify-center">
@@ -1021,15 +1021,15 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">TikZ 图形预览</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">格式: {previewTikZ.format.toUpperCase()}</p>
                 </div>
-                <div className="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4">
+                <div className="bg-transparent rounded-lg p-4 min-h-[500px] flex items-center justify-center">
                   <TikZPreview
                     code={previewTikZ.code}
                     format={previewTikZ.format}
-                    width={600}
-                    height={400}
+                    width={800}
+                    height={600}
                     showGrid={false}
                     showTitle={false}
-                    className="w-full h-full"
+                    className="w-full h-full flex items-center justify-center"
                   />
                 </div>
               </div>

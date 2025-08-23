@@ -37,10 +37,8 @@ class PuzzleSolver {
    * @returns 解题步骤数组
    */
   solve(initialBoard: number[]): SolutionStep[] {
-    console.log('PuzzleSolver.solve 开始:', { initialBoard, gridSize: this.gridSize });
     
     if (this.isSolved(initialBoard)) {
-      console.log('拼图已经解决');
       return [{
         board: [...initialBoard],
         move: null,
@@ -49,11 +47,9 @@ class PuzzleSolver {
     }
 
     if (!this.isSolvable(initialBoard)) {
-      console.log('拼图不可解');
       return [];
     }
     
-    console.log('拼图可解，开始搜索解决方案');
 
     const openSet = new Map<string, PuzzleState>();
     const closedSet = new Set<string>();
@@ -61,7 +57,6 @@ class PuzzleSolver {
     // 修复：按照Python代码逻辑，空格值应该是0
     const emptyValue = 0;
     const emptyIndex = initialBoard.indexOf(emptyValue);
-    console.log('检测到的空格值:', { emptyValue, emptyIndex });
     
     const initialState: PuzzleState = {
       board: [...initialBoard],
@@ -79,14 +74,11 @@ class PuzzleSolver {
       const currentState = this.getLowestFScore(openSet);
       const currentKey = this.getBoardKey(currentState.board);
       
-      console.log(`当前状态: 步数=${currentState.cost}, 启发值=${currentState.heuristic}, F值=${currentState.cost + currentState.heuristic}`);
-      console.log(`当前棋盘: [${currentState.board.join(', ')}]`);
       
       openSet.delete(currentKey);
       closedSet.add(currentKey);
 
       if (this.isSolved(currentState.board)) {
-        console.log('找到解决方案！');
         return this.reconstructSolution(currentState);
       }
 
@@ -121,7 +113,6 @@ class PuzzleSolver {
 
       // 防止无限循环，限制最大搜索深度
       if (currentState.cost > 80) {
-        console.log('达到最大搜索深度，停止搜索');
         break;
       }
     }
@@ -137,10 +128,8 @@ class PuzzleSolver {
     // 修复：按照Python代码逻辑，空格值应该是0
     const emptyValue = 0;
     
-    console.log('isSolvable 检查:', { board, emptyValue, gridSize: this.gridSize });
     
     // 按照Python代码的逆序数计算逻辑
-    console.log('棋盘状态:', board);
     
     // 计算逆序数（不包括空格）
     for (let i = 0; i < board.length - 1; i++) {
@@ -149,7 +138,6 @@ class PuzzleSolver {
         if (board[j] === emptyValue) continue;
         if (board[i] > board[j]) {
           inversions++;
-          console.log(`逆序对: ${board[i]} > ${board[j]} (位置 ${i} > ${j})`);
         }
       }
     }
@@ -159,13 +147,6 @@ class PuzzleSolver {
     
     // 使用Python代码的可解性判断公式：(逆序数 + 空格行数) % 2 == 0 则可解
     const result = (inversions + emptyRow) % 2 === 0;
-    
-    console.log('isSolvable 结果:', { 
-      inversions, 
-      emptyIndex, 
-      emptyRow, 
-      result 
-    });
     
     return result;
   }
@@ -357,37 +338,6 @@ class PuzzleSolver {
     return board;
   }
 
-  /**
-   * 测试解算器是否能正确工作
-   */
-  static testSolver(): void {
-    console.log('=== 开始测试拼图解算器 ===');
-    
-    // 测试一个简单的3x3拼图 - 修复：按照Python代码逻辑，空格应该是0
-    const testBoard = [0, 1, 2, 3, 4, 5, 6, 7, 8]; // 空格在开头，这是已解决状态
-    console.log('测试拼图:', testBoard);
-    
-    const solver = new PuzzleSolver(3);
-    
-    // 测试isSolved
-    const isSolved = solver['isSolved'](testBoard);
-    console.log('是否已解决:', isSolved);
-    
-    // 测试isSolvable
-    const isSolvable = solver['isSolvable'](testBoard);
-    console.log('是否可解:', isSolvable);
-    
-    // 测试启发式函数
-    const heuristic = solver['calculateHeuristic'](testBoard);
-    console.log('启发式值:', heuristic);
-    
-    // 测试求解
-    const solution = solver.solve(testBoard);
-    console.log('解决方案长度:', solution.length);
-    console.log('解决方案:', solution);
-    
-    console.log('=== 测试完成 ===');
-  }
 }
 
 export { PuzzleSolver, type Move, type SolutionStep };

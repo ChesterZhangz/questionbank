@@ -4,7 +4,7 @@ import { ColorParser } from '../features/colors/ColorParser';
 import { GradientEngine } from '../features/colors/GradientEngine';
 import { PatternFiller } from '../features/effects/PatternFiller';
 import { ShadowRenderer } from '../features/effects/ShadowRenderer';
-import { PgfplotsManager } from '../features/plotting/PgfplotsManager';
+import { TikZFunctionRenderer } from '../features/plotting/TikZFunctionRenderer';
 
 
 export interface TikZPreviewProps {
@@ -26,7 +26,7 @@ class TikZSimulator {
   private showGrid: boolean;
   private showTitle: boolean;
   private bounds: { minX: number; minY: number; maxX: number; maxY: number } | null = null;
-  private pgfplotsManager: PgfplotsManager;
+  private functionRenderer: TikZFunctionRenderer;
 
 
   constructor(width: number = 400, height: number = 300, showGrid: boolean = true, showTitle: boolean = true) {
@@ -35,12 +35,11 @@ class TikZSimulator {
     this.showGrid = showGrid;
     this.showTitle = showTitle;
     
-    // 初始化pgfplots管理器
-    this.pgfplotsManager = new PgfplotsManager({
+    // 初始化TikZ函数渲染器
+    this.functionRenderer = new TikZFunctionRenderer({
       width,
       height,
-      showGrid,
-      showLegend: true
+      showGrid
     });
   }
 
@@ -49,23 +48,15 @@ class TikZSimulator {
     this.elements = [];
     
     try {
-      // 首先检查是否包含pgfplots代码
-      const isPgfplots = this.pgfplotsManager.parseCode(code);
-      console.log('PGFPlots代码识别结果:', isPgfplots);
+      // 首先检查是否包含函数绘制代码
       
-      if (isPgfplots) {
-        // 如果是pgfplots代码，使用pgfplots渲染器
-        console.log('使用PGFPlots渲染器');
-        const svgElement = this.pgfplotsManager.render();
-        if (svgElement) {
-          console.log('PGFPlots渲染成功');
-          return svgElement.outerHTML;
-        } else {
-          console.log('PGFPlots渲染失败，返回null');
+      if (code.includes('\\draw') || code.includes('\\\\draw')) {
+        const svgContent = this.functionRenderer.parseAndRender(code);
+        if (svgContent) {
+          return svgContent;
         }
       }
       
-      console.log('使用传统TikZ解析');
       // 否则使用传统TikZ解析
       this.parseTikZCode(code);
       
@@ -1275,24 +1266,51 @@ export const TikZPreview: React.FC<TikZPreviewProps> = ({
 
   return (
     <div className={`${className}`}>
-      {/* 预览区域 */}
-      <div className="border border-gray-300 dark:border-gray-600 rounded-md p-4 bg-white dark:bg-gray-800">
-        {previewUrl ? (
-          <img 
-            src={previewUrl} 
-            alt="TikZ预览" 
-            className="max-w-full h-auto border border-gray-200 dark:border-gray-600 rounded"
-          />
-        
-        ) : (
-          <div className="flex items-center justify-center h-[300px] text-gray-500 dark:text-gray-400">
-            <div className="text-center">
-              <Code className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">输入TikZ代码后自动渲染</p>
-              <p className="text-xs text-gray-400 mt-1">使用前端模拟渲染，无需后端</p>
+      {/* 预览区域 - 透明背景设计 */}
+      <div className="relative">
+        {/* 完全透明容器 - 无边框，无内边距 */}
+        <div className="bg-transparent flex items-center justify-center w-full h-full">
+          {previewUrl ? (
+            <div className="relative w-full h-full flex items-center justify-center">
+              {/* SVG预览 - 完全透明背景 */}
+              <img 
+                src={previewUrl} 
+                alt="TikZ预览" 
+                className="max-w-full h-auto"
+                style={{
+                  filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))'
+                }}
+              />
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-center">
+              {/* 空状态图标 */}
+              <div className="relative mb-4">
+                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-full flex items-center justify-center">
+                  <Code className="w-8 h-8 text-blue-500 dark:text-blue-400" />
+                </div>
+                {/* 装饰性圆点 */}
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
+                <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-indigo-400 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
+              </div>
+              
+              {/* 提示文字 */}
+              <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                图形预览区域
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                输入TikZ代码后自动渲染
+              </p>
+              <div className="flex items-center justify-center space-x-2 text-xs text-gray-400 dark:text-gray-500">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span>前端模拟渲染</span>
+                <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+                <span>无需后端</span>
+              </div>
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );

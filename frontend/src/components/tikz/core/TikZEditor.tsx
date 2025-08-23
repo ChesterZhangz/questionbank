@@ -158,7 +158,7 @@ export const TikZEditor: React.FC<TikZEditorProps> = ({
             </div>
 
             {/* 编辑和预览区域 */}
-            <div className="grid grid-cols-2 gap-4 p-4">
+            <div className="grid grid-cols-2 gap-4 p-4 items-start">
               {/* 代码编辑区域 */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -170,7 +170,7 @@ export const TikZEditor: React.FC<TikZEditorProps> = ({
             placeholder="输入TikZ代码..."
             rows={12}
             enableAutoComplete={true}
-            className="border border-gray-300 dark:border-gray-600 rounded-md"
+            className=""
             style={{
               fontFamily: 'monospace',
               fontSize: '14px',

@@ -35,6 +35,7 @@ const TikZSupport = lazy(() => import('./pages/TikZHighlightDemo'));
 const TikZFeaturesDemo = lazy(() => import('./pages/TikZFeaturesDemo'));
 const LaTeXGuide = lazy(() => import('./pages/LaTeXGuide'));
 const FunctionPlottingTestPage = lazy(() => import('./pages/FunctionPlottingTestPage'));
+const TikZFunctionTestPage = lazy(() => import('./pages/TikZFunctionTestPage'));
 
 import { useAuthStore } from './stores/authStore';
 import { BackgroundTaskProvider } from './contexts/BackgroundTaskContext';
@@ -444,6 +445,17 @@ const App: React.FC = () => {
                 <ProtectedRoute>
                   <AppLayout>
                     <FunctionPlottingTestPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/TikZFunctionTest" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <TikZFunctionTestPage />
                   </AppLayout>
                 </ProtectedRoute>
               } 
