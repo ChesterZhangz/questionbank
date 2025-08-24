@@ -289,7 +289,7 @@ const CreateQuestionPage: React.FC = () => {
     if (multiQuestions.length > 0) {
       showConfirm(
         '退出多题目模式',
-        '确定要退出多题目模式吗？未保存的题目将会丢失。',
+        '确定要退出多题目模式吗？未保存的题目将会丢失.',
         () => {
           // 先关闭模态框
           closeConfirm();
@@ -669,7 +669,7 @@ const CreateQuestionPage: React.FC = () => {
     // 权限检查：确保用户对当前选择题库有创建题目的权限
     const selectedBank = questionBanks.find(bank => bank.bid === selectedBankId);
     if (!selectedBank || (selectedBank.userRole !== 'creator' && selectedBank.userRole !== 'manager' && selectedBank.userRole !== 'collaborator')) {
-      const errorMessage = '您没有权限为该题库创建题目。只有题库的创建者、管理员或协作者才能创建题目。';
+      const errorMessage = '您没有权限为该题库创建题目.只有题库的创建者、管理员或协作者才能创建题目.';
       setPermissionError(errorMessage);
       showErrorRightSlide('权限不足', errorMessage);
       // 3秒后自动清除错误提示
@@ -813,7 +813,7 @@ const CreateQuestionPage: React.FC = () => {
               transition={{ delay: 0.4, duration: 0.3 }}
               className="text-gray-600 dark:text-gray-300 mb-4"
             >
-              您没有权限为任何题库创建题目。只有题库的创建者、管理员或协作者才能创建题目。
+              您没有权限为任何题库创建题目.只有题库的创建者、管理员或协作者才能创建题目.
             </motion.p>
             <motion.div 
               initial={{ opacity: 0, y: 20 }}

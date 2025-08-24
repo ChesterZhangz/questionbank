@@ -40,7 +40,7 @@ const versionUpdates: VersionUpdate[] = [
     version: 'v0.72',
     date: '2025-08-24',
     title: 'TikZ渲染系统全面优化：分数渲染增强、虚线样式支持、箭头颜色适配、透明度控制',
-    description: '深度优化TikZ渲染引擎，完善分数渲染系统，新增虚线样式支持，实现箭头颜色自动匹配，添加透明度控制，全面提升TikZ图形的显示质量和视觉效果。',
+    description: '深度优化TikZ渲染引擎，完善分数渲染系统，新增虚线样式支持，实现箭头颜色自动匹配，添加透明度控制，全面提升TikZ图形的显示质量和视觉效果.',
     features: [
       '智能分数渲染系统：支持嵌套大括号解析，Unicode分数字符显示，美观的分数线渲染',
       '完整虚线样式支持：dashed、dotted、loosely dashed、densely dashed等多种线型',
@@ -90,7 +90,7 @@ const versionUpdates: VersionUpdate[] = [
     version: 'v0.71',
     date: '2025-08-23',
     title: 'TikZ教学系统全面构建：完整教程体系、交互式学习、实战项目指导',
-    description: '构建完整的TikZ教学系统，包含基础语法、高级技巧、实战案例，提供交互式学习体验，帮助用户从零开始掌握TikZ绘图技能。',
+    description: '构建完整的TikZ教学系统，包含基础语法、高级技巧、实战案例，提供交互式学习体验，帮助用户从零开始掌握TikZ绘图技能.',
     features: [
       'TikZ基础语法教程：环境搭建、基本命令、坐标系统、图形元素',
       'TikZ高级技巧教学：函数绘制、坐标轴、网格系统、数学公式集成',
@@ -137,7 +137,7 @@ const versionUpdates: VersionUpdate[] = [
     version: 'v0.7',
     date: '2025-08-23',
     title: 'TikZ画图系统全面升级：渲染引擎重构、DarkMode适配、用户体验优化',
-    description: '重构TikZ渲染系统，移除PGFPlots依赖，实现纯TikZ函数绘制，全面支持DarkMode，优化图形预览和编辑体验，大幅提升TikZ图形的显示质量和交互体验。',
+    description: '重构TikZ渲染系统，移除PGFPlots依赖，实现纯TikZ函数绘制，全面支持DarkMode，优化图形预览和编辑体验，大幅提升TikZ图形的显示质量和交互体验.',
     features: [
       'TikZ渲染引擎重构：移除PGFPlots依赖，实现纯TikZ函数绘制系统',
       '纯TikZ函数绘制：支持数学函数、三角函数、多项式等复杂函数图像',
@@ -181,7 +181,7 @@ const versionUpdates: VersionUpdate[] = [
     version: 'v0.69',
     date: '2025-08-19',
     title: 'LaTeX文档系统全面重构：统一设计风格、完善教程内容、优化用户体验',
-    description: '重构LaTeX指导中心，采用题目管理页面风格设计，完善数学公式和题目语法教程，统一使用CodeExample组件，提供完整的LaTeX学习体验。',
+    description: '重构LaTeX指导中心，采用题目管理页面风格设计，完善数学公式和题目语法教程，统一使用CodeExample组件，提供完整的LaTeX学习体验.',
     features: [
       'LaTeX指导中心全面重构：采用题目管理页面风格，顶部导航栏 + 标签切换设计',
       '统一教程页面结构：数学公式教程 + 题目语法教程，分工明确，内容完整',
@@ -231,7 +231,7 @@ const versionUpdates: VersionUpdate[] = [
     version: 'v0.68',
     date: '2025-08-17',
     title: '全面升级：DarkMode支持、游戏优化、AI分析改进',
-    description: '为所有小游戏组件添加完整的DarkMode支持，修复游戏倒计时bug，优化AI分析机制，重构截图功能，全面提升用户体验。',
+    description: '为所有小游戏组件添加完整的DarkMode支持，修复游戏倒计时bug，优化AI分析机制，重构截图功能，全面提升用户体验.',
     features: [
       '所有小游戏组件完整DarkMode支持：MathGame、MemoryGame、PuzzleGame、ReactionGame',
       '游戏设置、排行榜、历史记录、错误页面游戏区域DarkMode适配',
@@ -271,7 +271,7 @@ const versionUpdates: VersionUpdate[] = [
     version: 'v0.67',
     date: '2025-08-15',
     title: '成员管理与密码安全升级',
-    description: '完善题库成员管理体系，新增批量操作、邮件通知，强化密码重置安全机制，提升协作效率。',
+    description: '完善题库成员管理体系，新增批量操作、邮件通知，强化密码重置安全机制，提升协作效率.',
     features: [
       '完整的忘记密码功能：邮件验证 + 安全重置',
       '题库成员批量管理：批量添加/删除，智能选择',
@@ -297,7 +297,7 @@ const versionUpdates: VersionUpdate[] = [
     version: 'v0.66',
     date: '2025-08-14',
     title: '安全设置与功能优化',
-    description: '增强密码安全验证机制，统一头像显示系统，优化截图功能，提升整体用户体验。',
+    description: '增强密码安全验证机制，统一头像显示系统，优化截图功能，提升整体用户体验.',
     features: [
       '实现注册密码监管机制：8-20位长度限制',
       '密码智能验证：防止与用户名/邮箱相关的弱密码',
@@ -349,7 +349,7 @@ const versionUpdates: VersionUpdate[] = [
     version: 'v0.64',
     date: '2025-08-11',
     title: 'DarkMode模式',
-    description: '全面优化了DarkMode支持，确保在所有页面和组件中都有完美的深色主题体验。',
+    description: '全面优化了DarkMode支持，确保在所有页面和组件中都有完美的深色主题体验.',
     features: [
       '所有页面组件都支持DarkMode',
       '自定义弹窗组件完美适配深色主题',
@@ -435,7 +435,7 @@ const versionUpdates: VersionUpdate[] = [
     version: 'v0.61',
     date: '2025-08-03',
     title: '个人信息页面与游戏功能优化',
-    description: '对系统性能进行了全面优化，提升了页面加载速度和响应性能。',
+    description: '对系统性能进行了全面优化，提升了页面加载速度和响应性能.',
     features: [
       "添加游戏数据模型",
       "实现游戏API路由",
@@ -582,7 +582,7 @@ const versionUpdates: VersionUpdate[] = [
     version: 'v0.54',
     date: '2025-07-31',
     title: '用户管理',
-    description: '新增了用户管理功能，支持用户的增删改查和权限管理。',
+    description: '新增了用户管理功能，支持用户的增删改查和权限管理.',
     features: [
       '用户注册和登录',
       '用户信息管理',
@@ -605,7 +605,7 @@ const versionUpdates: VersionUpdate[] = [
     version: 'v0.53',
     date: '2024-07-30',
     title: '基础功能完善',
-    description: '完善了系统的基础功能，包括题库创建、题目管理等核心功能。',
+    description: '完善了系统的基础功能，包括题库创建、题目管理等核心功能.',
     features: [
       '题库创建和管理',
       '题目添加和编辑',
@@ -628,7 +628,7 @@ const versionUpdates: VersionUpdate[] = [
     version: 'v0.52',
     date: '2025-07-29',
     title: '系统架构搭建',
-    description: '搭建了系统的基础架构，包括前端框架、后端API和数据库设计。',
+    description: '搭建了系统的基础架构，包括前端框架、后端API和数据库设计.',
     features: [
       'React + TypeScript前端框架',
       'Node.js + Express后端API',
@@ -651,7 +651,7 @@ const versionUpdates: VersionUpdate[] = [
     version: 'v0.51',
     date: '2025-07-28',
     title: '项目初始化',
-    description: '项目正式启动，建立了基础的开发环境和项目结构。',
+    description: '项目正式启动，建立了基础的开发环境和项目结构.',
     features: [
       '项目基础结构搭建',
       '开发环境配置',
@@ -673,7 +673,7 @@ const versionUpdates: VersionUpdate[] = [
     version: 'v0.5',
     date: '2025-07-27',
     title: '项目概念设计',
-    description: 'Mareate题库管理系统的概念设计阶段，确定了系统的核心功能和设计理念。',
+    description: 'Mareate题库管理系统的概念设计阶段，确定了系统的核心功能和设计理念.',
     features: [
       '系统功能需求分析',
       '用户界面设计概念',

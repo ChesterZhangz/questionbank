@@ -170,8 +170,8 @@ export const emailService = {
         },
         content: {
           zh: `
-            <p>感谢您注册Mareate题库系统。为了确保您的账户安全，请点击下面的按钮验证您的邮箱地址。</p>
-            <p><strong>注意：</strong>此验证链接将在24小时后失效。如果您没有注册Mareate题库系统，请忽略此邮件。</p>
+            <p>感谢您注册Mareate题库系统.为了确保您的账户安全，请点击下面的按钮验证您的邮箱地址.</p>
+            <p><strong>注意：</strong>此验证链接将在24小时后失效.如果您没有注册Mareate题库系统，请忽略此邮件.</p>
           `,
           en: `
             <p>Thank you for registering with the Mareate Question Bank System. To ensure your account security, please click the button below to verify your email address.</p>
@@ -184,7 +184,7 @@ export const emailService = {
         },
         buttonUrl: verificationUrl,
         footerText: {
-          zh: '此邮件由系统自动发送，请勿回复。<br>如有问题请联系管理员：admin@viquard.com',
+          zh: '此邮件由系统自动发送，请勿回复.<br>如有问题请联系管理员：admin@viquard.com',
           en: 'This email was sent automatically by the system. Please do not reply.<br>If you have any questions, please contact the administrator: admin@viquard.com'
         },
         color: '#0066cc',
@@ -234,10 +234,10 @@ export const emailService = {
         },
         content: {
           zh: `
-            <p>恭喜您成功完成邮箱验证！现在您可以开始使用Mareate题库系统的所有功能了。</p>
+            <p>恭喜您成功完成邮箱验证！现在您可以开始使用Mareate题库系统的所有功能了.</p>
             <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
               <strong>验证成功</strong><br>
-              您的账户已激活，可以正常使用所有功能。
+              您的账户已激活，可以正常使用所有功能.
             </div>
             <h3 style="color: #333; margin-bottom: 15px;">您可以：</h3>
             <ul style="color: #666; line-height: 1.8;">
@@ -345,7 +345,7 @@ export const emailService = {
         },
         content: {
           zh: `
-            <p><strong>${data.inviterName}</strong> 邀请您加入试卷库 <strong>"${data.libraryName}"</strong>，并担任 <strong>${roleText}</strong> 角色。</p>
+            <p><strong>${data.inviterName}</strong> 邀请您加入试卷库 <strong>"${data.libraryName}"</strong>，并担任 <strong>${roleText}</strong> 角色.</p>
             
             <div style="background: #e3f2fd; border: 1px solid #bbdefb; color: #1565c0; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
               <h3 style="margin: 0 0 15px 0; color: #1565c0;">邀请详情</h3>
@@ -401,7 +401,7 @@ export const emailService = {
         },
         buttonUrl: data.acceptUrl,
         footerText: {
-          zh: '此邮件由系统自动发送，请勿回复。<br>如有问题请联系管理员：admin@viquard.com',
+          zh: '此邮件由系统自动发送，请勿回复.<br>如有问题请联系管理员：admin@viquard.com',
           en: 'This email was sent automatically by the system. Please do not reply.<br>If you have any questions, please contact the administrator: admin@viquard.com'
         },
         color: '#0066cc',
@@ -475,7 +475,7 @@ export const emailService = {
         },
         content: {
           zh: `
-            <p><strong>${data.inviterName}</strong> 邀请您加入题库 <strong>"${data.questionBankName}"</strong>，并担任 <strong>${roleText}</strong> 角色。</p>
+            <p><strong>${data.inviterName}</strong> 邀请您加入题库 <strong>"${data.questionBankName}"</strong>，并担任 <strong>${roleText}</strong> 角色.</p>
             
             <div style="background: #e3f2fd; border: 1px solid #bbdefb; color: #1565c0; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
               <h3 style="margin: 0 0 15px 0; color: #1565c0;">邀请详情</h3>
@@ -531,7 +531,7 @@ export const emailService = {
         },
         buttonUrl: data.acceptUrl,
         footerText: {
-          zh: '此邮件由系统自动发送，请勿回复。<br>如有问题请联系管理员：admin@viquard.com',
+          zh: '此邮件由系统自动发送，请勿回复.<br>如有问题请联系管理员：admin@viquard.com',
           en: 'This email was sent automatically by the system. Please do not reply.<br>If you have any questions, please contact the administrator: admin@viquard.com'
         },
         color: '#0066cc',
@@ -583,7 +583,7 @@ export const emailService = {
         },
         content: {
           zh: `
-            <p>我们收到了您重置密码的请求。请点击下面的按钮来重置您的密码：</p>
+            <p>我们收到了您重置密码的请求.请点击下面的按钮来重置您的密码：</p>
             
             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107; margin: 30px 0;">
               <p style="color: #856404; margin: 0; font-size: 14px; line-height: 1.5;">
@@ -613,7 +613,7 @@ export const emailService = {
         },
         buttonUrl: resetUrl,
         footerText: {
-          zh: '此邮件由系统自动发送，请勿回复。<br>如有问题请联系管理员：admin@viquard.com',
+          zh: '此邮件由系统自动发送，请勿回复.<br>如有问题请联系管理员：admin@viquard.com',
           en: 'This email was sent automatically by the system. Please do not reply.<br>If you have any questions, please contact the administrator: admin@viquard.com'
         },
         color: '#0066cc',
@@ -678,7 +678,7 @@ export const emailService = {
         },
         content: {
           zh: `
-            <p>恭喜！您已被 <strong>${data.inviterName}</strong> 添加到题库 <strong>"${data.questionBankName}"</strong>，您的角色是 <strong>${roleText}</strong>。</p>
+            <p>恭喜！您已被 <strong>${data.inviterName}</strong> 添加到题库 <strong>"${data.questionBankName}"</strong>，您的角色是 <strong>${roleText}</strong>.</p>
             
             <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981; margin: 30px 0;">
               <p style="color: #166534; margin: 0; font-size: 14px; line-height: 1.5;">
@@ -714,7 +714,7 @@ export const emailService = {
         },
         buttonUrl: data.questionBankUrl,
         footerText: {
-          zh: '此邮件由系统自动发送，请勿回复。<br>如有问题请联系管理员：admin@viquard.com',
+          zh: '此邮件由系统自动发送，请勿回复.<br>如有问题请联系管理员：admin@viquard.com',
           en: 'This email was sent automatically by the system. Please do not reply.<br>If you have any questions, please contact the administrator: admin@viquard.com'
         },
         color: '#10b981',
@@ -774,7 +774,7 @@ export const emailService = {
         },
         content: {
           zh: `
-            <p>我们通知您，您已被 <strong>${data.removerName}</strong> 从题库 <strong>"${data.questionBankName}"</strong> 中移除。</p>
+            <p>我们通知您，您已被 <strong>${data.removerName}</strong> 从题库 <strong>"${data.questionBankName}"</strong> 中移除.</p>
             
             <div style="background: #fef3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #f97316; margin: 30px 0;">
               <p style="color: #92400e; margin: 0; font-size: 14px; line-height: 1.5;">
@@ -810,7 +810,7 @@ export const emailService = {
         },
         buttonUrl: `${process.env.FRONTEND_URL}`,
         footerText: {
-          zh: '此邮件由系统自动发送，请勿回复。<br>如有问题请联系管理员：admin@viquard.com',
+          zh: '此邮件由系统自动发送，请勿回复.<br>如有问题请联系管理员：admin@viquard.com',
           en: 'This email was sent automatically by the system. Please do not reply.<br>If you have any questions, please contact the administrator: admin@viquard.com'
         },
         color: '#f97316',

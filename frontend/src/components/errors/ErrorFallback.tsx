@@ -55,7 +55,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, errorInfo }) => {
           transition={{ delay: 0.4 }}
           className="text-gray-600 dark:text-gray-300 mb-6"
         >
-          抱歉，应用程序遇到了一个意外错误。我们的技术团队已经收到这个错误报告。
+          抱歉，应用程序遇到了一个意外错误.我们的技术团队已经收到这个错误报告.
         </motion.p>
 
         {/* 错误详情（仅在开发环境显示） */}

@@ -110,7 +110,7 @@ class AnswerGenerationService {
   private generatePrompt(request: AnswerGenerationRequest): string {
     const { content, type, difficulty, category, tags } = request;
     
-    let prompt = `你是一个专业的数学题目解答专家。请仔细分析以下数学题目，并在思维链中展示你的解题思路，最后生成准确的答案和解析。
+    let prompt = `你是一个专业的数学题目解答专家.请仔细分析以下数学题目，并在思维链中展示你的解题思路，最后生成准确的答案和解析.
 
 题目内容：${content}
 题目类型：${type}

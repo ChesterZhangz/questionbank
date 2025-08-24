@@ -106,9 +106,6 @@ router.get('/members', authMiddleware, async (req: AuthRequest, res: Response) =
       query.departmentId = department;
     }
 
-    // 获取企业成员总数
-    const total = await EnterpriseMember.countDocuments(query);
-    
     // 获取企业成员列表
     const enterpriseMembers = await EnterpriseMember.find(query)
       .populate('userId', 'name email avatar lastLogin createdAt')
@@ -116,29 +113,34 @@ router.get('/members', authMiddleware, async (req: AuthRequest, res: Response) =
       .skip(skip)
       .limit(Number(limit));
 
+    // 获取企业成员总数（只计算有效的用户）
+    const total = enterpriseMembers.filter((member: any) => member.userId).length;
+    
     // 格式化返回数据 - 将用户信息和企业角色信息合并
-    const members = enterpriseMembers.map((member: any) => {
-      const memberData = {
-        _id: member.userId._id, // 用户ID（用于显示和编辑）
-        enterpriseMemberId: member._id, // EnterpriseMember的ID（用于转让等操作）
-        name: member.userId.name,
-        email: member.userId.email,
-        avatar: member.userId.avatar,
-        lastLogin: member.userId.lastLogin,
-        createdAt: member.userId.createdAt,
-        // 企业相关字段
-        role: member.role,
-        permissions: member.permissions,
-        departmentId: member.departmentId ? member.departmentId.toString() : null, // 确保是字符串格式
-        position: member.position,
-        joinDate: member.joinDate,
-        status: member.status,
-        // 企业名称（从企业信息获取）
-        enterpriseName: enterprise.name
-      };
-      
-      return memberData;
-    });
+    const members = enterpriseMembers
+      .filter((member: any) => member.userId) // 过滤掉userId为null的记录
+      .map((member: any) => {
+        const memberData = {
+          _id: member.userId._id, // 用户ID（用于显示和编辑）
+          enterpriseMemberId: member._id, // EnterpriseMember的ID（用于转让等操作）
+          name: member.userId.name,
+          email: member.userId.email,
+          avatar: member.userId.avatar,
+          lastLogin: member.userId.lastLogin,
+          createdAt: member.userId.createdAt,
+          // 企业相关字段
+          role: member.role,
+          permissions: member.permissions,
+          departmentId: member.departmentId ? member.departmentId.toString() : null, // 确保是字符串格式
+          position: member.position,
+          joinDate: member.joinDate,
+          status: member.status,
+          // 企业名称（从企业信息获取）
+          enterpriseName: enterprise.name
+        };
+        
+        return memberData;
+      });
 
     return res.json({
       success: true,
@@ -1010,7 +1012,7 @@ router.put('/transfer-super-admin', authMiddleware, [
   }
 });
 
-// 设置管理员身份（只有超级管理员可以调用）
+// 设置管理员身份（超级管理员可以设置任何角色，管理员可以将普通成员提升为管理员）
 router.put('/set-admin/:memberId', authMiddleware, [
   body('role').isIn(['admin', 'member']).withMessage('角色必须是 admin 或 member'),
   body('position').optional().isString().withMessage('职位必须是字符串'),
@@ -1031,14 +1033,14 @@ router.put('/set-admin/:memberId', authMiddleware, [
       return res.status(404).json({ success: false, error: '您尚未加入任何企业' });
     }
 
-    // 检查当前用户是否为超级管理员
+    // 检查当前用户权限：超级管理员或管理员
     const currentUserMember = await EnterpriseMember.findOne({
       userId: user._id,
       enterpriseId: user.enterpriseId
     });
 
-    if (!currentUserMember || currentUserMember.role !== 'superAdmin') {
-      return res.status(403).json({ success: false, error: '只有企业超级管理员可以设置管理员身份' });
+    if (!currentUserMember || !['superAdmin', 'admin'].includes(currentUserMember.role)) {
+      return res.status(403).json({ success: false, error: '只有企业超级管理员和管理员可以设置成员身份' });
     }
 
     const { memberId } = req.params;
@@ -1059,6 +1061,24 @@ router.put('/set-admin/:memberId', authMiddleware, [
     // 不能修改自己的角色
     if (targetMember.userId.toString() === user._id?.toString()) {
       return res.status(400).json({ success: false, error: '不能修改自己的角色' });
+    }
+
+    // 权限检查：管理员不能修改任何成员的角色，只能编辑职位和部门
+    if (currentUserMember.role === 'admin') {
+      // 管理员不能改变角色，只能编辑职位和部门
+      if (targetMember.role !== role) {
+        return res.status(403).json({ 
+          success: false, 
+          error: '管理员不能修改成员的企业角色，只能编辑职位和部门信息' 
+        });
+      }
+      // 管理员不能编辑超级管理员
+      if (targetMember.role === 'superAdmin') {
+        return res.status(403).json({ 
+          success: false, 
+          error: '管理员不能编辑超级管理员的任何信息' 
+        });
+      }
     }
 
     // 设置权限
@@ -1144,6 +1164,14 @@ router.put('/assign-department/:memberId', authMiddleware, [
     // 检查成员是否属于当前企业
     if (targetMember.enterpriseId.toString() !== user.enterpriseId?.toString()) {
       return res.status(404).json({ success: false, error: '成员不属于当前企业' });
+    }
+
+    // 权限检查：管理员不能分配管理员的部门，只能分配普通成员的部门
+    if (currentUserMember.role === 'admin' && targetMember.role === 'admin') {
+      return res.status(403).json({ 
+        success: false, 
+        error: '管理员不能分配其他管理员的部门，只能分配普通成员的部门' 
+      });
     }
 
     // 检查部门是否存在且属于同一企业

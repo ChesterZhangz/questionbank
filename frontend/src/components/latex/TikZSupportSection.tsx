@@ -195,9 +195,9 @@ const TikZSupportSection: React.FC = () => {
           TikZ 是什么？
         </h3>
         <p className="text-blue-700 dark:text-blue-300 leading-relaxed text-lg">
-          TikZ 是一个强大的图形绘制包，专为 LaTeX 设计。它允许用户使用简单的代码创建复杂的图形、图表和示意图。
-          在我们的系统中，我们提供了完整的 TikZ 支持，包括实时编辑器、语法高亮、即时预览和丰富的图形功能。
-          <span className="font-semibold text-blue-800 dark:text-blue-200"> 特别支持 PGFPlots 函数绘图，能够绘制各种数学函数图像。</span>
+          TikZ 是一个强大的图形绘制包，专为 LaTeX 设计.它允许用户使用简单的代码创建复杂的图形、图表和示意图.
+          在我们的系统中，我们提供了完整的 TikZ 支持，包括实时编辑器、语法高亮、即时预览和丰富的图形功能.
+          <span className="font-semibold text-blue-800 dark:text-blue-200"> 特别支持 PGFPlots 函数绘图，能够绘制各种数学函数图像.</span>
         </p>
       </div>
 
@@ -262,7 +262,7 @@ const TikZSupportSection: React.FC = () => {
           TikZ 编辑器功能
         </h3>
         <p className="text-green-700 dark:text-green-300 leading-relaxed text-lg">
-          我们的 TikZ 编辑器提供了完整的图形绘制体验，让您能够轻松创建和编辑复杂的图形代码。
+          我们的 TikZ 编辑器提供了完整的图形绘制体验，让您能够轻松创建和编辑复杂的图形代码.
         </p>
       </div>
 
@@ -395,7 +395,7 @@ const TikZSupportSection: React.FC = () => {
           TikZ 图形库
         </h3>
         <p className="text-purple-700 dark:text-purple-300 leading-relaxed text-lg">
-          探索 TikZ 提供的丰富图形库，从基础几何图形到复杂的组合图案。
+          探索 TikZ 提供的丰富图形库，从基础几何图形到复杂的组合图案.
         </p>
       </div>
 
@@ -487,7 +487,7 @@ const TikZSupportSection: React.FC = () => {
           TikZ 效果系统
         </h3>
         <p className="text-orange-700 dark:text-orange-300 leading-relaxed text-lg">
-          探索 TikZ 强大的效果系统，包括颜色、渐变、阴影、图案等高级功能。
+          探索 TikZ 强大的效果系统，包括颜色、渐变、阴影、图案等高级功能.
         </p>
       </div>
 
@@ -551,7 +551,7 @@ const TikZSupportSection: React.FC = () => {
           交互式演示
         </h3>
         <p className="text-red-700 dark:text-red-300 leading-relaxed text-lg">
-          通过交互式演示学习 TikZ 的各种功能，实时编辑代码并查看效果。
+          通过交互式演示学习 TikZ 的各种功能，实时编辑代码并查看效果.
         </p>
       </div>
 

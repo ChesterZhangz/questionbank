@@ -272,7 +272,7 @@ const UserManagementPage: React.FC = () => {
   const handleDeleteUser = async (userId: string, userName: string) => {
     showConfirm(
       `确定要删除用户 "${userName}" 吗？`,
-      '此操作不可撤销。',
+      '此操作不可撤销.',
       async () => {
         try {
           // 先关闭模态框

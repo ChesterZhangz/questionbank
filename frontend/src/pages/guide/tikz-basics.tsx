@@ -40,8 +40,8 @@ const TikZBasicsGuide: React.FC = () => {
           </div>
         </div>
         <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-          TikZ是一个强大的LaTeX绘图包，可以创建高质量的矢量图形。本教程将带你掌握TikZ的基础语法、
-          图形绘制、坐标系统等核心概念，通过实战示例快速上手TikZ绘图。
+          TikZ是一个强大的LaTeX绘图包，可以创建高质量的矢量图形.本教程将带你掌握TikZ的基础语法、
+          图形绘制、坐标系统等核心概念，通过实战示例快速上手TikZ绘图.
         </p>
       </div>
 

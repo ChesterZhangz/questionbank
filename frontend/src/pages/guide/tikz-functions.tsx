@@ -39,8 +39,8 @@ const TikZFunctionsGuide: React.FC = () => {
           </div>
         </div>
         <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-          TikZ函数绘制系统可以创建各种数学函数的图像，包括线性函数、二次函数、三角函数等。
-          本教程将教你如何设置坐标轴、绘制网格、绘制函数曲线，以及如何自定义函数图像的样式。
+          TikZ函数绘制系统可以创建各种数学函数的图像，包括线性函数、二次函数、三角函数等.
+          本教程将教你如何设置坐标轴、绘制网格、绘制函数曲线，以及如何自定义函数图像的样式.
         </p>
       </div>
 

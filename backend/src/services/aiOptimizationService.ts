@@ -121,7 +121,7 @@ ${question.content.options?.map((opt: any, index: number) => `${String.fromCharC
 5. 知识点标签
 6. 难度评估（1-5）
 
-请以JSON格式返回结果。
+请以JSON格式返回结果.
     `;
 
     try {
@@ -164,7 +164,7 @@ ${question.content.options?.map((opt: any, index: number) => `${String.fromCharC
 4. 知识点标签
 5. 难度评估（1-5）
 
-请以JSON格式返回结果。
+请以JSON格式返回结果.
     `;
 
     try {
@@ -208,7 +208,7 @@ ${question.content.options?.map((opt: any, index: number) => `${String.fromCharC
 5. 知识点标签
 6. 难度评估（1-5）
 
-请以JSON格式返回结果。
+请以JSON格式返回结果.
     `;
 
     try {
@@ -251,7 +251,7 @@ ${question.content.options?.map((opt: any, index: number) => `${String.fromCharC
 4. 知识点标签
 5. 难度评估（1-5）
 
-请以JSON格式返回结果。
+请以JSON格式返回结果.
     `;
 
     try {

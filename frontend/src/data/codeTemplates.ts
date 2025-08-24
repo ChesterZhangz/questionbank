@@ -31,13 +31,13 @@ export const codeTemplates: CodeTemplate[] = [
 \\maketitle
 
 \\section{引言}
-这里是引言部分。
+这里是引言部分.
 
 \\section{主要内容}
-这里是主要内容。
+这里是主要内容.
 
 \\subsection{子章节}
-这里是子章节内容。
+这里是子章节内容.
 
 \\end{document}`
   },
@@ -83,9 +83,9 @@ C. $f(x) = \\sin x$
 D. $f(x) = e^x$
 
 \\solution 
-偶函数满足 $f(-x) = f(x)$。
+偶函数满足 $f(-x) = f(x)$.
 检验选项A：$f(-x) = (-x)^2 + 1 = x^2 + 1 = f(x)$
-因此答案是A。
+因此答案是A.
 \\end{question}`
   },
 

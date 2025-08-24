@@ -238,4 +238,4 @@ lighthouse --view --output=html --chrome-flags='--headless'
 
 ---
 
-本规范作为Cursor开发的强制标准，所有代码必须通过ESLint（配置Airbnb+内存优化规则）和性能自动化测试。每个功能开发前需提交实现方案说明，重点描述内存管理策略。
+本规范作为Cursor开发的强制标准，所有代码必须通过ESLint（配置Airbnb+内存优化规则）和性能自动化测试.每个功能开发前需提交实现方案说明，重点描述内存管理策略.

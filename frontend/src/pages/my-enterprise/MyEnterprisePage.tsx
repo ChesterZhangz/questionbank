@@ -421,7 +421,7 @@ const MyEnterprisePage: React.FC = () => {
     // 使用 ConfirmModal 替代 window.confirm
     showConfirm(
       '删除部门',
-      '确定要删除这个部门吗？此操作不可撤销。',
+      '确定要删除这个部门吗？此操作不可撤销.',
       async () => {
         try {
           setConfirmLoading(true, '删除中...');
@@ -551,38 +551,28 @@ const MyEnterprisePage: React.FC = () => {
         return;
       }
 
-      // 乐观更新：立即更新UI
-      const updatedMember: EnterpriseMemberData = {
-        ...memberToEdit,
+      // 设置加载状态
+      setConfirmLoading(true, '更新中...');
+      
+      // 发送API请求
+      const response = await enterpriseService.setAdminRole(editMemberForm._id, {
         role: editMemberForm.role,
         position: editMemberForm.position,
         departmentId: editMemberForm.departmentId || undefined
-      };
-      
-      setMembers(prev => prev.map(m => 
-        m.enterpriseMemberId === editMemberForm._id ? updatedMember : m
-      ));
-      
-      setShowEditMemberModal(false);
-      showSuccessRightSlide('更新成功', '成员职位更新成功');
-      
-      // 异步刷新数据（不阻塞UI）
-      enterpriseService.setAdminRole(editMemberForm._id, {
-        role: editMemberForm.role,
-        position: editMemberForm.position,
-        departmentId: editMemberForm.departmentId || undefined
-      }).then(() => {
-        // 静默刷新，不显示加载状态
-        fetchMembers();
-      }).catch(() => {
-        // 错误日志已清理
-        // 如果失败，回滚UI更改
-        fetchMembers();
       });
       
+      if (response.data.success) {
+        setShowEditMemberModal(false);
+        showSuccessRightSlide('更新成功', '成员职位更新成功');
+        
+        // 刷新数据
+        fetchMembers();
+      }
+      
     } catch (error: any) {
-      // 错误日志已清理
       showErrorRightSlide('更新失败', error.response?.data?.error || '更新成员职位失败');
+    } finally {
+      setConfirmLoading(false);
     }
   };
 
@@ -635,7 +625,7 @@ const MyEnterprisePage: React.FC = () => {
         // 显示成功消息
         showSuccess(
           '转让成功',
-          '超级管理员身份转让成功！您将被重定向到登录页面。',
+          '超级管理员身份转让成功！您将被重定向到登录页面.',
           {
             onConfirm: () => {
               // 转让成功后重定向到登录页面，因为当前用户身份已改变
@@ -753,10 +743,25 @@ const MyEnterprisePage: React.FC = () => {
       return;
     }
     
+            // 权限检查：管理员可以编辑其他管理员的职位和部门，但不能修改角色
+        // 角色修改权限在模态框中通过UI控制
+    
+    // 角色设置逻辑：
+    // - 超级管理员：可以设置任何角色
+    // - 管理员：可以将普通成员提升为管理员，但不能降级其他管理员
+    let editableRole = member.role;
+    if (userRole?.isSuperAdmin) {
+      // 超级管理员可以设置任何角色
+      editableRole = member.role;
+    } else if (userRole?.isAdmin && member.role === 'member') {
+      // 管理员可以将普通成员提升为管理员
+      editableRole = member.role;
+    }
+    
     setEditMemberForm({
       _id: member.enterpriseMemberId || member._id, // 优先使用enterpriseMemberId，这是EnterpriseMember的ID
       name: member.name,
-      role: member.role as 'member' | 'admin',
+      role: editableRole as 'member' | 'admin',
       position: member.position || '',
       departmentId: member.departmentId || null
     });
@@ -1806,9 +1811,47 @@ const MyEnterprisePage: React.FC = () => {
         )}
 
         {/* 编辑成员职位模态框 */}
-        {showEditMemberModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+        <AnimatePresence>
+          {showEditMemberModal && (
+            <motion.div 
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <motion.div 
+                className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md"
+                initial={{ 
+                  opacity: 0,
+                  scale: 0.8,
+                  y: 20,
+                  rotateX: -15
+                }}
+                animate={{ 
+                  opacity: 1,
+                  scale: 1,
+                  y: 0,
+                  rotateX: 0
+                }}
+                exit={{ 
+                  opacity: 0,
+                  scale: 0.8,
+                  y: 20,
+                  rotateX: -15
+                }}
+                transition={{ 
+                  duration: 0.3,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 25
+                }}
+                style={{
+                  transformOrigin: "center center",
+                  perspective: "1000px"
+                }}
+              >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">编辑成员职位</h3>
                 <button
@@ -1819,7 +1862,11 @@ const MyEnterprisePage: React.FC = () => {
                 </button>
               </div>
               <div className="space-y-4">
-                <div>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1, duration: 0.1, ease: "easeOut" }}
+                >
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     成员姓名
                   </label>
@@ -1828,21 +1875,32 @@ const MyEnterprisePage: React.FC = () => {
                     disabled
                     className="bg-gray-100 dark:bg-gray-600"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    企业角色
-                  </label>
-                  <select
-                    value={editMemberForm.role}
-                    onChange={(e) => setEditMemberForm({ ...editMemberForm, role: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                </motion.div>
+                {/* 企业角色设置：只有超级管理员可以设置角色 */}
+                {userRole?.isSuperAdmin && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.13, duration: 0.1, ease: "easeOut" }}
                   >
-                    <option value="member">普通成员</option>
-                    <option value="admin">管理员</option>
-                  </select>
-                </div>
-                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      企业角色
+                    </label>
+                    <select
+                      value={editMemberForm.role}
+                      onChange={(e) => setEditMemberForm({ ...editMemberForm, role: e.target.value as any })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    >
+                      <option value="member">普通成员</option>
+                      <option value="admin">管理员</option>
+                    </select>
+                  </motion.div>
+                )}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.18, duration: 0.1, ease: "easeOut" }}
+                >
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     职位描述
                   </label>
@@ -1851,40 +1909,100 @@ const MyEnterprisePage: React.FC = () => {
                     onChange={(e) => setEditMemberForm({ ...editMemberForm, position: e.target.value })}
                     placeholder="请输入职位描述（可选）"
                   />
-                </div>
-                <div>
+                </motion.div>
+                {/* 部门选择：管理员不能编辑其他管理员的部门 */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.24, duration: 0.1, ease: "easeOut" }}
+                >
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     所属部门
                   </label>
-                  <select
-                    value={editMemberForm.departmentId || ''}
-                    onChange={(e) => setEditMemberForm({ 
-                      ...editMemberForm, 
-                      departmentId: e.target.value === '' ? null : e.target.value 
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  >
-                    <option value="">无部门</option>
-                    {departments?.map(dept => (
-                      <option key={dept._id} value={dept._id}>{dept.name}</option>
-                    )) || []}
-                  </select>
-                </div>
+                  {userRole?.isAdmin && !userRole?.isSuperAdmin && editMemberForm.role === 'admin' ? (
+                    // 管理员编辑其他管理员时，部门选择被禁用
+                    <div className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400">
+                      {editMemberForm.departmentId ? 
+                        departments?.find(d => d._id === editMemberForm.departmentId)?.name || '未知部门' : 
+                        '无部门'
+                      }
+                    </div>
+                  ) : (
+                    <select
+                      value={editMemberForm.departmentId || ''}
+                      onChange={(e) => setEditMemberForm({ 
+                        ...editMemberForm, 
+                        departmentId: e.target.value === '' ? null : e.target.value 
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    >
+                      <option value="">无部门</option>
+                      {departments?.map(dept => (
+                        <option key={dept._id} value={dept._id}>{dept.name}</option>
+                      )) || []}
+                    </select>
+                  )}
+                  {userRole?.isAdmin && !userRole?.isSuperAdmin && editMemberForm.role === 'admin' && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      管理员不能修改其他管理员的部门
+                    </p>
+                  )}
+                </motion.div>
               </div>
-              <div className="flex justify-end gap-3 mt-6">
+              <motion.div 
+                className="flex justify-end gap-3 mt-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.1, ease: "easeOut" }}
+              >
                 <Button
                   variant="outline"
                   onClick={() => setShowEditMemberModal(false)}
+                  disabled={confirmModal.confirmLoading}
+                  className="relative overflow-hidden"
                 >
-                  取消
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    取消
+                  </motion.span>
                 </Button>
-                <Button onClick={handleEditMember}>
-                  保存
+                <Button 
+                  onClick={handleEditMember}
+                  disabled={confirmModal.confirmLoading}
+                  className="relative overflow-hidden"
+                >
+                  {confirmModal.confirmLoading ? (
+                    <motion.div
+                      className="flex items-center gap-2"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <motion.div
+                        className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      />
+                      <span>保存中...</span>
+                    </motion.div>
+                  ) : (
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      保存
+                    </motion.span>
+                  )}
                 </Button>
-              </div>
-            </div>
-          </div>
-        )}
+              </motion.div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
 
 
@@ -1908,7 +2026,7 @@ const MyEnterprisePage: React.FC = () => {
                     <span className="font-medium">重要提示</span>
                   </div>
                   <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-2">
-                    转让超级管理员身份后，您将降级为普通成员，失去所有管理权限。此操作不可撤销，请谨慎操作。
+                    转让超级管理员身份后，您将降级为普通成员，失去所有管理权限.此操作不可撤销，请谨慎操作.
                   </p>
                 </div>
                 <div>
@@ -1950,7 +2068,7 @@ const MyEnterprisePage: React.FC = () => {
         <ConfirmModal
           isOpen={showDeleteMessageModal}
           title="删除消息"
-          message="确定要删除这条消息吗？删除后无法恢复。"
+          message="确定要删除这条消息吗？删除后无法恢复."
           type="delete"
           confirmText="删除"
           cancelText="取消"

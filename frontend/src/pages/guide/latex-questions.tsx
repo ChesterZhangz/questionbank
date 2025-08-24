@@ -33,8 +33,8 @@ const LaTeXQuestionsGuide: React.FC = () => {
           LaTeX 题目语法完整指南
         </h2>
         <p className="text-lg text-green-700 dark:text-green-300 leading-relaxed mb-6">
-          学习如何使用LaTeX编写各种类型的题目，包括选择题、填空题、解答题等。
-          我们的编辑器提供了专门的题目符号和语法支持，让题目编写更加规范和高效。
+          学习如何使用LaTeX编写各种类型的题目，包括选择题、填空题、解答题等.
+          我们的编辑器提供了专门的题目符号和语法支持，让题目编写更加规范和高效.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
@@ -130,8 +130,8 @@ const LaTeXQuestionsGuide: React.FC = () => {
             题目语法说明
           </h4>
           <p className="text-blue-700 dark:text-blue-300 text-sm">
-            我们的LaTeX编辑器提供了专门的题目语法支持。这些命令会渲染为特定的格式，
-            让题目编写更加规范和美观。所有题目语法都可以与数学公式完美结合使用。
+            我们的LaTeX编辑器提供了专门的题目语法支持.这些命令会渲染为特定的格式，
+            让题目编写更加规范和美观.所有题目语法都可以与数学公式完美结合使用.
           </p>
         </div>
         
@@ -195,8 +195,8 @@ const LaTeXQuestionsGuide: React.FC = () => {
           选择题语法
         </h2>
         <p className="text-lg text-blue-700 dark:text-blue-300 leading-relaxed">
-          学习如何使用LaTeX编写选择题，包括题目内容、选项和答案的格式规范。
-          使用 \\choice 命令创建选择题括号，每个 \\choice 渲染为一个（　　　　）。
+          学习如何使用LaTeX编写选择题，包括题目内容、选项和答案的格式规范.
+          使用 \\choice 命令创建选择题括号，每个 \\choice 渲染为一个（　　　　）.
         </p>
       </div>
 
@@ -267,8 +267,8 @@ D. $\\frac{-1}{(x^2 + 1)^2}$`}
           填空题语法
         </h2>
         <p className="text-lg text-purple-700 dark:text-purple-300 leading-relaxed">
-          学习如何使用LaTeX编写填空题，包括题目内容、空白标记和答案的格式规范。
-          使用 \\fill 命令标记空白处，每个 \\fill 渲染为一个下划线空白。
+          学习如何使用LaTeX编写填空题，包括题目内容、空白标记和答案的格式规范.
+          使用 \\fill 命令标记空白处，每个 \\fill 渲染为一个下划线空白.
         </p>
       </div>
 
@@ -337,19 +337,19 @@ D. $\\frac{-1}{(x^2 + 1)^2}$`}
           小题语法
         </h2>
         <p className="text-lg text-orange-700 dark:text-orange-300 leading-relaxed">
-          学习如何使用LaTeX编写小题和子小题，包括编号系统和格式规范。
-          使用 \\subp 和 \\subsubp 命令创建小题结构，分别标记为(小题)和(子小题)。
+          学习如何使用LaTeX编写小题和子小题，包括编号系统和格式规范.
+          使用 \\subp 和 \\subsubp 命令创建小题结构，分别标记为(小题)和(子小题).
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <CodeExample
           title="小题基本结构"
-          code={`\\subp 求函数 $f(x) = x^2 + 1$ 的导数。
+          code={`\\subp 求函数 $f(x) = x^2 + 1$ 的导数.
 
-\\subsubp 求 $f'(0)$ 的值。
+\\subsubp 求 $f'(0)$ 的值.
 
-\\subsubp 求函数 $f(x)$ 在区间 $[-1, 1]$ 上的最值。`}
+\\subsubp 求函数 $f(x)$ 在区间 $[-1, 1]$ 上的最值.`}
           description="使用 \\subp 标记小题，\\subsubp 标记子小题，自动编号"
         />
 
@@ -413,8 +413,8 @@ D. $\\frac{-1}{(x^2 + 1)^2}$`}
           综合示例
         </h2>
         <p className="text-lg text-indigo-700 dark:text-indigo-300 leading-relaxed">
-          通过这些综合示例，学习如何组合使用各种题目语法编写完整的题目。
-          左侧显示LaTeX代码，右侧显示真实的渲染结果。
+          通过这些综合示例，学习如何组合使用各种题目语法编写完整的题目.
+          左侧显示LaTeX代码，右侧显示真实的渲染结果.
         </p>
       </div>
 

@@ -172,7 +172,7 @@ const EmailVerificationPage: React.FC = () => {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">验证成功！</h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">{message}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                  您的邮箱已成功验证，现在可以登录使用系统了。
+                  您的邮箱已成功验证，现在可以登录使用系统了.
                 </p>
                 <Button 
                   onClick={handleGoToLogin} 

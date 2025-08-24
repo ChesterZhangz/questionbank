@@ -94,7 +94,7 @@ const RegisterSuccessPage: React.FC = () => {
               transition={{ delay: 0.8, duration: 0.5 }}
               className="text-gray-600 dark:text-gray-400 mb-6"
             >
-              我们已向您的企业邮箱发送了验证邮件，请查收并点击邮件中的验证链接完成注册。
+              我们已向您的企业邮箱发送了验证邮件，请查收并点击邮件中的验证链接完成注册.
             </motion.p>
             
             <motion.div 
@@ -136,7 +136,7 @@ const RegisterSuccessPage: React.FC = () => {
               <p className="text-sm text-yellow-800 dark:text-yellow-300 flex items-start">
                 <AlertCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
                 <span>
-                  <strong>注意：</strong>验证链接将在24小时后失效。如果未收到邮件，请检查垃圾邮件文件夹。
+                  <strong>注意：</strong>验证链接将在24小时后失效.如果未收到邮件，请检查垃圾邮件文件夹.
                 </span>
               </p>
             </motion.div>

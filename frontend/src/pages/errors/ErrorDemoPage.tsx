@@ -108,8 +108,8 @@ const ErrorDemoPage: React.FC = () => {
             错误页面系统
           </h2>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            我们重新设计了错误页面系统，提供更好的用户体验和交互功能。
-            每个错误页面都包含小游戏，让用户在等待的同时也能享受乐趣。
+            我们重新设计了错误页面系统，提供更好的用户体验和交互功能.
+            每个错误页面都包含小游戏，让用户在等待的同时也能享受乐趣.
           </p>
         </motion.div>
 

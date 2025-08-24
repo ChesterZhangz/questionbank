@@ -290,7 +290,7 @@ const QuestionBankSettingsPage: React.FC = () => {
               <AlertCircle className="w-5 h-5 text-yellow-600" />
               <p className="text-yellow-800">
                 您当前的角色是 <span className="font-medium">{userRole === 'collaborator' ? '协作者' : '查看者'}</span>，
-                只有创建者和管理者可以修改题库设置。
+                只有创建者和管理者可以修改题库设置.
               </p>
             </div>
           </motion.div>
@@ -825,7 +825,7 @@ const QuestionBankSettingsPage: React.FC = () => {
                         <h4 className="font-medium text-blue-900">通知说明</h4>
                       </div>
                       <p className="text-xs text-blue-800">
-                        通知将通过邮件和系统内消息发送。您可以在个人设置中管理通知偏好。
+                        通知将通过邮件和系统内消息发送.您可以在个人设置中管理通知偏好.
                       </p>
                     </div>
                   </div>

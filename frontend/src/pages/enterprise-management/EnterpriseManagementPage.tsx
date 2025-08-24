@@ -1051,7 +1051,7 @@ const EnterpriseManagementPage: React.FC = () => {
                   </h2>
                   
                   <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
-                    此操作不可逆，删除后该企业及其所有相关数据将无法恢复。确定要继续吗？
+                    此操作不可逆，删除后该企业及其所有相关数据将无法恢复.确定要继续吗？
                   </p>
 
                   <div className="flex gap-3">

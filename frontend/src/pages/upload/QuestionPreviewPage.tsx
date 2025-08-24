@@ -1281,7 +1281,7 @@ const QuestionPreviewPage: React.FC = () => {
         onClose={() => setShowConfirmDelete(false)}
         onConfirm={handleBatchDelete}
         title="确认删除"
-        message={`确定要删除选中的 ${selectedQuestions.length} 道题目吗？此操作不可撤销。`}
+        message={`确定要删除选中的 ${selectedQuestions.length} 道题目吗？此操作不可撤销.`}
         confirmText="删除"
         cancelText="取消"
         type="danger"
@@ -1293,7 +1293,7 @@ const QuestionPreviewPage: React.FC = () => {
         onClose={handleCancelLeave}
         onConfirm={handleConfirmLeave}
         title="确认离开"
-        message="您有未保存的题目，确定要离开吗？离开后未保存的更改将丢失。"
+        message="您有未保存的题目，确定要离开吗？离开后未保存的更改将丢失."
         confirmText="离开"
         cancelText="取消"
         type="warning"

@@ -32,8 +32,8 @@ const LaTeXMathGuide: React.FC = () => {
           LaTeX 数学公式完整指南
         </h2>
         <p className="text-lg text-blue-700 dark:text-blue-300 leading-relaxed mb-6">
-          我们的 LaTeX 编辑器专为数学公式编写设计，提供完整的数学符号支持、智能补全、实时预览等功能。
-          虽然主要面向题目编写，但也支持许多高级LaTeX功能。无需复杂的文档结构，专注于数学内容的快速编写。
+          我们的 LaTeX 编辑器专为数学公式编写设计，提供完整的数学符号支持、智能补全、实时预览等功能.
+          虽然主要面向题目编写，但也支持许多高级LaTeX功能.无需复杂的文档结构，专注于数学内容的快速编写.
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -43,7 +43,7 @@ const LaTeXMathGuide: React.FC = () => {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">智能补全</h3>
             <p className="text-gray-600 dark:text-gray-400 text-sm">
-              基于KaTeX的智能命令补全，支持常用数学符号和语法的快速输入。
+              基于KaTeX的智能命令补全，支持常用数学符号和语法的快速输入.
             </p>
           </div>
           
@@ -53,7 +53,7 @@ const LaTeXMathGuide: React.FC = () => {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">实时预览</h3>
             <p className="text-gray-600 dark:text-gray-400 text-sm">
-              实时渲染LaTeX内容，所见即所得的编辑体验，支持数学公式和高级语法。
+              实时渲染LaTeX内容，所见即所得的编辑体验，支持数学公式和高级语法.
             </p>
           </div>
           
@@ -63,7 +63,7 @@ const LaTeXMathGuide: React.FC = () => {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">丰富符号</h3>
             <p className="text-gray-600 dark:text-gray-400 text-sm">
-              完整的数学符号库和高级LaTeX功能，通过符号面板快速插入常用符号。
+              完整的数学符号库和高级LaTeX功能，通过符号面板快速插入常用符号.
             </p>
           </div>
         </div>
@@ -80,7 +80,7 @@ const LaTeXMathGuide: React.FC = () => {
           </h4>
           <p className="text-blue-700 dark:text-blue-300 text-sm">
             我们的LaTeX编辑器只支持 $...$（行内公式）和 $$...$$（块级公式）数学模式，
-            不支持 \(...\) 格式。请确保所有数学公式都使用正确的美元符号包围。
+            不支持 \(...\) 格式.请确保所有数学公式都使用正确的美元符号包围.
           </p>
         </div>
         
@@ -144,8 +144,8 @@ const LaTeXMathGuide: React.FC = () => {
           数学符号完整指南
         </h2>
         <p className="text-lg text-green-700 dark:text-green-300 leading-relaxed">
-          学习LaTeX数学公式的完整符号系统，包括基础运算、高级数学符号、函数、积分、极限等。
-          所有符号都使用正确的LaTeX语法（单斜杠）。
+          学习LaTeX数学公式的完整符号系统，包括基础运算、高级数学符号、函数、积分、极限等.
+          所有符号都使用正确的LaTeX语法（单斜杠）.
         </p>
       </div>
 
@@ -477,7 +477,7 @@ const LaTeXMathGuide: React.FC = () => {
           数学环境
         </h2>
         <p className="text-lg text-orange-700 dark:text-orange-300 leading-relaxed">
-          学习LaTeX中的各种数学环境，包括矩阵、对齐、分段函数等复杂数学结构。
+          学习LaTeX中的各种数学环境，包括矩阵、对齐、分段函数等复杂数学结构.
         </p>
       </div>
 
@@ -657,8 +657,8 @@ const LaTeXMathGuide: React.FC = () => {
           实用示例
         </h2>
         <p className="text-lg text-indigo-700 dark:text-indigo-300 leading-relaxed">
-          通过这些实际例子，快速掌握 LaTeX 数学公式的编写方法。
-          左侧显示LaTeX代码，右侧显示真实的渲染结果。
+          通过这些实际例子，快速掌握 LaTeX 数学公式的编写方法.
+          左侧显示LaTeX代码，右侧显示真实的渲染结果.
         </p>
       </div>
 

@@ -6,8 +6,8 @@ const ForbiddenPage: React.FC = () => {
     <ErrorPage
       errorCode="403"
       title="访问被拒绝"
-      message="抱歉，您没有权限访问此页面。"
-      description="请确认您已登录并具有相应的访问权限，或联系管理员获取帮助。"
+      message="抱歉，您没有权限访问此页面."
+      description="请确认您已登录并具有相应的访问权限，或联系管理员获取帮助."
       showGames={true}
       showNavigation={true}
     />

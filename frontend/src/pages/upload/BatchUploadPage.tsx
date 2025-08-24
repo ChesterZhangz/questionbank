@@ -1127,7 +1127,7 @@ const BatchUploadPage: React.FC = () => {
     const isProcessing = document.status === 'processing' || document.status === 'uploading';
     const confirmMessage = isProcessing 
       ? '确定要取消这个文档的处理吗？' 
-      : '确定要删除这个文档吗？此操作不可撤销。';
+      : '确定要删除这个文档吗？此操作不可撤销.';
 
     showConfirm(
       '确认操作',
@@ -1683,7 +1683,7 @@ const BatchUploadPage: React.FC = () => {
                         onClick={() => {
                           showConfirm(
                             '清空历史记录',
-                            '确定要清空所有历史记录和当前会话吗？这将清除所有上传的文件和题目。',
+                            '确定要清空所有历史记录和当前会话吗？这将清除所有上传的文件和题目.',
                             () => {
                               // 用户确认后才执行清空操作
                               clearHistory();

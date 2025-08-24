@@ -1453,7 +1453,7 @@ router.get('/:qid/related', authMiddleware, async (req: AuthRequest, res: Respon
     const preprocessText = (text: string): string => {
       return text
         .replace(/\s+/g, ' ')  // 统一空格
-        .replace(/[^\w\s$+\-*/^=()。，！？；]/g, ' ')  // 保留关键字符
+        .replace(/[^\w\s$+\-*/^=().，！？；]/g, ' ')  // 保留关键字符
         .trim();
     };
 

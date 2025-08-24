@@ -131,7 +131,7 @@ ${questionContent}
 // 解答题
 { "processedContent": "题干", "detectedType": "solution" }
 
-重要：仅返回JSON；数学一律$...$/$$...$$、\\dfrac；\\fill绝对不要用$...$包裹；去掉分值与题号；无额外文本。
+重要：仅返回JSON；数学一律$...$/$$...$$、\\dfrac；\\fill绝对不要用$...$包裹；去掉分值与题号；无额外文本.
 
 处理结果：`;
 
@@ -337,7 +337,7 @@ export async function processTeXWithOptimizedDeepSeek(texContent: string): Promi
 文本：
 ${preprocessedContent}
 
-仅返回JSON数组，无额外文字。`;
+仅返回JSON数组，无额外文字.`;
 
   try {
     // 验证API密钥

@@ -132,7 +132,7 @@ const QuestionBankDetailPage: React.FC = () => {
   const handleDeleteQuestion = async (qid: string) => {
     showConfirm(
       '确认删除',
-      '确定要删除这道题目吗？删除后无法恢复。',
+      '确定要删除这道题目吗？删除后无法恢复.',
       async () => {
         try {
           const response = await questionAPI.deleteQuestion(qid);

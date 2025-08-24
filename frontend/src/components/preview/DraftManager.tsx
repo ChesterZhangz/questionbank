@@ -68,7 +68,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
     const duplicateDraft = checkDuplicateQuestions(questions);
     
     if (duplicateDraft) {
-      const confirmMessage = `检测到与草稿"${duplicateDraft.name}"内容完全相同的习题集。\n\n是否要覆盖现有草稿？\n\n注意：这将更新草稿"${duplicateDraft.name}"的内容，而不是创建新的草稿。`;
+      const confirmMessage = `检测到与草稿"${duplicateDraft.name}"内容完全相同的习题集.\n\n是否要覆盖现有草稿？\n\n注意：这将更新草稿"${duplicateDraft.name}"的内容，而不是创建新的草稿.`;
       
       showConfirm(
         '确认覆盖',

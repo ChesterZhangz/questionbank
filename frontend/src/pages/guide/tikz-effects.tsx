@@ -39,8 +39,8 @@ const TikZEffectsGuide: React.FC = () => {
           </div>
         </div>
         <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-          TikZ提供了丰富的视觉效果功能，包括阴影、渐变、透明度、模式填充等。
-          本教程将教你如何使用这些高级效果来创建更加美观和专业的图形。
+          TikZ提供了丰富的视觉效果功能，包括阴影、渐变、透明度、模式填充等.
+          本教程将教你如何使用这些高级效果来创建更加美观和专业的图形.
         </p>
       </div>
 

@@ -94,7 +94,7 @@ const QuestionBankListPage: React.FC = () => {
   const handleDeleteBank = async (bid: string) => {
     showConfirm(
       '确认删除',
-      '确定要删除这个题库吗？删除后无法恢复。',
+      '确定要删除这个题库吗？删除后无法恢复.',
       async () => {
         try {
           const response = await questionBankAPI.deleteQuestionBank(bid);

@@ -318,7 +318,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
     
     showConfirm(
       '确认删除',
-      '确定要删除这道题目吗？此操作不可撤销。',
+      '确定要删除这道题目吗？此操作不可撤销.',
       async () => {
         try {
           await onDelete(question._id);

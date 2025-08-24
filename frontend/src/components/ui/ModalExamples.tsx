@@ -63,7 +63,7 @@ const ModalExamples: React.FC = () => {
             <Button
               onClick={() => showWarning(
                 '警告提示',
-                '此操作可能会影响系统性能，请谨慎操作。',
+                '此操作可能会影响系统性能，请谨慎操作.',
                 () => console.log('用户确认了警告操作')
               )}
               variant="outline"
@@ -87,7 +87,7 @@ const ModalExamples: React.FC = () => {
             <Button
               onClick={() => showInfo(
                 '信息提示',
-                '这是一个信息提示弹窗，用于显示重要信息。'
+                '这是一个信息提示弹窗，用于显示重要信息.'
               )}
               variant="outline"
               className="w-full border-blue-500 text-blue-600 hover:bg-blue-50"
@@ -109,7 +109,7 @@ const ModalExamples: React.FC = () => {
             <Button
               onClick={() => showConfirm(
                 '自定义弹窗',
-                '这是一个自定义宽度和样式的弹窗示例。',
+                '这是一个自定义宽度和样式的弹窗示例.',
                 () => console.log('自定义弹窗确认'),
                 { 
                   width: 'xl',
@@ -138,7 +138,7 @@ const ModalExamples: React.FC = () => {
             <Button
               onClick={() => showRightSlide(
                 '信息提示',
-                '这是一个精致的信息提示弹窗，显示在右上角。'
+                '这是一个精致的信息提示弹窗，显示在右上角.'
               )}
               variant="outline"
               className="w-full"
@@ -149,7 +149,7 @@ const ModalExamples: React.FC = () => {
             <Button
               onClick={() => showSuccessRightSlide(
                 '操作成功',
-                '您的操作已成功完成！精致弹窗将在1.5秒后自动关闭。'
+                '您的操作已成功完成！精致弹窗将在1.5秒后自动关闭.'
               )}
               className="w-full bg-green-600 hover:bg-green-700"
             >
@@ -159,7 +159,7 @@ const ModalExamples: React.FC = () => {
             <Button
               onClick={() => showErrorRightSlide(
                 '操作失败',
-                '抱歉，操作失败了。请检查网络连接后重试。精致弹窗将在2.5秒后自动关闭。'
+                '抱歉，操作失败了.请检查网络连接后重试.精致弹窗将在2.5秒后自动关闭.'
               )}
               variant="outline"
               className="w-full border-red-500 text-red-600 hover:bg-red-50"
@@ -170,7 +170,7 @@ const ModalExamples: React.FC = () => {
             <Button
               onClick={() => showRightSlide(
                 '自定义弹窗',
-                '这是一个自定义宽度和样式的右上角弹窗示例。',
+                '这是一个自定义宽度和样式的右上角弹窗示例.',
                 { 
                   width: 'lg',
                   type: 'warning',
@@ -187,7 +187,7 @@ const ModalExamples: React.FC = () => {
             <Button
               onClick={() => showRightSlide(
                 '无自动关闭',
-                '这个弹窗不会自动关闭，需要手动关闭。',
+                '这个弹窗不会自动关闭，需要手动关闭.',
                 { 
                   autoClose: 0,
                   showProgress: false
@@ -202,7 +202,7 @@ const ModalExamples: React.FC = () => {
             <Button
               onClick={() => showRightSlide(
                 '带确认按钮',
-                '这个弹窗包含确认按钮，点击确认后会执行相应操作。',
+                '这个弹窗包含确认按钮，点击确认后会执行相应操作.',
                 { 
                   onConfirm: () => console.log('用户点击了确认按钮')
                 }

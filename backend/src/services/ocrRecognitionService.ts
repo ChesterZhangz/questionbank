@@ -163,7 +163,7 @@ export class OCRRecognitionService {
         };
       case 'fill':
         return {
-          stem: '若 x + y = 10，x - y = 4，则 x = ____，y = ____。',
+          stem: '若 x + y = 10，x - y = 4，则 x = ____，y = ____.',
           answer: 'x = 7, y = 3'
         };
       case 'solution':

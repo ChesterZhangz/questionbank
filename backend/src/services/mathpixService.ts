@@ -210,7 +210,7 @@ export async function processPDF(
             fillQuestions: '',
             solutionQuestions: '',
             isFreeFormat: true,
-            freeFormatContent: `# PDF处理结果\n\n此PDF已成功处理，但由于API限制无法获取详细内容。\n\n文件信息:\n- 文件名: ${result.input_file}\n- 页数: ${result.num_pages}\n- 处理状态: ${result.status}\n\n请使用其他方法查看PDF内容。`
+            freeFormatContent: `# PDF处理结果\n\n此PDF已成功处理，但由于API限制无法获取详细内容.\n\n文件信息:\n- 文件名: ${result.input_file}\n- 页数: ${result.num_pages}\n- 处理状态: ${result.status}\n\n请使用其他方法查看PDF内容.`
           };
           
           return sections;
