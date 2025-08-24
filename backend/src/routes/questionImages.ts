@@ -5,6 +5,8 @@ import { uploadMultipleImages, uploadSingleImage, handleUploadError } from '../m
 import imageService from '../services/imageService';
 import { Question } from '../models/Question';
 import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import fs from 'fs';
 
 const router = express.Router();
 
@@ -38,6 +40,62 @@ router.get('/:questionId/images', [
   } catch (error) {
     console.error('获取题目图片失败:', error);
     return res.status(500).json({ success: false, error: '获取题目图片失败' });
+  }
+});
+
+// 临时图片上传（用于创建题目时）
+router.post('/upload', [
+  body('bid').notEmpty().withMessage('题库ID是必需的')
+], authMiddleware, uploadSingleImage, handleUploadError, async (req: AuthRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, error: '参数验证失败', details: errors.array() });
+    }
+
+    const { bid } = req.body;
+    const file = req.file;
+    const userId = req.user!._id.toString();
+
+    if (!file) {
+      return res.status(400).json({ success: false, error: '没有上传文件' });
+    }
+
+    // 生成临时图片ID
+    const tempImageId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // 保存到临时目录
+    const tempDir = path.join(process.cwd(), 'temp', 'images');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+    
+    const tempFilePath = path.join(tempDir, `${tempImageId}.${file.originalname.split('.').pop()}`);
+    await fs.promises.writeFile(tempFilePath, file.buffer);
+    
+    // 生成临时访问URL
+    const tempUrl = `/temp/images/${tempImageId}.${file.originalname.split('.').pop()}`;
+    
+    // 创建临时图片对象
+    const tempImage = {
+      id: tempImageId,
+      bid: bid,
+      order: 0,
+      format: file.originalname.split('.').pop() || 'unknown',
+      uploadedAt: new Date(),
+      uploadedBy: userId,
+      filename: file.originalname,
+      url: tempUrl,
+      isTemp: true // 标记为临时图片
+    };
+
+    return res.json({
+      success: true,
+      data: tempImage
+    });
+  } catch (error) {
+    console.error('临时图片上传失败:', error);
+    return res.status(500).json({ success: false, error: '临时图片上传失败' });
   }
 });
 

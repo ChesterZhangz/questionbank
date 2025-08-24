@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Image, Palette, Plus, Trash2, Upload } from 'lucide-react';
 import TikZHighlightInput from '../tikz/core/TikZHighlightInput';
 import TikZPreview from '../tikz/core/TikZPreview';
+import { QuestionImageManager } from './QuestionImageManager';
 
 import Button from '../ui/Button';
 
@@ -15,12 +16,17 @@ interface TikZCode {
 
 interface QuestionImage {
   id: string;
+  bid: string;
   url: string;
   filename: string;
   order: number;
+  format: string;
+  uploadedAt: Date;
+  uploadedBy: string;
 }
 
 interface IntegratedMediaEditorProps {
+  bid?: string; // 题库ID，用于图片上传
   tikzCodes: TikZCode[];
   onTikzCodesChange: (codes: TikZCode[]) => void;
   images?: QuestionImage[];
@@ -29,6 +35,7 @@ interface IntegratedMediaEditorProps {
 }
 
 const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
+  bid,
   tikzCodes,
   onTikzCodesChange,
   images = [],
@@ -96,9 +103,13 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
           
           const newImage: QuestionImage = {
             id: `img-${Date.now()}-${index}`,
+            bid: bid || 'temp-bid',
             url: imageUrl,
             filename: file.name,
-            order: images.length + index
+            order: images.length + index,
+            format: file.type.split('/')[1] || 'unknown',
+            uploadedAt: new Date(),
+            uploadedBy: 'current-user'
           };
           
           newImages.push(newImage);
@@ -196,86 +207,13 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
                   </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* 左侧：图片列表（只显示名字） */}
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      已经上传的图片为：
-                    </h4>
-                    {images.map((image, index) => (
-                      <motion.div
-                        key={image.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <span className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 flex items-center justify-center text-xs font-medium">
-                            {index + 1}
-                          </span>
-                          <div>
-                            <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                              {image.filename}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              图片 {index + 1}
-                            </p>
-                          </div>
-                        </div>
-                        <button 
-                          onClick={() => {
-                            // 删除图片
-                            const updatedImages = images.filter(img => img.id !== image.id);
-                            _onImagesChange(updatedImages);
-                          }}
-                          className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </motion.div>
-                    ))}
-                    
-                    {images.length < 3 && (
-                      <motion.button
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        onClick={handleImageUpload}
-                        className="w-full p-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                      >
-                        <Plus className="w-6 h-6 mb-2" />
-                        <span className="text-sm">添加图片</span>
-                      </motion.button>
-                    )}
-                  </div>
-
-                  {/* 右侧：图片预览 */}
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      图片预览：
-                    </h4>
-                    <div className="grid grid-cols-2 gap-3">
-                                             {images.map((image) => (
-                         <motion.div
-                           key={image.id}
-                           initial={{ opacity: 0, scale: 0.95 }}
-                           animate={{ opacity: 1, scale: 1 }}
-                           className="relative group bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-600"
-                         >
-                           <img
-                             src={image.url}
-                             alt={image.filename}
-                             className="w-full h-24 object-cover rounded"
-                           />
-                           <div className="mt-2">
-                             <p className="text-xs text-gray-500 dark:text-gray-400 truncate text-center">
-                               {image.filename}
-                             </p>
-                           </div>
-                         </motion.div>
-                       ))}
-                    </div>
-                  </div>
-                </div>
+                <QuestionImageManager
+                  bid={bid}
+                  images={images}
+                  onImagesChange={_onImagesChange}
+                  maxImages={3}
+                  className="w-full"
+                />
               )}
             </motion.div>
           ) : (

@@ -59,9 +59,13 @@ const CreateQuestionPage: React.FC = () => {
   // 图片相关状态
   const [images, setImages] = useState<Array<{
     id: string;
+    bid: string;
     url: string;
     filename: string;
     order: number;
+    format: string;
+    uploadedAt: Date;
+    uploadedBy: string;
   }>>([]);
   
   // TikZ 图形相关状态
@@ -1334,6 +1338,7 @@ const CreateQuestionPage: React.FC = () => {
                     <div className="space-y-4">
                       <h4 className="font-medium text-gray-700 dark:text-gray-200">图形管理</h4>
                       <IntegratedMediaEditor
+                        bid={selectedBankId}
                         tikzCodes={tikzCodes}
                         onTikzCodesChange={setTikzCodes}
                         images={images}

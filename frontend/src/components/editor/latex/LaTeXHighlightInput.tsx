@@ -363,11 +363,50 @@ const LaTeXHighlightInput: React.FC<LaTeXHighlightInputProps> = ({
 
   // 检查是否在数学模式内
   const isInsideMathMode = (beforeCursor: string): boolean => {
-    // 计算光标前的$数量
-    const dollarCountBefore = (beforeCursor.match(/\$/g) || []).length;
+    // 从光标位置向前搜索，找到最近的数学模式开始标记
+    let position = beforeCursor.length - 1;
+    let inDisplayMathMode = false;
+    let inInlineMathMode = false;
     
-    // 如果光标前的$数量是奇数，说明在数学模式内
-    return dollarCountBefore % 2 === 1;
+    while (position >= 0) {
+      const char = beforeCursor[position];
+      
+      if (char === '$') {
+        // 检查是否是$$（显示数学模式）
+        if (position > 0 && beforeCursor[position - 1] === '$') {
+          // 找到$$，检查是否匹配
+          if (!inDisplayMathMode) {
+            // 开始显示数学模式
+            inDisplayMathMode = true;
+            position -= 2; // 跳过两个$
+            continue;
+          } else {
+            // 结束显示数学模式
+            inDisplayMathMode = false;
+            position -= 2;
+            continue;
+          }
+        } else {
+          // 单个$，检查是否匹配
+          if (!inInlineMathMode && !inDisplayMathMode) {
+            // 开始行内数学模式
+            inInlineMathMode = true;
+            position--;
+            continue;
+          } else if (inInlineMathMode && !inDisplayMathMode) {
+            // 结束行内数学模式
+            inInlineMathMode = false;
+            position--;
+            continue;
+          }
+        }
+      }
+      
+      position--;
+    }
+    
+    // 如果在显示数学模式或行内数学模式内，返回true
+    return inDisplayMathMode || inInlineMathMode;
   };
 
   // 处理键盘事件

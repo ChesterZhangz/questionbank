@@ -309,9 +309,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   };
 
   // TikZ预览处理
-  const handleTikZPreview = (tikz: { code: string; format: 'svg' | 'png' }) => {
-    setPreviewTikZ(tikz);
-  };
+
 
   // 查看相关题目
   const handleViewRelatedQuestion = (qid: string) => {
@@ -639,50 +637,64 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                                                          {/* 题目图片和TikZ显示 */}
                                  {((currentQuestion?.images && currentQuestion.images.length > 0) || (currentQuestion?.tikzCodes && currentQuestion.tikzCodes.length > 0)) && (
                                           <div className="mt-4 space-y-3">
-                                                                                 {/* 图片显示 */}
-                                     {currentQuestion.images && currentQuestion.images.length > 0 && (
-                                              <div>
-                                                <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">题目图片</h4>
-                                                <div className="flex space-x-3 overflow-x-auto pb-2">
-                                                  {currentQuestion.images.map((image) => (
-                                                    <div key={image.id} className="flex-shrink-0">
-                                                      <img
-                                                        src={image.url}
-                                                        alt={image.filename}
-                                                        className="w-24 h-18 object-contain rounded border border-gray-200 dark:border-gray-600"
-                                                      />
-                                                    </div>
-                                                  ))}
-                                                </div>
-                                              </div>
-                                            )}
+                                            {/* 媒体内容标题 */}
+                                            <div className="flex items-center space-x-2 mb-2">
+                                              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">图形与图片</span>
+                                              <span className="text-xs text-gray-400 dark:text-gray-500">
+                                                ({((currentQuestion.images?.length || 0) + (currentQuestion.tikzCodes?.length || 0))} 个)
+                                              </span>
+                                            </div>
                                             
-                                                                                 {/* TikZ显示 */}
-                                     {currentQuestion.tikzCodes && currentQuestion.tikzCodes.length > 0 && (
-                                              <div>
-                                                <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">题目图形</h4>
-                                                <div className="flex space-x-3 overflow-x-auto pb-2">
-                                                  {currentQuestion.tikzCodes.map((tikz) => (
-                                                    <div key={tikz.id} className="flex-shrink-0">
-                                                      <div 
-                                                        className="w-50 h-38 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200"
-                                                        onClick={() => handleTikZPreview(tikz)}
-                                                      >
-                                                        <TikZPreview
-                                                          code={tikz.code}
-                                                          format={tikz.format}
-                                                          width={400}
-                                                          height={300}
-                                                          showGrid={false}
-                                                          showTitle={false}
-                                                          className="max-w-full max-h-full flex items-center justify-center"
-                                                        />
-                                                      </div>
-                                                    </div>
-                                                  ))}
-                                                </div>
-                                              </div>
-                                            )}
+                                            {/* 合并的媒体内容显示 */}
+                                            <div className="flex space-x-3 overflow-x-auto pb-2">
+                                                                                             {/* 合并图片和图形数据 */}
+                                               {[
+                                                 ...(currentQuestion.images || []).map(item => ({ type: 'image' as const, data: item })),
+                                                 ...(currentQuestion.tikzCodes || []).map(item => ({ type: 'tikz' as const, data: item }))
+                                               ].sort((a, b) => {
+                                                 // 按order字段排序
+                                                 const orderA = a.data.order || 0;
+                                                 const orderB = b.data.order || 0;
+                                                 return orderA - orderB;
+                                               }).map((item) => (
+                                                 <div key={`${item.type}-${item.data.id}`} className="flex-shrink-0 group relative">
+                                                   {item.type === 'image' ? (
+                                                     // 图片显示
+                                                     <div className="w-24 h-20 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden bg-gray-50 dark:bg-gray-700 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
+                                                       <img
+                                                         src={item.data.url}
+                                                         alt={item.data.filename}
+                                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                                       />
+                                                       <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded">
+                                                         图片
+                                                       </div>
+                                                     </div>
+                                                   ) : (
+                                                     // TikZ显示
+                                                     <div className="w-24 h-20 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer">
+                                                       <TikZPreview
+                                                         code={item.data.code}
+                                                         format={item.data.format as 'svg' | 'png'}
+                                                         width={400}
+                                                         height={300}
+                                                         showGrid={false}
+                                                         showTitle={false}
+                                                         className="w-full h-full group-hover:scale-105 transition-transform duration-200 flex items-center justify-center"
+                                                       />
+                                                       <div className="absolute top-1 left-1 bg-purple-500 text-white text-xs px-1 py-0.5 rounded">
+                                                         图形
+                                                       </div>
+                                                     </div>
+                                                   )}
+                                                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                                     <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-white text-xs font-medium">
+                                                       查看
+                                                     </div>
+                                                   </div>
+                                                 </div>
+                                               ))}
+                                            </div>
                                           </div>
                                         )}
                                       </div>

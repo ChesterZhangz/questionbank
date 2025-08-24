@@ -241,7 +241,7 @@ class TikZSimulator {
             x: centerX + (point.x - contentCenterX) * this.adaptiveScale,
             y: centerY - (point.y - contentCenterY) * this.adaptiveScale // Y轴翻转
           }));
-          this.elements.push({
+      this.elements.push({
             ...rawElement,
             points: transformedPoints
           });

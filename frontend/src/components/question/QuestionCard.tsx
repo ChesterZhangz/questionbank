@@ -126,10 +126,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
     setImagePosition({ x: 0, y: 0 });
   };
 
-  // TikZ预览处理
-  const handleTikZPreview = (tikz: { code: string; format: 'svg' | 'png' }) => {
-    setPreviewTikZ(tikz);
-  };
+
 
   // 图片操作函数
   const rotateImage = (direction: 'left' | 'right') => {
@@ -519,60 +516,67 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                     />
                   </h3>
                   
-                                    {/* 题目图片和TikZ显示 */}
+                                    {/* 题目图片和图形显示 - 合并到一行 */}
                   {((question.images && question.images.length > 0) || (question.tikzCodes && question.tikzCodes.length > 0)) && (
                     <div className="mt-3">
-
+                      {/* 媒体内容标题 */}
+                      <div className="flex items-center space-x-2 mb-2">
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">图形与图片</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">
+                          ({((question.images?.length || 0) + (question.tikzCodes?.length || 0))}个)
+                        </span>
+                      </div>
                       
-                      {/* 媒体内容 */}
+                      {/* 媒体内容 - 图片和图形混合显示 */}
                       <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-                        {/* 图片显示 */}
-                        {question.images && question.images.length > 0 && (
-                          question.images.map((image) => (
-                            <div key={image.id} className="flex-shrink-0 group relative">
+                        {/* 合并图片和图形，按顺序显示 */}
+                        {[
+                          ...(question.images || []).map(img => ({ type: 'image' as const, data: img })),
+                          ...(question.tikzCodes || []).map(tikz => ({ type: 'tikz' as const, data: tikz }))
+                        ].sort((a, b) => {
+                          // 按order字段排序
+                          const orderA = a.type === 'image' ? a.data.order : a.data.order;
+                          const orderB = b.type === 'image' ? b.data.order : b.data.order;
+                          return orderA - orderB;
+                        }).map((item) => (
+                          <div key={`${item.type}-${item.data.id}`} className="flex-shrink-0 group relative">
+                            {item.type === 'image' ? (
+                              // 图片显示
                               <div className="w-24 h-20 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden bg-gray-50 dark:bg-gray-700 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
                                 <img
-                                  src={image.url}
-                                  alt={image.filename}
+                                  src={item.data.url}
+                                  alt={item.data.filename}
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                  onClick={() => handleImagePreview(image)}
+                                  onClick={() => handleImagePreview(item.data)}
                                 />
-                              </div>
-                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
-                                <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-white text-xs font-medium">
-                                  查看
+                                <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded">
+                                  图片
                                 </div>
                               </div>
-                            </div>
-                          ))
-                        )}
-                        
-                        {/* TikZ显示 */}
-                        {question.tikzCodes && question.tikzCodes.length > 0 && (
-                          question.tikzCodes.map((tikz) => (
-                            <div key={tikz.id} className="flex-shrink-0 group relative">
-                              <div 
-                                className="w-24 h-20 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer"
-                                onClick={() => handleTikZPreview(tikz)}
-                              >
+                            ) : (
+                              // TikZ显示
+                              <div className="w-24 h-20 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer">
                                 <TikZPreview
-                                  code={tikz.code}
-                                  format={tikz.format}
+                                  code={item.data.code}
+                                  format={item.data.format}
                                   width={480}
                                   height={360}
                                   showGrid={false}
                                   showTitle={false}
                                   className="w-full h-full group-hover:scale-105 transition-transform duration-200 flex items-center justify-center"
                                 />
-                              </div>
-                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
-                                <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-white text-xs font-medium">
-                                  查看
+                                <div className="absolute top-1 left-1 bg-purple-500 text-white text-xs px-1 py-0.5 rounded">
+                                  图形
                                 </div>
                               </div>
+                            )}
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                              <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-white text-xs font-medium">
+                                查看
+                              </div>
                             </div>
-                          ))
-                        )}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -656,58 +660,67 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                       />
                     </div>
                     
-                    {/* 题目图片和TikZ显示 - 列表模式 */}
+                    {/* 题目图片和图形显示 - 列表模式，合并到一行 */}
                     {((question.images && question.images.length > 0) || (question.tikzCodes && question.tikzCodes.length > 0)) && (
                       <div className="mt-2">
-                        {/* 媒体内容 */}
+                        {/* 媒体内容标题 */}
+                        <div className="flex items-center space-x-2 mb-2">
+                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">图形与图片</span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500">
+                            ({((question.images?.length || 0) + (question.tikzCodes?.length || 0))}个)
+                          </span>
+                        </div>
+                        
+                        {/* 媒体内容 - 图片和图形混合显示 */}
                         <div className="flex space-x-3 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-                          {/* 图片显示 */}
-                          {question.images && question.images.length > 0 && (
-                            question.images.map((image) => (
-                              <div key={image.id} className="flex-shrink-0 group relative">
+                          {/* 合并图片和图形，按顺序显示 */}
+                          {[
+                            ...(question.images || []).map(img => ({ type: 'image' as const, data: img })),
+                            ...(question.tikzCodes || []).map(tikz => ({ type: 'tikz' as const, data: tikz }))
+                          ].sort((a, b) => {
+                            // 按order字段排序
+                            const orderA = a.type === 'image' ? a.data.order : a.data.order;
+                            const orderB = b.type === 'image' ? b.data.order : b.data.order;
+                            return orderA - orderB;
+                          }).map((item) => (
+                            <div key={`${item.type}-${item.data.id}`} className="flex-shrink-0 group relative">
+                              {item.type === 'image' ? (
+                                // 图片显示
                                 <div className="w-20 h-16 rounded-md border border-gray-200 dark:border-gray-600 overflow-hidden bg-gray-50 dark:bg-gray-700 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
                                   <img
-                                    src={image.url}
-                                    alt={image.filename}
+                                    src={item.data.url}
+                                    alt={item.data.filename}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                    onClick={() => handleImagePreview(image)}
+                                    onClick={() => handleImagePreview(item.data)}
                                   />
-                                </div>
-                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-md flex items-center justify-center">
-                                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-white text-xs font-medium">
-                                    查看
+                                  <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded">
+                                    图片
                                   </div>
                                 </div>
-                              </div>
-                            ))
-                          )}
-                          
-                          {/* TikZ显示 */}
-                          {question.tikzCodes && question.tikzCodes.length > 0 && (
-                            question.tikzCodes.map((tikz) => (
-                              <div key={tikz.id} className="flex-shrink-0 group relative">
-                                <div 
-                                  className="w-20 h-16 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer"
-                                  onClick={() => handleTikZPreview(tikz)}
-                                >
+                              ) : (
+                                // TikZ显示
+                                <div className="w-20 h-16 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer">
                                   <TikZPreview
-                                    code={tikz.code}
-                                    format={tikz.format}
+                                    code={item.data.code}
+                                    format={item.data.format}
                                     width={400}
                                     height={300}
                                     showGrid={false}
                                     showTitle={false}
                                     className="w-full h-full group-hover:scale-105 transition-transform duration-200 flex items-center justify-center"
                                   />
-                                </div>
-                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-md flex items-center justify-center">
-                                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-white text-xs font-medium">
-                                    查看
+                                  <div className="absolute top-1 left-1 bg-purple-500 text-white text-xs px-1 py-0.5 rounded">
+                                    图形
                                   </div>
                                 </div>
+                              )}
+                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-md flex items-center justify-center">
+                                <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-white text-xs font-medium">
+                                  查看
+                                </div>
                               </div>
-                            ))
-                          )}
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}

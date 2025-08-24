@@ -46,9 +46,13 @@ const EditQuestionPage: React.FC = () => {
   // 图片相关状态
   const [images, setImages] = useState<Array<{
     id: string;
+    bid: string;
     url: string;
     filename: string;
     order: number;
+    format: string;
+    uploadedAt: Date;
+    uploadedBy: string;
   }>>([]);
   
   // TikZ 图形相关状态
@@ -112,7 +116,18 @@ const EditQuestionPage: React.FC = () => {
   // 同步题目数据到媒体状态
   useEffect(() => {
     if (question) {
-      setImages(question.images || []);
+      // 转换图片数据，确保所有必需字段都存在
+      const convertedImages = (question.images || []).map(img => ({
+        id: img.id,
+        bid: img.bid || question.bid,
+        url: img.url,
+        filename: img.filename,
+        order: img.order,
+        format: img.format || 'unknown',
+        uploadedAt: img.uploadedAt ? new Date(img.uploadedAt) : new Date(),
+        uploadedBy: img.uploadedBy || 'unknown'
+      }));
+      setImages(convertedImages);
       setTikzCodes(question.tikzCodes || []);
     }
   }, [question]);

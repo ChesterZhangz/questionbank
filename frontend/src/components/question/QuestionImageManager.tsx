@@ -23,7 +23,8 @@ export interface QuestionImage {
 }
 
 interface QuestionImageManagerProps {
-  questionId: string;
+  questionId?: string; // 可选，创建题目时可能还没有ID
+  bid?: string; // 题库ID，用于临时图片上传
   images: QuestionImage[];
   onImagesChange: (images: QuestionImage[]) => void;
   maxImages?: number;
@@ -31,6 +32,7 @@ interface QuestionImageManagerProps {
 }
 
 export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
+  bid,
   images = [],
   onImagesChange,
   maxImages = 5,
@@ -48,6 +50,11 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
       return;
     }
 
+    if (!bid) {
+      alert('题库ID不存在，无法上传图片');
+      return;
+    }
+
     setIsUploading(true);
     setUploadProgress(0);
 
@@ -58,35 +65,64 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
         const file = files[i];
         setUploadProgress((i / files.length) * 100);
 
-        // 模拟上传过程
-        await new Promise(resolve => setTimeout(resolve, 500));
+        try {
+          // 创建FormData用于文件上传
+          const formData = new FormData();
+          formData.append('image', file);
+          formData.append('bid', bid);
+          
+          // 调用临时图片上传API
+          const response = await fetch('/api/question-images/upload', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
 
-        const newImage: QuestionImage = {
-          id: `img_${Date.now()}_${i}`,
-          bid: 'temp-bid',
-          order: images.length + i,
-          format: file.type.split('/')[1] || 'unknown',
-          uploadedAt: new Date(),
-          uploadedBy: 'current-user',
-          filename: file.name,
-          url: URL.createObjectURL(file)
-        };
+          if (!response.ok) {
+            throw new Error('图片上传失败');
+          }
 
-        newImages.push(newImage);
+          const uploadResult = await response.json();
+          
+          if (uploadResult.success) {
+            const newImage: QuestionImage = {
+              id: uploadResult.data.id,
+              bid: uploadResult.data.bid || bid,
+              order: images.length + i,
+              format: uploadResult.data.format || file.type.split('/')[1] || 'unknown',
+              uploadedAt: new Date(uploadResult.data.uploadedAt || Date.now()),
+              uploadedBy: uploadResult.data.uploadedBy || 'current-user',
+              filename: uploadResult.data.filename || file.name,
+              url: uploadResult.data.url // 使用后端返回的真实URL
+            };
+
+            newImages.push(newImage);
+          } else {
+            throw new Error(uploadResult.error || '图片上传失败');
+          }
+        } catch (uploadError) {
+          console.error('单个图片上传失败:', uploadError);
+          // 继续处理其他图片，不中断整个流程
+          continue;
+        }
       }
 
-      const updatedImages = [...images, ...newImages];
-      onImagesChange(updatedImages);
+      if (newImages.length > 0) {
+        const updatedImages = [...images, ...newImages];
+        onImagesChange(updatedImages);
+      }
       
       setUploadProgress(100);
       setTimeout(() => setUploadProgress(0), 1000);
     } catch (error) {
-      // 错误日志已清理
+      console.error('图片上传失败:', error);
       alert('图片上传失败，请重试');
     } finally {
       setIsUploading(false);
     }
-  }, [images, maxImages, onImagesChange]);
+  }, [images, maxImages, onImagesChange, bid]);
 
   // 删除图片
   const handleDeleteImage = useCallback((imageId: string) => {
@@ -115,13 +151,13 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
     <div className={cn("space-y-4", className)}>
       {/* 标题和统计 */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           题目图片 ({images.length}/{maxImages})
         </h3>
         <button
           onClick={handleClickUpload}
           disabled={isUploading || images.length >= maxImages}
-          className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-500 dark:hover:bg-blue-600"
         >
           <Upload className="w-4 h-4 mr-2" />
           上传图片
@@ -135,7 +171,7 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
           "border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer",
           isDragActive || dragActive
             ? "border-blue-500 bg-blue-50"
-            : "border-gray-300 hover:border-gray-400",
+            : "border-gray-300 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500",
           images.length >= maxImages && "opacity-50 cursor-not-allowed"
         )}
         onDragEnter={() => setDragActive(true)}
@@ -157,21 +193,21 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
         />
         
         <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
-        <p className="mt-2 text-sm text-gray-600">
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
           {isDragActive
             ? "释放文件以上传"
             : "拖拽图片文件到这里，或点击上传按钮"}
         </p>
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
           支持 JPG、PNG、GIF 格式，单个文件最大 5MB
         </p>
       </div>
 
       {/* 上传进度 */}
       {isUploading && (
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
           <div 
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+            className="bg-blue-600 h-2 rounded-full transition-all duration-300 dark:bg-blue-500"
             style={{ width: `${uploadProgress}%` }}
           />
         </div>
@@ -192,10 +228,10 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm"
+                className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700"
               >
                 {/* 拖拽手柄 */}
-                <div className="cursor-move text-gray-400 hover:text-gray-600">
+                <div className="cursor-move text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300">
                   <GripVertical className="w-5 h-5" />
                 </div>
 
@@ -204,17 +240,17 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
                   <img
                     src={image.url}
                     alt={image.filename}
-                    className="w-16 h-16 object-cover rounded border border-gray-200"
+                    className="w-16 h-16 object-cover rounded border border-gray-200 dark:border-gray-700"
                   />
                 </div>
 
                 {/* 图片信息 */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-gray-900 truncate dark:text-gray-100">
                     {image.filename}
                   </p>
-                  <p className="text-xs text-gray-500">
-                    {image.format.toUpperCase()} • {image.uploadedAt.toLocaleDateString()}
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {image.format.toUpperCase()} • {image.uploadedAt instanceof Date ? image.uploadedAt.toLocaleDateString() : new Date(image.uploadedAt).toLocaleDateString()}
                   </p>
                 </div>
 

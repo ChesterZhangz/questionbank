@@ -5,6 +5,9 @@ import QuestionBank from '../models/QuestionBank';
 import { AuthRequest, authMiddleware } from '../middleware/auth';
 import { SimilarityDetectionService } from '../services/similarityDetectionService';
 import { User } from '../models/User';
+import imageService from '../services/imageService';
+import fs from 'fs';
+import path from 'path';
 
 const router = express.Router();
 const similarityService = new SimilarityDetectionService();
@@ -898,7 +901,63 @@ router.post('/bank/:bid', [
     
     const qid = `MT-${randomStr}-${timestamp}-${randomEnd}`;
 
-
+    // 处理临时图片转换为永久存储
+    let permanentImages: any[] = [];
+    if (images && images.length > 0) {
+      for (const tempImage of images) {
+        try {
+          // 检查是否是临时图片
+          if (tempImage.id && tempImage.id.startsWith('temp_')) {
+            const tempFilename = `${tempImage.id}.${tempImage.format}`;
+            const tempFilePath = path.join(process.cwd(), 'temp', 'images', tempFilename);
+            
+            // 检查临时文件是否存在
+            if (fs.existsSync(tempFilePath)) {
+              // 使用imageService转换临时图片为永久存储
+              const imageBuffer = fs.readFileSync(tempFilePath);
+              const imageFile = {
+                buffer: imageBuffer,
+                originalname: tempImage.filename,
+                mimetype: `image/${tempImage.format}`,
+                size: fs.statSync(tempFilePath).size
+              } as Express.Multer.File;
+              
+              // 上传图片到正式位置
+              const uploadResult = await imageService.uploadImage(qid, imageFile, {
+                maxWidth: 1200,
+                maxHeight: 800,
+                quality: 85
+              });
+              
+              // 创建永久图片对象
+              const permanentImage = {
+                id: uploadResult.id,
+                bid: bid,
+                order: tempImage.order || 0,
+                format: uploadResult.format,
+                uploadedAt: new Date(),
+                uploadedBy: userId,
+                filename: uploadResult.filename,
+                url: uploadResult.url
+              };
+              
+              permanentImages.push(permanentImage);
+              
+              // 删除临时文件
+              fs.unlinkSync(tempFilePath);
+            } else {
+              console.warn(`临时图片文件不存在: ${tempFilePath}`);
+            }
+          } else {
+            // 如果不是临时图片，直接使用
+            permanentImages.push(tempImage);
+          }
+        } catch (error) {
+          console.error('处理图片时出错:', error);
+          // 继续处理其他图片
+        }
+      }
+    }
 
     const question = new Question({
       qid,
@@ -912,7 +971,7 @@ router.post('/bank/:bid', [
       source,
       creator: req.user!._id,
       status: 'published',
-      images: images || [],
+      images: permanentImages,
       tikzCodes: tikzCodes || []
     });
 
