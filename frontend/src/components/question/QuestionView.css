@@ -69,11 +69,14 @@
   font-size: 1em !important;
   line-height: 1.2 !important;
   color: inherit !important;
+  margin: 0.2em 0 !important; /* 添加垂直外边距，避免被遮挡 */
+  padding: 0.1em 0 !important; /* 添加垂直内边距，确保内容完整显示 */
 }
 
 .question-view-latex-content .katex-display {
-  margin: 0.5em 0 !important;
+  margin: 0.8em 0 !important; /* 增加块级公式的垂直外边距 */
   text-align: center !important;
+  padding: 0.3em 0 !important; /* 添加垂直内边距 */
 }
 
 .question-view-latex-content .katex-html {
@@ -198,16 +201,53 @@
   background: transparent !important;
 }
 
+/* 确保LaTeX内容在QuestionView中有足够的显示空间 */
 .question-view-latex-content .latex-preview-content {
-  padding: 0 !important;
-  margin: 0 !important;
+  padding: 0.5rem 0 !important; /* 添加垂直内边距，确保内容不被遮挡 */
+  margin: 0.5rem 0 !important; /* 添加垂直外边距，提供足够的空间 */
+  /* 在QuestionView中禁用滚动，因为空间充足 */
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 .question-view-latex-content .latex-content {
-  padding: 0 !important;
-  margin: 0 !important;
+  padding: 0.5rem 0 !important; /* 添加垂直内边距，确保内容不被遮挡 */
+  margin: 0.5rem 0 !important; /* 添加垂直外边距，提供足够的空间 */
   background: transparent !important;
   border: none !important;
+}
+
+/* 在QuestionView中禁用LaTeXPreview的滚动条 */
+.question-view-latex-content .latex-preview-content::-webkit-scrollbar {
+  display: none !important;
+}
+
+.question-view-latex-content .latex-preview-content::-webkit-scrollbar-track {
+  display: none !important;
+}
+
+.question-view-latex-content .latex-preview-content::-webkit-scrollbar-thumb {
+  display: none !important;
+}
+
+/* 特别处理分数公式，确保有足够的垂直空间 */
+.question-view-latex-content .katex .frac,
+.question-view-latex-content .katex .dfrac,
+.question-view-latex-content .katex .tfrac {
+  margin: 0.3em 0 !important; /* 为分数添加额外的垂直外边距 */
+  padding: 0.2em 0 !important; /* 为分数添加额外的垂直内边距 */
+  line-height: 1.4 !important; /* 增加分数的行高，确保内容不被遮挡 */
+}
+
+/* 确保分数分子和分母有足够的显示空间 */
+.question-view-latex-content .katex .frac .frac-num,
+.question-view-latex-content .katex .frac .frac-den,
+.question-view-latex-content .katex .dfrac .frac-num,
+.question-view-latex-content .katex .dfrac .frac-den,
+.question-view-latex-content .katex .tfrac .frac-num,
+.question-view-latex-content .katex .tfrac .frac-den {
+  padding: 0.1em 0 !important; /* 为分子分母添加内边距 */
+  margin: 0.1em 0 !important; /* 为分子分母添加外边距 */
 }
 
 /* 移除LaTeXPreview的默认边框和背景 */

@@ -733,7 +733,7 @@ router.get('/bank/:bid', [
 });
 
 // 获取单个题目详情
-router.get('/:qid', async (req: AuthRequest, res: Response) => {
+router.get('/:qid', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { qid } = req.params;
     const userId = req.user!._id;
@@ -776,7 +776,7 @@ router.get('/:qid', async (req: AuthRequest, res: Response) => {
 });
 
 // 更新题目
-router.put('/:qid', [
+router.put('/:qid', authMiddleware, [
   body('type').optional().isIn(['choice', 'multiple-choice', 'fill', 'solution']).withMessage('题目类型无效'),
   body('content.stem').optional().notEmpty().withMessage('题目内容不能为空'),
   body('content.answer').optional().isString().withMessage('答案必须是字符串'),
@@ -838,7 +838,7 @@ router.put('/:qid', [
 });
 
 // 在题库内创建题目
-router.post('/bank/:bid', [
+router.post('/bank/:bid', authMiddleware, [
   body('type').isIn(['choice', 'multiple-choice', 'fill', 'solution']).withMessage('题目类型无效'),
   body('content.stem').notEmpty().withMessage('题目内容是必需的'),
   body('content.answer').optional().isString().withMessage('答案必须是字符串'),
@@ -1011,45 +1011,8 @@ router.get('/questions/:id', async (req: Request, res: Response) => {
   }
 });
 
-// 更新题目
-router.put('/questions/:id', [
-  body('content.stem').optional().notEmpty().withMessage('题目内容不能为空'),
-  body('difficulty').optional().isInt({ min: 1, max: 5 }).withMessage('难度必须在1-5之间')
-], async (req: AuthRequest, res: Response) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const question = await Question.findById(req.params.id);
-
-    if (!question) {
-      return res.status(404).json({ error: '题目不存在' });
-    }
-
-    // 检查权限
-    if (question.creator.toString() !== req.user!._id.toString()) {
-      return res.status(403).json({ error: '无权限修改此题目' });
-    }
-
-    const updatedQuestion = await Question.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    ).populate('creator', 'name email');
-
-    return res.json({
-      success: true,
-      data: updatedQuestion
-    });
-  } catch (error) {
-    return res.status(500).json({ error: '更新题目失败' });
-  }
-});
-
 // 删除题目
-router.delete('/:id', async (req: AuthRequest, res: Response) => {
+router.delete('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const question = await Question.findById(req.params.id);
 
@@ -1089,10 +1052,9 @@ router.delete('/:id', async (req: AuthRequest, res: Response) => {
 });
 
 // 增加题目浏览量
-router.post('/:qid/view', async (req: AuthRequest, res: Response) => {
+router.post('/:qid/view', async (req: Request, res: Response) => {
   try {
     const { qid } = req.params;
-    const userId = req.user!._id;
 
     const question = await Question.findOne({ qid });
     if (!question) {
@@ -1115,7 +1077,7 @@ router.post('/:qid/view', async (req: AuthRequest, res: Response) => {
 });
 
 // 收藏/取消收藏题目
-router.post('/:qid/favorite', async (req: AuthRequest, res: Response) => {
+router.post('/:qid/favorite', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { qid } = req.params;
     const userId = req.user!._id;
@@ -1154,7 +1116,7 @@ router.post('/:qid/favorite', async (req: AuthRequest, res: Response) => {
 });
 
 // 获取用户收藏的题目列表
-router.get('/favorites', async (req: AuthRequest, res: Response) => {
+router.get('/favorites', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!._id;
     const page = parseInt(req.query.page as string) || 1;

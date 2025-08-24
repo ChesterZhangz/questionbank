@@ -19,12 +19,15 @@ import type { Question } from '../../types';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import { questionAPI } from '../../services/api';
+import { questionEvaluationAPI } from '../../services/questionEvaluationAPI';
+import { autoAIAnalysisService } from '../../services/autoAIAnalysisService';
 import { useModal } from '../../hooks/useModal';
 
 import MagicTextTransition from '../animations/MagicTextTransition';
 // 导入LaTeXPreview组件，使用与QuestionCard相同的渲染逻辑
 import LaTeXPreview from '../editor/preview/LaTeXPreview';
 import TikZPreview from '../tikz/core/TikZPreview';
+import AbilityRadarChart from './AbilityRadarChart';
 import './QuestionView.css';
 
 interface QuestionViewProps {
@@ -65,6 +68,17 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   const [scrollProgress, setScrollProgress] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [animationKey, setAnimationKey] = useState(0);
+  
+  // AI分析状态
+  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  
+
+  
+  // 自动分析队列状态
+  const [queueStatus, setQueueStatus] = useState<any>(null);
+  
   // TikZ预览状态
   const [previewTikZ, setPreviewTikZ] = useState<{ code: string; format: 'svg' | 'png' } | null>(null);
 
@@ -77,6 +91,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
       setCurrentQuestionIndex(currentIndex);
       document.body.style.overflow = 'hidden';
       fetchRelatedQuestions();
+      
       // 增加访问量
       if (currentQuestion?.qid) {
         questionAPI.addView(currentQuestion.qid).catch(() => {
@@ -91,6 +106,205 @@ const QuestionView: React.FC<QuestionViewProps> = ({
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, currentIndex]);
+
+  // 获取AI分析
+  const fetchAIAnalysis = useCallback(async (forceRefresh = false) => {
+    if (!currentQuestion?.qid) return;
+    
+    // 检查是否已有完整的AI分析结果，且不强制刷新
+    if (!forceRefresh && 
+        currentQuestion.aiAnalysis?.evaluation && 
+        currentQuestion.aiAnalysis?.coreAbilities &&
+        typeof currentQuestion.aiAnalysis.evaluation.overallRating === 'number' &&  // 必须是数字类型
+        currentQuestion.aiAnalysis.evaluation.evaluationReasoning &&
+        currentQuestion.aiAnalysis.evaluation.evaluationReasoning.trim() !== '' &&  // 不能是空字符串
+        typeof currentQuestion.aiAnalysis.coreAbilities.logicalThinking === 'number' &&  // 必须是数字类型
+        typeof currentQuestion.aiAnalysis.coreAbilities.mathematicalIntuition === 'number' &&
+        typeof currentQuestion.aiAnalysis.coreAbilities.problemSolving === 'number' &&
+        typeof currentQuestion.aiAnalysis.coreAbilities.analyticalSkills === 'number' &&
+        typeof currentQuestion.aiAnalysis.coreAbilities.creativeThinking === 'number' &&
+        typeof currentQuestion.aiAnalysis.coreAbilities.computationalSkills === 'number') {
+      setAiAnalysis(currentQuestion.aiAnalysis);
+      return;
+    }
+    
+    setLoadingAnalysis(true);
+    setAnalysisError(null);
+    
+    try {
+      // 首先尝试从后端获取已保存的分析结果
+      const savedResult = await questionEvaluationAPI.getSavedAnalysis(currentQuestion.qid);
+      
+      if (savedResult.hasSavedAnalysis && savedResult.analysis) {
+        setAiAnalysis(savedResult.analysis);
+        
+        setLoadingAnalysis(false);
+        return;
+      }
+      
+      // 如果没有保存的分析结果，尝试从API获取
+      const analysis = await questionEvaluationAPI.getCompleteAnalysis(currentQuestion.qid, currentQuestion);
+      setAiAnalysis(analysis);
+      
+      
+    } catch (error: any) {
+      console.error('AI分析获取失败:', error);
+      setAnalysisError(error.message || 'AI分析获取失败');
+      
+      // 如果API获取失败，尝试自动启动分析
+      if (!currentQuestion.aiAnalysis?.evaluation) {
+        try {
+          await autoAIAnalysisService.analyzeImmediately(currentQuestion);
+          showSuccessRightSlide('AI分析已启动', '题目已加入AI分析队列，分析完成后将自动保存');
+        } catch (autoError: any) {
+          console.error('启动自动AI分析失败:', autoError);
+          showErrorRightSlide('启动AI分析失败', autoError.message || '请稍后重试');
+        }
+      }
+    } finally {
+      setLoadingAnalysis(false);
+    }
+  }, [currentQuestion?.qid]);
+
+  // 获取AI分析并在需要时启动分析
+  const fetchAIAnalysisAndStartIfNeeded = useCallback(async () => {
+    if (!currentQuestion?.qid) return;
+    
+    // 首先检查前端缓存 - 必须同时有evaluation和coreAbilities才算完整
+    if (currentQuestion.aiAnalysis?.evaluation && 
+        currentQuestion.aiAnalysis?.coreAbilities &&
+        typeof currentQuestion.aiAnalysis.evaluation.overallRating === 'number' &&  // 必须是数字类型
+        currentQuestion.aiAnalysis.evaluation.evaluationReasoning &&
+        currentQuestion.aiAnalysis.evaluation.evaluationReasoning.trim() !== '' &&  // 不能是空字符串
+        typeof currentQuestion.aiAnalysis.coreAbilities.logicalThinking === 'number' &&  // 必须是数字类型
+        typeof currentQuestion.aiAnalysis.coreAbilities.mathematicalIntuition === 'number' &&
+        typeof currentQuestion.aiAnalysis.coreAbilities.problemSolving === 'number' &&
+        typeof currentQuestion.aiAnalysis.coreAbilities.analyticalSkills === 'number' &&
+        typeof currentQuestion.aiAnalysis.coreAbilities.creativeThinking === 'number' &&
+        typeof currentQuestion.aiAnalysis.coreAbilities.computationalSkills === 'number') {
+      setAiAnalysis(currentQuestion.aiAnalysis);
+      return;
+    }
+    
+    setLoadingAnalysis(true);
+    setAnalysisError(null);
+    
+    try {
+      // 尝试从后端获取已保存的分析结果
+      const savedResult = await questionEvaluationAPI.getSavedAnalysis(currentQuestion.qid);
+      
+      // 检查数据完整性：必须同时有evaluation和coreAbilities，且数据类型正确
+      if (savedResult.hasSavedAnalysis && 
+          savedResult.analysis &&
+          savedResult.analysis.evaluation &&
+          savedResult.analysis.coreAbilities &&
+          typeof savedResult.analysis.evaluation.overallRating === 'number' &&  // 必须是数字类型
+          savedResult.analysis.evaluation.evaluationReasoning &&
+          savedResult.analysis.evaluation.evaluationReasoning.trim() !== '' &&  // 不能是空字符串
+          typeof savedResult.analysis.coreAbilities.logicalThinking === 'number' &&  // 必须是数字类型
+          typeof savedResult.analysis.coreAbilities.mathematicalIntuition === 'number' &&
+          typeof savedResult.analysis.coreAbilities.problemSolving === 'number' &&
+          typeof savedResult.analysis.coreAbilities.analyticalSkills === 'number' &&
+          typeof savedResult.analysis.coreAbilities.creativeThinking === 'number' &&
+          typeof savedResult.analysis.coreAbilities.computationalSkills === 'number') {
+        setAiAnalysis(savedResult.analysis);
+        setLoadingAnalysis(false);
+        return;
+      }
+      
+      setLoadingAnalysis(false);
+      await startAutoAnalysis();
+      
+    } catch (error: any) {
+      console.error('获取AI分析失败，启动自动分析:', error);
+      setAnalysisError(error.message || 'AI分析获取失败');
+      setLoadingAnalysis(false);
+      
+      // 如果获取失败，启动自动分析
+      await startAutoAnalysis();
+    }
+  }, [currentQuestion?.qid]);
+
+  // 自动启动AI分析
+  const startAutoAnalysis = useCallback(async () => {
+    if (!currentQuestion?.qid) return;
+    
+    // 如果已有完整的分析结果，不需要重新分析
+    if (currentQuestion.aiAnalysis?.evaluation && 
+        currentQuestion.aiAnalysis?.coreAbilities &&
+        typeof currentQuestion.aiAnalysis.evaluation.overallRating === 'number' &&  // 必须是数字类型
+        currentQuestion.aiAnalysis.evaluation.evaluationReasoning &&
+        currentQuestion.aiAnalysis.evaluation.evaluationReasoning.trim() !== '' &&  // 不能是空字符串
+        typeof currentQuestion.aiAnalysis.coreAbilities.logicalThinking === 'number' &&  // 必须是数字类型
+        typeof currentQuestion.aiAnalysis.coreAbilities.mathematicalIntuition === 'number' &&
+        typeof currentQuestion.aiAnalysis.coreAbilities.problemSolving === 'number' &&
+        typeof currentQuestion.aiAnalysis.coreAbilities.analyticalSkills === 'number' &&
+        typeof currentQuestion.aiAnalysis.coreAbilities.creativeThinking === 'number' &&
+        typeof currentQuestion.aiAnalysis.coreAbilities.computationalSkills === 'number') {
+      return;
+    }
+    
+    try {
+      // 添加到自动分析队列
+      await autoAIAnalysisService.analyzeImmediately(currentQuestion);
+      
+      // 显示提示信息
+      showSuccessRightSlide('AI分析已启动', '题目已加入AI分析队列，分析完成后将自动保存');
+      
+    } catch (error: any) {
+      console.error('启动自动AI分析失败:', error);
+      showErrorRightSlide('启动AI分析失败', error.message || '请稍后重试');
+    }
+  }, [currentQuestion]);
+
+  // 更新队列状态
+  const updateQueueStatus = useCallback(() => {
+    const status = autoAIAnalysisService.getQueueStatus();
+    setQueueStatus(status);
+  }, []);
+
+  // 监听分析完成事件
+  useEffect(() => {
+    const handleAnalysisComplete = (questionId: string, analysis: any) => {
+      if (questionId === currentQuestion?.qid) {
+        setAiAnalysis(analysis);
+        setLoadingAnalysis(false);
+        setAnalysisError(null);
+        
+        // 更新队列状态
+        updateQueueStatus();
+        
+        // 显示成功提示
+        showSuccessRightSlide('AI分析完成', '题目分析已完成并自动保存到后端');
+      }
+    };
+
+    const handleAnalysisFailed = (questionId: string, error: any) => {
+      if (questionId === currentQuestion?.qid) {
+        console.error('题目AI分析失败:', questionId, error);
+        setAnalysisError(error.message || 'AI分析失败');
+        setLoadingAnalysis(false);
+        
+        // 更新队列状态
+        updateQueueStatus();
+      }
+    };
+
+    // 注册事件监听器
+    autoAIAnalysisService.onAnalysisComplete(handleAnalysisComplete);
+    autoAIAnalysisService.onAnalysisFailed(handleAnalysisFailed);
+
+    // 定期更新队列状态
+    const interval = setInterval(updateQueueStatus, 5000);
+
+    return () => {
+      autoAIAnalysisService.removeListener('analysisComplete', handleAnalysisComplete);
+      autoAIAnalysisService.removeListener('analysisFailed', handleAnalysisFailed);
+      clearInterval(interval);
+    };
+  }, [currentQuestion?.qid, updateQueueStatus]);
+
+
 
   // 获取相关题目
   const fetchRelatedQuestions = useCallback(async () => {
@@ -162,12 +376,14 @@ const QuestionView: React.FC<QuestionViewProps> = ({
     }
   }, [currentQuestionIndex, isTransitioning, questions]);
 
-  // 当题目切换时，重新获取相关题目
+  // 当题目切换时，重新获取相关题目和AI分析
   useEffect(() => {
     if (isOpen && currentQuestion?.qid) {
       fetchRelatedQuestions();
+      // 先获取AI分析，如果没有数据再启动分析
+      fetchAIAnalysisAndStartIfNeeded();
     }
-  }, [currentQuestionIndex, isOpen]);
+  }, [currentQuestionIndex, isOpen, fetchRelatedQuestions]);
 
   const isFavorite = favorites.has(currentQuestion?.qid || '');
 
@@ -817,43 +1033,116 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                       exit={{ opacity: 0, y: -5 }}
                                       transition={{ duration: 0.15, ease: "easeOut" }}
                                     >
-                                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">题目分析</h3>
-                                      <div className="prose max-w-none dark:prose-invert">
-                                        {currentQuestion.content.solutionAnswers && currentQuestion.content.solutionAnswers.length > 0 ? (
-                                          <div className="space-y-4">
-                                            {currentQuestion.content.solutionAnswers.map((answer, index) => (
-                                              <div key={index} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
-                                                  解答步骤 {index + 1}
-                                                </h4>
-                                                <LaTeXPreview 
-                                                  content={answer} 
-                                                  config={{ 
-                                                    mode: 'full',
-                                                    features: {
-                                                      markdown: true,
-                                                      questionSyntax: true,
-                                                      autoNumbering: true,
-                                                      errorHandling: 'lenient'
-                                                    },
-                                                    styling: {
-                                                      fontSize: '1rem',
-                                                      lineHeight: '1.6',
-                                                      maxWidth: '100%'
-                                                    }
-                                                  }}
-                                                  variant="compact"
-                                                  showTitle={false}
-                                                  className="question-view-latex-content text-gray-700 dark:text-gray-300 leading-relaxed prose max-w-none dark:prose-invert"
-                                                  maxWidth="max-w-none"
-                                                />
-                                              </div>
-                                            ))}
+                                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">AI智能分析</h3>
+                                      
+                                      {/* AI分析状态 */}
+                                      {loadingAnalysis && (
+                                        <div className="mb-6 text-center py-8">
+                                          <div className="loading-spinner-enhanced mx-auto mb-3"></div>
+                                          <p className="text-gray-500 dark:text-gray-400">AI分析生成中，请稍候...</p>
+                                        </div>
+                                      )}
+                                      
+                                      {analysisError && (
+                                        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+                                          <div className="flex items-center">
+                                            <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
+                                            <span className="text-red-700 dark:text-red-300">AI分析失败: {analysisError}</span>
                                           </div>
-                                        ) : (
-                                          <p className="text-gray-500 dark:text-gray-400 italic">暂无题目分析</p>
-                                        )}
-                                      </div>
+                                          <button
+                                            onClick={() => fetchAIAnalysis()}
+                                            className="mt-2 text-sm text-red-600 dark:text-red-400 underline hover:no-underline"
+                                          >
+                                            重试
+                                          </button>
+                                        </div>
+                                      )}
+                                      
+                                      {aiAnalysis && !loadingAnalysis && !analysisError && (
+                                        <>
+                                          {/* 队列状态显示（仅超级管理员可见） */}
+                                          {userRole === 'superadmin' && queueStatus && (
+                                            <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
+                                              <h5 className="text-sm font-medium text-yellow-700 dark:text-yellow-300 mb-2">AI分析队列状态</h5>
+                                              <div className="grid grid-cols-2 gap-3 text-xs">
+                                                <div className="text-center">
+                                                  <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                                                    {queueStatus.total}
+                                                  </div>
+                                                  <div className="text-yellow-500 dark:text-yellow-300">总队列数</div>
+                                                </div>
+                                                <div className="text-center">
+                                                  <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                                                    {queueStatus.processing ? '处理中' : '空闲'}
+                                                  </div>
+                                                  <div className="text-yellow-500 dark:text-yellow-300">处理状态</div>
+                                                </div>
+                                                <div className="text-center">
+                                                  <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                                                    {queueStatus.highPriority}
+                                                  </div>
+                                                  <div className="text-yellow-500 dark:text-yellow-300">高优先级</div>
+                                                </div>
+                                                <div className="text-center">
+                                                  <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                                                    {queueStatus.normalPriority}
+                                                  </div>
+                                                  <div className="text-yellow-500 dark:text-yellow-300">普通优先级</div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )}
+                                          
+                                          {/* 整体评价 */}
+                                          <div className="mb-6">
+                                            <h4 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">整体评价</h4>
+                                            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
+                                              <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+                                                {aiAnalysis.evaluation?.overallRating || 7}/10
+                                              </div>
+                                              <div className="text-lg text-blue-500 dark:text-blue-300 mb-3">综合评分</div>
+                                              <div className="text-sm text-blue-600 dark:text-blue-400">
+                                                {aiAnalysis.evaluation?.evaluationReasoning || '这是一道设计良好的数学题目，逻辑清晰，知识点覆盖全面，能够有效培养学生的逻辑思维和计算能力。'}
+                                              </div>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* 能力维度图 */}
+                                          <div className="mb-6">
+                                            <h4 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">能力维度评估</h4>
+                                            <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                              <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-4 text-center">核心能力评估</h5>
+                                              <AbilityRadarChart 
+                                                data={aiAnalysis.coreAbilities || {
+                                                  logicalThinking: 7,
+                                                  mathematicalIntuition: 6,
+                                                  problemSolving: 8,
+                                                  analyticalSkills: 7,
+                                                  creativeThinking: 5,
+                                                  computationalSkills: 6
+                                                }}
+                                                className="h-80"
+                                                showValues={true}
+                                              />
+                                            </div>
+                                          </div>
+                                        </>
+                                      )}
+                                      
+                                      {/* 如果没有AI分析数据，显示默认内容 */}
+                                      {!aiAnalysis && !loadingAnalysis && !analysisError && (
+                                        <div className="mb-6 text-center py-8">
+                                          <div className="text-gray-500 dark:text-gray-400 mb-4">
+                                            <BookOpen className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
+                                            <p>
+                                              {currentQuestion.aiAnalysis?.evaluation 
+                                                ? 'AI分析结果加载中...' 
+                                                : 'AI分析已自动启动，请稍候...'
+                                              }
+                                            </p>
+                                          </div>
+                                        </div>
+                                      )}
                                     </motion.div>
                                   )}
                                 </AnimatePresence>

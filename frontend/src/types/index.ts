@@ -153,6 +153,13 @@ export interface Question {
   updatedAt: string;
   relevanceScore?: number; // 相关度分数（0-1）
   isSelected?: boolean; // 是否被选中
+  // 新增AI分析相关字段
+  aiAnalysis?: {
+    evaluation?: QuestionEvaluation;
+    coreAbilities?: CoreAbilities;
+    analysisTimestamp?: string;
+    analysisVersion?: string;
+  };
 }
 
 // API响应类型
@@ -569,4 +576,25 @@ export interface AIAnalysisResult {
   options?: string[]; // 选择题选项
   difficulty: number; // 难度等级 1-5
   questionType: 'choice' | 'multiple-choice' | 'fill' | 'solution'; // 题目类型
-} 
+  confidence?: number; // 分析置信度
+  alternativeTags?: string[]; // 替代标签建议
+  difficultyRange?: [number, number]; // 难度范围
+  skillRequirements?: string[]; // 技能要求
+}
+
+// 题目评价相关类型
+export interface QuestionEvaluation {
+  overallRating: number;           // 综合评分 (1-10)
+  evaluationReasoning: string;     // 评价理由
+  reasoning?: string;              // 兼容旧字段名
+  lastUpdated: string;             // 最后更新时间
+}
+
+export interface CoreAbilities {
+  logicalThinking: number;         // 逻辑思维 (1-10)
+  mathematicalIntuition: number;   // 数学直观 (1-10)
+  problemSolving: number;          // 问题解决 (1-10)
+  analyticalSkills: number;        // 分析能力 (1-10)
+  creativeThinking: number;        // 创造性思维 (1-10)
+  computationalSkills: number;     // 计算技能 (1-10)
+}

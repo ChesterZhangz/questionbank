@@ -54,6 +54,25 @@ export interface IQuestion extends Document {
   // 新增字段
   images?: IQuestionImage[];      // 图片数组
   tikzCodes?: ITikZCode[];       // TikZ图代码数组
+  
+  // AI分析结果
+  aiAnalysis?: {
+    evaluation?: {
+      overallRating: number;
+      evaluationReasoning: string;
+    };
+    coreAbilities?: {
+      logicalThinking: number;
+      mathematicalIntuition: number;
+      problemSolving: number;
+      analyticalSkills: number;
+      creativeThinking: number;
+      computationalSkills: number;
+    };
+    analysisTimestamp?: Date;
+    analysisVersion?: string;
+  };
+  
   createdAt: Date;
   updatedAt: Date;
 }
@@ -258,6 +277,57 @@ const questionSchema = new Schema<IQuestion>({
       }
     }],
     default: []
+  },
+  
+  // AI分析结果
+  aiAnalysis: {
+    evaluation: {
+      overallRating: {
+        type: Number,
+        min: 1,
+        max: 10
+      },
+      evaluationReasoning: String,
+      // 兼容旧字段名
+      reasoning: String
+    },
+    coreAbilities: {
+      logicalThinking: {
+        type: Number,
+        min: 1,
+        max: 10
+      },
+      mathematicalIntuition: {
+        type: Number,
+        min: 1,
+        max: 10
+      },
+      problemSolving: {
+        type: Number,
+        min: 1,
+        max: 10
+      },
+      analyticalSkills: {
+        type: Number,
+        min: 1,
+        max: 10
+      },
+      creativeThinking: {
+        type: Number,
+        min: 1,
+        max: 10
+      },
+      computationalSkills: {
+        type: Number,
+        min: 1,
+        max: 10
+      }
+    },
+    analysisTimestamp: {
+      type: Date,
+      default: Date.now
+    },
+    analysisVersion: String
   }
 }, {
   timestamps: true
@@ -315,5 +385,10 @@ questionSchema.index({ 'images.bid': 1 }); // 图片题库索引
 questionSchema.index({ 'tikzCodes.bid': 1 }); // TikZ代码题库索引
 questionSchema.index({ 'images.order': 1 }); // 图片顺序索引
 questionSchema.index({ 'tikzCodes.order': 1 }); // TikZ代码顺序索引
+
+// AI分析相关索引
+questionSchema.index({ 'aiAnalysis.analysisTimestamp': -1 }); // 分析时间索引
+questionSchema.index({ 'aiAnalysis.evaluation.overallRating': -1 }); // 整体评分索引
+questionSchema.index({ 'aiAnalysis.evaluation.confidence': -1 }); // 置信度索引
 
 export const Question = mongoose.model<IQuestion>('Question', questionSchema); 

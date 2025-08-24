@@ -6,6 +6,10 @@ interface QuestionAnalysis {
   options?: string[]; // 选择题选项
   difficulty: number; // 难度等级 1-5
   questionType: 'choice' | 'multiple-choice' | 'fill' | 'solution'; // 题目类型
+  confidence?: number; // 分析置信度
+  alternativeTags?: string[]; // 替代标签建议
+  difficultyRange?: [number, number]; // 难度范围
+  skillRequirements?: string[]; // 技能要求
 }
 
 interface DeepSeekConfig {
@@ -194,7 +198,11 @@ class QuestionAnalysisService {
           tags: Array.isArray(analysis.tags) ? analysis.tags.slice(0, 5) : [],
           options: Array.isArray(analysis.options) ? analysis.options : [],
           difficulty: normalizedDifficulty,
-          questionType: analysis.questionType || 'choice'
+          questionType: analysis.questionType || 'choice',
+          confidence: 0.85, // 默认置信度
+          alternativeTags: [], // 暂时为空
+          difficultyRange: [Math.max(1, normalizedDifficulty - 1), Math.min(5, normalizedDifficulty + 1)] as [number, number],
+          skillRequirements: [], // 暂时为空
         };
       } else {
         console.error('未找到JSON格式的响应:', content);

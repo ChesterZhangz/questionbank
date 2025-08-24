@@ -17,6 +17,7 @@ import ocrRoutes from './routes/ocr';
 import mathpixRoutes from './routes/mathpix';
 import optimizedMathpixRoutes from './routes/optimizedMathpix';
 import questionAnalysisRoutes from './routes/questionAnalysis';
+import questionEvaluationRoutes from './routes/questionEvaluation';
 import documentParserRoutes from './routes/document-parser';
 import answerGenerationRoutes from './routes/answerGeneration';
 import dashboardRoutes from './routes/dashboard';
@@ -330,6 +331,7 @@ app.use('/api/mathpix', mathpixRoutes); // Mathpix API路由
 app.use('/api/mathpix-optimized', optimizedMathpixRoutes); // 优化版Mathpix API路由
  // Word转PDF路由
 app.use('/api/question-analysis', authMiddleware, questionAnalysisRoutes); // 题目分析路由
+app.use('/api/question-evaluation', authMiddleware, questionEvaluationRoutes); // 题目评价路由
 app.use('/api/document-parser', documentParserRoutes); // 文档解析路由
 app.use('/api/answer-generation', authMiddleware, answerGenerationRoutes); // 答案生成路由
 

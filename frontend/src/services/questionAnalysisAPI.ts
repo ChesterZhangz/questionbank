@@ -6,6 +6,10 @@ export interface QuestionAnalysis {
   options?: string[]; // 选择题选项
   difficulty: number; // 难度等级 1-5
   questionType: 'choice' | 'multiple-choice' | 'fill' | 'solution'; // 题目类型
+  confidence?: number; // 分析置信度
+  alternativeTags?: string[]; // 替代标签建议
+  difficultyRange?: [number, number]; // 难度范围
+  skillRequirements?: string[]; // 技能要求
 }
 
 class QuestionAnalysisAPI {

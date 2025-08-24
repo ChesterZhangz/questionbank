@@ -89,11 +89,13 @@
 /* 为行内数学公式也添加横向滚动支持 */
 .latex-content .katex {
   max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
+  /* 移除强制横向滚动，只对真正需要的情况设置 */
+  overflow-x: visible;
+  overflow-y: visible;
   display: inline-block;
-  vertical-align: middle; /* 改为middle对齐，更自然 */
-  transform: translateY(-0.05em); /* 微调位置，修正偏上的问题 */
+  vertical-align: baseline; /* 改为baseline对齐，避免偏移 */
+  /* 移除transform偏移，防止内容被遮挡 */
+  /* transform: translateY(-0.05em); */
 }
 
 /* 为长表格和矩阵添加横向滚动 */
@@ -193,6 +195,77 @@
   overflow-x: auto;
   overflow-y: hidden;
   max-width: 100%;
+}
+
+/* 新增：只对真正需要横向滚动的行内公式设置滚动条 */
+.latex-content .katex:has(.array),
+.latex-content .katex:has(.matrix),
+.latex-content .katex-display .katex-html:has(.array),
+.latex-content .katex-display .katex-html:has(.matrix) {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* 兼容性：对于不支持:has()的浏览器，使用JavaScript动态添加类 */
+.latex-content .katex.needs-scroll {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+/* 优化滚动条样式，只在需要时显示 */
+.latex-content .katex.needs-scroll::-webkit-scrollbar {
+  height: 4px; /* 减小滚动条高度 */
+}
+
+.latex-content .katex.needs-scroll::-webkit-scrollbar-track {
+  background: transparent; /* 透明轨道 */
+}
+
+.latex-content .katex.needs-scroll::-webkit-scrollbar-thumb {
+  background: rgba(203, 213, 225, 0.6); /* 半透明滚动条 */
+  border-radius: 2px;
+}
+
+.latex-content .katex.needs-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.8); /* 悬停时更明显 */
+}
+
+/* Dark Mode下的滚动条样式 */
+.dark .latex-content .katex.needs-scroll::-webkit-scrollbar-thumb {
+  background: rgba(107, 114, 128, 0.6);
+}
+
+.dark .latex-content .katex.needs-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
+}
+
+/* 滚动提示样式 */
+.latex-content .katex .scroll-hint {
+  position: absolute;
+  top: -20px;
+  right: 0;
+  font-size: 10px;
+  color: #6b7280;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid #e5e7eb;
+  white-space: nowrap;
+  z-index: 10;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.latex-content .katex:hover .scroll-hint {
+  opacity: 1;
+}
+
+/* Dark Mode下的滚动提示样式 */
+.dark .latex-content .katex .scroll-hint {
+  background: rgba(31, 41, 55, 0.9);
+  color: #9ca3af;
+  border-color: #4b5563;
 }
 
 /* 修正KaTeX的strut元素导致的对齐偏移 */
@@ -557,6 +630,7 @@
 .latex-preview-content {
   color: #374151;
   padding: 0 1rem 1rem;
+  /* 恢复滚动设置，但允许通过类名控制 */
   max-height: 100%;
   overflow-y: auto;
   overflow-x: hidden;

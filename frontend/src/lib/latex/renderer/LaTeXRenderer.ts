@@ -83,6 +83,92 @@ export class LaTeXRenderer {
       globalRenderCache.set(cacheKey, processedContent);
     }
 
+    // 添加JavaScript代码来动态检测需要横向滚动的数学公式
+    const scrollDetectionScript = `
+      <script>
+        (function() {
+          function detectScrollableFormulas() {
+            const katexElements = document.querySelectorAll('.latex-content .katex');
+            katexElements.forEach(function(katex) {
+              // 检查是否包含需要横向滚动的复杂元素
+              const hasArray = katex.querySelector('.array');
+              const hasMatrix = katex.querySelector('.matrix');
+              const hasEqnarray = katex.querySelector('.eqnarray');
+              const hasAlign = katex.querySelector('.align');
+              const hasFrac = katex.querySelector('.frac');
+              const hasSqrt = katex.querySelector('.sqrt');
+              const hasSum = katex.querySelector('.sum');
+              const hasInt = katex.querySelector('.int');
+              const hasProd = katex.querySelector('.prod');
+              const hasLim = katex.querySelector('.lim');
+              const hasLargeOperator = katex.querySelector('.large-op');
+              
+              // 检查内容是否超出容器宽度（考虑一定的容差）
+              const contentWidth = katex.scrollWidth;
+              const containerWidth = katex.clientWidth;
+              const needsScroll = hasArray || hasMatrix || hasEqnarray || hasAlign || 
+                                hasFrac || hasSqrt || hasSum || hasInt || hasProd ||
+                                hasLim || hasLargeOperator ||
+                                (contentWidth > containerWidth + 10); // 10px容差
+              
+              if (needsScroll) {
+                katex.classList.add('needs-scroll');
+                // 为需要滚动的公式添加提示
+                if (!katex.querySelector('.scroll-hint')) {
+                  const hint = document.createElement('div');
+                  hint.className = 'scroll-hint';
+                  hint.style.cssText = 'position: absolute; top: -20px; right: 0; font-size: 10px; color: #666; pointer-events: none;';
+                  hint.textContent = '← 可横向滚动';
+                  katex.style.position = 'relative';
+                  katex.appendChild(hint);
+                }
+              } else {
+                katex.classList.remove('needs-scroll');
+                // 移除滚动提示
+                const hint = katex.querySelector('.scroll-hint');
+                if (hint) {
+                  hint.remove();
+                }
+              }
+            });
+          }
+          
+          // 页面加载完成后执行检测
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', detectScrollableFormulas);
+          } else {
+            detectScrollableFormulas();
+          }
+          
+          // 监听DOM变化，动态检测新添加的数学公式
+          const observer = new MutationObserver(function(mutations) {
+            let shouldCheck = false;
+            mutations.forEach(function(mutation) {
+              if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                shouldCheck = true;
+              }
+            });
+            if (shouldCheck) {
+              setTimeout(detectScrollableFormulas, 100);
+            }
+          });
+          
+          observer.observe(document.body, {
+            childList: true,
+            subtree: true
+          });
+          
+          // 监听窗口大小变化，重新检测
+          window.addEventListener('resize', function() {
+            setTimeout(detectScrollableFormulas, 100);
+          });
+        })();
+      </script>
+    `;
+
+    // 在HTML末尾添加脚本
+    processedContent += scrollDetectionScript;
+
     return {
       html: processedContent,
       error: globalErrorHandler.hasErrors() ? '渲染过程中出现错误' : undefined,
