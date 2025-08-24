@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Target, TrendingUp, X, Plus, RefreshCw, Grid3X3, List } from 'lucide-react';
+import { Search, Filter, TrendingUp, X, Plus, RefreshCw, Grid3X3, List } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
@@ -635,15 +635,6 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                   transition={{ duration: 0.2, delay: 0.3 }}
                   className="relative group"
                 >
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate('/paper-generation')}
-                    className="px-3 py-2 bg-white dark:bg-gray-800 backdrop-blur-sm border-gray-200 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-700 hover:border-orange-300 dark:hover:border-orange-500 text-gray-700 dark:text-gray-200 hover:text-orange-700 dark:hover:text-orange-400 font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
-                  >
-                    <Target className="h-4 h-4 mr-1" />
-                    组卷
-                  </Button>
                   {/* 悬停提示 */}
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
                     智能组卷

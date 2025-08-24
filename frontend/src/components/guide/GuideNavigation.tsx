@@ -4,18 +4,22 @@ import { motion } from 'framer-motion';
 import { 
   Calculator, 
   Target, 
-  ArrowLeft
+  ArrowLeft,
+  Palette,
+  Code,
+  Zap
 } from 'lucide-react';
 
 interface GuideNavigationProps {
   title: string;
   description: string;
+  type?: 'latex' | 'tikz';
 }
 
-const GuideNavigation: React.FC<GuideNavigationProps> = ({ title, description }) => {
+const GuideNavigation: React.FC<GuideNavigationProps> = ({ title, description, type = 'latex' }) => {
   const location = useLocation();
 
-  const guideLinks = [
+  const latexGuideLinks = [
     {
       path: '/guide/latex/math',
       name: '数学公式',
@@ -31,6 +35,32 @@ const GuideNavigation: React.FC<GuideNavigationProps> = ({ title, description })
       description: '选择题、填空题、小题结构'
     }
   ];
+
+  const tikzGuideLinks = [
+    {
+      path: '/guide/tikz/basics',
+      name: '基础教程',
+      icon: Palette,
+      color: 'from-purple-500 to-pink-500',
+      description: 'TikZ基础语法和图形绘制'
+    },
+    {
+      path: '/guide/tikz/functions',
+      name: '函数绘图',
+      icon: Code,
+      color: 'from-blue-500 to-indigo-500',
+      description: '函数图像和坐标轴绘制'
+    },
+    {
+      path: '/guide/tikz/effects',
+      name: '特效样式',
+      icon: Zap,
+      color: 'from-orange-500 to-red-500',
+      description: '线条样式、颜色和透明度'
+    }
+  ];
+
+  const guideLinks = type === 'tikz' ? tikzGuideLinks : latexGuideLinks;
 
   return (
     <div className="sticky top-0 z-30 bg-white dark:bg-gray-900 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm">

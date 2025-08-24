@@ -455,7 +455,7 @@ const ProfilePage: React.FC = () => {
   const handleDeleteAccount = () => {
     showDanger(
       '确定要删除账户吗？',
-      '此操作不可撤销，所有数据将被永久删除。',
+      '此操作不可撤销，所有数据将被永久删除.',
       () => {
         authAPI.deleteAccount().then(response => {
           if (response.data.success) {
@@ -1165,7 +1165,7 @@ const ProfilePage: React.FC = () => {
 
             {/* 快速操作 */}
             <Card>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">快速操作</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 dark:text-gray-100">快速操作</h2>
               <div className="space-y-3">
                 <Button
                   onClick={() => navigate('/settings')}

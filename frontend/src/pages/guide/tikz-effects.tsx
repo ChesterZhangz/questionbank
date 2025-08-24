@@ -2,23 +2,20 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Palette, 
+  Brush, 
   Sparkles, 
   Eye,
-  ArrowRight,
-  ChevronRight,
-  Zap,
-  Target,
-  Layers
+  Zap
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import TikZCodeExample from '../../components/guide/TikZCodeExample';
+import GuideNavigation from '../../components/guide/GuideNavigation';
 
 const TikZEffectsGuide: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
 
   const tabs = [
     { id: 'overview', label: '概述', icon: Eye },
-    { id: 'shadows', label: '阴影效果', icon: Layers },
+    { id: 'shadows', label: '阴影效果', icon: Brush },
     { id: 'gradients', label: '渐变填充', icon: Palette },
     { id: 'transparency', label: '透明度', icon: Eye },
     { id: 'examples', label: '实战示例', icon: Zap }
@@ -50,7 +47,7 @@ const TikZEffectsGuide: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-purple-50/80 dark:bg-gray-800/80 rounded-lg p-4 border border-purple-200/50 dark:border-gray-700/50">
           <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/50 rounded-lg flex items-center justify-center mb-3">
-            <Layers className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <Brush className="w-5 h-5 text-purple-600 dark:text-purple-400" />
           </div>
           <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">阴影效果</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">创建立体感和深度</p>
@@ -84,7 +81,7 @@ const TikZEffectsGuide: React.FC = () => {
     >
       <div className="bg-purple-50/80 dark:bg-gray-800/80 rounded-xl p-6 border border-purple-200/50 dark:border-gray-700/50">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-          <Layers className="w-5 h-5 text-purple-600" />
+          <Brush className="w-5 h-5 text-purple-600" />
           阴影效果
         </h3>
         
@@ -239,37 +236,55 @@ const TikZEffectsGuide: React.FC = () => {
       transition={{ duration: 0.5 }}
       className="space-y-6"
     >
-      <div className="bg-purple-50/80 dark:bg-gray-800/80 rounded-xl p-6 border border-purple-200/50 dark:border-gray-700/50">
+      <div className="bg-orange-50/80 dark:bg-gray-800/80 rounded-xl p-6 border border-orange-200/50 dark:border-gray-700/50">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-          <Zap className="w-5 h-5 text-yellow-600" />
+          <Zap className="w-5 h-5 text-orange-600" />
           实战示例
         </h3>
         
         <div className="space-y-6">
           <div>
-            <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">1. 立体按钮效果</h4>
+            <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">1. 综合样式效果</h4>
             <TikZCodeExample
-              code="\\begin{tikzpicture}   % 按钮阴影   \\fill[drop shadow={shadow xshift=2pt, shadow yshift=-2pt, shadow opacity=0.3}] (0,0) rectangle (2,1);   % 按钮主体   \\fill[left color=blue!80, right color=blue!60] (0,0) rectangle (2,1);   % 高光效果   \\fill[white!30] (0.1,0.1) rectangle (1.8,0.9);   % 文字   \ ode[white, font=\\bfseries] at (1,0.5) {按钮}; \\end{tikzpicture}"
-              title="立体按钮"
-              description="结合阴影、渐变和透明度创建立体按钮"
+              code={`\\begin{tikzpicture}
+% 综合应用各种样式效果
+\\draw[dashed, red, thick, opacity=0.7] (0,0) -- (2,2);
+\\draw[dotted, blue, ultra thick, opacity=0.8] (0,2) -- (2,0);
+\\fill[green!50, opacity=0.6] (1,1) circle (0.5);
+\\node[above, red, opacity=0.9] at (1,1.5) {综合效果};
+\\end{tikzpicture}`}
+              title="综合样式效果"
+              description="组合使用多种样式属性，创建丰富的视觉效果"
             />
           </div>
           
           <div>
-            <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">2. 玻璃质感效果</h4>
+            <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">2. 渐变和阴影效果</h4>
             <TikZCodeExample
-              code="\\begin{tikzpicture}   % 背景阴影   \\fill[drop shadow={shadow xshift=3pt, shadow yshift=-3pt, shadow opacity=0.2}] (0,0) circle (1cm);   % 玻璃主体   \\fill[radial, inner color=white!80, outer color=blue!20] (0,0) circle (1cm);   % 高光   \\fill[white!60] (-0.3,0.3) circle (0.2cm);   % 边框   \\draw[blue!50, thick] (0,0) circle (1cm); \\end{tikzpicture}"
-              title="玻璃质感"
-              description="创建具有玻璃质感的圆形"
+              code={`\\begin{tikzpicture}
+% 创建渐变和阴影效果
+\\draw[thick, red, opacity=0.8] (0,0) rectangle (2,1);
+\\draw[thick, red, opacity=0.6] (0.1,0.1) rectangle (2.1,1.1);
+\\draw[thick, red, opacity=0.4] (0.2,0.2) rectangle (2.2,1.2);
+\\fill[red!30, opacity=0.7] (0,0) rectangle (2,1);
+\\end{tikzpicture}`}
+              title="渐变和阴影"
+              description="通过多层绘制和透明度变化模拟阴影效果"
             />
           </div>
           
           <div>
-            <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">3. 彩虹渐变效果</h4>
+            <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">3. 高级线条样式</h4>
             <TikZCodeExample
-              code="\\begin{tikzpicture}   % 彩虹渐变   \\fill[left color=red, middle color=yellow, right color=blue] (0,0) rectangle (4,1);   % 添加阴影   \\fill[drop shadow={shadow xshift=2pt, shadow yshift=-2pt, shadow opacity=0.4}] (0,0) rectangle (4,1);   % 高光效果   \\fill[white!40] (0,0.6) rectangle (4,1);   % 文字   \ ode[white, font=\\bfseries, drop shadow={shadow xshift=1pt, shadow yshift=-1pt, shadow opacity=0.8}] at (2,0.5) {彩虹}; \\end{tikzpicture}"
-              title="彩虹渐变"
-              description="结合多种效果创建彩虹渐变条"
+              code={`\\begin{tikzpicture}
+% 展示各种线条样式
+\\draw[loosely dashed, thick, blue] (0,0) -- (2,0);
+\\draw[densely dotted, thick, green] (0,0.5) -- (2,0.5);
+\\draw[loosely dotted, thick, red] (0,1) -- (2,1);
+\\draw[densely dashed, thick, purple] (0,1.5) -- (2,1.5);
+\\end{tikzpicture}`}
+              title="高级线条样式"
+              description="使用不同的虚线样式创建丰富的线条效果"
             />
           </div>
         </div>
@@ -277,103 +292,48 @@ const TikZEffectsGuide: React.FC = () => {
     </motion.div>
   );
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'overview':
-        return renderOverview();
-      case 'shadows':
-        return renderShadows();
-      case 'gradients':
-        return renderGradients();
-      case 'transparency':
-        return renderTransparency();
-      case 'examples':
-        return renderExamples();
-      default:
-        return renderOverview();
-    }
-  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50/30 to-orange-50/30 dark:from-slate-900 dark:via-yellow-900/20 dark:to-orange-900/20">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* 页面头部 */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center gap-4 mb-6">
-            <Link
-              to="/LaTeXGuide"
-              className="p-2 rounded-lg bg-purple-50/80 dark:bg-gray-800/80 backdrop-blur-sm border border-purple-200/50 dark:border-gray-700/50 hover:bg-white dark:hover:bg-gray-700 transition-all duration-200"
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <GuideNavigation 
+        title="TikZ 特效样式" 
+        description="掌握TikZ的线条样式、颜色、透明度和高级视觉效果"
+        type="tikz"
+      />
+
+      {/* 导航标签 */}
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="flex flex-wrap justify-center gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                activeTab === tab.id
+                  ? 'bg-orange-600 text-white shadow-lg'
+                  : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
             >
-              <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400 rotate-180" />
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">TikZ 高级效果</h1>
-              <p className="text-gray-600 dark:text-gray-400">掌握TikZ的视觉增强技巧</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* 标签导航 */}
-        <div className="bg-purple-50/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-2 border border-purple-200/50 dark:border-gray-700/50 mb-8">
-          <div className="flex flex-wrap gap-2">
-            {tabs.map((tab) => (
-              <motion.button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? 'bg-yellow-500 text-white shadow-lg'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
-              </motion.button>
-            ))}
-          </div>
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
         </div>
+      </div>
 
-        {/* 内容区域 */}
-        <div className="space-y-8">
-          {renderContent()}
-        </div>
-
-        {/* 底部导航 */}
+      {/* 内容区域 */}
+      <div className="max-w-7xl mx-auto px-6 pb-12">
         <motion.div
+          key={activeTab}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="mt-12 text-center"
+          transition={{ duration: 0.3 }}
         >
-          <div className="bg-purple-50/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-purple-200/50 dark:border-gray-700/50">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-              继续学习更多TikZ技巧
-            </h3>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link
-                to="/guide/tikz/basics"
-                className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 hover:scale-105"
-              >
-                <Palette className="w-4 h-4" />
-                基础教程
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                to="/guide/tikz/functions"
-                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 hover:scale-105"
-              >
-                <Target className="w-4 h-4" />
-                函数绘制
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
+          {activeTab === 'overview' && renderOverview()}
+          {activeTab === 'shadows' && renderShadows()}
+          {activeTab === 'gradients' && renderGradients()}
+          {activeTab === 'transparency' && renderTransparency()}
+          {activeTab === 'examples' && renderExamples()}
         </motion.div>
       </div>
     </div>

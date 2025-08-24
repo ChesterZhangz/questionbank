@@ -25,6 +25,9 @@ class TikZSimulator {
   private width: number;
   private height: number;
   private elements: any[] = [];
+  private rawElements: any[] = []; // 存储原始坐标的元素
+  private coordinateRange: { minX: number, maxX: number, minY: number, maxY: number } | null = null;
+  private adaptiveScale: number = 1;
   private showGrid: boolean;
   private showTitle: boolean;
   private functionRenderer: TikZFunctionRenderer;
@@ -127,10 +130,173 @@ class TikZSimulator {
         }
       }
       
+      // 解析完成后，计算自适应缩放并转换所有元素
+      this.calculateAdaptiveScaling();
+      this.transformAllElements();
+      
       return this.generateSVG();
     } catch (error) {
       console.error('TikZ解析失败:', error);
       return this.generateErrorSVG(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  // 计算自适应缩放因子
+  private calculateAdaptiveScaling() {
+    if (this.rawElements.length === 0) {
+      this.adaptiveScale = Math.min(this.width / 8, this.height / 6); // 默认缩放
+      this.coordinateRange = { minX: -2, maxX: 2, minY: -2, maxY: 2 };
+      return;
+    }
+
+    // 收集所有坐标点
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+    for (const element of this.rawElements) {
+      switch (element.type) {
+        case 'path':
+          for (const point of element.points) {
+            minX = Math.min(minX, point.x);
+            maxX = Math.max(maxX, point.x);
+            minY = Math.min(minY, point.y);
+            maxY = Math.max(maxY, point.y);
+          }
+          break;
+        case 'circle':
+          minX = Math.min(minX, element.x - element.radius);
+          maxX = Math.max(maxX, element.x + element.radius);
+          minY = Math.min(minY, element.y - element.radius);
+          maxY = Math.max(maxY, element.y + element.radius);
+          break;
+        case 'rectangle':
+          minX = Math.min(minX, element.x);
+          maxX = Math.max(maxX, element.x + element.width);
+          minY = Math.min(minY, element.y);
+          maxY = Math.max(maxY, element.y + element.height);
+          break;
+        case 'ellipse':
+          minX = Math.min(minX, element.x - element.rx);
+          maxX = Math.max(maxX, element.x + element.rx);
+          minY = Math.min(minY, element.y - element.ry);
+          maxY = Math.max(maxY, element.y + element.ry);
+          break;
+        case 'text':
+          minX = Math.min(minX, element.x);
+          maxX = Math.max(maxX, element.x);
+          minY = Math.min(minY, element.y);
+          maxY = Math.max(maxY, element.y);
+          break;
+      }
+    }
+
+    // 如果没有找到有效坐标，使用默认值
+    if (minX === Infinity) {
+      minX = -2; maxX = 2; minY = -2; maxY = 2;
+    }
+
+    // 存储坐标范围
+    this.coordinateRange = { minX, maxX, minY, maxY };
+
+    // 计算内容的实际尺寸
+    const contentWidth = maxX - minX;
+    const contentHeight = maxY - minY;
+
+    // 如果内容尺寸为0，使用默认缩放
+    if (contentWidth === 0 && contentHeight === 0) {
+      this.adaptiveScale = Math.min(this.width / 8, this.height / 6);
+      return;
+    }
+
+    // 计算适合的缩放因子，留出边距
+    const margin = 40; // 边距
+    const availableWidth = this.width - 2 * margin;
+    const availableHeight = this.height - 2 * margin;
+
+    let scaleX = contentWidth > 0 ? availableWidth / contentWidth : Infinity;
+    let scaleY = contentHeight > 0 ? availableHeight / contentHeight : Infinity;
+
+    // 使用较小的缩放因子以确保所有内容都能显示
+    this.adaptiveScale = Math.min(scaleX, scaleY);
+
+    // 限制缩放范围，避免过大或过小
+    this.adaptiveScale = Math.max(1, Math.min(this.adaptiveScale, 200));
+  }
+
+  // 转换所有原始元素到最终元素
+  private transformAllElements() {
+    if (!this.coordinateRange) return;
+
+    const { minX, maxX, minY, maxY } = this.coordinateRange;
+    const centerX = this.width / 2;
+    const centerY = this.height / 2;
+    
+    // 计算内容中心点
+    const contentCenterX = (minX + maxX) / 2;
+    const contentCenterY = (minY + maxY) / 2;
+
+    for (const rawElement of this.rawElements) {
+      switch (rawElement.type) {
+        case 'path':
+          const transformedPoints = rawElement.points.map((point: any) => ({
+            x: centerX + (point.x - contentCenterX) * this.adaptiveScale,
+            y: centerY - (point.y - contentCenterY) * this.adaptiveScale // Y轴翻转
+          }));
+          this.elements.push({
+            ...rawElement,
+            points: transformedPoints
+          });
+          break;
+        case 'circle':
+          this.elements.push({
+            ...rawElement,
+            x: centerX + (rawElement.x - contentCenterX) * this.adaptiveScale,
+            y: centerY - (rawElement.y - contentCenterY) * this.adaptiveScale,
+            radius: rawElement.radius * this.adaptiveScale
+          });
+          break;
+        case 'rectangle':
+          this.elements.push({
+            ...rawElement,
+            x: centerX + (rawElement.x - contentCenterX) * this.adaptiveScale,
+            y: centerY - (rawElement.y - contentCenterY) * this.adaptiveScale,
+            width: rawElement.width * this.adaptiveScale,
+            height: rawElement.height * this.adaptiveScale
+          });
+          break;
+        case 'ellipse':
+          this.elements.push({
+            ...rawElement,
+            x: centerX + (rawElement.x - contentCenterX) * this.adaptiveScale,
+            y: centerY - (rawElement.y - contentCenterY) * this.adaptiveScale,
+            rx: rawElement.rx * this.adaptiveScale,
+            ry: rawElement.ry * this.adaptiveScale
+          });
+          break;
+        case 'text':
+          // 计算基础位置
+          const baseX = centerX + (rawElement.x - contentCenterX) * this.adaptiveScale;
+          const baseY = centerY - (rawElement.y - contentCenterY) * this.adaptiveScale;
+          
+          // 如果有位置调整信息，应用它
+          let finalX = baseX;
+          let finalY = baseY;
+          if (rawElement.position) {
+            const adjustedPos = this.adjustNodePosition(baseX, baseY, rawElement.position);
+            finalX = adjustedPos.x;
+            finalY = adjustedPos.y;
+          }
+          
+          this.elements.push({
+            ...rawElement,
+            x: finalX,
+            y: finalY
+          });
+          break;
+        default:
+          // 对于其他类型，直接复制
+          this.elements.push(rawElement);
+          break;
+      }
     }
   }
 
@@ -182,22 +348,16 @@ class TikZSimulator {
           if (isNaN(x) || isNaN(y)) {
             throw new Error(`坐标值无效: ${coord}`);
           }
-                  // 修复坐标系统：将LaTeX坐标转换为SVG坐标，确保在边界内
-        const scale = Math.min(this.width / 8, this.height / 6); // 动态缩放
-        const centerX = this.width / 2;
-        const centerY = this.height / 2;
-        
-          return { 
-          x: centerX + x * scale, 
-          y: centerY - y * scale  // Y轴翻转
-          };
+          
+          // 存储原始坐标
+          return { x, y };
         } catch (error) {
           throw new Error(`第${index + 1}个坐标解析失败: ${coord}`);
         }
       });
       
-      // 添加路径元素
-      this.elements.push({
+      // 添加到原始元素数组
+      this.rawElements.push({
         type: 'path',
         points,
         style: TikZStyleParser.parseDrawOptions(style)
@@ -205,7 +365,7 @@ class TikZSimulator {
       
       // 添加内嵌节点元素
       inlineNodes.forEach(node => {
-        this.elements.push(node);
+        this.rawElements.push(node);
       });
     } else {
       // 警告日志已清理
@@ -256,26 +416,18 @@ class TikZSimulator {
         // 解析位置参数
         const position = this.parseNodePosition(positionStr || '');
         
-        // 使用动态缩放
-        const scale = Math.min(this.width / 8, this.height / 6);
-        const centerX = this.width / 2;
-        const centerY = this.height / 2;
-        
-        const baseX = centerX + x * scale;
-        const baseY = centerY - y * scale;  // Y轴翻转
-        
-        // 根据位置参数调整坐标
-        const adjustedPos = this.adjustNodePosition(baseX, baseY, position);
-        
         const parsedText = this.parseNodeText(text);
         // 数字使用更小的字体，数学符号使用正常字体
         const fontSize = parsedText.isNumber ? '12px' : (parsedText.isMath ? '14px' : '14px');
+        
+        // 存储原始坐标，位置调整将在transformAllElements中处理
         nodes.push({
           type: 'text',
-          x: adjustedPos.x,
-          y: adjustedPos.y,
+          x: x,
+          y: y,
           text: parsedText.content,
           italic: parsedText.hasItalic,
+          position: position, // 保存位置信息用于后续调整
           style: { fill: this.getTextColor(), fontSize: fontSize, ...position.style }
         });
       } catch (error) {
@@ -360,16 +512,12 @@ class TikZSimulator {
     
     if (coords && TikZGeometryParser.validateCoords(coords)) {
       try {
-        // 使用动态缩放
-        const scale = Math.min(this.width / 8, this.height / 6);
-        const centerX = this.width / 2;
-        const centerY = this.height / 2;
-        
-        this.elements.push({
+        // 存储原始坐标
+        this.rawElements.push({
           type: 'circle',
-          x: centerX + coords.x * scale,
-          y: centerY - coords.y * scale,  // Y轴翻转
-          radius: coords.radius * scale,
+          x: coords.x,
+          y: coords.y,
+          radius: coords.radius,
           style: TikZStyleParser.parseDrawOptions(style)
         });
       } catch (error) {
@@ -384,17 +532,13 @@ class TikZSimulator {
     
     if (coords && TikZGeometryParser.validateCoords(coords)) {
       try {
-        // 使用动态缩放
-        const scale = Math.min(this.width / 8, this.height / 6);
-        const centerX = this.width / 2;
-        const centerY = this.height / 2;
-        
-        this.elements.push({
+        // 存储原始坐标
+        this.rawElements.push({
           type: 'rectangle',
-          x: centerX + coords.x1 * scale,
-          y: centerY - coords.y2 * scale,  // Y轴翻转，使用y2作为顶部
-          width: (coords.x2 - coords.x1) * scale,
-          height: (coords.y2 - coords.y1) * scale,
+          x: coords.x1,
+          y: coords.y1,
+          width: coords.x2 - coords.x1,
+          height: coords.y2 - coords.y1,
           style: TikZStyleParser.parseDrawOptions(style)
         });
       } catch (error) {
@@ -409,17 +553,13 @@ class TikZSimulator {
     
     if (coords && TikZGeometryParser.validateCoords(coords)) {
       try {
-        // 使用动态缩放
-        const scale = Math.min(this.width / 8, this.height / 6);
-        const centerX = this.width / 2;
-        const centerY = this.height / 2;
-        
-        this.elements.push({
+        // 存储原始坐标
+        this.rawElements.push({
           type: 'ellipse',
-          x: centerX + coords.x * scale,
-          y: centerY - coords.y * scale,  // Y轴翻转
-          rx: coords.rx * scale,
-          ry: coords.ry * scale,
+          x: coords.x,
+          y: coords.y,
+          rx: coords.rx,
+          ry: coords.ry,
           style: TikZStyleParser.parseDrawOptions(style)
         });
       } catch (error) {
