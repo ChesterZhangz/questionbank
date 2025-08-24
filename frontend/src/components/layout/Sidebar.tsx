@@ -86,6 +86,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       setActiveSection('profile');
     } else if (currentPath === '/version') {
       setActiveSection('version');
+    } else if (currentPath === '/LaTeXGuide' || currentPath.startsWith('/guide/')) {
+      setActiveSection('LaTeXGuide');
     }
   }, [location.pathname]);
 
@@ -401,7 +403,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                   exit={{ opacity: 0 }}
                   className="flex items-center gap-2"
                 >
-                  <span className="text-xs">v0.70</span>
+                  <span className="text-xs">v0.72</span>
                   <span className="text-xs opacity-75">版本信息</span>
                 </motion.div>
               )}

@@ -2,6 +2,9 @@
 // 纯 TikZ 实现，支持函数绘制、坐标轴、网格等
 
 import { createSVGElement, setSVGAttributes } from '../../utils/SVGUtils';
+import { TikZForeachUtils, type ForeachContext } from '../../utils/TikZForeachUtils';
+import { TikZStyleParser } from '../../utils/TikZStyleParser';
+import { TikZGeometryParser } from '../../utils/TikZGeometryParser';
 
 export interface TikZAxisOptions {
   xmin?: number;
@@ -38,6 +41,7 @@ export class TikZFunctionRenderer {
   private options: TikZAxisOptions;
   private functions: TikZFunction[] = [];
   private drawElements: any[] = [];
+  private foreachStack: Array<ForeachContext> = [];
   private dimensions: {
     width: number;
     height: number;
@@ -74,8 +78,8 @@ export class TikZFunctionRenderer {
       xmax: 5,
       ymin: -5,
       ymax: 5,
-      width: 400,
-      height: 300,
+      width: 500,
+      height: 500,
       showGrid: true,
       showTicks: true,
       showArrows: true,
@@ -86,8 +90,8 @@ export class TikZFunctionRenderer {
     };
 
     // 确保 width 和 height 有有效值
-    if (!this.options.width) this.options.width = 400;
-    if (!this.options.height) this.options.height = 300;
+    if (!this.options.width) this.options.width = 500;
+    if (!this.options.height) this.options.height = 500;
 
     // 然后计算尺寸
     this.dimensions = this.calculateDimensions();
@@ -97,10 +101,10 @@ export class TikZFunctionRenderer {
    * 计算尺寸和边距
    */
   private calculateDimensions() {
-    const marginLeft = 60;
-    const marginRight = 20;
+    const marginLeft = 40;
+    const marginRight = 40;
     const marginTop = 40;
-    const marginBottom = 60;
+    const marginBottom = 40;
 
     const dimensions = {
       width: this.options.width!,
@@ -233,6 +237,8 @@ export class TikZFunctionRenderer {
       return this.renderLine(drawElement.path, options);
     } else if (type === 'node') {
       return this.renderNode(drawElement);
+    } else if (type === 'grid') {
+      return this.renderGrid(drawElement);
     } else if (type === 'rectangle') {
       return this.renderRectangle(drawElement);
     } else if (type === 'circle') {
@@ -268,7 +274,7 @@ export class TikZFunctionRenderer {
     
     // 创建线条
     const line = createSVGElement('line');
-    setSVGAttributes(line, {
+    let lineAttributes: any = {
       x1: startScreen.x,
       y1: startScreen.y,
       x2: endScreen.x,
@@ -276,15 +282,26 @@ export class TikZFunctionRenderer {
       stroke: options.color || '#000000',
       'stroke-width': options.lineWidth || 1.5,
       'stroke-linecap': 'round'
-    });
-    lineGroup.appendChild(line);
+    };
     
-    // 如果有箭头，添加箭头
+    // 如果有箭头，添加箭头标记
     if (options.hasArrow) {
-      // 传递屏幕坐标的差值作为方向向量
-      const arrow = this.createArrowHead(endScreen.x, endScreen.y, endScreen.x - startScreen.x, endScreen.y - startScreen.y, options);
-      lineGroup.appendChild(arrow);
+      // 根据线条颜色选择对应的箭头
+      let arrowId = 'arrowhead'; // 默认箭头
+      
+      if (options.color) {
+        // 尝试匹配颜色名称
+        const colorName = this.getColorName(options.color);
+        if (colorName) {
+          arrowId = `arrowhead-${colorName}`;
+        }
+      }
+      
+      lineAttributes['marker-end'] = `url(#${arrowId})`;
     }
+    
+    setSVGAttributes(line, lineAttributes);
+    lineGroup.appendChild(line);
     
     return lineGroup;
   }
@@ -375,54 +392,78 @@ export class TikZFunctionRenderer {
   }
 
   /**
-   * 创建箭头头部
+   * 获取颜色名称（用于匹配箭头）
    */
-  private createArrowHead(x: number, y: number, dx: number, dy: number, options: any): SVGGElement {
-    const arrowGroup = createSVGElement('g') as SVGGElement;
+  private getColorName(color: string): string | null {
+    const colorMap: { [key: string]: string } = {
+      '#ff0000': 'red',
+      '#0000ff': 'blue', 
+      '#00ff00': 'green',
+      '#ffff00': 'yellow',
+      '#ffa500': 'orange',
+      '#800080': 'purple',
+      '#ffc0cb': 'pink',
+      '#8b4513': 'brown',
+      '#808080': 'gray',
+      '#000000': 'black',
+      '#ffffff': 'white'
+    };
     
-    // 标准化方向向量
-    const length = Math.sqrt(dx * dx + dy * dy);
-    if (length === 0) return arrowGroup;
+    // 直接匹配颜色名称
+    const lowerColor = color.toLowerCase();
+    if (['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', 'gray', 'grey', 'black', 'white'].includes(lowerColor)) {
+      return lowerColor;
+    }
     
-    const unitX = dx / length;
-    const unitY = dy / length;
+    // 匹配十六进制颜色
+    return colorMap[color.toLowerCase()] || null;
+  }
+
+  /**
+   * 生成SVG定义（箭头标记）
+   */
+  private generateDefinitions(): string {
+    let defs = '<defs>';
     
-    const arrowLength = 8;
-    const arrowAngle = Math.PI / 6; 
+    // 基础箭头标记 - 支持暗色模式
+    const isDarkMode = this.isDarkMode();
+    const defaultArrowColor = isDarkMode ? '#e5e7eb' : '#000000';
     
-    const line1X = x - arrowLength * (unitX * Math.cos(arrowAngle) + unitY * Math.sin(arrowAngle));
-    const line1Y = y - arrowLength * (unitY * Math.cos(arrowAngle) - unitX * Math.sin(arrowAngle));
+    // 默认箭头
+    defs += `
+      <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+              refX="10" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="${defaultArrowColor}" />
+      </marker>
+    `;
     
-    const line2X = x - arrowLength * (unitX * Math.cos(arrowAngle) - unitY * Math.sin(arrowAngle));
-    const line2Y = y - arrowLength * (unitY * Math.cos(arrowAngle) + unitX * Math.sin(arrowAngle));
+    // 为常见颜色生成专门的箭头
+    const commonColors = [
+      { name: 'red', color: '#ff0000' },
+      { name: 'blue', color: '#0000ff' },
+      { name: 'green', color: '#00ff00' },
+      { name: 'yellow', color: '#ffff00' },
+      { name: 'orange', color: '#ffa500' },
+      { name: 'purple', color: '#800080' },
+      { name: 'pink', color: '#ffc0cb' },
+      { name: 'brown', color: '#8b4513' },
+      { name: 'gray', color: '#808080' },
+      { name: 'grey', color: '#808080' },
+      { name: 'black', color: '#000000' },
+      { name: 'white', color: '#ffffff' }
+    ];
     
-    // 创建箭头的两条线
-    const arrowLine1 = createSVGElement('line');
-    setSVGAttributes(arrowLine1, {
-      x1: x,
-      y1: y,
-      x2: line1X,
-      y2: line1Y,
-      stroke: options.color || '#000000',
-      'stroke-width': options.lineWidth || 1.5,
-      'stroke-linecap': 'round'
+    commonColors.forEach(({ name, color }) => {
+      defs += `
+        <marker id="arrowhead-${name}" markerWidth="10" markerHeight="7" 
+                refX="10" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="${color}" />
+        </marker>
+      `;
     });
     
-    const arrowLine2 = createSVGElement('line');
-    setSVGAttributes(arrowLine2, {
-      x1: x,
-      y1: y,
-      x2: line2X,
-      y2: line2Y,
-      stroke: options.color || '#000000',
-      'stroke-width': options.lineWidth || 1.5,
-      'stroke-linecap': 'round'
-    });
-    
-    arrowGroup.appendChild(arrowLine1);
-    arrowGroup.appendChild(arrowLine2);
-    
-    return arrowGroup;
+    defs += '</defs>';
+    return defs;
   }
 
 
@@ -648,7 +689,7 @@ export class TikZFunctionRenderer {
     
     // 确保尺寸有效
     if (!this.options.width) this.options.width = 500;
-    if (!this.options.height) this.options.height = 400;
+    if (!this.options.height) this.options.height = 500;
     
     let svg: SVGSVGElement;
     try {
@@ -658,6 +699,8 @@ export class TikZFunctionRenderer {
       throw error;
     }
 
+    // 添加SVG定义（箭头标记等）
+    svg.innerHTML = this.generateDefinitions();
 
     // 渲染用户定义的 TikZ 元素（包括坐标轴、网格、刻度等）
     const userElements = this.renderUserElements();
@@ -686,7 +729,7 @@ export class TikZFunctionRenderer {
 
     // 确保 width 和 height 仍然有效
     if (!this.options.width) this.options.width = 500;
-    if (!this.options.height) this.options.height = 400;
+    if (!this.options.height) this.options.height = 500;
 
     // 重新计算尺寸（坐标轴范围可能已更新）
     this.dimensions = this.calculateDimensions();
@@ -700,136 +743,125 @@ export class TikZFunctionRenderer {
    * 解析 TikZ 代码
    */
   private parseTikZCode(code: string) {
+    this.drawElements = [];
+    this.foreachStack = [];
+    
     const lines = code.split('\n');
     
-    for (const line of lines) {
+    for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
+      const line = lines[lineNumber];
       const trimmedLine = line.trim();
       
-      // 跳过空行和注释
       if (!trimmedLine || trimmedLine.startsWith('%')) {
         continue;
       }
-
-      // 解析 plot 命令（支持双反斜杠）
-      const plotMatch = trimmedLine.match(/\\\\?draw\s*(?:\[([^\]]*)\])?\s*plot\s*(?:\[([^\]]*)\])?\s*\{([^}]+)\}/);
-      if (plotMatch) {
-        const drawOptions = plotMatch[1] || '';
-        const plotOptions = plotMatch[2] || '';
-        const expression = plotMatch[3];
-
-        // 解析选项
-        const options = this.parsePlotOptions(drawOptions, plotOptions);
+      
+      try {
+        // 检查是否有待处理的foreach命令
+        if (this.foreachStack.length > 0) {
+          this.processForeachCommand(trimmedLine, lineNumber);
+          continue;
+        }
         
-        // 添加函数
-        this.addFunction(expression, options);
-      }
-
-      // 解析 draw 命令（坐标轴、网格等）
-      const drawMatch = trimmedLine.match(/\\\\?draw\s*(?:\[([^\]]*)\])?\s*([^;]+);/);
-      if (drawMatch && !drawMatch[2].includes('plot')) { // 排除 plot 命令
-        const drawOptions = drawMatch[1] || '';
-        const drawPath = drawMatch[2];
-        
-        // 解析选项
-        const hasArrow = drawOptions.includes('->');
-        
-        const options = {
-          hasArrow,
-          color: this.parseColor(drawOptions) || this.getAdaptiveColor('#000000', '#ffffff'),
-          lineWidth: this.parseLineWidth(drawOptions) || 1.5,
-          fill: this.parseFill(drawOptions)
-        };
-        
-        // 检查是否是图形绘制命令
-        if (drawPath.includes('rectangle')) {
-          this.parseRectangle(drawPath, options);
-        } else if (drawPath.includes('circle')) {
-          this.parseCircle(drawPath, options);
-        } else if (drawPath.includes('ellipse')) {
-          this.parseEllipse(drawPath, options);
-        } else if (drawPath.includes('arc')) {
-          this.parseArc(drawPath, options);
-        } else {
-          // 检查是否包含 node，支持多种node位置格式
-          const nodeMatches = [];
-          let cleanPath = drawPath;
-          const globalNodeRegex = /node\s*\[([^\]]*)\]\s*\{([^}]+)\}/g;
-          let nodeMatch;
-          
-          while ((nodeMatch = globalNodeRegex.exec(drawPath)) !== null) {
-            nodeMatches.push({
-              fullMatch: nodeMatch[0],
-              nodeOptions: nodeMatch[1],
-              nodeText: nodeMatch[2],
-              startIndex: nodeMatch.index
-            });
+        // 解析 \foreach 命令
+        if (TikZForeachUtils.containsForeach(trimmedLine)) {
+          const foreachContext = TikZForeachUtils.parseForeach(trimmedLine, lineNumber);
+          if (foreachContext) {
+            if (foreachContext.command) {
+              // 如果同一行有命令，直接处理
+              this.foreachStack.push(foreachContext);
+              this.processForeachCommand(foreachContext.command, lineNumber);
+            } else {
+              // 存储foreach信息，等待下一行的命令
+              this.foreachStack.push(foreachContext);
+            }
           }
+          continue;
+        }
+        
+        // 解析函数绘制
+        if (trimmedLine.includes('plot')) {
+          this.parsePlotCommand(trimmedLine);
+        }
+        
+        // 解析 draw 命令（坐标轴、网格等）
+        const drawMatch = trimmedLine.match(/\\\\?draw\s*(?:\[([^\]]*)\])?\s*([^;]+);/);
+        if (drawMatch && !drawMatch[2].includes('plot')) {
+          const drawOptions = drawMatch[1] || '';
+          const drawPath = drawMatch[2];
           
-          // 移除所有node部分，得到纯路径
-          cleanPath = drawPath.replace(/node\s*\[([^\]]*)\]\s*\{([^}]+)\}/g, '').trim();
-          
-          // 添加线条元素（使用清理后的路径）
-          if (cleanPath) {
+          if (drawPath.includes('grid')) {
+            this.parseGrid(drawPath, drawOptions);
+          } else if (drawPath.includes('rectangle')) {
+            this.parseRectangle(drawPath, this.parseDrawOptions(drawOptions));
+          } else if (drawPath.includes('circle')) {
+            this.parseCircle(drawPath, this.parseDrawOptions(drawOptions));
+          } else if (drawPath.includes('ellipse')) {
+            this.parseEllipse(drawPath, this.parseDrawOptions(drawOptions));
+          } else if (drawPath.includes('arc')) {
+            this.parseArc(drawPath, this.parseDrawOptions(drawOptions));
+          } else {
+            // 处理线条和node
             this.drawElements.push({
               type: 'line',
-              path: cleanPath,
-              options
+              path: drawPath,
+              options: this.parseDrawOptions(drawOptions)
             });
           }
-          
-          // 为每个node添加独立的元素
-          nodeMatches.forEach((node) => {
-            // 确定node的位置：
-            // 如果node在路径中间，我们需要分析它应该位于哪个坐标
-            let nodePosition = this.determineNodePosition(drawPath, cleanPath, node);
-            
-            this.drawElements.push({
-              type: 'node',
-              path: nodePosition,
-              nodeOptions: node.nodeOptions.trim(),
-              nodeText: node.nodeText.trim(),
-              options: { color: options.color }
-            });
-          });
         }
-      }
-
-      // 解析坐标轴设置（支持双反斜杠）
-      const axisMatch = trimmedLine.match(/\\\\?tikzset\s*\{([^}]+)\}/);
-      if (axisMatch) {
-        this.parseAxisOptions(axisMatch[1]);
+        
+        // 解析坐标轴设置
+        if (trimmedLine.includes('\\begin{axis}') || trimmedLine.includes('\\begin{tikzpicture}')) {
+          this.parseAxisOptions(trimmedLine);
+        }
+        
+        // 解析函数定义
+        if (trimmedLine.includes('\\addplot')) {
+          this.parseAddPlot(trimmedLine);
+        }
+        
+      } catch (error) {
+        console.warn(`第${lineNumber + 1}行解析失败:`, error);
+        continue;
       }
     }
-    
   }
 
   /**
-   * 确定node的位置坐标
+   * 解析plot命令
    */
-  private determineNodePosition(originalPath: string, cleanPath: string, nodeInfo: any): string {
-    // 提取所有坐标点
-    const coordMatches = cleanPath.match(/\(([^)]+)\)/g);
-    if (!coordMatches || coordMatches.length === 0) {
-      return cleanPath; // 返回原路径作为后备
+  private parsePlotCommand(line: string) {
+    // 匹配 plot 命令（支持双反斜杠）
+    const plotMatch = line.match(/\\\\?draw\s*(?:\[([^\]]*)\])?\s*plot\s*(?:\[([^\]]*)\])?\s*\{([^}]+)\}/);
+    if (plotMatch) {
+      const drawOptions = plotMatch[1] || '';
+      const plotOptions = plotMatch[2] || '';
+      const expression = plotMatch[3];
+
+      // 解析选项
+      const options = this.parsePlotOptions(drawOptions, plotOptions);
+      
+      // 添加函数
+      this.addFunction(expression, options);
     }
-    
-    // 分析node在原始路径中的位置
-    const beforeNode = originalPath.substring(0, nodeInfo.startIndex);
-    const coordsBeforeNode = beforeNode.match(/\(([^)]+)\)/g) || [];
-    
-    // 确定node应该关联的坐标
-    let targetCoord: string;
-    
-    if (coordsBeforeNode.length > 0) {
-      // node前面有坐标，使用最后一个坐标
-      targetCoord = coordsBeforeNode[coordsBeforeNode.length - 1];
-    } else {
-      // node前面没有坐标，使用第一个坐标
-      targetCoord = coordMatches[0];
+  }
+
+  /**
+   * 解析addplot命令
+   */
+  private parseAddPlot(line: string) {
+    // 匹配 \addplot 命令
+    const addPlotMatch = line.match(/\\addplot\s*(?:\[([^\]]*)\])?\s*\{([^}]+)\}/);
+    if (addPlotMatch) {
+      const options = addPlotMatch[1] || '';
+      const expression = addPlotMatch[2];
+      
+      // 解析选项
+      const parsedOptions = this.parsePlotOptions(options, '');
+      
+      // 添加函数
+      this.addFunction(expression, parsedOptions);
     }
-    
-    // 创建一个只包含目标坐标的路径，用于node定位
-    return `${targetCoord}--${targetCoord}`;
   }
 
   /**
@@ -888,98 +920,23 @@ export class TikZFunctionRenderer {
     if (optionsString.includes('no ticks')) this.options.showTicks = false;
   }
 
-  /**
-   * 解析颜色选项
-   */
-  private parseColor(options: string): string | null {
-    // 匹配颜色名称并转换为适配暗色模式的hex值
-    const colorMatch = options.match(/\b(red|blue|green|yellow|orange|purple|pink|brown|gray|black|white)\b/);
-    if (colorMatch) {
-      const colorName = colorMatch[1];
-      // 根据颜色名称返回适配暗色模式的hex值
-      switch (colorName) {
-        case 'red': return this.getAdaptiveColor('#ff0000', '#ff6666');
-        case 'blue': return this.getAdaptiveColor('#0000ff', '#6666ff');
-        case 'green': return this.getAdaptiveColor('#00ff00', '#66ff66');
-        case 'yellow': return this.getAdaptiveColor('#ffff00', '#ffff66');
-        case 'orange': return this.getAdaptiveColor('#ffa500', '#ffcc66');
-        case 'purple': return this.getAdaptiveColor('#800080', '#cc66cc');
-        case 'pink': return this.getAdaptiveColor('#ffc0cb', '#ffccdd');
-        case 'brown': return this.getAdaptiveColor('#8b4513', '#cc9966');
-        case 'gray': return this.getAdaptiveColor('#808080', '#cccccc');
-        case 'black': return this.getAdaptiveColor('#000000', '#ffffff');
-        case 'white': return this.getAdaptiveColor('#ffffff', '#000000');
-        default: return this.getAdaptiveColor('#000000', '#ffffff');
-      }
-    }
-    
-    // 匹配 RGB 颜色（保持原样，用户自定义颜色）
-    const rgbMatch = options.match(/rgb\(([^)]+)\)/);
-    if (rgbMatch) {
-      return `rgb(${rgbMatch[1]})`;
-    }
-    
-    // 匹配 hex 颜色（保持原样，用户自定义颜色）
-    const hexMatch = options.match(/#[0-9a-fA-F]{6}/);
-    if (hexMatch) {
-      return hexMatch[0];
-    }
-    
-    return null;
-  }
 
-  /**
-   * 解析线宽选项
-   */
-  private parseLineWidth(options: string): number | null {
-    if (options.includes('thick')) return 2;
-    if (options.includes('thin')) return 0.5;
-    if (options.includes('very thick')) return 3;
-    if (options.includes('ultra thick')) return 4;
-    
-    // 匹配具体数值
-    const widthMatch = options.match(/line width=([0-9.]+)/);
-    if (widthMatch) {
-      return parseFloat(widthMatch[1]);
-    }
-    
-    return null;
-  }
-
-  /**
-   * 解析填充选项
-   */
-  private parseFill(options: string): string | null {
-    const fillMatch = options.match(/fill=([^,\]]+)/);
-    if (fillMatch) {
-      return fillMatch[1].trim();
-    }
-    
-    if (options.includes('fill')) {
-      return '#cccccc'; // 默认填充颜色
-    }
-    
-    return null;
-  }
 
   /**
    * 解析矩形绘制命令
    */
   private parseRectangle(path: string, options: any) {
-    // 匹配 (x1,y1) rectangle (x2,y2) 格式
-    const rectMatch = path.match(/\(([^,]+),([^)]+)\)\s+rectangle\s+\(([^,]+),([^)]+)\)/);
-    if (rectMatch) {
-      const x1 = parseFloat(rectMatch[1]);
-      const y1 = parseFloat(rectMatch[2]);
-      const x2 = parseFloat(rectMatch[3]);
-      const y2 = parseFloat(rectMatch[4]);
-      
+    const coords = TikZGeometryParser.parseRectangleCoords(path);
+    
+    if (coords && TikZGeometryParser.validateCoords(coords)) {
       this.drawElements.push({
         type: 'rectangle',
-        x1, y1, x2, y2,
+        x1: coords.x1, 
+        y1: coords.y1, 
+        x2: coords.x2, 
+        y2: coords.y2,
         options
       });
-      
     }
   }
 
@@ -987,16 +944,14 @@ export class TikZFunctionRenderer {
    * 解析圆形绘制命令
    */
   private parseCircle(path: string, options: any) {
-    // 匹配 (x,y) circle (r) 格式
-    const circleMatch = path.match(/\(([^,]+),([^)]+)\)\s+circle\s+\(([^)]+)\)/);
-    if (circleMatch) {
-      const x = parseFloat(circleMatch[1]);
-      const y = parseFloat(circleMatch[2]);
-      const r = parseFloat(circleMatch[3]);
-      
+    const coords = TikZGeometryParser.parseCircleCoords(path);
+    
+    if (coords && TikZGeometryParser.validateCoords(coords)) {
       this.drawElements.push({
         type: 'circle',
-        x, y, r,
+        x: coords.x, 
+        y: coords.y, 
+        r: coords.radius,
         options
       });
     }
@@ -1006,17 +961,15 @@ export class TikZFunctionRenderer {
    * 解析椭圆绘制命令
    */
   private parseEllipse(path: string, options: any) {
-    // 匹配 (x,y) ellipse (rx and ry) 格式
-    const ellipseMatch = path.match(/\(([^,]+),([^)]+)\)\s+ellipse\s+\(([^)]+)\s+and\s+([^)]+)\)/);
-    if (ellipseMatch) {
-      const x = parseFloat(ellipseMatch[1]);
-      const y = parseFloat(ellipseMatch[2]);
-      const rx = parseFloat(ellipseMatch[3]);
-      const ry = parseFloat(ellipseMatch[4]);
-      
+    const coords = TikZGeometryParser.parseEllipseCoords(path);
+    
+    if (coords && TikZGeometryParser.validateCoords(coords)) {
       this.drawElements.push({
         type: 'ellipse',
-        x, y, rx, ry,
+        x: coords.x, 
+        y: coords.y, 
+        rx: coords.rx, 
+        ry: coords.ry,
         options
       });
     }
@@ -1026,21 +979,41 @@ export class TikZFunctionRenderer {
    * 解析圆弧绘制命令
    */
   private parseArc(path: string, options: any) {
-    // 匹配 (x,y) arc (start:end:radius) 格式
-    const arcMatch = path.match(/\(([^,]+),([^)]+)\)\s+arc\s+\(([^:]+):([^:]+):([^)]+)\)/);
-    if (arcMatch) {
-      const x = parseFloat(arcMatch[1]);
-      const y = parseFloat(arcMatch[2]);
-      const startAngle = parseFloat(arcMatch[3]);
-      const endAngle = parseFloat(arcMatch[4]);
-      const radius = parseFloat(arcMatch[5]);
-      
+    const coords = TikZGeometryParser.parseArcCoords(path);
+    
+    if (coords && TikZGeometryParser.validateCoords(coords)) {
       this.drawElements.push({
         type: 'arc',
-        x, y, radius, startAngle, endAngle,
+        x: coords.x, 
+        y: coords.y, 
+        radius: coords.radius, 
+        startAngle: coords.startAngle, 
+        endAngle: coords.endAngle,
         options
       });
+    }
+  }
+
+  /**
+   * 解析网格绘制命令
+   */
+  private parseGrid(path: string, options: string) {
+    const coords = TikZGeometryParser.parseGridCoords(path, options);
+    
+    if (coords && TikZGeometryParser.validateCoords(coords)) {
+      // 解析颜色和线宽
+      const color = TikZStyleParser.parseColor(options) || this.getAdaptiveColor('#cccccc', '#444444');
+      const lineWidth = TikZStyleParser.parseLineWidth(options) || 0.5;
       
+      this.drawElements.push({
+        type: 'grid',
+        x1: coords.x1, 
+        y1: coords.y1, 
+        x2: coords.x2, 
+        y2: coords.y2, 
+        step: coords.step,
+        options: { color, lineWidth }
+      });
     }
   }
 
@@ -1172,5 +1145,118 @@ export class TikZFunctionRenderer {
     
     group.appendChild(path);
     return group;
+  }
+
+  /**
+   * 渲染网格
+   */
+  private renderGrid(element: any): SVGGElement {
+    const group = createSVGElement('g') as SVGGElement;
+    const { x1, y1, x2, y2, step, options } = element;
+    
+    const minX = Math.min(x1, x2);
+    const maxX = Math.max(x1, x2);
+    const minY = Math.min(y1, y2);
+    const maxY = Math.max(y1, y2);
+    
+    // 生成垂直线
+    for (let x = minX; x <= maxX; x += step) {
+      const line = createSVGElement('line');
+      const startPoint = this.dataToScreen(x, minY);
+      const endPoint = this.dataToScreen(x, maxY);
+      
+      setSVGAttributes(line, {
+        x1: startPoint.x,
+        y1: startPoint.y,
+        x2: endPoint.x,
+        y2: endPoint.y,
+        stroke: options.color,
+        'stroke-width': options.lineWidth,
+        opacity: 0.5
+      });
+      
+      group.appendChild(line);
+    }
+    
+    // 生成水平线
+    for (let y = minY; y <= maxY; y += step) {
+      const line = createSVGElement('line');
+      const startPoint = this.dataToScreen(minX, y);
+      const endPoint = this.dataToScreen(maxX, y);
+      
+      setSVGAttributes(line, {
+        x1: startPoint.x,
+        y1: startPoint.y,
+        x2: endPoint.x,
+        y2: endPoint.y,
+        stroke: options.color,
+        'stroke-width': options.lineWidth,
+        opacity: 0.5
+      });
+      
+      group.appendChild(line);
+    }
+    
+    return group;
+  }
+
+  /**
+   * 解析绘图选项
+   */
+  private parseDrawOptions(optionsString: string) {
+    return TikZStyleParser.parseDrawOptions(optionsString);
+  }
+
+  /**
+   * 处理foreach命令
+   */
+  private processForeachCommand(command: string, _lineNumber: number) {
+    if (this.foreachStack.length === 0) return;
+    
+    const currentForeach = this.foreachStack[this.foreachStack.length - 1];
+    
+    // 如果这是第一次处理，设置命令
+    if (currentForeach.command === '') {
+      currentForeach.command = command;
+    }
+    
+    // 使用工具类处理foreach命令
+    TikZForeachUtils.processForeachCommand(currentForeach, (expandedCommand: string, _lineNumber: number) => {
+      // 递归解析展开后的命令
+      try {
+        if (expandedCommand.includes('plot')) {
+          this.parsePlotCommand(expandedCommand);
+        } else if (expandedCommand.includes('\\draw')) {
+          const drawMatch = expandedCommand.match(/\\\\?draw\s*(?:\[([^\]]*)\])?\s*([^;]+);/);
+          if (drawMatch) {
+            const drawOptions = drawMatch[1] || '';
+            const drawPath = drawMatch[2];
+            
+            if (drawPath.includes('grid')) {
+              this.parseGrid(drawPath, drawOptions);
+            } else if (drawPath.includes('rectangle')) {
+              this.parseRectangle(drawPath, this.parseDrawOptions(drawOptions));
+            } else if (drawPath.includes('circle')) {
+              this.parseCircle(drawPath, this.parseDrawOptions(drawOptions));
+            } else if (drawPath.includes('ellipse')) {
+              this.parseEllipse(drawPath, this.parseDrawOptions(drawOptions));
+            } else if (drawPath.includes('arc')) {
+              this.parseArc(drawPath, this.parseDrawOptions(drawOptions));
+            } else {
+              this.drawElements.push({
+                type: 'line',
+                path: drawPath,
+                options: this.parseDrawOptions(drawOptions)
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.warn(`foreach展开命令解析失败: ${expandedCommand}`, error);
+      }
+    });
+    
+    // 当前foreach处理完成，移除它
+    this.foreachStack.pop();
   }
 }

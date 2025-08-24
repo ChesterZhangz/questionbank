@@ -30,12 +30,13 @@ const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
 const QuestionViewPage = lazy(() => import('./pages/view/QuestionViewPage'));
 const MyEnterprisePage = lazy(() => import('./pages/my-enterprise/MyEnterprisePage'));
 const EnterpriseManagementPage = lazy(() => import('./pages/enterprise-management/EnterpriseManagementPage'));
-const QuestionMediaDemo = lazy(() => import('./pages/QuestionMediaDemo'));
-const TikZSupport = lazy(() => import('./pages/TikZHighlightDemo'));
-const TikZFeaturesDemo = lazy(() => import('./pages/TikZFeaturesDemo'));
 const LaTeXGuide = lazy(() => import('./pages/LaTeXGuide'));
+const LaTeXMathGuide = lazy(() => import('./pages/guide/latex-math'));
+const LaTeXQuestionsGuide = lazy(() => import('./pages/guide/latex-questions'));
+const TikZBasicsGuide = lazy(() => import('./pages/guide/tikz-basics'));
+const TikZFunctionsGuide = lazy(() => import('./pages/guide/tikz-functions'));
+const TikZEffectsGuide = lazy(() => import('./pages/guide/tikz-effects'));
 const FunctionPlottingTestPage = lazy(() => import('./pages/FunctionPlottingTestPage'));
-const TikZFunctionTestPage = lazy(() => import('./pages/TikZFunctionTestPage'));
 
 import { useAuthStore } from './stores/authStore';
 import { BackgroundTaskProvider } from './contexts/BackgroundTaskContext';
@@ -392,48 +393,67 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               } 
             />
-
-            <Route 
-              path="/QuestionMediaDemo" 
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <QuestionMediaDemo />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-
-            <Route 
-              path="/TikZSupport" 
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <TikZSupport />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-
-
-
-            <Route 
-              path="/TikZFeaturesDemo" 
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <TikZFeaturesDemo />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-
                                 <Route 
               path="/LaTeXGuide" 
               element={
                 <ProtectedRoute>
                   <AppLayout>
                     <LaTeXGuide />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/guide/latex/math" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <LaTeXMathGuide />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/guide/latex/questions" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <LaTeXQuestionsGuide />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/guide/tikz/basics" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <TikZBasicsGuide />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/guide/tikz/functions" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <TikZFunctionsGuide />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/guide/tikz/effects" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <TikZEffectsGuide />
                   </AppLayout>
                 </ProtectedRoute>
               } 
@@ -450,16 +470,7 @@ const App: React.FC = () => {
               } 
             />
 
-            <Route 
-              path="/TikZFunctionTest" 
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <TikZFunctionTestPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
+ 
 
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             

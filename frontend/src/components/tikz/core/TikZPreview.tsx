@@ -1,10 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { Code } from 'lucide-react';
-import { ColorParser } from '../features/colors/ColorParser';
 import { GradientEngine } from '../features/colors/GradientEngine';
 import { PatternFiller } from '../features/effects/PatternFiller';
 import { ShadowRenderer } from '../features/effects/ShadowRenderer';
 import { TikZFunctionRenderer } from '../features/plotting/TikZFunctionRenderer';
+import { TikZForeachUtils, type ForeachContext } from '../utils/TikZForeachUtils';
+import { TikZStyleParser } from '../utils/TikZStyleParser';
+import { TikZGeometryParser } from '../utils/TikZGeometryParser';
 
 
 export interface TikZPreviewProps {
@@ -25,11 +27,11 @@ class TikZSimulator {
   private elements: any[] = [];
   private showGrid: boolean;
   private showTitle: boolean;
-  private bounds: { minX: number; minY: number; maxX: number; maxY: number } | null = null;
   private functionRenderer: TikZFunctionRenderer;
+  private foreachStack: Array<ForeachContext> = [];
 
 
-  constructor(width: number = 400, height: number = 300, showGrid: boolean = true, showTitle: boolean = true) {
+  constructor(width: number = 500, height: number = 500, showGrid: boolean = true, showTitle: boolean = true) {
     this.width = width;
     this.height = height;
     this.showGrid = showGrid;
@@ -46,11 +48,12 @@ class TikZSimulator {
   // 解析TikZ代码并生成SVG
   parseAndRender(code: string): string {
     this.elements = [];
+    this.foreachStack = [];
     
     try {
-      // 首先检查是否包含函数绘制代码
-      
-      if (code.includes('\\draw') || code.includes('\\\\draw')) {
+      // 首先检查是否包含函数绘制代码或pgfplots轴环境
+      // 只有明确包含函数绘制或轴环境时才使用TikZFunctionRenderer
+      if (code.includes('plot') || code.includes('\\addplot') || code.includes('\\begin{axis}')) {
         const svgContent = this.functionRenderer.parseAndRender(code);
         if (svgContent) {
           return svgContent;
@@ -58,91 +61,77 @@ class TikZSimulator {
       }
       
       // 否则使用传统TikZ解析
-      this.parseTikZCode(code);
-      
-      // 生成SVG
-      return this.generateSVG();
-    } catch (error) {
-      // 错误日志已清理
-      throw new Error(`TikZ解析失败: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-
-  // 解析TikZ代码
-  private parseTikZCode(code: string) {
     const lines = code.split('\n');
-    let lineNumber = 0;
     
-    for (const line of lines) {
-      lineNumber++;
+      for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
+        const line = lines[lineNumber];
       const trimmedLine = line.trim();
       
-      // 跳过空行和注释
       if (!trimmedLine || trimmedLine.startsWith('%')) {
         continue;
       }
       
       try {
+          // 检查是否有待处理的foreach命令
+          if (this.foreachStack.length > 0) {
+            this.processForeachCommand(trimmedLine, lineNumber);
+            continue;
+          }
+          
+          // 解析 \foreach 命令
+          if (TikZForeachUtils.containsForeach(trimmedLine)) {
+            const foreachContext = TikZForeachUtils.parseForeach(trimmedLine, lineNumber);
+            if (foreachContext) {
+              // 总是存储foreach信息，等待下一行的命令
+              this.foreachStack.push(foreachContext);
+            }
+            continue;
+          }
+          
         // 解析 \draw 命令
         if (trimmedLine.includes('\\draw')) {
           this.parseDrawCommand(trimmedLine, lineNumber);
         }
-        
         // 解析 \fill 命令
         else if (trimmedLine.includes('\\fill')) {
           this.parseFillCommand(trimmedLine, lineNumber);
         }
-        
         // 解析 \node 命令
         else if (trimmedLine.includes('\\node')) {
           this.parseNodeCommand(trimmedLine, lineNumber);
         }
-        
         // 解析 \coordinate 命令
         else if (trimmedLine.includes('\\coordinate')) {
           this.parseCoordinateCommand(trimmedLine, lineNumber);
         }
-        
         // 解析 \path 命令
         else if (trimmedLine.includes('\\path')) {
           this.parsePathCommand(trimmedLine, lineNumber);
         }
-        
         // 解析 \shade 命令
         else if (trimmedLine.includes('\\shade')) {
           this.parseShadeCommand(trimmedLine, lineNumber);
         }
-        
-        // 解析函数绘图命令 \plot
-        else if (trimmedLine.includes('\\plot')) {
-          this.parsePlotCommand(trimmedLine, lineNumber);
-        }
-        
-        // 跳过 \begin{tikzpicture} 和 \end{tikzpicture}
-        else if (trimmedLine.includes('\\begin{tikzpicture}') || trimmedLine.includes('\\end{tikzpicture}')) {
-          continue;
-        }
-        
-        // 记录无法识别的命令
-        else if (trimmedLine.startsWith('\\')) {
-          // 警告日志已清理
+          // 解析 \begin{tikzpicture} 和 \end{tikzpicture}
+          else if (trimmedLine.includes('\\begin{tikzpicture}')) {
+            // 开始新的TikZ图形
+            this.elements = [];
+          }
+          else if (trimmedLine.includes('\\end{tikzpicture}')) {
+            // 结束TikZ图形
+            break;
         }
       } catch (error) {
-        // 错误日志已清理
-        // 继续解析其他行，而不是完全失败
+          console.warn(`第${lineNumber + 1}行解析失败:`, error);
+          continue;
+        }
       }
+      
+      return this.generateSVG();
+    } catch (error) {
+      console.error('TikZ解析失败:', error);
+      return this.generateErrorSVG(error instanceof Error ? error.message : String(error));
     }
-    
-    // 如果没有解析到任何元素，生成一个默认的占位符
-    if (this.elements.length === 0) {
-      this.elements.push({
-        type: 'placeholder',
-        message: '未识别到有效的TikZ命令'
-      });
-    }
-    
-    // 计算边界框用于居中
-    this.calculateBounds();
   }
 
   // 解析 \draw 命令
@@ -153,7 +142,9 @@ class TikZSimulator {
       const style = styleMatch ? styleMatch[1] : '';
       
       // 解析路径
-      if (line.includes('--')) {
+      if (line.includes('grid')) {
+        this.parseGrid(line, style, lineNumber);
+      } else if (line.includes('--')) {
         this.parseLinePath(line, style, lineNumber);
       } else if (line.includes('circle')) {
         this.parseCircle(line, style);
@@ -161,6 +152,10 @@ class TikZSimulator {
         this.parseRectangle(line, style);
       } else if (line.includes('ellipse')) {
         this.parseEllipse(line, style);
+      } else if (line.includes('parabola')) {
+        this.parseParabola(line, style);
+      } else if (line.includes('arc')) {
+        this.parseArc(line, style);
       } else {
         // 尝试解析其他类型的绘制命令
         this.parseGenericDraw(line, style);
@@ -187,10 +182,14 @@ class TikZSimulator {
           if (isNaN(x) || isNaN(y)) {
             throw new Error(`坐标值无效: ${coord}`);
           }
-          // 修复坐标系统：将LaTeX坐标转换为SVG坐标
+                  // 修复坐标系统：将LaTeX坐标转换为SVG坐标，确保在边界内
+        const scale = Math.min(this.width / 8, this.height / 6); // 动态缩放
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
+        
           return { 
-            x: (x + 2) * 50, 
-            y: this.height - (y + 2) * 50  // Y轴翻转
+          x: centerX + x * scale, 
+          y: centerY - y * scale  // Y轴翻转
           };
         } catch (error) {
           throw new Error(`第${index + 1}个坐标解析失败: ${coord}`);
@@ -201,7 +200,7 @@ class TikZSimulator {
       this.elements.push({
         type: 'path',
         points,
-        style: this.parseStyle(style)
+        style: TikZStyleParser.parseDrawOptions(style)
       });
       
       // 添加内嵌节点元素
@@ -217,14 +216,37 @@ class TikZSimulator {
   private parseInlineNodes(line: string, lineNumber: number) {
     const nodes: any[] = [];
     
-    // 匹配 (x,y)node[position]{text} 模式
-    const inlineNodeRegex = /\(([^)]+)\)\s*node\s*(?:\[([^\]]*)\])?\s*\{([^}]+)\}/g;
-    let match;
+    // 首先提取所有坐标
+    const coordMatches = line.match(/\(([^)]+)\)/g);
+    if (!coordMatches || coordMatches.length < 1) {
+      return nodes;
+    }
     
-    while ((match = inlineNodeRegex.exec(line)) !== null) {
+    // 更智能地匹配 node[position]{text} 模式，处理嵌套大括号
+    const nodeMatches = this.extractNodesWithPositions(line);
+    
+    for (const nodeInfo of nodeMatches) {
       try {
-        const [, coordStr, positionStr, text] = match;
-        const [x, y] = coordStr.split(',').map(s => parseFloat(s.trim()));
+        const { positionStr, text, nodeIndex } = nodeInfo;
+        
+        // 确定节点应该放在哪个坐标上
+        // 根据节点在命令中的位置来决定使用哪个坐标
+        let coordIndex = 0;
+        
+        // 分析节点在命令中的位置
+        const beforeNode = line.substring(0, nodeIndex);
+        const coordsBeforeNode = (beforeNode.match(/\(([^)]+)\)/g) || []).length;
+        
+        if (coordsBeforeNode > 0) {
+          // 如果节点前面有坐标，使用最后一个坐标
+          coordIndex = Math.min(coordsBeforeNode - 1, coordMatches.length - 1);
+        } else {
+          // 如果节点在第一个坐标前，使用第一个坐标
+          coordIndex = 0;
+        }
+        
+        const coordStr = coordMatches[coordIndex];
+        const [x, y] = coordStr.replace(/[()]/g, '').split(',').map(s => parseFloat(s.trim()));
         
         if (isNaN(x) || isNaN(y)) {
           console.warn(`第${lineNumber}行: 内嵌节点坐标值无效: (${x},${y})`);
@@ -233,118 +255,307 @@ class TikZSimulator {
         
         // 解析位置参数
         const position = this.parseNodePosition(positionStr || '');
-        const baseX = (x + 2) * 50;
-        const baseY = this.height - (y + 2) * 50;  // Y轴翻转
+        
+        // 使用动态缩放
+        const scale = Math.min(this.width / 8, this.height / 6);
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
+        
+        const baseX = centerX + x * scale;
+        const baseY = centerY - y * scale;  // Y轴翻转
         
         // 根据位置参数调整坐标
         const adjustedPos = this.adjustNodePosition(baseX, baseY, position);
         
         const parsedText = this.parseNodeText(text);
-        // 数学符号使用更大的字体
-        const fontSize = parsedText.hasItalic ? '16px' : '14px';
+        // 数字使用更小的字体，数学符号使用正常字体
+        const fontSize = parsedText.isNumber ? '12px' : (parsedText.isMath ? '14px' : '14px');
         nodes.push({
           type: 'text',
           x: adjustedPos.x,
           y: adjustedPos.y,
           text: parsedText.content,
           italic: parsedText.hasItalic,
-          style: { fill: 'black', fontSize: fontSize, ...position.style }
+          style: { fill: this.getTextColor(), fontSize: fontSize, ...position.style }
         });
       } catch (error) {
-        // 警告日志已清理
+        console.warn(`第${lineNumber}行: 内嵌节点解析失败:`, error);
       }
     }
     
     return nodes;
   }
 
+  // 提取节点信息，包括位置信息，处理嵌套大括号
+  private extractNodesWithPositions(line: string): Array<{positionStr: string, text: string, nodeIndex: number}> {
+    const results: Array<{positionStr: string, text: string, nodeIndex: number}> = [];
+    
+    // 使用更精确的方法来匹配节点，处理嵌套大括号
+    let index = 0;
+    while (index < line.length) {
+      const nodeStart = line.indexOf('node', index);
+      if (nodeStart === -1) break;
+      
+      let currentIndex = nodeStart + 4; // 跳过 'node'
+      
+      // 跳过空白字符
+      while (currentIndex < line.length && /\s/.test(line[currentIndex])) {
+        currentIndex++;
+      }
+      
+      // 解析位置参数 [position]
+      let positionStr = '';
+      if (currentIndex < line.length && line[currentIndex] === '[') {
+        const positionStart = currentIndex + 1;
+        let bracketCount = 1;
+        currentIndex++;
+        
+        while (currentIndex < line.length && bracketCount > 0) {
+          if (line[currentIndex] === '[') bracketCount++;
+          else if (line[currentIndex] === ']') bracketCount--;
+          currentIndex++;
+        }
+        
+        if (bracketCount === 0) {
+          positionStr = line.substring(positionStart, currentIndex - 1);
+        }
+      }
+      
+      // 跳过空白字符
+      while (currentIndex < line.length && /\s/.test(line[currentIndex])) {
+        currentIndex++;
+      }
+      
+      // 解析文本内容 {text}，处理嵌套大括号
+      if (currentIndex < line.length && line[currentIndex] === '{') {
+        const textStart = currentIndex + 1;
+        let braceCount = 1;
+        currentIndex++;
+        
+        while (currentIndex < line.length && braceCount > 0) {
+          if (line[currentIndex] === '{') braceCount++;
+          else if (line[currentIndex] === '}') braceCount--;
+          currentIndex++;
+        }
+        
+        if (braceCount === 0) {
+          const text = line.substring(textStart, currentIndex - 1);
+          results.push({
+            positionStr,
+            text,
+            nodeIndex: nodeStart
+          });
+        }
+      }
+      
+      index = currentIndex;
+    }
+    
+    return results;
+  }
+
   // 解析圆形
   private parseCircle(line: string, style: string) {
-    const coordMatch = line.match(/\(([^)]+)\)/);
-    const radiusMatch = line.match(/circle\s*\(([^)]+)\)/);
+    const coords = TikZGeometryParser.parseCircleCoords(line);
     
-    if (coordMatch && radiusMatch) {
+    if (coords && TikZGeometryParser.validateCoords(coords)) {
       try {
-        const [x, y] = coordMatch[1].split(',').map(s => parseFloat(s.trim()));
-        const radius = parseFloat(radiusMatch[1]);
-        
-        if (isNaN(x) || isNaN(y) || isNaN(radius)) {
-          throw new Error(`坐标或半径值无效: x=${x}, y=${y}, radius=${radius}`);
-        }
+        // 使用动态缩放
+        const scale = Math.min(this.width / 8, this.height / 6);
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
         
         this.elements.push({
           type: 'circle',
-          x: (x + 2) * 50,
-          y: this.height - (y + 2) * 50,  // Y轴翻转
-          radius: radius * 50,
-          style: this.parseStyle(style)
+          x: centerX + coords.x * scale,
+          y: centerY - coords.y * scale,  // Y轴翻转
+          radius: coords.radius * scale,
+          style: TikZStyleParser.parseDrawOptions(style)
         });
       } catch (error) {
         throw new Error(`圆形参数解析失败: ${error instanceof Error ? error.message : String(error)}`);
       }
-    } else {
-      // 警告日志已清理
     }
   }
 
   // 解析矩形
   private parseRectangle(line: string, style: string) {
-    const coordMatch = line.match(/\(([^)]+)\)/);
-    const sizeMatch = line.match(/rectangle\s*\(([^)]+)\)/);
+    const coords = TikZGeometryParser.parseRectangleCoords(line);
     
-    if (coordMatch && sizeMatch) {
+    if (coords && TikZGeometryParser.validateCoords(coords)) {
       try {
-        const [x1, y1] = coordMatch[1].split(',').map(s => parseFloat(s.trim()));
-        const [x2, y2] = sizeMatch[1].split(',').map(s => parseFloat(s.trim()));
-        
-        if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) {
-          throw new Error(`矩形坐标值无效: (${x1},${y1}) to (${x2},${y2})`);
-        }
+        // 使用动态缩放
+        const scale = Math.min(this.width / 8, this.height / 6);
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
         
         this.elements.push({
           type: 'rectangle',
-          x: (x1 + 2) * 50,
-          y: this.height - (y2 + 2) * 50,  // Y轴翻转，使用y2作为顶部
-          width: (x2 - x1) * 50,
-          height: (y2 - y1) * 50,
-          style: this.parseStyle(style)
+          x: centerX + coords.x1 * scale,
+          y: centerY - coords.y2 * scale,  // Y轴翻转，使用y2作为顶部
+          width: (coords.x2 - coords.x1) * scale,
+          height: (coords.y2 - coords.y1) * scale,
+          style: TikZStyleParser.parseDrawOptions(style)
         });
       } catch (error) {
         throw new Error(`矩形参数解析失败: ${error instanceof Error ? error.message : String(error)}`);
       }
-    } else {
-      // 警告日志已清理
     }
   }
 
   // 解析椭圆
   private parseEllipse(line: string, style: string) {
-    const coordMatch = line.match(/\(([^)]+)\)/);
-    const sizeMatch = line.match(/ellipse\s*\(([^)]+)\)/);
+    const coords = TikZGeometryParser.parseEllipseCoords(line);
     
-    if (coordMatch && sizeMatch) {
+    if (coords && TikZGeometryParser.validateCoords(coords)) {
       try {
-        const [x, y] = coordMatch[1].split(',').map(s => parseFloat(s.trim()));
-        const [rx, ry] = sizeMatch[1].split(',').map(s => parseFloat(s.trim()));
-        
-        if (isNaN(x) || isNaN(y) || isNaN(rx) || isNaN(ry)) {
-          throw new Error(`椭圆参数值无效: center=(${x},${y}), radii=(${rx},${ry})`);
-        }
+        // 使用动态缩放
+        const scale = Math.min(this.width / 8, this.height / 6);
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
         
         this.elements.push({
           type: 'ellipse',
-          x: (x + 2) * 50,
-          y: this.height - (y + 2) * 50,  // Y轴翻转
-          rx: rx * 50,
-          ry: ry * 50,
-          style: this.parseStyle(style)
+          x: centerX + coords.x * scale,
+          y: centerY - coords.y * scale,  // Y轴翻转
+          rx: coords.rx * scale,
+          ry: coords.ry * scale,
+          style: TikZStyleParser.parseDrawOptions(style)
         });
       } catch (error) {
         throw new Error(`椭圆参数解析失败: ${error instanceof Error ? error.message : String(error)}`);
       }
-    } else {
-      // 警告日志已清理
     }
+  }
+
+  // 解析抛物线
+  private parseParabola(line: string, style: string) {
+    const coords = TikZGeometryParser.parseParabolaCoords(line);
+    
+    if (coords && TikZGeometryParser.validateCoords(coords)) {
+      try {
+        // 使用动态缩放
+        const scale = Math.min(this.width / 8, this.height / 6);
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
+        
+        // 计算抛物线控制点（顶点）
+        const midX = (coords.x1 + coords.x2) / 2;
+        const controlY = Math.min(coords.y1, coords.y2) - Math.abs(coords.x2 - coords.x1) * 0.3; // 抛物线顶点
+        
+        this.elements.push({
+          type: 'parabola',
+          x1: centerX + coords.x1 * scale,
+          y1: centerY - coords.y1 * scale,
+          x2: centerX + coords.x2 * scale,
+          y2: centerY - coords.y2 * scale,
+          controlX: centerX + midX * scale,
+          controlY: centerY - controlY * scale,
+          style: TikZStyleParser.parseDrawOptions(style)
+        });
+      } catch (error) {
+        throw new Error(`抛物线参数解析失败: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+  }
+
+  // 解析圆弧
+  private parseArc(line: string, style: string) {
+    const coords = TikZGeometryParser.parseArcCoords(line);
+    
+    if (coords && TikZGeometryParser.validateCoords(coords)) {
+      try {
+        // 使用动态缩放
+        const scale = Math.min(this.width / 8, this.height / 6);
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
+        
+        this.elements.push({
+          type: 'arc',
+          x: centerX + coords.x * scale,
+          y: centerY - coords.y * scale,
+          startAngle: coords.startAngle * Math.PI / 180, // 转换为弧度
+          endAngle: coords.endAngle * Math.PI / 180,
+          radius: coords.radius * scale,
+          style: TikZStyleParser.parseDrawOptions(style)
+        });
+      } catch (error) {
+        throw new Error(`圆弧参数解析失败: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+  }
+
+  // 解析网格
+  private parseGrid(line: string, style: string, lineNumber: number) {
+    try {
+      const coords = TikZGeometryParser.parseGridCoords(line, style);
+      
+      if (coords && TikZGeometryParser.validateCoords(coords)) {
+        // 解析颜色，默认为灰色
+        const colorMatch = style.match(/\b(gray|grey|black|blue|red|green|yellow|orange|purple|pink|brown|white)\b/);
+        const color = colorMatch ? colorMatch[1] : 'gray';
+        
+        // 解析线宽
+        const lineWidth = TikZStyleParser.parseLineWidth(style) || 1;
+        
+        // 生成网格线
+        this.generateGridLines(coords.x1, coords.y1, coords.x2, coords.y2, coords.step, color, lineWidth);
+    } else {
+        throw new Error(`无法解析网格命令: ${line}`);
+      }
+    } catch (error) {
+      throw new Error(`第${lineNumber}行: grid命令解析失败: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  // 生成网格线
+  private generateGridLines(x1: number, y1: number, x2: number, y2: number, step: number, color: string, lineWidth: number) {
+    const minX = Math.min(x1, x2);
+    const maxX = Math.max(x1, x2);
+    const minY = Math.min(y1, y2);
+    const maxY = Math.max(y1, y2);
+    
+    // 使用动态缩放
+    const scale = Math.min(this.width / 8, this.height / 6);
+    const centerX = this.width / 2;
+    const centerY = this.height / 2;
+    
+    // 生成垂直线
+    for (let x = minX; x <= maxX; x += step) {
+      this.elements.push({
+        type: 'path',
+        points: [
+          { x: centerX + x * scale, y: centerY - minY * scale },
+          { x: centerX + x * scale, y: centerY - maxY * scale }
+        ],
+        style: {
+          stroke: TikZStyleParser.getColorValue(color),
+          strokeWidth: lineWidth,
+          opacity: 0.5
+        }
+      });
+    }
+      
+      // 生成水平线
+      for (let y = minY; y <= maxY; y += step) {
+        this.elements.push({
+          type: 'path',
+          points: [
+            { x: centerX + minX * scale, y: centerY - y * scale },
+            { x: centerX + maxX * scale, y: centerY - y * scale }
+          ],
+          style: {
+            stroke: TikZStyleParser.getColorValue(color),
+            strokeWidth: lineWidth,
+            opacity: 0.5
+          }
+        });
+    }
+  }
+
+  // 获取适合当前模式的文本颜色
+  private getTextColor(): string {
+    return TikZStyleParser.getTextColor();
   }
 
   // 解析通用绘制命令
@@ -355,11 +566,16 @@ class TikZSimulator {
       try {
         const [x, y] = coordMatch[1].split(',').map(s => parseFloat(s.trim()));
         if (!isNaN(x) && !isNaN(y)) {
+                             // 使用动态缩放
+        const scale = Math.min(this.width / 8, this.height / 6);
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
+        
                      this.elements.push({
              type: 'point',
-             x: (x + 2) * 50,
-             y: this.height - (y + 2) * 50,  // Y轴翻转
-             style: { ...this.parseStyle(style), fill: 'black', r: 2 }
+          x: centerX + x * scale,
+          y: centerY - y * scale,  // Y轴翻转
+             style: { ...TikZStyleParser.parseDrawOptions(style), fill: 'black', r: 2 }
            });
           return;
         }
@@ -400,22 +616,28 @@ class TikZSimulator {
         
         // 解析位置参数
         const position = this.parseNodePosition(styleOrPosition || '');
-        const baseX = (x + 2) * 50;
-        const baseY = this.height - (y + 2) * 50;  // Y轴翻转
+        
+        // 使用动态缩放
+        const scale = Math.min(this.width / 8, this.height / 6);
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
+        
+        const baseX = centerX + x * scale;
+        const baseY = centerY - y * scale;  // Y轴翻转
         
         // 根据位置参数调整坐标
         const adjustedPos = this.adjustNodePosition(baseX, baseY, position);
         
         const parsedText = this.parseNodeText(text);
-        // 数学符号使用更大的字体
-        const fontSize = parsedText.hasItalic ? '16px' : '14px';
+        // 数字使用更小的字体，数学符号使用正常字体
+        const fontSize = parsedText.isNumber ? '12px' : (parsedText.isMath ? '14px' : '14px');
         this.elements.push({
           type: 'text',
           x: adjustedPos.x,
           y: adjustedPos.y,
           text: parsedText.content,
           italic: parsedText.hasItalic,
-          style: { fill: 'black', fontSize: fontSize, ...position.style }
+          style: { fill: this.getTextColor(), fontSize: fontSize, ...position.style }
         });
       } else {
         // 备用解析方式 - 处理简化格式
@@ -431,15 +653,21 @@ class TikZSimulator {
           }
           
           const parsedText = this.parseNodeText(text);
-          // 数学符号使用更大的字体
-          const fontSize = parsedText.hasItalic ? '16px' : '14px';
+          // 数字使用更小的字体，数学符号使用正常字体
+          const fontSize = parsedText.isNumber ? '12px' : (parsedText.isMath ? '14px' : '14px');
+          
+          // 使用动态缩放
+          const scale = Math.min(this.width / 8, this.height / 6);
+          const centerX = this.width / 2;
+          const centerY = this.height / 2;
+          
           this.elements.push({
             type: 'text',
-            x: (x + 2) * 50,
-            y: this.height - (y + 2) * 50,  // Y轴翻转
+            x: centerX + x * scale,
+            y: centerY - y * scale,  // Y轴翻转
             text: parsedText.content,
             italic: parsedText.hasItalic,
-            style: { fill: 'black', fontSize: fontSize }
+            style: { fill: this.getTextColor(), fontSize: fontSize }
           });
         } else {
           // 警告日志已清理
@@ -461,35 +689,35 @@ class TikZSimulator {
 
     if (!params) return position;
 
-    // 解析位置关键词
+    // 解析位置关键词 - 减少偏移量让文字更靠近坐标轴
     if (params.includes('above')) {
       position.anchor = 'above';
-      position.offsetY = -20;
+      position.offsetY = -15;
     } else if (params.includes('below')) {
       position.anchor = 'below';
-      position.offsetY = 20;
+      position.offsetY = 15;
     } else if (params.includes('left')) {
       position.anchor = 'left';
-      position.offsetX = -30;
+      position.offsetX = -20;
     } else if (params.includes('right')) {
       position.anchor = 'right';
-      position.offsetX = 30;
+      position.offsetX = 20;
     } else if (params.includes('above right')) {
       position.anchor = 'above right';
-      position.offsetX = 20;
-      position.offsetY = -20;
+      position.offsetX = 15;
+      position.offsetY = -15;
     } else if (params.includes('above left')) {
       position.anchor = 'above left';
-      position.offsetX = -20;
-      position.offsetY = -20;
+      position.offsetX = -15;
+      position.offsetY = -15;
     } else if (params.includes('below right')) {
       position.anchor = 'below right';
-      position.offsetX = 20;
-      position.offsetY = 20;
+      position.offsetX = 15;
+      position.offsetY = 15;
     } else if (params.includes('below left')) {
       position.anchor = 'below left';
-      position.offsetX = -20;
-      position.offsetY = 20;
+      position.offsetX = -15;
+      position.offsetY = 15;
     }
 
     // 解析颜色
@@ -508,29 +736,319 @@ class TikZSimulator {
     };
   }
 
-  // 解析节点文本（支持LaTeX数学符号）
-  private parseNodeText(text: string): { content: string; hasItalic: boolean } {
+  // 解析节点文本（支持LaTeX数学符号转Unicode）
+  private parseNodeText(text: string): { content: string; hasItalic: boolean; isNumber: boolean; isMath: boolean } {
     // 检查是否包含数学模式
     const hasMathMode = /\$([^$]+)\$/.test(text);
     
-    // 处理简单的LaTeX数学符号
-    const processedText = text
-      .replace(/\$([^$]+)\$/g, '$1')  // 移除$符号，保留内容
+    // 如果包含数学模式，提取并转换内容
+    if (hasMathMode) {
+      const mathContent = text.replace(/\$([^$]+)\$/g, '$1');
+      const convertedText = this.convertLaTeXToUnicode(mathContent);
+      
+      // 检查转换后是否为纯数字
+      const isNumber = /^-?\d+(\.\d+)?$/.test(convertedText.trim());
+      
+      return {
+        content: convertedText,
+        hasItalic: !isNumber, // 数字不使用斜体，其他数学符号使用斜体
+        isNumber: isNumber,
+        isMath: true
+      };
+    }
+    
+    // 普通文本处理
+    const processedText = this.convertLaTeXToUnicode(text);
+    const isNumber = /^-?\d+(\.\d+)?$/.test(processedText.trim());
+    
+    return {
+      content: processedText,
+      hasItalic: false,
+      isNumber: isNumber,
+      isMath: false
+    };
+  }
+
+  // 将LaTeX符号转换为Unicode字符
+  private convertLaTeXToUnicode(text: string): string {
+    return text
+      // 希腊字母
       .replace(/\\alpha/g, 'α')
       .replace(/\\beta/g, 'β')
       .replace(/\\gamma/g, 'γ')
       .replace(/\\delta/g, 'δ')
-      .replace(/\\pi/g, 'π')
+      .replace(/\\epsilon/g, 'ε')
+      .replace(/\\zeta/g, 'ζ')
+      .replace(/\\eta/g, 'η')
       .replace(/\\theta/g, 'θ')
+      .replace(/\\iota/g, 'ι')
+      .replace(/\\kappa/g, 'κ')
       .replace(/\\lambda/g, 'λ')
       .replace(/\\mu/g, 'μ')
+      .replace(/\\nu/g, 'ν')
+      .replace(/\\xi/g, 'ξ')
+      .replace(/\\pi/g, 'π')
+      .replace(/\\rho/g, 'ρ')
       .replace(/\\sigma/g, 'σ')
-      .replace(/\\omega/g, 'ω');
+      .replace(/\\tau/g, 'τ')
+      .replace(/\\upsilon/g, 'υ')
+      .replace(/\\phi/g, 'φ')
+      .replace(/\\chi/g, 'χ')
+      .replace(/\\psi/g, 'ψ')
+      .replace(/\\omega/g, 'ω')
+      // 大写希腊字母
+      .replace(/\\Gamma/g, 'Γ')
+      .replace(/\\Delta/g, 'Δ')
+      .replace(/\\Theta/g, 'Θ')
+      .replace(/\\Lambda/g, 'Λ')
+      .replace(/\\Xi/g, 'Ξ')
+      .replace(/\\Pi/g, 'Π')
+      .replace(/\\Sigma/g, 'Σ')
+      .replace(/\\Upsilon/g, 'Υ')
+      .replace(/\\Phi/g, 'Φ')
+      .replace(/\\Psi/g, 'Ψ')
+      .replace(/\\Omega/g, 'Ω')
+      // 数学符号
+      .replace(/\\infty/g, '∞')
+      .replace(/\\sum/g, '∑')
+      .replace(/\\prod/g, '∏')
+      .replace(/\\int/g, '∫')
+      .replace(/\\partial/g, '∂')
+      .replace(/\\nabla/g, '∇')
+      .replace(/\\pm/g, '±')
+      .replace(/\\mp/g, '∓')
+      .replace(/\\times/g, '×')
+      .replace(/\\div/g, '÷')
+      .replace(/\\cdot/g, '·')
+      .replace(/\\leq/g, '≤')
+      .replace(/\\geq/g, '≥')
+      .replace(/\\neq/g, '≠')
+      .replace(/\\approx/g, '≈')
+      .replace(/\\equiv/g, '≡')
+      .replace(/\\in/g, '∈')
+      .replace(/\\notin/g, '∉')
+      .replace(/\\subset/g, '⊂')
+      .replace(/\\supset/g, '⊃')
+      .replace(/\\subseteq/g, '⊆')
+      .replace(/\\supseteq/g, '⊇')
+      .replace(/\\cap/g, '∩')
+      .replace(/\\cup/g, '∪')
+      .replace(/\\emptyset/g, '∅')
+      .replace(/\\forall/g, '∀')
+      .replace(/\\exists/g, '∃')
+      .replace(/\\neg/g, '¬')
+      .replace(/\\land/g, '∧')
+      .replace(/\\lor/g, '∨')
+      .replace(/\\rightarrow/g, '→')
+      .replace(/\\leftarrow/g, '←')
+      .replace(/\\leftrightarrow/g, '↔')
+      .replace(/\\Rightarrow/g, '⇒')
+      .replace(/\\Leftarrow/g, '⇐')
+      .replace(/\\Leftrightarrow/g, '⇔')
+      // 分数处理 - 使用智能分数解析
+      .replace(/\\(?:d?f|t|c)rac\{([^}]*(?:\{[^}]*\}[^}]*)*)\}\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/g, (_, num, den) => {
+        return this.renderFractionSafe(num, den);
+      })
+      // 二项式系数
+      .replace(/\\binom\{([^}]*(?:\{[^}]*\}[^}]*)*)\}\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/g, (_, n, k) => {
+        return this.renderBinomialSafe(n, k);
+      })
+      // 根号处理
+      .replace(/\\sqrt\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/g, (_, radicand) => {
+        return this.renderSqrtSafe(radicand);
+      })
+      .replace(/\\sqrt\[([^\]]*)\]\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/g, (_, index, radicand) => {
+        return this.renderSqrtSafe(radicand, index);
+      })
+      // 上下标的简单处理（转为普通字符）
+      .replace(/\^(\{[^}]+\}|\w)/g, (_, exp) => {
+        const cleanExp = exp.replace(/[{}]/g, '');
+        return this.toSuperscript(cleanExp);
+      })
+      .replace(/_(\{[^}]+\}|\w)/g, (_, sub) => {
+        const cleanSub = sub.replace(/[{}]/g, '');
+        return this.toSubscript(cleanSub);
+      });
+  }
+
+  // 安全的分数渲染 - 避免递归调用
+  private renderFractionSafe(numerator: string, denominator: string): string {
+    // 只处理基本符号，避免递归
+    const num = this.convertBasicSymbols(numerator.trim());
+    const den = this.convertBasicSymbols(denominator.trim());
     
-    return {
-      content: processedText,
-      hasItalic: hasMathMode
+    // 对于简单的情况，尝试使用Unicode分数字符
+    const simpleFractions: { [key: string]: string } = {
+      '1/2': '½', '1/3': '⅓', '2/3': '⅔', '1/4': '¼', '3/4': '¾',
+      '1/5': '⅕', '2/5': '⅖', '3/5': '⅗', '4/5': '⅘', '1/6': '⅙',
+      '5/6': '⅚', '1/8': '⅛', '3/8': '⅜', '5/8': '⅝', '7/8': '⅞'
     };
+    
+    const fractionKey = `${num}/${den}`;
+    if (simpleFractions[fractionKey]) {
+      return simpleFractions[fractionKey];
+    }
+    
+    // 如果分子或分母为空，特殊处理
+    if (!num && !den) {
+      return '□/□'; // 空分数占位符
+    } else if (!num) {
+      return `□/${den}`;
+    } else if (!den) {
+      return `${num}/□`;
+    }
+    
+    // 对于复杂情况，使用斜杠分隔
+    if (num.length > 3 || den.length > 3 || 
+        num.includes(' ') || den.includes(' ')) {
+      return `(${num})/(${den})`;
+    }
+    
+    // 对于其他情况，使用上标和下标创建美观的分数
+    const numSup = this.toSuperscript(num);
+    const denSub = this.toSubscript(den);
+    
+    // 使用Unicode分数线字符
+    return `${numSup}⁄${denSub}`;
+  }
+
+  // 安全的二项式系数渲染
+  private renderBinomialSafe(n: string, k: string): string {
+    const nProcessed = this.convertBasicSymbols(n.trim());
+    const kProcessed = this.convertBasicSymbols(k.trim());
+    const nSup = this.toSuperscript(nProcessed);
+    const kSub = this.toSubscript(kProcessed);
+    return `C(${nSup},${kSub})`;
+  }
+
+  // 安全的根号渲染
+  private renderSqrtSafe(radicand: string, index?: string): string {
+    const processedRadicand = this.convertBasicSymbols(radicand.trim());
+    if (index) {
+      // 有根指数的根号
+      const processedIndex = this.convertBasicSymbols(index.trim());
+      const indexSup = this.toSuperscript(processedIndex);
+      return `${indexSup}√(${processedRadicand})`;
+    } else {
+      // 平方根
+      return `√(${processedRadicand})`;
+    }
+  }
+
+
+
+  // 转换基本符号（不包含复杂结构，避免递归）
+  private convertBasicSymbols(text: string): string {
+    return text
+      // 希腊字母
+      .replace(/\\alpha/g, 'α')
+      .replace(/\\beta/g, 'β')
+      .replace(/\\gamma/g, 'γ')
+      .replace(/\\delta/g, 'δ')
+      .replace(/\\epsilon/g, 'ε')
+      .replace(/\\zeta/g, 'ζ')
+      .replace(/\\eta/g, 'η')
+      .replace(/\\theta/g, 'θ')
+      .replace(/\\iota/g, 'ι')
+      .replace(/\\kappa/g, 'κ')
+      .replace(/\\lambda/g, 'λ')
+      .replace(/\\mu/g, 'μ')
+      .replace(/\\nu/g, 'ν')
+      .replace(/\\xi/g, 'ξ')
+      .replace(/\\pi/g, 'π')
+      .replace(/\\rho/g, 'ρ')
+      .replace(/\\sigma/g, 'σ')
+      .replace(/\\tau/g, 'τ')
+      .replace(/\\upsilon/g, 'υ')
+      .replace(/\\phi/g, 'φ')
+      .replace(/\\chi/g, 'χ')
+      .replace(/\\psi/g, 'ψ')
+      .replace(/\\omega/g, 'ω')
+      // 大写希腊字母
+      .replace(/\\Gamma/g, 'Γ')
+      .replace(/\\Delta/g, 'Δ')
+      .replace(/\\Theta/g, 'Θ')
+      .replace(/\\Lambda/g, 'Λ')
+      .replace(/\\Xi/g, 'Ξ')
+      .replace(/\\Pi/g, 'Π')
+      .replace(/\\Sigma/g, 'Σ')
+      .replace(/\\Upsilon/g, 'Υ')
+      .replace(/\\Phi/g, 'Φ')
+      .replace(/\\Psi/g, 'Ψ')
+      .replace(/\\Omega/g, 'Ω')
+      // 基本数学符号
+      .replace(/\\infty/g, '∞')
+      .replace(/\\sum/g, '∑')
+      .replace(/\\prod/g, '∏')
+      .replace(/\\int/g, '∫')
+      .replace(/\\partial/g, '∂')
+      .replace(/\\nabla/g, '∇')
+      .replace(/\\pm/g, '±')
+      .replace(/\\mp/g, '∓')
+      .replace(/\\times/g, '×')
+      .replace(/\\div/g, '÷')
+      .replace(/\\cdot/g, '·')
+      .replace(/\\leq/g, '≤')
+      .replace(/\\geq/g, '≥')
+      .replace(/\\neq/g, '≠')
+      .replace(/\\approx/g, '≈')
+      .replace(/\\equiv/g, '≡')
+      .replace(/\\in/g, '∈')
+      .replace(/\\notin/g, '∉')
+      .replace(/\\subset/g, '⊂')
+      .replace(/\\supset/g, '⊃')
+      .replace(/\\subseteq/g, '⊆')
+      .replace(/\\supseteq/g, '⊇')
+      .replace(/\\cap/g, '∩')
+      .replace(/\\cup/g, '∪')
+      .replace(/\\emptyset/g, '∅')
+      .replace(/\\forall/g, '∀')
+      .replace(/\\exists/g, '∃')
+      .replace(/\\neg/g, '¬')
+      .replace(/\\land/g, '∧')
+      .replace(/\\lor/g, '∨')
+      .replace(/\\rightarrow/g, '→')
+      .replace(/\\leftarrow/g, '←')
+      .replace(/\\leftrightarrow/g, '↔')
+      .replace(/\\Rightarrow/g, '⇒')
+      .replace(/\\Leftarrow/g, '⇐')
+      .replace(/\\Leftrightarrow/g, '⇔')
+      // 简单的上下标处理
+      .replace(/\^(\{[^}]+\}|\w)/g, (_, exp) => {
+        const cleanExp = exp.replace(/[{}]/g, '');
+        return this.toSuperscript(cleanExp);
+      })
+      .replace(/_(\{[^}]+\}|\w)/g, (_, sub) => {
+        const cleanSub = sub.replace(/[{}]/g, '');
+        return this.toSubscript(cleanSub);
+      });
+  }
+
+  // 转换为上标字符
+  private toSuperscript(text: string): string {
+    const superscriptMap: { [key: string]: string } = {
+      '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+      '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+      '+': '⁺', '-': '⁻', '=': '⁼', '(': '⁽', ')': '⁾',
+      'n': 'ⁿ', 'i': 'ⁱ', 'x': 'ˣ', 'y': 'ʸ'
+    };
+    
+    return text.split('').map(char => superscriptMap[char] || char).join('');
+  }
+
+  // 转换为下标字符
+  private toSubscript(text: string): string {
+    const subscriptMap: { [key: string]: string } = {
+      '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄',
+      '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉',
+      '+': '₊', '-': '₋', '=': '₌', '(': '₍', ')': '₎',
+      'a': 'ₐ', 'e': 'ₑ', 'h': 'ₕ', 'i': 'ᵢ', 'j': 'ⱼ',
+      'k': 'ₖ', 'l': 'ₗ', 'm': 'ₘ', 'n': 'ₙ', 'o': 'ₒ',
+      'p': 'ₚ', 'r': 'ᵣ', 's': 'ₛ', 't': 'ₜ', 'u': 'ᵤ',
+      'v': 'ᵥ', 'x': 'ₓ'
+    };
+    
+    return text.split('').map(char => subscriptMap[char] || char).join('');
   }
 
   // 解析 \coordinate 命令
@@ -545,10 +1063,15 @@ class TikZSimulator {
           throw new Error(`坐标值无效: (${x},${y})`);
         }
         
+        // 使用动态缩放
+        const scale = Math.min(this.width / 8, this.height / 6);
+        const centerX = this.width / 2;
+        const centerY = this.height / 2;
+        
         this.elements.push({
           type: 'point',
-          x: (x + 2) * 50,
-          y: this.height - (y + 2) * 50,  // Y轴翻转
+          x: centerX + x * scale,
+          y: centerY - y * scale,  // Y轴翻转
           style: { fill: 'red', r: 3 }
         });
       } else {
@@ -575,6 +1098,10 @@ class TikZSimulator {
         this.parseRectangle(line, style);
       } else if (line.includes('ellipse')) {
         this.parseEllipse(line, style);
+      } else if (line.includes('parabola')) {
+        this.parseParabola(line, style);
+      } else if (line.includes('arc')) {
+        this.parseArc(line, style);
       } else {
         // 尝试解析其他类型的路径命令
         this.parseGenericDraw(line, style);
@@ -588,336 +1115,36 @@ class TikZSimulator {
   // 解析 \shade 命令
   private parseShadeCommand(line: string, lineNumber: number) {
     try {
-      // 提取样式
-      const styleMatch = line.match(/\\shade\[([^\]]*)\]/);
-      const style = styleMatch ? styleMatch[1] : '';
+      // 匹配 \shade[options] (x1,y1) to (x2,y2) 格式
+      const shadeMatch = line.match(/\\shade\s*\[([^\]]*)\]\s*\(([^)]+)\)\s+to\s+\(([^)]+)\)/);
       
-      // 解析渐变填充
-      if (line.includes('circle')) {
-        this.parseCircle(line, style);
-      } else if (line.includes('rectangle')) {
-        this.parseRectangle(line, style);
-      } else if (line.includes('ellipse')) {
-        this.parseEllipse(line, style);
-      } else {
-        // 尝试解析其他类型的渐变命令
-        this.parseGenericDraw(line, style);
-      }
-    } catch (error) {
-      // 错误日志已清理
-      throw new Error(`第${lineNumber}行: \\shade命令解析失败`);
-    }
-  }
-
-  // 解析函数绘图命令
-  private parsePlotCommand(line: string, lineNumber: number) {
-    try {
-      // 提取样式
-      const styleMatch = line.match(/\\draw\[([^\]]*)\]/);
-      const style = styleMatch ? styleMatch[1] : '';
-      
-      // 解析domain参数
-      const domainMatch = line.match(/domain=([^,\]]+)/);
-      const samplesMatch = line.match(/samples=(\d+)/);
-      
-      const domain = domainMatch ? domainMatch[1] : '-2:2';
-      const samples = samplesMatch ? parseInt(samplesMatch[1]) : 50;
-      
-      // 解析函数表达式
-      const plotMatch = line.match(/plot\s*\((.*?)\)/);
-      if (plotMatch) {
-        const expression = plotMatch[1];
-        this.generateFunctionPlot(expression, domain, samples, style);
-      }
-    } catch (error) {
-      throw new Error(`第${lineNumber}行: \\plot命令解析失败`);
-    }
-  }
-
-  // 生成函数图像
-  private generateFunctionPlot(expression: string, domain: string, samples: number, style: string) {
-    try {
-      const [minX, maxX] = domain.split(':').map(x => parseFloat(x));
-      const step = (maxX - minX) / samples;
-      const points = [];
-      
-      for (let i = 0; i <= samples; i++) {
-        const x = minX + i * step;
-        const y = this.evaluateFunction(expression, x);
+      if (shadeMatch) {
+        const [, options, start, end] = shadeMatch;
+        const [x1, y1] = start.split(',').map(s => parseFloat(s.trim()));
+        const [x2, y2] = end.split(',').map(s => parseFloat(s.trim()));
         
-        if (!isNaN(y) && isFinite(y)) {
-          points.push({
-            x: (x + 2) * 50,
-            y: this.height - (y + 2) * 50
-          });
-        }
-      }
-      
-      if (points.length > 1) {
+        // 解析样式选项
+        const style = TikZStyleParser.parseDrawOptions(options);
+        
+        // 创建渐变填充的矩形
         this.elements.push({
-          type: 'function',
-          points,
-          style: this.parseStyle(style)
+          type: 'shade',
+          x1, y1, x2, y2,
+          style,
+          lineNumber
         });
       }
     } catch (error) {
-      console.warn('函数绘图生成失败:', error);
+      throw new Error(`第${lineNumber + 1}行: shade命令解析失败: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
-  // 简单的函数求值器
-  private evaluateFunction(expression: string, x: number): number {
-    // 替换常见的数学函数和运算符
-    let expr = expression
-      .replace(/\\x/g, x.toString())
-      .replace(/\^/g, '**')
-      .replace(/sin\(/g, 'Math.sin(')
-      .replace(/cos\(/g, 'Math.cos(')
-      .replace(/tan\(/g, 'Math.tan(')
-      .replace(/ln\(/g, 'Math.log(')
-      .replace(/log\(/g, 'Math.log10(')
-      .replace(/sqrt\(/g, 'Math.sqrt(')
-      .replace(/abs\(/g, 'Math.abs(')
-      .replace(/exp\(/g, 'Math.exp(')
-      .replace(/pi/g, 'Math.PI')
-      .replace(/e/g, 'Math.E');
-    
-    // 处理简单的多项式
-    if (expression.includes('\\x*\\x')) {
-      expr = expr.replace(/\\x\*\\x/g, `${x}*${x}`);
-    }
-    if (expression.includes('\\x')) {
-      expr = expr.replace(/\\x/g, x.toString());
-    }
-    
-    try {
-      // 安全的函数求值
-      return Function('"use strict"; return (' + expr + ')')();
-    } catch (error) {
-      return NaN;
-    }
-  }
 
-  // 计算边界框用于居中和自动扩展
-  private calculateBounds() {
-    if (this.elements.length === 0) {
-      this.bounds = null;
-      return;
-    }
-
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    
-    this.elements.forEach(element => {
-      switch (element.type) {
-        case 'path':
-          element.points.forEach((point: any) => {
-            minX = Math.min(minX, point.x);
-            minY = Math.min(minY, point.y);
-            maxX = Math.max(maxX, point.x);
-            maxY = Math.max(maxY, point.y);
-          });
-          break;
-        case 'circle':
-        case 'ellipse':
-          minX = Math.min(minX, element.x - (element.radius || element.rx));
-          minY = Math.min(minY, element.y - (element.radius || element.ry));
-          maxX = Math.max(maxX, element.x + (element.radius || element.rx));
-          maxY = Math.max(maxY, element.y + (element.radius || element.ry));
-          break;
-        case 'rectangle':
-          minX = Math.min(minX, element.x);
-          minY = Math.min(minY, element.y);
-          maxX = Math.max(maxX, element.x + element.width);
-          maxY = Math.max(maxY, element.y + element.height);
-          break;
-        case 'point':
-          // 点的边界计算，考虑点的半径
-          const pointRadius = element.style?.r || 3;
-          minX = Math.min(minX, element.x - pointRadius);
-          minY = Math.min(minY, element.y - pointRadius);
-          maxX = Math.max(maxX, element.x + pointRadius);
-          maxY = Math.max(maxY, element.y + pointRadius);
-          break;
-        case 'text':
-          // 文本的边界计算，考虑文本的大小
-          const fontSize = parseInt(element.style?.fontSize) || 14;
-          const textWidth = element.text.length * fontSize * 0.6; // 估算文本宽度
-          const textHeight = fontSize;
-          minX = Math.min(minX, element.x - textWidth / 2);
-          minY = Math.min(minY, element.y - textHeight / 2);
-          maxX = Math.max(maxX, element.x + textWidth / 2);
-          maxY = Math.max(maxY, element.y + textHeight / 2);
-          break;
-      }
-    });
-
-    this.bounds = { minX, minY, maxX, maxY };
-    
-    // 自动扩展画布
-    this.autoExpandCanvas();
-  }
-
-  // 自动扩展画布以包含所有图形
-  private autoExpandCanvas() {
-    if (!this.bounds) return;
-
-    const padding = 50; // 边距
-    const requiredWidth = this.bounds.maxX - this.bounds.minX + 2 * padding;
-    const requiredHeight = this.bounds.maxY - this.bounds.minY + 2 * padding;
-
-    // 如果需要的尺寸比当前画布大，就扩展画布
-    if (requiredWidth > this.width) {
-      this.width = Math.max(this.width, requiredWidth);
-    }
-    
-    if (requiredHeight > this.height) {
-      this.height = Math.max(this.height, requiredHeight);
-    }
-  }
 
   // 获取居中偏移量
   private getCenteringOffset() {
-    if (!this.bounds) return { offsetX: 0, offsetY: 0 };
-    
-    const contentWidth = this.bounds.maxX - this.bounds.minX;
-    const contentHeight = this.bounds.maxY - this.bounds.minY;
-    
-    const offsetX = (this.width - contentWidth) / 2 - this.bounds.minX;
-    const offsetY = (this.height - contentHeight) / 2 - this.bounds.minY;
-    
-    return { offsetX, offsetY };
-  }
-
-  // 解析样式
-  private parseStyle(style: string) {
-    const result: any = {};
-    
-    // 线条粗细
-    if (style.includes('thick')) result.strokeWidth = '3';
-    else if (style.includes('thin')) result.strokeWidth = '1';
-    else if (style.includes('ultra thick')) result.strokeWidth = '5';
-    else if (style.includes('very thick')) result.strokeWidth = '4';
-    else if (style.includes('semithick')) result.strokeWidth = '2.5';
-    else if (style.includes('very thin')) result.strokeWidth = '0.5';
-    else if (style.includes('ultra thin')) result.strokeWidth = '0.25';
-    
-    // 使用ColorParser解析颜色
-    const colorPattern = /([a-zA-Z]+)!(\d+)/;
-    const colorMatch = style.match(colorPattern);
-    if (colorMatch) {
-      const [, color, opacity] = colorMatch;
-      const parsedColor = ColorParser.parse(color);
-      result.stroke = parsedColor.value;
-      result.opacity = (parseInt(opacity) / 100).toString();
-    } else {
-      // 基础颜色
-      if (style.includes('blue')) result.stroke = ColorParser.parse('blue').value;
-      else if (style.includes('red')) result.stroke = ColorParser.parse('red').value;
-      else if (style.includes('green')) result.stroke = ColorParser.parse('green').value;
-      else if (style.includes('black')) result.stroke = ColorParser.parse('black').value;
-      else if (style.includes('white')) result.stroke = ColorParser.parse('white').value;
-      else if (style.includes('yellow')) result.stroke = ColorParser.parse('yellow').value;
-      else if (style.includes('orange')) result.stroke = ColorParser.parse('orange').value;
-      else if (style.includes('purple')) result.stroke = ColorParser.parse('purple').value;
-      else if (style.includes('brown')) result.stroke = ColorParser.parse('brown').value;
-      else if (style.includes('pink')) result.stroke = ColorParser.parse('pink').value;
-      else if (style.includes('gray')) result.stroke = ColorParser.parse('gray').value;
-      else if (style.includes('cyan')) result.stroke = ColorParser.parse('cyan').value;
-      else if (style.includes('magenta')) result.stroke = ColorParser.parse('magenta').value;
-    }
-    
-    // 线条样式
-    if (style.includes('dashed')) result.strokeDasharray = '5,5';
-    else if (style.includes('dotted')) result.strokeDasharray = '2,2';
-    else if (style.includes('loosely dashed')) result.strokeDasharray = '10,5';
-    else if (style.includes('densely dashed')) result.strokeDasharray = '3,3';
-    else if (style.includes('loosely dotted')) result.strokeDasharray = '5,2';
-    else if (style.includes('densely dotted')) result.strokeDasharray = '1,1';
-    
-    // 箭头
-    if (style.includes('->')) result.markerEnd = 'url(#arrowhead)';
-    if (style.includes('<-')) result.markerStart = 'url(#arrowhead)';
-    if (style.includes('<->')) {
-      result.markerStart = 'url(#arrowhead)';
-      result.markerEnd = 'url(#arrowhead)';
-    }
-    
-    // 填充
-    if (style.includes('fill')) {
-      if (style.includes('fill=')) {
-        const fillMatch = style.match(/fill=([a-zA-Z!0-9]+)/);
-        if (fillMatch) {
-          const fillColor = fillMatch[1];
-          if (fillColor.includes('!')) {
-            const [color, opacity] = fillColor.split('!');
-            const parsedColor = ColorParser.parse(color);
-            result.fill = parsedColor.value;
-            result.fillOpacity = (parseInt(opacity) / 100).toString();
-          } else {
-            const parsedColor = ColorParser.parse(fillColor);
-            result.fill = parsedColor.value;
-          }
-        }
-      } else {
-        result.fill = result.stroke || 'black';
-      }
-    }
-    
-    // 图案填充支持
-    if (style.includes('pattern=')) {
-      const patternMatch = style.match(/pattern=([a-zA-Z]+)/);
-      if (patternMatch) {
-        result.pattern = patternMatch[1];
-        result.fill = `url(#pattern-${patternMatch[1]})`;
-      }
-    }
-    
-    // 渐变填充支持
-    if (style.includes('top color=') && style.includes('bottom color=')) {
-      const topColorMatch = style.match(/top color=([a-zA-Z]+)/);
-      const bottomColorMatch = style.match(/bottom color=([a-zA-Z]+)/);
-      if (topColorMatch && bottomColorMatch) {
-        result.gradient = {
-          type: 'vertical',
-          startColor: ColorParser.parse(topColorMatch[1]).value,
-          endColor: ColorParser.parse(bottomColorMatch[1]).value
-        };
-        result.fill = 'url(#gradient-vertical)';
-      }
-    }
-    
-    if (style.includes('left color=') && style.includes('right color=')) {
-      const leftColorMatch = style.match(/left color=([a-zA-Z]+)/);
-      const rightColorMatch = style.match(/right color=([a-zA-Z]+)/);
-      if (leftColorMatch && rightColorMatch) {
-        result.gradient = {
-          type: 'horizontal',
-          startColor: ColorParser.parse(leftColorMatch[1]).value,
-          endColor: ColorParser.parse(rightColorMatch[1]).value
-        };
-        result.fill = 'url(#gradient-horizontal)';
-      }
-    }
-    
-    // 阴影效果
-    if (style.includes('drop shadow')) {
-      result.dropShadow = true;
-      result.filter = 'url(#dropshadow)';
-    }
-    
-    // 透明度
-    if (style.includes('opacity=')) {
-      const opacityMatch = style.match(/opacity=([0-9.]+)/);
-      if (opacityMatch) {
-        result.opacity = opacityMatch[1];
-      }
-    }
-    
-    // 默认样式
-    if (!result.stroke) result.stroke = 'black';
-    if (!result.strokeWidth) result.strokeWidth = '2';
-    
-    return result;
+    // 简化版本，返回0偏移
+    return { offsetX: 0, offsetY: 0 };
   }
 
   // 生成SVG
@@ -927,8 +1154,8 @@ class TikZSimulator {
     // 添加SVG定义
     svgContent += this.generateDefinitions();
     
-    // 背景
-    svgContent += `<rect width="${this.width}" height="${this.height}" fill="#f8f9fa" stroke="#e9ecef" stroke-width="1"/>`;
+    // 完全透明背景，无边框
+    svgContent += `<rect width="${this.width}" height="${this.height}" fill="rgba(0,0,0,0)" stroke="none"/>`;
     
     // 网格线（可选）
     if (this.showGrid) {
@@ -947,7 +1174,7 @@ class TikZSimulator {
     
     // 添加标题（可选）
     if (this.showTitle) {
-      svgContent += `<text x="${this.width / 2}" y="${this.height - 10}" text-anchor="middle" font-size="12" fill="#666">TikZ 模拟渲染</text>`;
+      svgContent += `<text x="${this.width / 2}" y="${this.height - 20}" text-anchor="middle" font-size="12" fill="#666">TikZ 模拟渲染</text>`;
     }
     
     svgContent += '</svg>';
@@ -958,13 +1185,42 @@ class TikZSimulator {
   private generateDefinitions(): string {
     let defs = '<defs>';
     
-    // 箭头标记
+    // 基础箭头标记 - 支持暗色模式
+    const isDarkMode = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+    const defaultArrowColor = isDarkMode ? '#e5e7eb' : '#000000';
+    
+    // 默认箭头
     defs += `
       <marker id="arrowhead" markerWidth="10" markerHeight="7" 
               refX="10" refY="3.5" orient="auto">
-        <polygon points="0 0, 10 3.5, 0 7" fill="black" />
+        <polygon points="0 0, 10 3.5, 0 7" fill="${defaultArrowColor}" />
       </marker>
     `;
+    
+    // 为常见颜色生成专门的箭头
+    const commonColors = [
+      { name: 'red', color: '#ff0000' },
+      { name: 'blue', color: '#0000ff' },
+      { name: 'green', color: '#00ff00' },
+      { name: 'yellow', color: '#ffff00' },
+      { name: 'orange', color: '#ffa500' },
+      { name: 'purple', color: '#800080' },
+      { name: 'pink', color: '#ffc0cb' },
+      { name: 'brown', color: '#8b4513' },
+      { name: 'gray', color: '#808080' },
+      { name: 'grey', color: '#808080' },
+      { name: 'black', color: '#000000' },
+      { name: 'white', color: '#ffffff' }
+    ];
+    
+    commonColors.forEach(({ name, color }) => {
+      defs += `
+        <marker id="arrowhead-${name}" markerWidth="10" markerHeight="7" 
+                refX="10" refY="3.5" orient="auto">
+          <polygon points="0 0, 10 3.5, 0 7" fill="${color}" />
+        </marker>
+      `;
+    });
     
     // 使用ShadowRenderer创建阴影滤镜
     const shadow = ShadowRenderer.createDefaultShadow();
@@ -1016,14 +1272,18 @@ class TikZSimulator {
   // 生成网格
   private generateGrid(): string {
     let grid = '';
-    const gridSize = 50;
+    const gridSize = 60;
+    
+    // 支持暗色模式
+    const isDarkMode = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+    const gridColor = isDarkMode ? '#404040' : '#e9ecef';
     
     for (let x = 0; x <= this.width; x += gridSize) {
-      grid += `<line x1="${x}" y1="0" x2="${x}" y2="${this.height}" stroke="#e9ecef" stroke-width="0.5" opacity="0.5"/>`;
+      grid += `<line x1="${x}" y1="0" x2="${x}" y2="${this.height}" stroke="${gridColor}" stroke-width="0.5" opacity="0.5"/>`;
     }
     
     for (let y = 0; y <= this.height; y += gridSize) {
-      grid += `<line x1="0" y1="${y}" x2="${this.width}" y2="${y}" stroke="#e9ecef" stroke-width="0.5" opacity="0.5"/>`;
+      grid += `<line x1="0" y1="${y}" x2="${this.width}" y2="${y}" stroke="${gridColor}" stroke-width="0.5" opacity="0.5"/>`;
     }
     
     return grid;
@@ -1055,6 +1315,10 @@ class TikZSimulator {
           return this.renderRectangle(element, offsetX, offsetY);
         case 'ellipse':
           return this.renderEllipse(element, offsetX, offsetY);
+        case 'parabola':
+          return this.renderParabola(element, offsetX, offsetY);
+        case 'arc':
+          return this.renderArc(element, offsetX, offsetY);
         case 'text':
           return this.renderText(element, offsetX, offsetY);
         case 'point':
@@ -1080,7 +1344,9 @@ class TikZSimulator {
         `${index === 0 ? 'M' : 'L'} ${point.x + offsetX} ${point.y + offsetY}`
       ).join(' ');
       
-      let pathAttributes = `stroke="${element.style.stroke}" stroke-width="${element.style.strokeWidth}"`;
+      // 获取适合当前模式的描边颜色
+      const strokeColor = element.style.stroke || element.style.color || this.getTextColor();
+      let pathAttributes = `stroke="${strokeColor}" stroke-width="${element.style.strokeWidth || element.style.lineWidth || 1}"`;
       
       if (element.style.strokeDasharray) {
         pathAttributes += ` stroke-dasharray="${element.style.strokeDasharray}"`;
@@ -1096,6 +1362,22 @@ class TikZSimulator {
         pathAttributes += ` opacity="${element.style.opacity}"`;
       }
       
+      // 添加箭头标记
+      if (element.style.hasArrow || element.style.arrow) {
+        // 根据线条颜色选择对应的箭头
+        let arrowId = 'arrowhead'; // 默认箭头
+        
+        if (element.style.color) {
+          // 尝试匹配颜色名称
+          const colorName = TikZStyleParser.getColorName(element.style.color);
+          if (colorName) {
+            arrowId = `arrowhead-${colorName}`;
+          }
+        }
+        
+        pathAttributes += ` marker-end="url(#${arrowId})"`;
+      }
+      
       return `<path d="${d}" ${pathAttributes}/>`;
     } catch (error) {
       // 错误日志已清理
@@ -1106,7 +1388,9 @@ class TikZSimulator {
   // 渲染圆形
   private renderCircle(element: any, offsetX: number = 0, offsetY: number = 0): string {
     try {
-      let circleAttributes = `stroke="${element.style.stroke}" stroke-width="${element.style.strokeWidth}"`;
+      // 获取适合当前模式的描边颜色
+      const strokeColor = element.style.stroke || this.getTextColor();
+      let circleAttributes = `stroke="${strokeColor}" stroke-width="${element.style.strokeWidth}"`;
       
       if (element.style.strokeDasharray) {
         circleAttributes += ` stroke-dasharray="${element.style.strokeDasharray}"`;
@@ -1132,7 +1416,9 @@ class TikZSimulator {
   // 渲染矩形
   private renderRectangle(element: any, offsetX: number = 0, offsetY: number = 0): string {
     try {
-      return `<rect x="${element.x + offsetX}" y="${element.y + offsetY}" width="${element.width}" height="${element.height}" stroke="${element.style.stroke}" stroke-width="${element.style.strokeWidth}" fill="none"/>`;
+      // 获取适合当前模式的描边颜色
+      const strokeColor = element.style.stroke || this.getTextColor();
+      return `<rect x="${element.x + offsetX}" y="${element.y + offsetY}" width="${element.width}" height="${element.height}" stroke="${strokeColor}" stroke-width="${element.style.strokeWidth}" fill="none"/>`;
     } catch (error) {
       // 错误日志已清理
       return '';
@@ -1142,7 +1428,96 @@ class TikZSimulator {
   // 渲染椭圆
   private renderEllipse(element: any, offsetX: number = 0, offsetY: number = 0): string {
     try {
-      return `<ellipse cx="${element.x + offsetX}" cy="${element.y + offsetY}" rx="${element.rx}" ry="${element.ry}" stroke="${element.style.stroke}" stroke-width="${element.style.strokeWidth}" fill="none"/>`;
+      // 获取适合当前模式的描边颜色
+      const strokeColor = element.style.stroke || this.getTextColor();
+      let ellipseAttributes = `stroke="${strokeColor}" stroke-width="${element.style.strokeWidth}"`;
+      
+      if (element.style.strokeDasharray) {
+        ellipseAttributes += ` stroke-dasharray="${element.style.strokeDasharray}"`;
+      }
+      
+      if (element.style.fill) {
+        ellipseAttributes += ` fill="${element.style.fill}"`;
+      } else {
+        ellipseAttributes += ` fill="none"`;
+      }
+      
+      if (element.style.opacity) {
+        ellipseAttributes += ` opacity="${element.style.opacity}"`;
+      }
+      
+      return `<ellipse cx="${element.x + offsetX}" cy="${element.y + offsetY}" rx="${element.rx}" ry="${element.ry}" ${ellipseAttributes}/>`;
+    } catch (error) {
+      // 错误日志已清理
+      return '';
+    }
+  }
+
+  // 渲染抛物线
+  private renderParabola(element: any, offsetX: number = 0, offsetY: number = 0): string {
+    try {
+      // 获取适合当前模式的描边颜色
+      const strokeColor = element.style.stroke || this.getTextColor();
+      let pathAttributes = `stroke="${strokeColor}" stroke-width="${element.style.strokeWidth || 1}"`;
+      
+      if (element.style.strokeDasharray) {
+        pathAttributes += ` stroke-dasharray="${element.style.strokeDasharray}"`;
+      }
+      
+      if (element.style.fill) {
+        pathAttributes += ` fill="${element.style.fill}"`;
+      } else {
+        pathAttributes += ` fill="none"`;
+      }
+      
+      if (element.style.opacity) {
+        pathAttributes += ` opacity="${element.style.opacity}"`;
+      }
+      
+      // 使用二次贝塞尔曲线绘制抛物线
+      const d = `M ${element.x1 + offsetX} ${element.y1 + offsetY} Q ${element.controlX + offsetX} ${element.controlY + offsetY} ${element.x2 + offsetX} ${element.y2 + offsetY}`;
+      
+      return `<path d="${d}" ${pathAttributes}/>`;
+    } catch (error) {
+      // 错误日志已清理
+      return '';
+    }
+  }
+
+  // 渲染圆弧
+  private renderArc(element: any, offsetX: number = 0, offsetY: number = 0): string {
+    try {
+      // 获取适合当前模式的描边颜色
+      const strokeColor = element.style.stroke || this.getTextColor();
+      let arcAttributes = `stroke="${strokeColor}" stroke-width="${element.style.strokeWidth || 1}"`;
+      
+      if (element.style.strokeDasharray) {
+        arcAttributes += ` stroke-dasharray="${element.style.strokeDasharray}"`;
+      }
+      
+      if (element.style.fill) {
+        arcAttributes += ` fill="${element.style.fill}"`;
+      } else {
+        arcAttributes += ` fill="none"`;
+      }
+      
+      if (element.style.opacity) {
+        arcAttributes += ` opacity="${element.style.opacity}"`;
+      }
+      
+      // 计算圆弧的起始和结束点
+      const startX = element.x + offsetX + element.radius * Math.cos(element.startAngle);
+      const startY = element.y + offsetY - element.radius * Math.sin(element.startAngle);
+      const endX = element.x + offsetX + element.radius * Math.cos(element.endAngle);
+      const endY = element.y + offsetY - element.radius * Math.sin(element.endAngle);
+      
+      // 计算大弧标志
+      const largeArcFlag = Math.abs(element.endAngle - element.startAngle) > Math.PI ? 1 : 0;
+      
+      // 使用SVG的A命令绘制圆弧
+      const d = `M ${startX} ${startY} A ${element.radius} ${element.radius} 0 ${largeArcFlag} 0 ${endX} ${endY}`;
+      
+      return `<path d="${d}" ${arcAttributes}/>`;
     } catch (error) {
       // 错误日志已清理
       return '';
@@ -1189,7 +1564,9 @@ class TikZSimulator {
         `${index === 0 ? 'M' : 'L'} ${point.x + offsetX} ${point.y + offsetY}`
       ).join(' ');
       
-      let pathAttributes = `stroke="${element.style.stroke}" stroke-width="${element.style.strokeWidth}"`;
+      // 获取适合当前模式的描边颜色
+      const strokeColor = element.style.stroke || this.getTextColor();
+      let pathAttributes = `stroke="${strokeColor}" stroke-width="${element.style.strokeWidth}"`;
       
       if (element.style.strokeDasharray) {
         pathAttributes += ` stroke-dasharray="${element.style.strokeDasharray}"`;
@@ -1211,13 +1588,51 @@ class TikZSimulator {
       return '';
     }
   }
+
+  // 处理foreach命令
+  private processForeachCommand(command: string, lineNumber: number) {
+    if (this.foreachStack.length === 0) return;
+    
+    const currentForeach = this.foreachStack[this.foreachStack.length - 1];
+    
+    // 如果这是第一次处理，设置命令
+    if (currentForeach.command === '') {
+      currentForeach.command = command;
+    }
+    
+    // 使用工具类处理foreach命令
+    TikZForeachUtils.processForeachCommand(currentForeach, (expandedCommand: string, _lineNumber: number) => {
+      // 递归解析展开后的命令
+      if (expandedCommand.includes('\\draw')) {
+        this.parseDrawCommand(expandedCommand, lineNumber);
+      } else if (expandedCommand.includes('\\fill')) {
+        this.parseFillCommand(expandedCommand, lineNumber);
+      } else if (expandedCommand.includes('\\node')) {
+        this.parseNodeCommand(expandedCommand, lineNumber);
+      } else if (expandedCommand.includes('\\coordinate')) {
+        this.parseCoordinateCommand(expandedCommand, lineNumber);
+      } else if (expandedCommand.includes('\\path')) {
+        this.parsePathCommand(expandedCommand, lineNumber);
+      } else if (expandedCommand.includes('\\shade')) {
+        this.parseShadeCommand(expandedCommand, lineNumber);
+      }
+    });
+    
+    // 当前foreach处理完成，移除它
+    this.foreachStack.pop();
+  }
+
+  // 生成错误SVG
+  private generateErrorSVG(message: string): string {
+    return `<svg width="500" height="500" xmlns="http://www.w3.org/2000/svg"><text x="250" y="250" text-anchor="middle" dominant-baseline="middle" font-size="16" fill="red">${message}</text></svg>`;
+  }
 }
 
 export const TikZPreview: React.FC<TikZPreviewProps> = ({
   code,
   format: _format = 'svg', // eslint-disable-line @typescript-eslint/no-unused-vars
-  width = 400,
-  height = 300,
+  width = 500,
+  height = 500,
   showGrid = true,
   showTitle = true,
   className = '',
