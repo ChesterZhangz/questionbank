@@ -566,7 +566,7 @@ export const useQuestionPreviewStore = create<QuestionPreviewState & QuestionPre
             if (processedSource && !processedSource.includes(`T${questionIndex}`)) {
               // 如果来源不为空且不包含当前序号，则添加序号
               processedSource = `${processedSource} T${questionIndex}`;
-            }
+            } 
             
             // 确保数据格式正确，补充媒体数据的必要字段
             const questionData = {

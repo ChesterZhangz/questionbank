@@ -292,7 +292,7 @@ const TikZFunctionsGuide: React.FC = () => {
 \\draw[step=0.5cm,gray,very thin] (-2,-1) grid (2,4);
 \\draw[->, thick] (-2.5,0) -- (2.5,0) node[right] {$x$};
 \\draw[->, thick] (0,-1.5) -- (0,4.5) node[above] {$y$};
-\\draw[red, thick, smooth] plot[domain=-2:2] (\\x,{\\x*\\x});
+\\draw[red, thick, smooth] plot[domain=-2:2] {x^2};
 \\node[red] at (1.5,2.5) {$y = x^2$};
 \\end{tikzpicture}`}
               title="二次函数"
@@ -308,7 +308,7 @@ const TikZFunctionsGuide: React.FC = () => {
 \\draw[step=0.5cm,gray,very thin] (-3,-1.5) grid (3,1.5);
 \\draw[->, thick] (-3.5,0) -- (3.5,0) node[right] {$x$};
 \\draw[->, thick] (0,-2) -- (0,2) node[above] {$y$};
-\\draw[blue, thick, smooth] plot[domain=-3:3] (\\x,{sin(\\x r)});
+\\draw[blue, thick, smooth] plot[domain=-3:3] {sin(x)};
 \\node[blue] at (2,1.2) {$y = \\sin(x)$};
 \\end{tikzpicture}`}
               title="正弦函数"
@@ -324,7 +324,7 @@ const TikZFunctionsGuide: React.FC = () => {
 \\draw[step=0.5cm,gray,very thin] (-2,-1) grid (2,5);
 \\draw[->, thick] (-2.5,0) -- (2.5,0) node[right] {$x$};
 \\draw[->, thick] (0,-1.5) -- (0,5.5) node[above] {$y$};
-\\draw[purple, thick, smooth] plot[domain=-2:2] (\\x,{\\x*\\x + sin(\\x r)});
+\\draw[purple, thick, smooth] plot[domain=-2:2] {x^2 + sin(x)};
 \\node[purple] at (1.5,4) {$y = x^2 + \\sin(x)$};
 \\end{tikzpicture}`}
               title="复合函数"
