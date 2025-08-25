@@ -682,7 +682,7 @@ router.get('/bank/:bid', [
   query('limit').optional().isInt({ min: 1, max: 1000 }).withMessage('每页数量必须在1-1000之间'),
   query('type').optional().isIn(['choice', 'multiple-choice', 'fill', 'solution']).withMessage('题目类型无效'),
   query('difficulty').optional().isInt({ min: 1, max: 5 }).withMessage('难度必须在1-5之间'),
-  query('category').optional().isString().withMessage('分类必须是字符串'),
+  query('category').optional().isArray().withMessage('分类必须是数组'),
   query('search').optional().isString().withMessage('搜索关键词必须是字符串')
 ], async (req: Request, res: Response) => {
   try {
@@ -781,7 +781,7 @@ router.put('/:qid', authMiddleware, [
   body('content.stem').optional().notEmpty().withMessage('题目内容不能为空'),
   body('content.answer').optional().isString().withMessage('答案必须是字符串'),
   body('difficulty').optional().isInt({ min: 1, max: 5 }).withMessage('难度必须在1-5之间'),
-  body('category').optional().isString().withMessage('小题型必须是字符串'),
+  body('category').optional().isArray().withMessage('小题型必须是数组'),
   body('tags').optional().isArray().withMessage('知识点标签必须是数组'),
   body('source').optional().isString().withMessage('题目出处必须是字符串'),
   body('status').optional().isIn(['draft', 'published', 'archived']).withMessage('状态无效')
@@ -843,7 +843,7 @@ router.post('/bank/:bid', authMiddleware, [
   body('content.stem').notEmpty().withMessage('题目内容是必需的'),
   body('content.answer').optional().isString().withMessage('答案必须是字符串'),
   body('difficulty').isInt({ min: 1, max: 5 }).withMessage('难度必须在1-5之间'),
-  body('category').optional().isString().withMessage('小题型必须是字符串'),
+  body('category').optional().isArray().withMessage('小题型必须是数组'),
   body('tags').optional().isArray().withMessage('知识点标签必须是数组'),
   body('source').optional().isString().withMessage('题目出处必须是字符串')
 ], async (req: AuthRequest, res: Response) => {

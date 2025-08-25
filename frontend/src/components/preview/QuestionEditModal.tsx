@@ -78,7 +78,7 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
         },
         difficulty: question.difficulty || 3,
         tags: question.tags || [],
-        category: question.category || '',
+        category: question.category || [],
         source: question.source || ''
       });
       

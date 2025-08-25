@@ -368,7 +368,7 @@ const EditQuestionPage: React.FC = () => {
 
   // 处理分类变化
   const handleCategoryChange = (categories: string[]) => {
-    handleQuestionChange({ category: categories.join(', ') });
+    handleQuestionChange({ category: categories });
   };
 
   // 处理来源变化
@@ -804,7 +804,7 @@ const EditQuestionPage: React.FC = () => {
 
             {/* 小题型设置 */}
             <QuestionTypeSelector
-              selectedTypes={question.category ? [question.category] : []}
+              selectedTypes={Array.isArray(question.category) ? question.category : []}
               onTypesChange={handleCategoryChange}
               maxCount={3}
             />

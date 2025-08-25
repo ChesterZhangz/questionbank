@@ -26,7 +26,7 @@ router.post('/detect', [
   body('stem').notEmpty().withMessage('题目内容是必需的'),
   body('type').isIn(['choice', 'multiple-choice', 'fill', 'solution']).withMessage('题目类型无效'),
   body('difficulty').isInt({ min: 1, max: 5 }).withMessage('难度必须在1-5之间'),
-  body('category').optional().isString().withMessage('小题型必须是字符串'),
+  body('category').optional().isArray().withMessage('小题型必须是数组'),
   body('tags').optional().isArray().withMessage('知识点标签必须是数组'),
   body('options').optional().isArray().withMessage('选项必须是数组'),
   body('answer').optional().isString().withMessage('答案必须是字符串'),

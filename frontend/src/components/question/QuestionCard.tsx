@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Star, 
+  Heart, 
   Eye, 
   Edit, 
   MoreVertical,
@@ -416,10 +416,14 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                     handleFavorite();
                   }}
                   disabled={isFavoriting}
-                  className="p-1"
+                  className={`p-1 ${
+                    isFavorite 
+                      ? 'text-red-500 dark:text-red-400 border-red-300 dark:border-red-600' 
+                      : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                  }`}
                 >
-                  <Star 
-                    className={`w-4 h-4 ${isFavorite ? 'fill-yellow-400 text-yellow-500' : 'text-gray-400 dark:text-gray-500'}`} 
+                  <Heart 
+                    className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} 
                   />
                 </Button>
 
@@ -737,8 +741,8 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                       disabled={isFavoriting}
                       className="p-1"
                     >
-                      <Star 
-                        className={`w-4 h-4 ${isFavorite ? 'fill-yellow-400 text-yellow-500' : 'text-gray-400 dark:text-gray-500'}`} 
+                      <Heart 
+                        className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} 
                       />
                     </Button>
 
@@ -841,7 +845,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                     {formatBankName(bankName)}
                   </span>
                   <span className="flex items-center space-x-1 flex-shrink-0">
-                    <Star className="h-3 w-3 fill-current text-yellow-400 dark:text-yellow-500" />
+                    <Eye className="h-3 w-3 text-gray-400 dark:text-gray-500" />
                     <span className="text-xs">{question.views || 0}</span>
                   </span>
                   <span className="text-xs whitespace-nowrap flex-shrink-0" title={new Date(question.createdAt).toLocaleDateString()}>

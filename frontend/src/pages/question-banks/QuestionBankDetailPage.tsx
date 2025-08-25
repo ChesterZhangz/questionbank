@@ -13,7 +13,7 @@ import {
   Target,
   TrendingUp
 } from 'lucide-react';
-import { questionAPI, questionBankAPI, authAPI } from '../../services/api';
+import { questionAPI, questionBankAPI } from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
 import type { Question, QuestionBank } from '../../types';
 import Button from '../../components/ui/Button';
@@ -153,7 +153,7 @@ const QuestionBankDetailPage: React.FC = () => {
   const handleFavoriteQuestion = async (qid: string) => {
     try {
 
-      const response = await authAPI.toggleFavorite(qid);
+      const response = await questionAPI.toggleFavorite(qid);
       
       if (response.data.success) {
         // 更新本地状态

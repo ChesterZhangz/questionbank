@@ -38,7 +38,7 @@ export interface IQuestion extends Document {
     solutionAnswers?: string[];
     solution?: string;
   };
-  category?: string; // 小题型（最多三个，用逗号分隔）
+  category?: string[]; // 小题型（最多三个）
   tags?: string[]; // 知识点标签（最多五个）
   difficulty: number;
   source?: string; // 题目出处
@@ -128,12 +128,10 @@ const questionSchema = new Schema<IQuestion>({
     }
   },
   category: {
-    type: String,
-    trim: true,
+    type: [String],
+    default: [],
     validate: {
-      validator: function(category: string) {
-        if (!category || typeof category !== 'string') return true;
-        const categories = category.split(',').filter(c => c.trim());
+      validator: function(categories: string[]) {
         return categories.length <= 3;
       },
       message: '小题型最多只能选择三个'
@@ -284,7 +282,7 @@ const questionSchema = new Schema<IQuestion>({
     evaluation: {
       overallRating: {
         type: Number,
-        min: 1,
+        min: 0,
         max: 10
       },
       evaluationReasoning: String,
@@ -294,32 +292,32 @@ const questionSchema = new Schema<IQuestion>({
     coreAbilities: {
       logicalThinking: {
         type: Number,
-        min: 1,
+        min: 0,
         max: 10
       },
       mathematicalIntuition: {
         type: Number,
-        min: 1,
+        min: 0,
         max: 10
       },
       problemSolving: {
         type: Number,
-        min: 1,
+        min: 0,
         max: 10
       },
       analyticalSkills: {
         type: Number,
-        min: 1,
+        min: 0,
         max: 10
       },
       creativeThinking: {
         type: Number,
-        min: 1,
+        min: 0,
         max: 10
       },
       computationalSkills: {
         type: Number,
-        min: 1,
+        min: 0,
         max: 10
       }
     },
@@ -389,6 +387,5 @@ questionSchema.index({ 'tikzCodes.order': 1 }); // TikZ代码顺序索引
 // AI分析相关索引
 questionSchema.index({ 'aiAnalysis.analysisTimestamp': -1 }); // 分析时间索引
 questionSchema.index({ 'aiAnalysis.evaluation.overallRating': -1 }); // 整体评分索引
-questionSchema.index({ 'aiAnalysis.evaluation.confidence': -1 }); // 置信度索引
 
 export const Question = mongoose.model<IQuestion>('Question', questionSchema); 

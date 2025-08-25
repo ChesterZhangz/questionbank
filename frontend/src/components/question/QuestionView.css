@@ -353,15 +353,73 @@
 
 /* 标签优雅效果 */
 .tag-enhanced {
-  background: #10b981;
-  color: white;
-  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.dark .tag-enhanced {
+  background: #374151;
+  color: #e5e7eb;
+  border: 1px solid #4b5563;
 }
 
 .tag-enhanced:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+  background: #e5e7eb;
+  border-color: #d1d5db;
+}
+
+.dark .tag-enhanced:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+/* 分类标签特殊样式 */
+.category-tag {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #dbeafe;
+}
+
+.dark .category-tag {
+  background: #1e3a8a;
+  color: #dbeafe;
+  border: 1px solid #1e40af;
+}
+
+.category-tag:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.dark .category-tag:hover {
+  background: #1e40af;
+  border-color: #3b82f6;
+}
+
+/* 知识点标签特殊样式 */
+.knowledge-tag {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fef3c7;
+}
+
+.dark .knowledge-tag {
+  background: #78350f;
+  color: #fef3c7;
+  border: 1px solid #92400e;
+}
+
+.knowledge-tag:hover {
+  background: #fef3c7;
+  border-color: #fde68a;
+}
+
+.dark .knowledge-tag:hover {
+  background: #92400e;
+  border-color: #f59e0b;
 }
 
 /* 难度星级优雅效果 */
@@ -374,26 +432,64 @@
   transform: scale(1.05);
 }
 
-/* 统计卡片优雅效果 */
-.stats-card-enhanced {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  position: relative;
-  overflow: hidden;
+/* 题目信息卡片样式优化 */
+.question-card-enhanced .bg-purple-50 {
+  background-color: rgba(139, 92, 246, 0.05) !important;
 }
 
-.stats-card-enhanced::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transition: left 0.6s ease;
+.dark .question-card-enhanced .bg-purple-900\/20 {
+  background-color: rgba(139, 92, 246, 0.05) !important;
 }
 
-.stats-card-enhanced:hover::before {
-  left: 100%;
+.question-card-enhanced .bg-red-50 {
+  background-color: rgba(239, 68, 68, 0.05) !important;
+}
+
+.dark .question-card-enhanced .bg-red-900\/20 {
+  background-color: rgba(239, 68, 68, 0.05) !important;
+}
+
+
+
+/* 答案显示控制 */
+.answer-text-toggle {
+  transition: all 0.2s ease;
+}
+
+.answer-text-toggle:hover {
+  transform: translateY(-1px);
+}
+
+.answer-text-toggle span {
+  transition: all 0.2s ease;
+}
+
+/* 正确答案高亮 */
+.correct-option {
+  background: linear-gradient(135deg, #10b981, #34d399);
+  color: white;
+  border: 2px solid #10b981;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.dark .correct-option {
+  background: linear-gradient(135deg, #059669, #10b981);
+  border-color: #059669;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.4);
+}
+
+/* 选择题提示信息样式 */
+.choice-hint {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.dark .choice-hint {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border-color: #475569;
 }
 
 /* 相关题目卡片样式 - 移除放大效果 */

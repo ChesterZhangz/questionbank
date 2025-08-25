@@ -79,11 +79,35 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   // 自动分析队列状态
   const [queueStatus, setQueueStatus] = useState<any>(null);
   
+  // 答案显示控制
+  const [showAnswer, setShowAnswer] = useState(false);
+  
+  // 本地收藏状态管理
+  const [localFavorites, setLocalFavorites] = useState<Set<string>>(favorites);
+  
+  // 当前题目数据状态（用于实时更新收藏数等）
+  const [currentQuestionData, setCurrentQuestionData] = useState<Question | null>(null);
+  
+  // 处理分类数据，兼容字符串和数组格式
+  const getCategoryArray = useCallback((category: string | string[] | undefined): string[] => {
+    if (!category) return [];
+    if (Array.isArray(category)) return category;
+    // 如果是字符串，按逗号分割
+    return category.split(',').map(item => item.trim()).filter(item => item.length > 0);
+  }, []);
+  
   // TikZ预览状态
   const [previewTikZ, setPreviewTikZ] = useState<{ code: string; format: 'svg' | 'png' } | null>(null);
 
   // 获取当前题目
-  const currentQuestion = questions[currentQuestionIndex];
+  const currentQuestion = currentQuestionData || questions[currentQuestionIndex];
+  
+  // 初始化当前题目数据
+  useEffect(() => {
+    if (questions[currentQuestionIndex]) {
+      setCurrentQuestionData(questions[currentQuestionIndex]);
+    }
+  }, [questions, currentQuestionIndex]);
 
   // 当弹窗打开时，设置当前题目索引
   useEffect(() => {
@@ -385,7 +409,6 @@ const QuestionView: React.FC<QuestionViewProps> = ({
     }
   }, [currentQuestionIndex, isOpen, fetchRelatedQuestions]);
 
-  const isFavorite = favorites.has(currentQuestion?.qid || '');
 
   // 处理键盘事件
   useEffect(() => {
@@ -448,13 +471,46 @@ const QuestionView: React.FC<QuestionViewProps> = ({
 
   // 收藏功能
   const handleFavorite = async () => {
-    if (!onFavorite || !currentQuestion) return;
+    if (!currentQuestion) return;
     
     setIsFavoriting(true);
     try {
-      await onFavorite(currentQuestion.qid, !isFavorite);
+      // 直接调用后端API
+      const response = await questionAPI.toggleFavorite(currentQuestion.qid);
+      
+      if (response.data.success) {
+        // 更新本地收藏状态
+        setLocalFavorites(prev => {
+          const newFavorites = new Set(prev);
+          if (response.data.isFavorited) {
+            newFavorites.add(currentQuestion.qid);
+          } else {
+            newFavorites.delete(currentQuestion.qid);
+          }
+          return newFavorites;
+        });
+        
+        // 通知父组件（如果提供了回调）
+        if (onFavorite) {
+          await onFavorite(currentQuestion.qid, response.data.isFavorited);
+        }
+        
+        // 显示提示
+        showSuccessRightSlide('收藏成功', response.data.isFavorited ? '已添加到收藏' : '已取消收藏');
+        
+        // 直接使用返回的收藏数更新本地数据
+        if (currentQuestionData) {
+          setCurrentQuestionData({
+            ...currentQuestionData,
+            favorites: Array(response.data.favoritesCount).fill('user-id') // 创建对应长度的数组
+          });
+        }
+      } else {
+        showErrorRightSlide('收藏失败', '收藏操作失败，请重试');
+      }
     } catch (error) {
       // 错误日志已清理
+      showErrorRightSlide('收藏失败', '收藏操作失败，请重试');
     } finally {
       setIsFavoriting(false);
     }
@@ -510,15 +566,14 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   // 难度文本
   const getDifficultyText = (difficulty: number) => {
     switch (difficulty) {
-      case 1: return '简单';
-      case 2: return '较易';
+      case 1: return '非常简单';
+      case 2: return '简单';
       case 3: return '中等';
-      case 4: return '较难';
-      case 5: return '困难';
+      case 4: return '困难';
+      case 5: return '非常困难';
       default: return '未知';
     }
   };
-
   // 难度星级
   const getDifficultyStars = (difficulty: number) => {
     return '★'.repeat(difficulty) + '☆'.repeat(5 - difficulty);
@@ -577,10 +632,10 @@ const QuestionView: React.FC<QuestionViewProps> = ({
         >
           <motion.div
             className="question-view-container w-full max-w-7xl h-[90vh] rounded-2xl overflow-hidden"
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            initial={{ scale: 0.98, opacity: 0, y: 15 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            exit={{ scale: 0.98, opacity: 0, y: 15 }}
+            transition={{ duration: 0.2 }}
           >
             {/* 头部 */}
             <div className="flex items-center justify-between p-6 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
@@ -595,7 +650,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
               
               <div className="flex items-center space-x-2">
                 {/* 分享按钮 */}
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                   <Button
                     onClick={handleShare}
                     disabled={isSharing}
@@ -608,25 +663,25 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                 </motion.div>
                 
                 {/* 收藏按钮 */}
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                   <Button
                     onClick={handleFavorite}
                     disabled={isFavoriting}
                     variant="outline"
                     size="sm"
                     className={`${
-                      favorites.has(currentQuestion?.qid || '')
+                      localFavorites.has(currentQuestion?.qid || '')
                         ? 'text-red-500 dark:text-red-400 border-red-300 dark:border-red-600'
                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                     }`}
                   >
-                    <Heart className={`w-5 h-5 ${favorites.has(currentQuestion?.qid || '') ? 'fill-current' : ''}`} />
+                    <Heart className={`w-5 h-5 ${localFavorites.has(currentQuestion?.qid || '') ? 'fill-current' : ''}`} />
                   </Button>
                 </motion.div>
                 
                 {/* 编辑按钮 */}
                 {(userRole === 'creator' || userRole === 'manager' || userRole === 'collaborator') && (
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                     <Button
                       onClick={handleEdit}
                       variant="outline"
@@ -639,12 +694,12 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                 )}
                 
                 {/* 关闭按钮 */}
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                   <Button
                     onClick={onClose}
                     variant="outline"
                     size="sm"
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-400"
                   >
                     <X className="w-5 h-5" />
                   </Button>
@@ -658,30 +713,36 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                 {/* 左侧导航 */}
                 <div className="w-16 bg-gray-50 dark:bg-gray-800 flex flex-col items-center justify-center space-y-4 flex-shrink-0">
                   <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    initial={{ opacity: 0, scale: 0.8, x: -15 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    transition={{ duration: 0.15, delay: 0.1, ease: "easeOut" }}
                   >
                     <Button
                       onClick={handlePrevious}
                       disabled={currentQuestionIndex === 0 || isTransitioning}
                       variant="outline"
                       size="sm"
-                      className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
+                      className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-100"
                     >
                       <ChevronLeft className="w-6 h-6" />
                     </Button>
                   </motion.div>
                   
                   <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    initial={{ opacity: 0, scale: 0.8, x: 15 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    transition={{ duration: 0.15, delay: 0.15, ease: "easeOut" }}
                   >
                     <Button
                       onClick={handleNext}
                       disabled={currentQuestionIndex === questions.length - 1 || isTransitioning}
                       variant="outline"
                       size="sm"
-                      className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
+                      className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-100"
                     >
                       <ChevronRight className="w-6 h-6" />
                     </Button>
@@ -699,8 +760,8 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                           className="question-card-enhanced h-[calc(90vh-200px)] overflow-hidden"
                           initial={{ 
                             opacity: 0, 
-                            x: slideDirection === 'left' ? -20 : slideDirection === 'right' ? 20 : 0,
-                            scale: 0.98
+                            x: slideDirection === 'left' ? -15 : slideDirection === 'right' ? 15 : 0,
+                            scale: 0.99
                           }}
                           animate={{ 
                             opacity: 1, 
@@ -708,103 +769,161 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                             scale: 1
                           }}
                           transition={{ 
-                            duration: 0.2,
-                            ease: "easeOut"
+                            duration: 0.15
                           }}
                         >
                           <Card className="h-full flex flex-col">
                             <div className="p-6 flex-1 flex flex-col overflow-hidden">
                               {/* 题目信息头部 */}
-                              <div className="flex items-center justify-between mb-6">
+                              <motion.div 
+                                className="flex items-center justify-between mb-6"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.08, ease: "easeOut" }}
+                              >
                                 <div className="flex items-center space-x-3">
-                                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getQuestionTypeColor(currentQuestion.type)}`}>
+                                  <motion.span 
+                                    className={`px-3 py-1 rounded-full text-sm font-medium ${getQuestionTypeColor(currentQuestion.type)}`}
+                                    initial={{ opacity: 0, scale: 0.8, x: -10 }}
+                                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                                    transition={{ duration: 0.08, delay: 0.02, ease: "easeOut" }}
+                                  >
                                     {getQuestionTypeText(currentQuestion.type)}
-                                  </span>
+                                  </motion.span>
                                   <div className="flex items-center space-x-2">
-                                    <span className="difficulty-stars-enhanced text-sm">
+                                    <motion.span 
+                                      className="difficulty-stars-enhanced text-sm"
+                                      initial={{ opacity: 0, scale: 0.8, x: -8 }}
+                                      animate={{ opacity: 1, scale: 1, x: 0 }}
+                                      transition={{ duration: 0.08, delay: 0.04, ease: "easeOut" }}
+                                    >
                                       {getDifficultyStars(currentQuestion.difficulty)}
-                                    </span>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(currentQuestion.difficulty)}`}>
+                                    </motion.span>
+                                    <motion.span 
+                                      className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(currentQuestion.difficulty)}`}
+                                      initial={{ opacity: 0, scale: 0.8, x: -6 }}
+                                      animate={{ opacity: 1, scale: 1, x: 0 }}
+                                      transition={{ duration: 0.08, delay: 0.06, ease: "easeOut" }}
+                                    >
                                       {getDifficultyText(currentQuestion.difficulty)}
-                                    </span>
+                                    </motion.span>
                                   </div>
                                 </div>
                                 
                                 {/* 题目出处 */}
                                 {currentQuestion.source && (
-                                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                                    <span className="font-medium">出处:</span>
-                                    <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md">
+                                  <motion.div 
+                                    className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400"
+                                    initial={{ opacity: 0, scale: 0.9, x: 10 }}
+                                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                                    transition={{ duration: 0.08, delay: 0.08, ease: "easeOut" }}
+                                  >
+                                    <motion.span 
+                                      className="font-medium"
+                                      initial={{ opacity: 0, scale: 0.8 }}
+                                      animate={{ opacity: 1, scale: 1 }}
+                                      transition={{ duration: 0.06, delay: 0.1, ease: "easeOut" }}
+                                    >
+                                      出处:
+                                    </motion.span>
+                                    <motion.span 
+                                      className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md"
+                                      initial={{ opacity: 0, scale: 0.8 }}
+                                      animate={{ opacity: 1, scale: 1 }}
+                                      transition={{ duration: 0.06, delay: 0.12, ease: "easeOut" }}
+                                    >
                                       {currentQuestion.source}
-                                    </span>
-                                  </div>
+                                    </motion.span>
+                                  </motion.div>
                                 )}
-                              </div>
+                              </motion.div>
 
-                              {/* 标签 */}
-                              <div className="mb-6 space-y-2">
-                                {currentQuestion.category && Array.isArray(currentQuestion.category) && currentQuestion.category.length > 0 && (
-                                  <div className="flex flex-wrap gap-2">
-                                    {currentQuestion.category.map((category, index) => (
-                                      <span
-                                        key={`category-${index}`}
-                                        className="tag-enhanced inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                              {/* 题目标签 */}
+                              <motion.div 
+                                className="mb-6 space-y-3"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.08, delay: 0.1, ease: "easeOut" }}
+                              >
+                                {(() => {
+                                  const categories = getCategoryArray(currentQuestion.category);
+                                  const tags = currentQuestion.tags || [];
+                                  const allTags = [...categories, ...tags];
+                                  
+                                  return allTags.length > 0 ? (
+                                    <div className="space-y-2">
+                                      <motion.div 
+                                        className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                                        initial={{ opacity: 0, scale: 0.9, x: -5 }}
+                                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                                        transition={{ duration: 0.08, delay: 0.12, ease: "easeOut" }}
                                       >
-                                        {category}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-                                {currentQuestion.tags && currentQuestion.tags.length > 0 && (
-                                  <div className="flex flex-wrap gap-2">
-                                    {currentQuestion.tags.map((tag, index) => (
-                                      <span
-                                        key={`tag-${index}`}
-                                        className="tag-enhanced inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                                      >
-                                        {tag}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
+                                        题目标签
+                                      </motion.div>
+                                      <div className="flex flex-wrap gap-2">
+                                        {allTags.map((tag, index) => {
+                                          // 判断标签类型：前几个是小题型，后面是知识点
+                                          const isCategory = index < categories.length;
+                                          const tagClass = isCategory ? 'category-tag' : 'knowledge-tag';
+                                          
+                                          return (
+                                            <motion.span
+                                              key={`tag-${index}`}
+                                              className={`${tagClass} inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200`}
+                                              initial={{ opacity: 0, scale: 0.7, y: 5 }}
+                                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                                              transition={{ 
+                                                duration: 0.06, 
+                                                delay: 0.14 + index * 0.02, 
+                                                ease: "easeOut" 
+                                              }}
+                                            >
+                                              {tag}
+                                            </motion.span>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  ) : null;
+                                })()}
+                              </motion.div>
 
                               {/* 标签页 */}
                               <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
                                 <nav className="-mb-px flex space-x-8">
                                   <motion.button
                                     onClick={() => setActiveTab('question')}
-                                    className={`tab-button-enhanced py-2 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
+                                    className={`tab-button-enhanced py-2 px-1 border-b-2 font-medium text-sm transition-all duration-150 ${
                                       activeTab === 'question'
                                         ? 'active border-blue-500 text-blue-600 dark:text-blue-400'
                                         : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                                     }`}
-                                    whileHover={{ scale: 1.01 }}
-                                    whileTap={{ scale: 0.99 }}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
                                   >
                                     题目
                                   </motion.button>
                                   <motion.button
                                     onClick={() => setActiveTab('solution')}
-                                    className={`tab-button-enhanced py-2 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
+                                    className={`tab-button-enhanced py-2 px-1 border-b-2 font-medium text-sm transition-all duration-150 ${
                                       activeTab === 'solution'
                                         ? 'active border-blue-500 text-blue-600 dark:text-blue-400'
                                         : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                                     }`}
-                                    whileHover={{ scale: 1.01 }}
-                                    whileTap={{ scale: 0.99 }}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
                                   >
                                     解析
                                   </motion.button>
                                   <motion.button
                                     onClick={() => setActiveTab('analysis')}
-                                    className={`tab-button-enhanced py-2 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
+                                    className={`tab-button-enhanced py-2 px-1 border-b-2 font-medium text-sm transition-all duration-150 ${
                                       activeTab === 'analysis'
                                         ? 'active border-blue-500 text-blue-600 dark:text-blue-400'
                                         : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                                     }`}
-                                    whileHover={{ scale: 1.01 }}
-                                    whileTap={{ scale: 0.99 }}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
                                   >
                                     分析
                                   </motion.button>
@@ -817,15 +936,26 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                   {activeTab === 'question' && (
                                     <motion.div
                                       key={`question-${animationKey}`}
-                                      className="fade-in-up"
-                                      initial={{ opacity: 0, y: 5 }}
+                                      initial={{ opacity: 0, y: 8 }}
                                       animate={{ opacity: 1, y: 0 }}
-                                      exit={{ opacity: 0, y: -5 }}
-                                      transition={{ duration: 0.15, ease: "easeOut" }}
+                                      exit={{ opacity: 0, y: -8 }}
+                                      transition={{ duration: 0.12 }}
                                     >
                                       {/* 题目内容 */}
-                                      <div className="mb-6">
-                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">题目内容</h3>
+                                      <motion.div 
+                                        className="mb-6"
+                                        initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        transition={{ duration: 0.08, delay: 0.16, ease: "easeOut" }}
+                                      >
+                                        <motion.h3 
+                                          className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4"
+                                          initial={{ opacity: 0, scale: 0.9, x: -8 }}
+                                          animate={{ opacity: 1, scale: 1, x: 0 }}
+                                          transition={{ duration: 0.08, delay: 0.18, ease: "easeOut" }}
+                                        >
+                                          题目内容
+                                        </motion.h3>
                                         <MagicTextTransition>
                                           <LaTeXPreview 
                                             content={currentQuestion?.content?.stem || '题目内容缺失'} 
@@ -854,12 +984,29 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                  {((currentQuestion?.images && currentQuestion.images.length > 0) || (currentQuestion?.tikzCodes && currentQuestion.tikzCodes.length > 0)) && (
                                           <div className="mt-4 space-y-3">
                                             {/* 媒体内容标题 */}
-                                            <div className="flex items-center space-x-2 mb-2">
-                                              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">图形与图片</span>
-                                              <span className="text-xs text-gray-400 dark:text-gray-500">
+                                            <motion.div 
+                                              className="flex items-center space-x-2 mb-2"
+                                              initial={{ opacity: 0, scale: 0.9, y: 5 }}
+                                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                                              transition={{ duration: 0.08, delay: 0.2, ease: "easeOut" }}
+                                            >
+                                              <motion.span 
+                                                className="text-sm font-medium text-gray-600 dark:text-gray-400"
+                                                initial={{ opacity: 0, scale: 0.8, x: -5 }}
+                                                animate={{ opacity: 1, scale: 1, x: 0 }}
+                                                transition={{ duration: 0.06, delay: 0.22, ease: "easeOut" }}
+                                              >
+                                                图形与图片
+                                              </motion.span>
+                                              <motion.span 
+                                                className="text-xs text-gray-400 dark:text-gray-500"
+                                                initial={{ opacity: 0, scale: 0.8, x: 5 }}
+                                                animate={{ opacity: 1, scale: 1, x: 0 }}
+                                                transition={{ duration: 0.06, delay: 0.24, ease: "easeOut" }}
+                                              >
                                                 ({((currentQuestion.images?.length || 0) + (currentQuestion.tikzCodes?.length || 0))} 个)
-                                              </span>
-                                            </div>
+                                              </motion.span>
+                                            </motion.div>
                                             
                                             {/* 合并的媒体内容显示 */}
                                             <div className="flex space-x-3 overflow-x-auto pb-2">
@@ -913,16 +1060,23 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                             </div>
                                           </div>
                                         )}
-                                      </div>
+                                      </motion.div>
 
                                       {/* 选项 */}
                               <div className="space-y-3">
                                 {currentQuestion.content.options?.map((option, index) => (
-                                  <div
+                                  <motion.div
                                     key={index}
-                                    className="option-card-enhanced flex items-start space-x-3 p-3 rounded-lg border transition-all duration-200"
+                                    className={`option-card-enhanced flex items-start space-x-3 p-3 rounded-lg border transition-all duration-200 ${
+                                      showAnswer && option.isCorrect ? 'correct-option' : ''
+                                    }`}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.08, delay: index * 0.03 }}
                                   >
-                                    <span className="option-number-enhanced flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                    <span className={`option-number-enhanced flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                                      showAnswer && option.isCorrect ? 'bg-white text-green-600' : 'text-white'
+                                    }`}>
                                       {String.fromCharCode(65 + index)}
                                     </span>
                                     <div className="flex-1 min-w-0">
@@ -944,19 +1098,57 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                         }}
                                         variant="compact"
                                         showTitle={false}
-                                        className="question-view-latex-content text-gray-700 dark:text-gray-300 leading-relaxed prose max-w-none dark:prose-invert"
+                                        className={`question-view-latex-content leading-relaxed prose max-w-none dark:prose-invert ${
+                                          showAnswer && option.isCorrect ? 'text-white' : 'text-gray-700 dark:text-gray-300'
+                                        }`}
                                         maxWidth="max-w-none"
                                       />
                                     </div>
-                                  </div>
+                                    {showAnswer && option.isCorrect && (
+                                      <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{ duration: 0.2, delay: 0.1 }}
+                                        className="ml-2 text-green-500"
+                                      >
+                                        ✓
+                                      </motion.div>
+                                    )}
+                                  </motion.div>
                                 ))}
                               </div>
 
-                                      {/* 答案 */}
-                                      {currentQuestion.content.answer && (
+                                      {/* 答案显示控制 */}
                                         <div className="mb-6">
-                                          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">答案</h3>
-                                          <div className="prose max-w-none dark:prose-invert">
+                                        <div className="flex items-center mb-4">
+                                          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                            答案
+                                            <motion.span
+                                              onClick={() => setShowAnswer(!showAnswer)}
+                                              className="answer-text-toggle ml-2 cursor-pointer"
+                                              whileHover={{ scale: 1.02 }}
+                                              whileTap={{ scale: 0.98 }}
+                                            >
+                                              <span className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-semibold">
+                                                {showAnswer ? '隐藏' : '显示'}
+                                              </span>
+                                            </motion.span>
+                                          </h3>
+                                        </div>
+                                        
+                                        {showAnswer && (
+                                          <motion.div
+                                            initial={{ opacity: 0, y: 8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -8 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="prose max-w-none dark:prose-invert"
+                                          >
+                                            {currentQuestion.type === 'choice' || currentQuestion.type === 'multiple-choice' ? (
+                                              <div className="choice-hint text-sm text-gray-600 dark:text-gray-400">
+                                                正确答案已在上方选项中高亮显示
+                                              </div>
+                                            ) : (
                                             <LaTeXPreview 
                                               content={currentQuestion.content.answer} 
                                               config={{ 
@@ -978,20 +1170,20 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                               className="question-view-latex-content text-gray-700 dark:text-gray-300 leading-relaxed prose max-w-none dark:prose-invert"
                                               maxWidth="max-w-none"
                                             />
-                                          </div>
-                                        </div>
                                       )}
+                                          </motion.div>
+                                        )}
+                                      </div>
                                     </motion.div>
                                   )}
 
                                   {activeTab === 'solution' && (
                                     <motion.div
                                       key={`solution-${animationKey}`}
-                                      className="fade-in-up"
-                                      initial={{ opacity: 0, y: 5 }}
+                                      initial={{ opacity: 0, y: 8 }}
                                       animate={{ opacity: 1, y: 0 }}
-                                      exit={{ opacity: 0, y: -5 }}
-                                      transition={{ duration: 0.15, ease: "easeOut" }}
+                                      exit={{ opacity: 0, y: -8 }}
+                                      transition={{ duration: 0.12 }}
                                     >
                                       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">解析</h3>
                                       <div className="prose max-w-none dark:prose-invert">
@@ -1027,11 +1219,10 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                   {activeTab === 'analysis' && (
                                     <motion.div
                                       key={`analysis-${animationKey}`}
-                                      className="fade-in-up"
-                                      initial={{ opacity: 0, y: 5 }}
+                                      initial={{ opacity: 0, y: 8 }}
                                       animate={{ opacity: 1, y: 0 }}
-                                      exit={{ opacity: 0, y: -5 }}
-                                      transition={{ duration: 0.15, ease: "easeOut" }}
+                                      exit={{ opacity: 0, y: -8 }}
+                                      transition={{ duration: 0.12 }}
                                     >
                                       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">AI智能分析</h3>
                                       
@@ -1094,8 +1285,20 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                           )}
                                           
                                           {/* 整体评价 */}
-                                          <div className="mb-6">
-                                            <h4 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">整体评价</h4>
+                                          <motion.div 
+                                            className="mb-6"
+                                            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            transition={{ duration: 0.08, delay: 0.25, ease: "easeOut" }}
+                                          >
+                                            <motion.h4 
+                                              className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3"
+                                              initial={{ opacity: 0, scale: 0.9, x: -8 }}
+                                              animate={{ opacity: 1, scale: 1, x: 0 }}
+                                              transition={{ duration: 0.08, delay: 0.27, ease: "easeOut" }}
+                                            >
+                                              整体评价
+                                            </motion.h4>
                                             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
                                               <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
                                                 {aiAnalysis.evaluation?.overallRating || 7}/10
@@ -1105,13 +1308,32 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                                 {aiAnalysis.evaluation?.evaluationReasoning || '这是一道设计良好的数学题目，逻辑清晰，知识点覆盖全面，能够有效培养学生的逻辑思维和计算能力。'}
                                               </div>
                                             </div>
-                                          </div>
+                                          </motion.div>
                                           
                                           {/* 能力维度图 */}
-                                          <div className="mb-6">
-                                            <h4 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">能力维度评估</h4>
+                                          <motion.div 
+                                            className="mb-6"
+                                            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            transition={{ duration: 0.08, delay: 0.3, ease: "easeOut" }}
+                                          >
+                                            <motion.h4 
+                                              className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3"
+                                              initial={{ opacity: 0, scale: 0.9, x: -8 }}
+                                              animate={{ opacity: 1, scale: 1, x: 0 }}
+                                              transition={{ duration: 0.08, delay: 0.32, ease: "easeOut" }}
+                                            >
+                                              能力维度评估
+                                            </motion.h4>
                                             <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                                              <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-4 text-center">核心能力评估</h5>
+                                              <motion.h5 
+                                                className="font-medium text-gray-900 dark:text-gray-100 mb-4 text-center"
+                                                initial={{ opacity: 0, scale: 0.9, y: 5 }}
+                                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                transition={{ duration: 0.08, delay: 0.35, ease: "easeOut" }}
+                                              >
+                                                核心能力评估
+                                              </motion.h5>
                                               <AbilityRadarChart 
                                                 data={aiAnalysis.coreAbilities || {
                                                   logicalThinking: 7,
@@ -1123,9 +1345,9 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                                 }}
                                                 className="h-80"
                                                 showValues={true}
-                                              />
-                                            </div>
-                                          </div>
+                                                />
+                                              </div>
+                                          </motion.div>
                                         </>
                                       )}
                                       
@@ -1140,7 +1362,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                                 : 'AI分析已自动启动，请稍候...'
                                               }
                                             </p>
-                                          </div>
+                                      </div>
                                         </div>
                                       )}
                                     </motion.div>
@@ -1157,12 +1379,28 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                         {/* 题目信息卡片 */}
                         <Card className="question-card-enhanced">
                           <div className="p-4">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                              <TrendingUp className="w-5 h-5 mr-2 text-blue-500" />
+                            <motion.h3 
+                              className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center"
+                              initial={{ opacity: 0, scale: 0.9, x: -10 }}
+                              animate={{ opacity: 1, scale: 1, x: 0 }}
+                              transition={{ duration: 0.08, delay: 0.15, ease: "easeOut" }}
+                            >
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
+                                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                                transition={{ duration: 0.08, delay: 0.17, ease: "easeOut" }}
+                              >
+                                <TrendingUp className="w-5 h-5 mr-2 text-blue-500" />
+                              </motion.div>
                               题目信息
-                            </h3>
+                            </motion.h3>
                             <div className="space-y-3">
-                              <div className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                              <motion.div 
+                                className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.2, delay: 0.1 }}
+                              >
                                 <div className="flex items-center">
                                   <User className="w-4 h-4 text-blue-500 mr-2" />
                                   <span className="text-xs text-gray-600 dark:text-gray-400">创建者</span>
@@ -1170,9 +1408,14 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                 <span className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate max-w-[80px]" title={currentQuestion.creator.name}>
                                   {currentQuestion.creator.name}
                                 </span>
-                              </div>
+                              </motion.div>
                               
-                              <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                              <motion.div 
+                                className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded-lg"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.2, delay: 0.15 }}
+                              >
                                 <div className="flex items-center">
                                   <Clock className="w-4 h-4 text-green-500 mr-2" />
                                   <span className="text-xs text-gray-600 dark:text-gray-400">创建时间</span>
@@ -1180,22 +1423,39 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                 <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
                                   {new Date(currentQuestion.createdAt).toLocaleDateString()}
                                 </span>
-                              </div>
+                              </motion.div>
                               
-                              {/* 题目统计 */}
-                              <div className="mt-4 p-3 stats-card-enhanced rounded-lg text-white">
-                                <h4 className="font-medium mb-2 text-sm">题目统计</h4>
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div className="text-center">
-                                    <div className="text-lg font-bold">{currentQuestion.views || 0}</div>
-                                    <div className="text-xs opacity-90">浏览量</div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-lg font-bold">{currentQuestion.favorites?.length || 0}</div>
-                                    <div className="text-xs opacity-90">收藏数</div>
-                                  </div>
-                                </div>
+                              {/* 浏览量统计 */}
+                              <motion.div 
+                                className="flex items-center justify-between p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.2, delay: 0.2 }}
+                              >
+                                <div className="flex items-center">
+                                  <Eye className="w-4 h-4 text-purple-500 mr-2" />
+                                  <span className="text-xs text-gray-600 dark:text-gray-400">浏览量</span>
                               </div>
+                                <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
+                                  {currentQuestion.views || 0}
+                                </span>
+                              </motion.div>
+                              
+                              {/* 收藏数统计 */}
+                              <motion.div 
+                                className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/20 rounded-lg"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.2, delay: 0.25 }}
+                              >
+                                <div className="flex items-center">
+                                  <Heart className="w-4 h-4 text-red-500 mr-2" />
+                                  <span className="text-xs text-gray-600 dark:text-gray-400">收藏数</span>
+                                  </div>
+                                <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
+                                  {currentQuestion.favorites?.length || 0}
+                                </span>
+                              </motion.div>
                             </div>
                           </div>
                         </Card>
@@ -1203,18 +1463,30 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                         {/* 相关题目 */}
                         <motion.div
                           key={`related-${animationKey}`}
-                          initial={{ opacity: 0, y: 10 }}
+                          initial={{ opacity: 0, y: 15 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.2, delay: 0.05, ease: "easeOut" }}
+                          transition={{ duration: 0.15, delay: 0.1 }}
                         >
                           <Card className="h-72 lg:h-80 question-card-enhanced">
                             <div className="p-4 lg:p-5 h-full flex flex-col">
                               <div className="flex items-center justify-between mb-4 flex-shrink-0">
                                 <div className="flex items-center space-x-2">
-                                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">相关题目</h3>
-                                  <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+                                  <motion.h3 
+                                    className="text-lg font-semibold text-gray-900 dark:text-gray-100"
+                                    initial={{ opacity: 0, scale: 0.9, x: -8 }}
+                                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                                    transition={{ duration: 0.08, delay: 0.2, ease: "easeOut" }}
+                                  >
+                                    相关题目
+                                  </motion.h3>
+                                  <motion.span 
+                                    className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full"
+                                    initial={{ opacity: 0, scale: 0.8, x: 8 }}
+                                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                                    transition={{ duration: 0.08, delay: 0.22, ease: "easeOut" }}
+                                  >
                                     显示前3个
-                                  </span>
+                                  </motion.span>
                                 </div>
                                 {relatedError && (
                                   <button
@@ -1305,9 +1577,14 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                                     </div>
                                                   </div>
                                                 </div>
-                                                <div className="text-xs text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors font-medium text-center">
+                                                <motion.div 
+                                                  className="text-xs text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors font-medium text-center"
+                                                  initial={{ opacity: 0, scale: 0.8, x: 10 }}
+                                                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                                                  transition={{ duration: 0.08, delay: 0.1, ease: "easeOut" }}
+                                                >
                                                   点击查看 →
-                                                </div>
+                                                </motion.div>
                                               </div>
                                             </div>
                                           </motion.div>
@@ -1346,13 +1623,22 @@ const QuestionView: React.FC<QuestionViewProps> = ({
             </div>
 
             {/* 底部提示 - 固定在底部 */}
-            <div className="p-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400 flex-shrink-0 sticky bottom-0 z-10">
-              <p>
+            <motion.div 
+              className="p-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400 flex-shrink-0 sticky bottom-0 z-10"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.08, delay: 0.4, ease: "easeOut" }}
+            >
+              <motion.p
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.08, delay: 0.42, ease: "easeOut" }}
+              >
                 使用 ← → 键切换题目
                 {(userRole === 'creator' || userRole === 'manager' || userRole === 'collaborator') && '，Ctrl+E 编辑题目'}
                 ，ESC 键关闭弹窗
-              </p>
-            </div>
+              </motion.p>
+            </motion.div>
           </motion.div>
         </motion.div>
       )}

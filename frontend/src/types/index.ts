@@ -120,7 +120,7 @@ export interface Question {
     solutionAnswers?: string[];
     solution?: string;
   };
-  category?: string; // 小题型（最多三个，用逗号分隔）
+  category?: string[]; // 小题型（最多三个）
   tags?: string[]; // 知识点标签（最多五个）
   source?: string; // 题目出处
   creator: User;
@@ -324,7 +324,7 @@ export interface UpdateQuestionRequest {
     solutionAnswers?: string[];
     solution?: string;
   };
-  category?: string;
+  category?: string[];
   tags?: string[];
   source?: string;
   difficulty?: number;
