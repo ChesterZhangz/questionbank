@@ -140,6 +140,7 @@ const versionUpdates: VersionUpdate[] = [
       '解决图片排序问题：支持按order字段进行图片和图形的统一排序',
       '修复图片预览功能缺失问题：为图片添加点击预览交互',
       '解决图片存储空间浪费问题：及时清理临时文件，优化存储效率',
+      '修复题目编辑页面跳转问题',
     ],
     icon: Upload,
     color: 'from-orange-500 to-red-500'

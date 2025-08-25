@@ -306,7 +306,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
 
   // 编辑题目
   const handleEdit = () => {
-            navigate(`/question-banks/${bid}/questions/${question._id}/edit`);
+    navigate(`/question-banks/${bid}/questions/${question.qid}/edit`);
   };
 
   // 删除题目
