@@ -286,7 +286,7 @@ export interface CreateQuestionRequest {
     solutionAnswers?: string[];
     solution?: string;
   };
-  category?: string;
+  category?: string[];
   tags?: string[];
   source?: string;
   difficulty?: number;
@@ -532,7 +532,7 @@ export interface SimilarityResult {
     };
     type: string;
     difficulty: number;
-    category?: string;
+    category?: string[];
     tags?: string[];
     creator: any;
     createdAt: string;
@@ -571,7 +571,7 @@ export interface RealTimeSimilarityResponse {
 
 // AI分析结果类型
 export interface AIAnalysisResult {
-  category: string; // 小题型
+  category: string[]; // 小题型
   tags: string[]; // 知识点标签
   options?: string[]; // 选择题选项
   difficulty: number; // 难度等级 1-5

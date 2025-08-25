@@ -299,24 +299,32 @@ const LaTeXHighlightInput: React.FC<LaTeXHighlightInputProps> = ({
       const beforeCommand = value.substring(0, commandStart);
       const afterCursor = value.substring(cursorPosition);
       
-      // 清理填充字符，将字母替换为空的大括号
-      const cleanedSuggestion = suggestion.text
-        .replace(/\{([a-zA-Z])\}/g, (match, _letter) => {
-          // 检查是否在字体样式命令中
-          const beforeMatch = suggestion.text.substring(0, suggestion.text.indexOf(match));
-          if (beforeMatch.includes('\\mathbb') || beforeMatch.includes('\\mathbf') || beforeMatch.includes('\\mathit') || beforeMatch.includes('\\mathrm') || beforeMatch.includes('\\mathcal') || beforeMatch.includes('\\mathscr') || beforeMatch.includes('\\mathfrak') || beforeMatch.includes('\\text') || beforeMatch.includes('\\texttt') || beforeMatch.includes('\\textsf')) {
-            return match; // 保持原样
-          }
-          return '{}'; // 替换为空大括号
-        })
-        .replace(/\{([a-zA-Z]+)\}/g, (match, _letters) => {
-          // 检查是否在字体样式命令中
-          const beforeMatch = suggestion.text.substring(0, suggestion.text.indexOf(match));
-          if (beforeMatch.includes('\\mathbb') || beforeMatch.includes('\\mathbf') || beforeMatch.includes('\\mathit') || beforeMatch.includes('\\mathrm') || beforeMatch.includes('\\mathcal') || beforeMatch.includes('\\mathscr') || beforeMatch.includes('\\mathfrak') || beforeMatch.includes('\\text') || beforeMatch.includes('\\texttt') || beforeMatch.includes('\\textsf')) {
-            return match; // 保持原样
-          }
-          return '{}'; // 替换为空大括号
-        });
+      // 清理填充字符，将字母替换为空的大括号，但保护LaTeX环境名称
+      let cleanedSuggestion = suggestion.text;
+      
+      // 首先检查是否包含LaTeX环境命令，如果是则完全跳过清理
+      if (suggestion.text.includes('\\begin') || suggestion.text.includes('\\end')) {
+        cleanedSuggestion = suggestion.text; // 保持原样，不进行任何清理
+      } else {
+        // 只对非环境命令进行清理
+        cleanedSuggestion = suggestion.text
+          .replace(/\{([a-zA-Z])\}/g, (match, _letter) => {
+            // 检查是否在字体样式命令中
+            const beforeMatch = suggestion.text.substring(0, suggestion.text.indexOf(match));
+            if (beforeMatch.includes('\\mathbb') || beforeMatch.includes('\\mathbf') || beforeMatch.includes('\\mathit') || beforeMatch.includes('\\mathrm') || beforeMatch.includes('\\mathcal') || beforeMatch.includes('\\mathscr') || beforeMatch.includes('\\mathfrak') || beforeMatch.includes('\\text') || beforeMatch.includes('\\texttt') || beforeMatch.includes('\\textsf')) {
+              return match; // 保持原样
+            }
+            return '{}'; // 替换为空大括号
+          })
+          .replace(/\{([a-zA-Z]+)\}/g, (match, _letters) => {
+            // 检查是否在字体样式命令中
+            const beforeMatch = suggestion.text.substring(0, suggestion.text.indexOf(match));
+            if (beforeMatch.includes('\\mathbb') || beforeMatch.includes('\\mathbf') || beforeMatch.includes('\\mathit') || beforeMatch.includes('\\mathrm') || beforeMatch.includes('\\mathcal') || beforeMatch.includes('\\mathscr') || beforeMatch.includes('\\mathfrak') || beforeMatch.includes('\\text') || beforeMatch.includes('\\texttt') || beforeMatch.includes('\\textsf')) {
+              return match; // 保持原样
+            }
+            return '{}'; // 替换为空大括号
+          });
+      }
       
       // 检查是否在数学模式内
       const isInMathMode = isInsideMathMode(beforeCommand);

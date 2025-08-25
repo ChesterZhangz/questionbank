@@ -719,7 +719,7 @@ export const questionAnalysisAPI = {
     content: string;
     type: 'choice' | 'multiple-choice' | 'fill' | 'solution';
     difficulty: number;
-    category?: string;
+    category?: string[];
     tags?: string[];
   }) => {
     try {

@@ -38,7 +38,8 @@ const QuestionBankDetailPage: React.FC = () => {
     showSuccessRightSlide,
     showErrorRightSlide,
     rightSlideModal,
-    closeRightSlide
+    closeRightSlide,
+    setConfirmLoading
   } = useModal();
   const [questionBank, setQuestionBank] = useState<QuestionBank | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -135,16 +136,24 @@ const QuestionBankDetailPage: React.FC = () => {
       '确定要删除这道题目吗？删除后无法恢复.',
       async () => {
         try {
+          // 设置确认弹窗的加载状态
+          setConfirmLoading(true, '正在删除...');
+          
           const response = await questionAPI.deleteQuestion(qid);
           if (response.data.success) {
-            setQuestions(prev => prev.filter(q => q.qid !== qid));
+            setQuestions(prev => prev.filter(q => q._id !== qid));
             // 刷新题库信息以更新题目数量
             fetchQuestionBank();
+            closeConfirm(); // 删除成功后关闭弹窗
+            // 显示成功提示
+            showSuccessRightSlide('删除成功', '题目已成功删除');
           } else {
             showErrorRightSlide('删除失败', response.data.error || '删除失败');
+            closeConfirm(); // 删除失败后也关闭弹窗
           }
         } catch (error: any) {
           showErrorRightSlide('删除失败', error.response?.data?.error || '删除失败');
+          closeConfirm(); // 发生错误后也关闭弹窗
         }
       }
     );
@@ -440,7 +449,7 @@ const QuestionBankDetailPage: React.FC = () => {
                   userRole={userRole}
                   index={index}
                   onFavorite={handleFavoriteQuestion}
-                  isFavorite={favorites.has(question.qid)}
+                  isFavorite={favorites.has(question._id)}
                   onViewDetail={handleViewQuestionDetail}
                   onDelete={handleDeleteQuestion}
                 />

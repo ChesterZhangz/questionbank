@@ -16,6 +16,9 @@ import LoadingPage from '../../components/ui/LoadingPage';
 import { getTopQuestionTypes } from '../../utils/statsUtils';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
+import { useModal } from '../../hooks/useModal';
+import ConfirmModal from '../../components/ui/ConfirmModal';
+import RightSlideModal from '../../components/ui/RightSlideModal';
 
 
 const animationStyles = `
@@ -110,6 +113,18 @@ interface QuestionManagementPageProps {}
 const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  
+  // 弹窗状态管理
+  const { 
+    showConfirm, 
+    showSuccessRightSlide,
+    showErrorRightSlide,
+    confirmModal, 
+    closeConfirm,
+    rightSlideModal,
+    closeRightSlide,
+    setConfirmLoading
+  } = useModal();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionBanks, setQuestionBanks] = useState<QuestionBank[]>([]);
   const [loading, setLoading] = useState(true);
@@ -293,42 +308,53 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
 
   // 删除题目
   const handleDeleteQuestion = async (qid: string) => {
-    try {
-      await questionAPI.deleteQuestion(qid);
-      // 从题目列表中移除被删除的题目
-      setQuestions(prev => prev.filter(q => q._id !== qid));
-      // 从选中列表中移除
-      setSelectedQuestions(prev => prev.filter(id => id !== qid));
-      
-      // 立即更新分页信息
-      setTotalQuestions(prev => Math.max(0, prev - 1));
-      
-      // 重新计算总页数
-      const newTotalQuestions = Math.max(0, totalQuestions - 1);
-      const newTotalPages = Math.ceil(newTotalQuestions / pageSize);
-      setTotalPages(newTotalPages);
-      
-      // 如果当前页没有题目了，且不是第一页，则跳转到上一页
-      if (questions.length === 1 && currentPage > 1) {
-        setCurrentPage(prev => Math.max(1, prev - 1));
+    showConfirm(
+      '确认删除',
+      '确定要删除这道题目吗？删除后无法恢复.',
+      async () => {
+        try {
+          // 设置确认弹窗的加载状态
+          setConfirmLoading(true, '正在删除...');
+          
+          await questionAPI.deleteQuestion(qid);
+          // 从题目列表中移除被删除的题目
+          setQuestions(prev => prev.filter(q => q._id !== qid));
+          // 从选中列表中移除
+          setSelectedQuestions(prev => prev.filter(id => id !== qid));
+          
+          // 立即更新分页信息
+          setTotalQuestions(prev => Math.max(0, prev - 1));
+          
+          // 重新计算总页数
+          const newTotalQuestions = Math.max(0, totalQuestions - 1);
+          const newTotalPages = Math.ceil(newTotalQuestions / pageSize);
+          setTotalPages(newTotalPages);
+          
+          // 如果当前页没有题目了，且不是第一页，则跳转到上一页
+          if (questions.length === 1 && currentPage > 1) {
+            setCurrentPage(prev => Math.max(1, prev - 1));
+          }
+          
+          setError(''); // 清除错误信息
+          
+          // 触发全局事件，通知其他页面更新统计数据
+          window.dispatchEvent(new CustomEvent('questionDeleted', { 
+            detail: { 
+              questionId: qid,
+              timestamp: Date.now()
+            } 
+          }));
+          
+          closeConfirm(); // 删除成功后关闭弹窗
+          // 显示成功提示
+          showSuccessRightSlide('删除成功', '题目已成功删除');
+        } catch (error) {
+          // 错误日志已清理
+          showErrorRightSlide('删除失败', '删除题目失败，请重试');
+          closeConfirm(); // 删除失败后也关闭弹窗
+        }
       }
-      
-      setError(''); // 清除错误信息
-      
-      // 触发全局事件，通知其他页面更新统计数据
-      window.dispatchEvent(new CustomEvent('questionDeleted', { 
-        detail: { 
-          questionId: qid,
-          timestamp: Date.now()
-        } 
-      }));
-      
-      // 可选：显示成功提示
-      // toast.success('题目删除成功');
-    } catch (error) {
-      // 错误日志已清理
-      setError('删除题目失败，请重试');
-    }
+    );
   };
 
   // 初始化数据
@@ -1191,6 +1217,18 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
           favorites={favorites}
         />
       )}
+
+      {/* 确认弹窗 */}
+      <ConfirmModal
+        {...confirmModal}
+        onCancel={closeConfirm}
+      />
+
+      {/* 右侧弹窗 */}
+      <RightSlideModal
+        {...rightSlideModal}
+        onClose={closeRightSlide}
+      />
     </div>
   );
 };

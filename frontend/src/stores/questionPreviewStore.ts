@@ -490,7 +490,15 @@ export const useQuestionPreviewStore = create<QuestionPreviewState & QuestionPre
       analyzeQuestion: async (content) => {
         try {
           const response = await questionAnalysisAPI.analyzeQuestion(content);
-          return response.data?.analysis;
+          const analysis = response.data?.analysis;
+          // 确保返回的数据符合AIAnalysisResult接口
+          if (analysis) {
+            return {
+              ...analysis,
+              category: Array.isArray(analysis.category) ? analysis.category : [analysis.category].filter(Boolean)
+            };
+          }
+          return analysis;
         } catch (error) {
           console.error('AI分析失败:', error);
           throw error;
@@ -505,7 +513,16 @@ export const useQuestionPreviewStore = create<QuestionPreviewState & QuestionPre
             return questionAnalysisAPI.analyzeQuestion(content);
           });
           const results = await Promise.all(promises.filter(Boolean));
-          return results.map(r => r?.data?.analysis).filter(Boolean) as AIAnalysisResult[];
+          return results.map(r => {
+            const analysis = r?.data?.analysis;
+            if (analysis) {
+              return {
+                ...analysis,
+                category: Array.isArray(analysis.category) ? analysis.category : [analysis.category].filter(Boolean)
+              };
+            }
+            return analysis;
+          }).filter(Boolean) as AIAnalysisResult[];
         } catch (error) {
           console.error('批量AI分析失败:', error);
           throw error;
@@ -562,7 +579,7 @@ export const useQuestionPreviewStore = create<QuestionPreviewState & QuestionPre
                 solutionAnswers: question.content.solutionAnswers || [],
                 solution: question.content.solution || ''
               },
-              category: Array.isArray(question.category) ? question.category.join(', ') : (typeof question.category === 'string' ? question.category : ''),
+              category: Array.isArray(question.category) ? question.category : (typeof question.category === 'string' ? [question.category] : []),
               tags: question.tags || [],
               source: processedSource, // 使用处理后的来源（包含序号）
               difficulty: question.difficulty || 3,

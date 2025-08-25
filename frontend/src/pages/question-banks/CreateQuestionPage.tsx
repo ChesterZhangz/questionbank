@@ -250,7 +250,7 @@ const CreateQuestionPage: React.FC = () => {
             isCorrect: content.answer.includes(String.fromCharCode(65 + index))
           })) : undefined
         },
-        category: content.category?.join(', ') || '',
+        category: content.category || [],
         tags: content.tags,
         difficulty: content.difficulty || 3,
         source: content.source
@@ -738,7 +738,7 @@ const CreateQuestionPage: React.FC = () => {
           solutionAnswers: questionType === 'solution' ? content.solutionAnswers : undefined,
           solution: content.solution
         },
-        category: content.category?.join(', ') || '',
+        category: content.category || [],
         tags: content.tags,
         difficulty: content.difficulty || 3,
         source: content.source,

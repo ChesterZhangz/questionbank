@@ -333,6 +333,14 @@ export const myEnterpriseAPI = {
   deleteDepartment: enterpriseService.deleteDepartment,
   sendMessage: enterpriseService.sendMessage,
   getMessages: enterpriseService.getMessages,
+  deleteMessage: enterpriseService.deleteMessage,
+  markMessageAsRead: enterpriseService.markMessageAsRead,
+  getUnreadMessageCount: enterpriseService.getUnreadMessageCount,
+  getMemberDetail: enterpriseService.getMemberDetail,
+  updateMemberPosition: enterpriseService.updateMemberPosition,
+  transferSuperAdmin: enterpriseService.transferSuperAdmin,
+  setAdminRole: enterpriseService.setAdminRole,
+  assignDepartment: enterpriseService.assignDepartment,
 };
 
 export default enterpriseService;

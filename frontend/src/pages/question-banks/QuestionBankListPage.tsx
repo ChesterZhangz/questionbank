@@ -34,7 +34,9 @@ const QuestionBankListPage: React.FC = () => {
     closeConfirm,
     showErrorRightSlide,
     rightSlideModal,
-    closeRightSlide
+    closeRightSlide,
+    showSuccessRightSlide,
+    setConfirmLoading
   } = useModal();
   const [questionBanks, setQuestionBanks] = useState<QuestionBank[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,14 +99,21 @@ const QuestionBankListPage: React.FC = () => {
       '确定要删除这个题库吗？删除后无法恢复.',
       async () => {
         try {
+          setConfirmLoading(true, '正在删除...');
+          
           const response = await questionBankAPI.deleteQuestionBank(bid);
           if (response.data.success) {
             setQuestionBanks(prev => prev.filter(bank => bank.bid !== bid));
+            closeConfirm(); // 删除成功后关闭弹窗
+            // 显示成功提示
+            showSuccessRightSlide('删除成功', '题库已成功删除');
           } else {
             showErrorRightSlide('删除失败', response.data.error || '删除失败');
+            closeConfirm(); // 删除失败后也关闭弹窗
           }
         } catch (error: any) {
           showErrorRightSlide('删除失败', error.response?.data?.error || '删除失败');
+          closeConfirm(); // 发生错误后也关闭弹窗
         }
       }
     );
@@ -304,7 +313,7 @@ const QuestionBankListPage: React.FC = () => {
                             {bank.creator._id === user?._id && (
                               <button
                                 onClick={() => handleDeleteBank(bank.bid)}
-                                className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <Trash2 className="w-4 h-4 mr-2" />
                                 删除题库

@@ -463,7 +463,7 @@ const QuestionPreviewPage: React.FC = () => {
           const result = results[resultIndex];
           return {
             ...question,
-            category: result.category,
+            category: Array.isArray(result.category) ? result.category : [result.category].filter(Boolean),
             tags: result.tags,
             difficulty: result.difficulty,
             type: result.questionType
@@ -583,7 +583,7 @@ const QuestionPreviewPage: React.FC = () => {
       // 2. 立即应用标签并更新UI
       const updatedQuestion = {
         ...question,
-        category: result.category,
+        category: Array.isArray(result.category) ? result.category : [result.category].filter(Boolean),
         tags: result.tags,
         difficulty: result.difficulty,
         type: result.questionType

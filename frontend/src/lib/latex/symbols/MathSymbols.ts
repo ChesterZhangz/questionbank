@@ -212,10 +212,8 @@ export const matrixEnvironments: SymbolDefinition[] = [
 
 // 对齐环境
 export const alignEnvironments: SymbolDefinition[] = [
-  { latex: '\\begin{align}\\end{align}', name: '对齐环境', category: 'align-environments' },
-  { latex: '\\begin{alignat}\\end{alignat}', name: '多列对齐', category: 'align-environments' },
-  { latex: '\\begin{gather}\\end{gather}', name: '居中对齐', category: 'align-environments' },
-  { latex: '\\begin{multline}\\end{multline}', name: '长公式换行', category: 'align-environments' }
+  { latex: '\\begin{aligned}\\end{aligned}', name: '多列对齐', category: 'align-environments' },
+  { latex: '\\begin{cases}\\end{cases}', name: '分段函数', category: 'align-environments' },
 ];
 
 // 其他常用命令

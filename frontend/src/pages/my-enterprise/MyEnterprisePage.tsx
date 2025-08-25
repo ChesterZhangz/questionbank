@@ -25,8 +25,7 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import FuzzySelect from '../../components/ui/FuzzySelect';
 import MultiSelect from '../../components/ui/MultiSelect';
-import LaTeXHighlightInput from '../../components/editor/latex/LaTeXHighlightInput';
-import HoverTooltip from '../../components/editor/preview/HoverTooltip';
+
 import Avatar from '../../components/ui/Avatar';
 import LoadingPage from '../../components/ui/LoadingPage';
 
@@ -1278,13 +1277,50 @@ const MyEnterprisePage: React.FC = () => {
                 <div className="p-6">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">企业消息</h3>
-                    <Button 
-                      className="bg-blue-600 hover:bg-blue-700"
-                      onClick={() => setShowSendMessageModal(true)}
+                    <motion.div
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ 
+                        duration: 0.6, 
+                        ease: [0.25, 0.46, 0.45, 0.94],
+                        delay: 0.3
+                      }}
                     >
-                      <Send className="w-4 h-4 mr-2" />
-                      发送消息
-                    </Button>
+                      <Button 
+                        className="bg-blue-600 hover:bg-blue-700 transition-all duration-200 relative overflow-hidden group"
+                        onClick={() => setShowSendMessageModal(true)}
+                      >
+                        {/* 背景光效 */}
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-blue-600/20"
+                          initial={{ x: "-100%" }}
+                          animate={{ x: "100%" }}
+                          transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
+                        />
+                        
+                        {/* 图标微动画 */}
+                        <motion.div
+                          animate={{ 
+                            rotate: [0, 5, -5, 0],
+                            scale: [1, 1.1, 1]
+                          }}
+                          transition={{ 
+                            duration: 2, 
+                            repeat: Infinity, 
+                            repeatDelay: 3,
+                            ease: "easeInOut"
+                          }}
+                          className="relative z-10"
+                        >
+                          <Send className="w-4 h-4 mr-2" />
+                        </motion.div>
+                        
+                        {/* 文字 */}
+                        <span className="relative z-10">发送消息</span>
+                      </Button>
+                    </motion.div>
                   </div>
 
                   <div className="space-y-4">
@@ -1302,7 +1338,15 @@ const MyEnterprisePage: React.FC = () => {
                       // 其他消息：接收者可以看到，发送者也可以看到（用于查看已读状态）
                       return isRecipient || isSender;
                     }).map((msg) => (
-                      <div key={msg._id} className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                      <motion.div 
+                        key={msg._id} 
+                        className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700/70 hover:shadow-md"
+                        whileHover={{ y: -2, scale: 1.01 }}
+                        whileTap={{ scale: 0.98 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
                         <div className="flex items-start gap-4">
                           <Avatar
                             src={msg.sender?.avatar}
@@ -1314,18 +1358,31 @@ const MyEnterprisePage: React.FC = () => {
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 <h4 className="font-semibold text-gray-900 dark:text-gray-100">{msg.sender?.name || '未知用户'}</h4>
-                                <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
+                                <motion.span 
+                                  className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full"
+                                  whileHover={{ scale: 1.1, rotate: 5 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  initial={{ scale: 0.8, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  transition={{ duration: 0.2 }}
+                                >
                                   {getMessageTypeName(msg.type)}
-                                </span>
+                                </motion.span>
                                 <span className="text-xs text-gray-500 dark:text-gray-400">
                                   {msg.createdAt ? new Date(msg.createdAt).toLocaleString() : '未知时间'}
                                 </span>
                                 {/* 已读状态显示 - 只有发送者能看到 */}
                                 {msg.isRead && msg.isRead.length > 0 && msg.sender?._id === currentUserId && (
                                   <div className="flex items-center gap-2">
-                                    <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
+                                    <motion.span 
+                                      className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full"
+                                      whileHover={{ scale: 1.05 }}
+                                      initial={{ scale: 0.9, opacity: 0 }}
+                                      animate={{ scale: 1, opacity: 1 }}
+                                      transition={{ duration: 0.3, delay: 0.1 }}
+                                    >
                                       已读 ({msg.isRead.length})
-                                    </span>
+                                    </motion.span>
                                     {/* 发送者可以看到具体已读的人 */}
                                     <div className="flex items-center gap-1">
                                       <span className="text-xs text-gray-500 dark:text-gray-400">已读:</span>
@@ -1360,15 +1417,29 @@ const MyEnterprisePage: React.FC = () => {
                               <div className="flex items-center gap-2 mt-2">
                                 <AtSign className="w-4 h-4 text-gray-400" />
                                 <div className="flex gap-2">
-                                  {msg.mentionedUsers?.map(user => (
-                                    <span key={user._id} className="text-xs px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded">
+                                  {msg.mentionedUsers?.map((user, index) => (
+                                    <motion.span 
+                                      key={user._id} 
+                                      className="text-xs px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded"
+                                      whileHover={{ scale: 1.1, y: -2 }}
+                                      initial={{ scale: 0.8, opacity: 0, y: 10 }}
+                                      animate={{ scale: 1, opacity: 1, y: 0 }}
+                                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                                    >
                                       @{user?.name || '未知用户'}
-                                    </span>
+                                    </motion.span>
                                   )) || []}
-                                  {msg.mentionedDepartments?.map(dept => (
-                                    <span key={dept._id} className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">
+                                  {msg.mentionedDepartments?.map((dept, index) => (
+                                    <motion.span 
+                                      key={dept._id} 
+                                      className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded"
+                                      whileHover={{ scale: 1.1, y: -2 }}
+                                      initial={{ scale: 0.8, opacity: 0, y: 10 }}
+                                      animate={{ scale: 1, opacity: 1, y: 0 }}
+                                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                                    >
                                       @{dept.name || '未知部门'}
-                                    </span>
+                                    </motion.span>
                                   )) || []}
                                 </div>
                               </div>
@@ -1376,15 +1447,29 @@ const MyEnterprisePage: React.FC = () => {
                             
                             {/* 回复统计和展开按钮 */}
                             {msg.replies && msg.replies.length > 0 && (
-                              <div className="mt-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
+                              <div className="mt-3">
+                                <motion.button
                                   onClick={() => toggleReplies(msg._id)}
-                                  className="text-gray-600 hover:text-gray-700"
+                                  className="group flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
                                 >
-                                  {expandedReplies.has(msg._id) ? '收起回复' : `展开回复 (${msg.replies.length})`}
-                                </Button>
+                                  <motion.div
+                                    animate={{ rotate: expandedReplies.has(msg._id) ? 180 : 0 }}
+                                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                                    className="w-4 h-4"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                  </motion.div>
+                                  <span>{expandedReplies.has(msg._id) ? '收起回复' : `展开回复 (${msg.replies.length})`}</span>
+                                  <motion.div
+                                    animate={{ scale: [1, 1.2, 1] }}
+                                    transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2 }}
+                                    className="w-2 h-2 bg-blue-400 rounded-full"
+                                  />
+                                </motion.button>
                               </div>
                             )}
                             
@@ -1429,18 +1514,32 @@ const MyEnterprisePage: React.FC = () => {
                               </div>
                             )}
                             
-                            {/* 消息操作按钮 */}
-                            <div className="flex items-center gap-2 mt-3">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => openReplyInput(msg._id)}
-                                className="text-blue-600 hover:text-blue-700"
+                            {/* 消息操作按钮 - 右侧透明设计 */}
+                            <motion.div 
+                              className="flex items-center justify-between mt-3"
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.3, delay: 0.2 }}
+                            >
+                              {/* 左侧占位，保持布局平衡 */}
+                              <div className="flex-1"></div>
+                              
+                              {/* 右侧回复按钮 */}
+                              <motion.div
+                                whileHover={{ scale: 1.05, y: -2 }}
+                                whileTap={{ scale: 0.95 }}
                               >
-                                <MessageSquare className="w-4 h-4 mr-1" />
-                                回复
-                              </Button>
-                            </div>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => openReplyInput(msg._id)}
+                                  className="text-blue-600/80 hover:text-blue-700 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all duration-200 backdrop-blur-sm"
+                                >
+                                  <MessageSquare className="w-4 h-4 mr-1" />
+                                  回复
+                                </Button>
+                              </motion.div>
+                            </motion.div>
 
                             {/* 内联回复输入框 */}
                             {replyingToMessage === msg._id && (
@@ -1479,7 +1578,7 @@ const MyEnterprisePage: React.FC = () => {
                             )}
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
@@ -1776,22 +1875,15 @@ const MyEnterprisePage: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     消息内容
                   </label>
-                  <HoverTooltip
-                    content={sendMessageForm.content}
-                    config={{ mode: 'lightweight' }}
-                    maxWidth="max-w-md"
-                  >
-                    <LaTeXHighlightInput
-                      value={sendMessageForm.content}
-                      onChange={(content) => setSendMessageForm({ ...sendMessageForm, content })}
-                      placeholder="请输入消息内容，支持LaTeX公式"
-                      className="w-full"
-                      rows={4}
-                      enableAutoComplete={true}
-                    />
-                  </HoverTooltip>
+                  <textarea
+                    value={sendMessageForm.content}
+                    onChange={(e) => setSendMessageForm({ ...sendMessageForm, content: e.target.value })}
+                    placeholder="请输入消息内容"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={4}
+                  />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    支持LaTeX数学公式，鼠标悬停可预览渲染效果
+                    请输入您的消息内容
                   </p>
                 </div>
               </div>

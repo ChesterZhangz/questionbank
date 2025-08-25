@@ -325,24 +325,39 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
       currentPosition = textareaRef.current.selectionStart;
     }
     
-    // 清理填充字符，将字母替换为空的大括号
-    const cleanedSymbol = symbol
-      .replace(/\{([a-zA-Z])\}/g, (match, _letter) => {
-        // 检查是否在字体样式命令中
-        const beforeMatch = symbol.substring(0, symbol.indexOf(match));
-        if (beforeMatch.includes('\\mathbb') || beforeMatch.includes('\\mathbf') || beforeMatch.includes('\\mathit') || beforeMatch.includes('\\mathrm') || beforeMatch.includes('\\mathcal') || beforeMatch.includes('\\mathscr') || beforeMatch.includes('\\mathfrak') || beforeMatch.includes('\\text') || beforeMatch.includes('\\texttt') || beforeMatch.includes('\\textsf')) {
-          return match; // 保持原样
-        }
-        return '{}'; // 替换为空大括号
-      })
-      .replace(/\{([a-zA-Z]+)\}/g, (match, _letters) => {
-        // 检查是否在字体样式命令中
-        const beforeMatch = symbol.substring(0, symbol.indexOf(match));
-        if (beforeMatch.includes('\\mathbb') || beforeMatch.includes('\\mathbf') || beforeMatch.includes('\\mathit') || beforeMatch.includes('\\mathrm') || beforeMatch.includes('\\mathcal') || beforeMatch.includes('\\mathscr') || beforeMatch.includes('\\mathfrak') || beforeMatch.includes('\\text') || beforeMatch.includes('\\texttt') || beforeMatch.includes('\\textsf')) {
-          return match; // 保持原样
-        }
-        return '{}'; // 替换为空大括号
-      });
+    // 清理填充字符，将字母替换为空的大括号，但保护LaTeX环境名称
+    let cleanedSymbol = symbol;
+    
+    // 添加调试信息
+    console.log('🔍 insertSymbol - 原始符号:', symbol);
+    console.log('🔍 insertSymbol - 是否包含\\begin:', symbol.includes('\\begin'));
+    console.log('🔍 insertSymbol - 是否包含\\end:', symbol.includes('\\end'));
+    
+    // 首先检查是否包含LaTeX环境命令，如果是则完全跳过清理
+    if (symbol.includes('\\begin') || symbol.includes('\\end')) {
+      cleanedSymbol = symbol; // 保持原样，不进行任何清理
+      console.log('🔍 insertSymbol - 检测到LaTeX环境，跳过清理，结果:', cleanedSymbol);
+    } else {
+      // 只对非环境命令进行清理
+      cleanedSymbol = symbol
+        .replace(/\{([a-zA-Z])\}/g, (match, _letter) => {
+          // 检查是否在字体样式命令中
+          const beforeMatch = symbol.substring(0, symbol.indexOf(match));
+          if (beforeMatch.includes('\\mathbb') || beforeMatch.includes('\\mathbf') || beforeMatch.includes('\\mathit') || beforeMatch.includes('\\mathrm') || beforeMatch.includes('\\mathcal') || beforeMatch.includes('\\mathscr') || beforeMatch.includes('\\mathfrak') || beforeMatch.includes('\\text') || beforeMatch.includes('\\texttt') || beforeMatch.includes('\\textsf')) {
+            return match; // 保持原样
+          }
+          return '{}'; // 替换为空大括号
+        })
+        .replace(/\{([a-zA-Z]+)\}/g, (match, _letters) => {
+          // 检查是否在字体样式命令中
+          const beforeMatch = symbol.substring(0, symbol.indexOf(match));
+          if (beforeMatch.includes('\\mathbb') || beforeMatch.includes('\\mathbf') || beforeMatch.includes('\\mathit') || beforeMatch.includes('\\mathrm') || beforeMatch.includes('\\mathcal') || beforeMatch.includes('\\mathscr') || beforeMatch.includes('\\mathfrak') || beforeMatch.includes('\\text') || beforeMatch.includes('\\texttt') || beforeMatch.includes('\\textsf')) {
+            return match; // 保持原样
+          }
+          return '{}'; // 替换为空大括号
+        });
+      console.log('🔍 insertSymbol - 非环境命令，清理后结果:', cleanedSymbol);
+    }
     
     // 检查当前光标是否在$...$内部
     const beforeCursor = value.substring(0, currentPosition);

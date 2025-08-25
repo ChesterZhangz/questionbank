@@ -94,7 +94,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
       },
       difficulty: content.difficulty,
       tags: content.tags,
-      category: content.category,
+      category: Array.isArray(content.category) ? content.category : [content.category].filter(Boolean),
       source: content.source
     };
     

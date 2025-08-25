@@ -66,7 +66,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
   onDelete
 }) => {
   // 弹窗状态管理
-  const { showConfirm, showErrorRightSlide, confirmModal, closeConfirm } = useModal();
+  const { confirmModal, closeConfirm } = useModal();
   
   // 图片预览状态
   const [previewImage, setPreviewImage] = useState<{ url: string; filename: string } | null>(null);
@@ -278,7 +278,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
     
     setIsFavoriting(true);
     try {
-      await onFavorite(question.qid, !isFavorite);
+              await onFavorite(question._id, !isFavorite);
     } catch (error) {
       // 错误日志已清理
     } finally {
@@ -300,31 +300,21 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
       onViewDetail(index);
     } else {
       // 如果没有提供回调，则使用默认的导航方式
-      navigate(`/question-banks/${bid}/questions/${question.qid}`);
+    navigate(`/question-banks/${bid}/questions/${question._id}`);
     }
   };
 
   // 编辑题目
   const handleEdit = () => {
-    navigate(`/question-banks/${bid}/questions/${question.qid}/edit`);
+            navigate(`/question-banks/${bid}/questions/${question._id}/edit`);
   };
 
   // 删除题目
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!onDelete) return;
     
-    showConfirm(
-      '确认删除',
-      '确定要删除这道题目吗？此操作不可撤销.',
-      async () => {
-        try {
-          await onDelete(question._id);
-        } catch (error) {
-          // 错误日志已清理
-          showErrorRightSlide('删除失败', '删除题目失败，请重试');
-        }
-      }
-    );
+    // 直接调用父组件的删除函数，让父组件处理确认弹窗和删除逻辑
+    onDelete(question._id);
   };
 
   

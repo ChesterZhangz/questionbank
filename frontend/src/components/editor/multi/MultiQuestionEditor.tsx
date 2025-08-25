@@ -225,7 +225,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
               solutionAnswers: question.questionType === 'solution' ? question.solutionAnswers : undefined,
               solution: question.solution || ''
             },
-            category: question.category?.join(', ') || '',
+            category: question.category || [],
             tags: question.tags || [],
             source: question.source || '',
             difficulty: question.difficulty || 3
