@@ -2,7 +2,7 @@ import axios from 'axios';
 const config = {
   apiUrl: import.meta.env.DEV 
     ? 'http://localhost:3001'
-    : (import.meta.env.VITE_API_URL || 'https://www.mareate.com')
+    : (import.meta.env.VITE_API_URL || 'https://www.mareate.com/api')
 };
 import type { Question } from '../types';
 
@@ -71,7 +71,7 @@ export interface DraftListResponse {
 
 // 创建axios实例
 const questionDraftAPI = axios.create({
-  baseURL: `${config.apiUrl}/api/question-drafts`,
+  baseURL: `${config.apiUrl}/question-drafts`,
   timeout: 15000, // 减少超时时间到15秒
   headers: {
     'Content-Type': 'application/json',
