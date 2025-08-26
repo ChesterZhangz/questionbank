@@ -1,8 +1,8 @@
 import axios from 'axios';
 const config = {
-  apiUrl: import.meta.env.PROD 
-    ? (import.meta.env.VITE_API_URL || 'https://www.mareate.com/api')
-    : 'http://localhost:3001'
+  apiUrl: import.meta.env.DEV 
+    ? 'http://localhost:3001'
+    : (import.meta.env.VITE_API_URL || 'https://www.mareate.com/api')
 };
 import type { Question } from '../types';
 

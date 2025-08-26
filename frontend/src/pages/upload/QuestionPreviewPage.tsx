@@ -247,7 +247,7 @@ const QuestionPreviewPage: React.FC = () => {
       // 如果用户已经保存过草稿，自动保存当前状态
       else if (hasUserSavedDraft && isDraftMode && currentDraftId) {
         // 自动保存当前状态
-        const currentDrafts = useQuestionPreviewStore.getState().drafts;
+        const currentDrafts = useQuestionPreviewStore.getState().drafts || [];
         const updatedDrafts = currentDrafts.map(draft => 
           draft._id === currentDraftId 
             ? { ...draft, questions, updatedAt: new Date() }
@@ -307,7 +307,7 @@ const QuestionPreviewPage: React.FC = () => {
                 
                 // 先获取用户的草稿列表
                 const draftsResponse = await userDraftAPI.getDrafts();
-                const existingDrafts = draftsResponse.drafts || [];
+                const existingDrafts = draftsResponse?.drafts || [];
                 
                 // 转换题目数据
                 const processedQuestions = routeData.questions.map((q, index) => {
@@ -1169,7 +1169,7 @@ const QuestionPreviewPage: React.FC = () => {
     } else {
       // 如果用户已经保存过草稿，自动保存当前状态
       if (hasUserSavedDraft && isDraftMode && currentDraftId) {
-        const currentDrafts = useQuestionPreviewStore.getState().drafts;
+        const currentDrafts = useQuestionPreviewStore.getState().drafts || [];
         const updatedDrafts = currentDrafts.map(draft => 
           draft._id === currentDraftId 
             ? { ...draft, questions, updatedAt: new Date() }

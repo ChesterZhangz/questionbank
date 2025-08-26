@@ -186,7 +186,11 @@ if (process.env.NODE_ENV === 'production') {
   console.log('🚀 生产环境：配置前端静态资源服务');
   
   // 静态资源服务 - 必须放在API路由之前
-  app.use(express.static(path.join(process.cwd(), '..', 'frontend/dist'), {
+  const frontendDistPath = path.join(process.cwd(), '..', 'frontend', 'dist');
+  console.log(`📁 前端资源路径: ${frontendDistPath}`);
+  console.log(`📁 路径是否存在: ${fs.existsSync(frontendDistPath)}`);
+  
+  app.use(express.static(frontendDistPath, {
     setHeaders: (res, filePath) => {
       // 设置正确的MIME类型
       if (filePath.endsWith('.js')) {
@@ -224,7 +228,7 @@ if (process.env.NODE_ENV === 'production') {
     console.log(`📁 SPA静态资源请求: ${req.method} ${req.path} -> 重定向到 /assets/${filename}`);
     
     // 直接重定向到根assets目录
-    const assetPath = path.join(process.cwd(), '..', 'frontend/dist/assets', filename);
+    const assetPath = path.join(process.cwd(), '..', 'frontend', 'dist', 'assets', filename);
     
     if (fs.existsSync(assetPath)) {
       // 设置正确的MIME类型
@@ -270,7 +274,7 @@ if (process.env.NODE_ENV === 'production') {
     }
     
     // 对于SPA路由，返回index.html
-    const indexPath = path.join(process.cwd(), '..', 'frontend/dist/index.html');
+    const indexPath = path.join(process.cwd(), '..', 'frontend', 'dist', 'index.html');
     if (fs.existsSync(indexPath)) {
       console.log(`📄 返回SPA index.html: ${req.path}`);
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -350,7 +354,12 @@ app.use('/api/enterprises', authMiddleware, enterpriseRoutes); // 企业管理�
 app.use('/api/my-enterprise', authMiddleware, myEnterpriseRoutes); // 我的企业路由
 
 // 草稿相关路由
-app.use('/api/question-drafts', questionDraftRoutes); // 题目草稿路由
+app.use('/api/question-drafts', (req, res, next) => {
+  console.log(`📋 草稿API请求: ${req.method} ${req.originalUrl}`);
+  console.log(`📋 请求头Origin: ${req.headers.origin}`);
+  console.log(`📋 请求头Authorization: ${req.headers.authorization ? '存在' : '不存在'}`);
+  next();
+}, questionDraftRoutes); // 题目草稿路由
 
 // 健康检查端点
 app.get('/health', (req, res) => {
@@ -363,7 +372,7 @@ app.get('/health', (req, res) => {
 
 // 调试端点 - 检查静态资源路径
 app.get('/debug/static', (req, res) => {
-  const staticPath = path.join(process.cwd(), '..', 'frontend/dist');
+  const staticPath = path.join(process.cwd(), '..', 'frontend', 'dist');
   const indexPath = path.join(staticPath, 'index.html');
   const jsPath = path.join(staticPath, 'assets');
   
@@ -381,7 +390,7 @@ app.get('/debug/static', (req, res) => {
 // 调试端点 - 测试SPA路由的静态资源访问
 app.get('/debug/spa-assets/:filename', (req, res) => {
   const { filename } = req.params;
-  const assetPath = path.join(process.cwd(), '..', 'frontend/dist/assets', filename);
+  const assetPath = path.join(process.cwd(), '..', 'frontend', 'dist', 'assets', filename);
   
   res.json({
     requestedFile: filename,
@@ -420,7 +429,7 @@ app.use('*', (req, res) => {
   
   // 生产环境：所有非API请求都返回前端index.html
   if (process.env.NODE_ENV === 'production') {
-    const indexPath = path.join(process.cwd(), '..', 'frontend/dist/index.html');
+    const indexPath = path.join(process.cwd(), '..', 'frontend', 'dist', 'index.html');
     if (fs.existsSync(indexPath)) {
       console.log(`🔄 SPA路由回退: ${req.path} -> index.html (${indexPath})`);
       

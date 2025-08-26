@@ -171,6 +171,13 @@ export const useQuestionPreviewStore = create<QuestionPreviewState & QuestionPre
         set({ isLoadingDrafts: true, draftError: undefined });
         const result = await userDraftAPI.getDrafts();
         
+        // 检查结果是否有效
+        if (!result || !result.drafts || !Array.isArray(result.drafts)) {
+          console.warn('获取草稿列表返回数据格式异常:', result);
+          set({ drafts: [], isLoadingDrafts: false });
+          return;
+        }
+        
         // 预加载所有草稿的详细数据，避免后续加载时的延迟
         const draftsWithDetails = await Promise.all(
           result.drafts.map(async (draft) => {
@@ -192,6 +199,7 @@ export const useQuestionPreviewStore = create<QuestionPreviewState & QuestionPre
       } catch (error) {
         console.error('获取草稿列表失败:', error);
         set({ 
+          drafts: [], // 确保设置为空数组而不是undefined
           isLoadingDrafts: false, 
           draftError: error instanceof Error ? error.message : '获取草稿列表失败' 
         });

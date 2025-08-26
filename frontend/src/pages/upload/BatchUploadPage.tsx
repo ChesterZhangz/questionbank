@@ -126,7 +126,7 @@ interface Question {
 
 const BatchUploadPage: React.FC = () => {
   const navigate = useNavigate();
-  const { drafts } = useQuestionPreviewStore();
+  const { drafts = [] } = useQuestionPreviewStore();
 
   // 弹窗状态管理
   const { 
