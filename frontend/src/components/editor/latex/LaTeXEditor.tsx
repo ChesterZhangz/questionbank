@@ -329,15 +329,13 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
     let cleanedSymbol = symbol;
     
     // 添加调试信息
-    console.log('🔍 insertSymbol - 原始符号:', symbol);
-    console.log('🔍 insertSymbol - 是否包含\\begin:', symbol.includes('\\begin'));
-    console.log('🔍 insertSymbol - 是否包含\\end:', symbol.includes('\\end'));
+    );
+    );
     
     // 首先检查是否包含LaTeX环境命令，如果是则完全跳过清理
     if (symbol.includes('\\begin') || symbol.includes('\\end')) {
       cleanedSymbol = symbol; // 保持原样，不进行任何清理
-      console.log('🔍 insertSymbol - 检测到LaTeX环境，跳过清理，结果:', cleanedSymbol);
-    } else {
+      } else {
       // 只对非环境命令进行清理
       cleanedSymbol = symbol
         .replace(/\{([a-zA-Z])\}/g, (match, _letter) => {
@@ -356,8 +354,7 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
           }
           return '{}'; // 替换为空大括号
         });
-      console.log('🔍 insertSymbol - 非环境命令，清理后结果:', cleanedSymbol);
-    }
+      }
     
     // 检查当前光标是否在$...$内部
     const beforeCursor = value.substring(0, currentPosition);

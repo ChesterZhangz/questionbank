@@ -981,7 +981,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                         </MagicTextTransition>
                                         
                                                                          {/* 题目图片和TikZ显示 */}
-                                        {(() => { console.log('QuestionView images:', currentQuestion?.images, 'tikzCodes:', currentQuestion?.tikzCodes); return null; })()}
+                                        {(() => { return null; })()}
                                  {((currentQuestion?.images && currentQuestion.images.length > 0) || (currentQuestion?.tikzCodes && currentQuestion.tikzCodes.length > 0)) && (
                                           <div className="mt-4 space-y-3">
                                             {/* 媒体内容标题 */}

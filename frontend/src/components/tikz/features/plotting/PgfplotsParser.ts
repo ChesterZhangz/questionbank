@@ -97,7 +97,7 @@ export class PgfplotsParser {
       }
     });
     
-    console.log('🔍 解析完成，所有plots:', result.plots.map((p, i) => ({
+    => ({
       index: i,
       legend: p.legend,
       type: p.type

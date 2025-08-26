@@ -511,7 +511,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                   </h3>
                   
                                     {/* 题目图片和图形显示 - 合并到一行 */}
-                  {(() => { console.log('QuestionCard images:', question.images, 'tikzCodes:', question.tikzCodes); return null; })()}
+                  {(() => { return null; })()}
                   {((question.images && question.images.length > 0) || (question.tikzCodes && question.tikzCodes.length > 0)) && (
                     <div className="mt-3">
                       {/* 媒体内容标题 */}

@@ -386,8 +386,7 @@ const QuestionPreviewPage: React.FC = () => {
                 if (duplicateDraft && duplicateDraft._id) {
                   // 使用现有的草稿
                   finalDraftId = duplicateDraft._id;
-                  console.log('找到相同内容的草稿，使用现有草稿:', duplicateDraft.name);
-                } else {
+                  } else {
                   // 创建新的草稿
                   const draftData = {
                     name: `批量上传草稿_${new Date().toLocaleString()}`,
@@ -399,8 +398,7 @@ const QuestionPreviewPage: React.FC = () => {
                   const newDraft = await userDraftAPI.createDraft(draftData);
                   if (newDraft && newDraft._id) {
                     finalDraftId = newDraft._id;
-                    console.log('创建新的草稿:', newDraft.name);
-                  } else {
+                    } else {
                     throw new Error('创建草稿失败：返回的草稿数据无效');
                   }
                 }

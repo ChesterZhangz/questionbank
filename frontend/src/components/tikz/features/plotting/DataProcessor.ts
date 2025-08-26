@@ -134,13 +134,9 @@ export class DataProcessor {
       parameters?: Record<string, number>;
     } = {}
   ): DataSeries {
-    console.log('DataProcessor.generateFunctionData 开始');
-    console.log('expression:', expression, 'domain:', domain, 'samples:', samples);
-    
     // 类型修复：如果传入的是数组，取第一个元素
     let fixedExpression: string;
     if (Array.isArray(expression)) {
-      console.log('expression 是数组，取第一个元素:', expression[0]);
       fixedExpression = expression[0] || 'x';
     } else if (typeof expression === 'string') {
       fixedExpression = expression;

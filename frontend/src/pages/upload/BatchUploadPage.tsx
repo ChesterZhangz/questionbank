@@ -394,7 +394,6 @@ const BatchUploadPage: React.FC = () => {
     // 检查并清理旧的localStorage数据
     const migrationStatus = checkMigrationStatus();
     if (migrationStatus.oldDataExists) {
-      console.log('🔄 发现旧的localStorage数据，开始清理...');
       cleanupOldStorage();
     }
     
@@ -717,12 +716,12 @@ const BatchUploadPage: React.FC = () => {
           token = authData.state.token;
         }
       } catch (error) {
-        console.error('Failed to parse auth storage:', error);
+        // 静默处理认证存储解析错误
       }
     }
     
     if (!token) {
-      console.warn('⚠️ 没有认证token，尝试使用测试路由');
+      // 没有认证token，尝试使用测试路由
       if (import.meta.env.DEV) {
       } else {
         throw new Error('需要登录才能处理文件，请先登录');

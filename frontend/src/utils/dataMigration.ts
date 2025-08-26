@@ -26,19 +26,15 @@ const PRESERVE_STORAGE_KEYS = [
  * 清理旧的localStorage数据
  */
 export const cleanupOldStorage = () => {
-  console.log('🧹 开始清理旧的localStorage数据...');
-  
   let cleanedCount = 0;
   
   OLD_STORAGE_KEYS.forEach(key => {
     if (localStorage.getItem(key)) {
       localStorage.removeItem(key);
       cleanedCount++;
-      console.log(`🗑️ 清理: ${key}`);
-    }
+      }
   });
   
-  console.log(`✅ 清理完成，共清理 ${cleanedCount} 个键`);
   return cleanedCount;
 };
 
@@ -53,14 +49,11 @@ export const checkAndCleanupStorage = () => {
   );
   
   if (unknownKeys.length > 0) {
-    console.log('⚠️ 发现未知的localStorage键:', unknownKeys);
-    
     // 询问用户是否清理
     if (confirm(`发现 ${unknownKeys.length} 个未知的存储键，是否清理？\n\n${unknownKeys.join('\n')}`)) {
       unknownKeys.forEach(key => {
         localStorage.removeItem(key);
-        console.log(`🗑️ 清理未知键: ${key}`);
-      });
+        });
     }
   }
   
@@ -93,8 +86,6 @@ export const getStorageInfo = () => {
  * 强制清理所有非必要数据
  */
 export const forceCleanup = () => {
-  console.log('🧹 强制清理所有非必要数据...');
-  
   const allKeys = Object.keys(localStorage);
   let cleanedCount = 0;
   
@@ -102,11 +93,9 @@ export const forceCleanup = () => {
     if (!PRESERVE_STORAGE_KEYS.includes(key)) {
       localStorage.removeItem(key);
       cleanedCount++;
-      console.log(`🗑️ 强制清理: ${key}`);
-    }
+      }
   });
   
-  console.log(`✅ 强制清理完成，共清理 ${cleanedCount} 个键`);
   return cleanedCount;
 };
 

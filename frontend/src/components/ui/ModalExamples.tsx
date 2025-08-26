@@ -52,7 +52,7 @@ const ModalExamples: React.FC = () => {
               onClick={() => showConfirm(
                 '确认操作',
                 '您确定要执行此操作吗？',
-                () => console.log('用户确认了操作'),
+                () => ,
                 { type: 'confirm' }
               )}
               className="w-full"
@@ -64,8 +64,7 @@ const ModalExamples: React.FC = () => {
               onClick={() => showWarning(
                 '警告提示',
                 '此操作可能会影响系统性能，请谨慎操作.',
-                () => console.log('用户确认了警告操作')
-              )}
+                () => )}
               variant="outline"
               className="w-full border-yellow-500 text-yellow-600 hover:bg-yellow-50"
             >
@@ -76,8 +75,7 @@ const ModalExamples: React.FC = () => {
               onClick={() => showDanger(
                 '危险操作',
                 '此操作不可逆，删除后无法恢复，确定要继续吗？',
-                () => console.log('用户确认了危险操作')
-              )}
+                () => )}
               variant="outline"
               className="w-full border-red-500 text-red-600 hover:bg-red-50"
             >
@@ -110,7 +108,7 @@ const ModalExamples: React.FC = () => {
               onClick={() => showConfirm(
                 '自定义弹窗',
                 '这是一个自定义宽度和样式的弹窗示例.',
-                () => console.log('自定义弹窗确认'),
+                () => ,
                 { 
                   width: 'xl',
                   confirmText: '我知道了',
@@ -204,8 +202,7 @@ const ModalExamples: React.FC = () => {
                 '带确认按钮',
                 '这个弹窗包含确认按钮，点击确认后会执行相应操作.',
                 { 
-                  onConfirm: () => console.log('用户点击了确认按钮')
-                }
+                  onConfirm: () => }
               )}
               className="w-full bg-blue-600 hover:bg-blue-700"
             >

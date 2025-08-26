@@ -29,10 +29,8 @@ const SymbolPanel: React.FC<SymbolPanelProps> = ({
           throwOnError: false,
           output: 'html'
         });
-        console.log('🔍 SymbolPanel - 渲染符号:', symbol.latex, '结果:', rendered);
         return rendered;
       } catch (error) {
-        console.log('🔍 SymbolPanel - 渲染失败:', symbol.latex, '错误:', error);
         return symbol.latex;
       }
     }
@@ -67,7 +65,6 @@ const SymbolPanel: React.FC<SymbolPanelProps> = ({
                 <button
                   key={symbol.latex}
                   onClick={() => {
-                    console.log('🔍 SymbolPanel - 点击符号:', symbol.latex);
                     onSymbolSelect(symbol.latex);
                   }}
                   className="px-2 py-1 text-sm bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-600 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors text-gray-900 dark:text-gray-100"
