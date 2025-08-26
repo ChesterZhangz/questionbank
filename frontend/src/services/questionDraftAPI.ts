@@ -90,7 +90,7 @@ questionDraftAPI.interceptors.request.use(
           config.headers.Authorization = `Bearer ${authData.state.token}`;
         }
       } catch (error) {
-        console.error('Failed to parse auth storage:', error);
+        // 静默处理认证存储解析错误
       }
     }
     return config;
@@ -106,15 +106,13 @@ questionDraftAPI.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error('草稿API请求失败:', error);
-    
     // 根据错误类型提供更友好的错误信息
     if (error.response?.status === 401) {
-      console.error('认证失败，请重新登录');
+      // 认证失败，请重新登录
     } else if (error.response?.status === 400) {
-      console.error('请求参数错误:', error.response.data?.message);
+      // 请求参数错误
     } else if (error.response?.status === 500) {
-      console.error('服务器内部错误:', error.response.data?.message);
+      // 服务器内部错误
     }
     
     return Promise.reject(error);
@@ -137,25 +135,21 @@ export const userDraftAPI = {
       
       // 检查响应结构
       if (!response || !response.data) {
-        console.error('草稿API响应结构异常:', response);
         throw new Error('API响应结构异常');
       }
       
       // 检查data字段
       if (!response.data.data) {
-        console.error('草稿API data字段缺失:', response.data);
         throw new Error('API数据字段缺失');
       }
       
       // 检查drafts字段
       if (!response.data.data.drafts || !Array.isArray(response.data.data.drafts)) {
-        console.error('草稿API drafts字段异常:', response.data.data);
         throw new Error('草稿数据格式异常');
       }
       
       return response.data.data;
     } catch (error) {
-      console.error('获取草稿列表API调用失败:', error);
       throw error;
     }
   },
@@ -166,13 +160,11 @@ export const userDraftAPI = {
       const response = await questionDraftAPI.get(`/user/${id}`);
       
       if (!response || !response.data || !response.data.data) {
-        console.error('草稿详情API响应异常:', response);
         throw new Error('草稿详情获取失败');
       }
       
       return response.data.data;
     } catch (error) {
-      console.error('获取草稿详情API调用失败:', error);
       throw error;
     }
   },

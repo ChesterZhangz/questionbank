@@ -60,6 +60,7 @@ export const authMiddleware = async (
 
     // 检查用户是否属于某个企业（通过enterpriseId字段）
     if (!user.enterpriseId) {
+      console.log('❌ 用户没有enterpriseId:', user.email);
       return res.status(403).json({ error: '仅限企业人员访问' });
     }
 
