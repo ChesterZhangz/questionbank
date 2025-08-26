@@ -5,7 +5,7 @@ import QuestionBank from '../models/QuestionBank';
 import { AuthRequest, authMiddleware } from '../middleware/auth';
 import { SimilarityDetectionService } from '../services/similarityDetectionService';
 import { User } from '../models/User';
-import imageService from '../services/imageService';
+import cosService from '../services/cosService';
 import fs from 'fs';
 import path from 'path';
 
@@ -908,46 +908,23 @@ router.post('/bank/:bid', authMiddleware, [
         try {
           // 检查是否是临时图片
           if (tempImage.id && tempImage.id.startsWith('temp_')) {
-            const tempFilename = `${tempImage.id}.${tempImage.format}`;
-            const tempFilePath = path.join(process.cwd(), 'temp', 'images', tempFilename);
+            // 使用腾讯云COS将临时图片转换为永久图片
+            const uploadResult = await cosService.convertTempToPermanent(qid, tempImage);
             
-            // 检查临时文件是否存在
-            if (fs.existsSync(tempFilePath)) {
-              // 使用imageService转换临时图片为永久存储
-              const imageBuffer = fs.readFileSync(tempFilePath);
-              const imageFile = {
-                buffer: imageBuffer,
-                originalname: tempImage.filename,
-                mimetype: `image/${tempImage.format}`,
-                size: fs.statSync(tempFilePath).size
-              } as Express.Multer.File;
-              
-              // 上传图片到正式位置
-              const uploadResult = await imageService.uploadImage(qid, imageFile, {
-                maxWidth: 1200,
-                maxHeight: 800,
-                quality: 85
-              });
-              
-              // 创建永久图片对象
-              const permanentImage = {
-                id: uploadResult.id,
-                bid: bid,
-                order: tempImage.order || 0,
-                format: uploadResult.format,
-                uploadedAt: new Date(),
-                uploadedBy: userId,
-                filename: uploadResult.filename,
-                url: uploadResult.url
-              };
-              
-              permanentImages.push(permanentImage);
-              
-              // 删除临时文件
-              fs.unlinkSync(tempFilePath);
-            } else {
-              console.warn(`临时图片文件不存在: ${tempFilePath}`);
-            }
+            // 创建永久图片对象
+            const permanentImage = {
+              id: uploadResult.id,
+              bid: bid,
+              order: tempImage.order || 0,
+              format: uploadResult.format,
+              uploadedAt: new Date(),
+              uploadedBy: userId,
+              filename: uploadResult.filename,
+              url: uploadResult.url,
+              cosKey: uploadResult.cosKey
+            };
+            
+            permanentImages.push(permanentImage);
           } else {
             // 如果不是临时图片，直接使用
             permanentImages.push(tempImage);

@@ -526,7 +526,7 @@ export const questionAPI = {
     stem: string;
     type: string;
     difficulty: number;
-    category?: string;
+    category?: string[];
     tags?: string[];
     options?: Array<{ text: string; isCorrect: boolean }>;
     answer?: string;

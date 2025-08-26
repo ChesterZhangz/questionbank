@@ -25,6 +25,8 @@ import searchRoutes from './routes/search';
 // 题目扩展路由
 import questionImagesRoutes from './routes/questionImages';
 import questionTikZRoutes from './routes/questionTikZ';
+// 草稿路由
+import questionDraftRoutes from './routes/questionDraft';
 
 
 import similarityRoutes from './routes/similarity';
@@ -346,6 +348,9 @@ app.use('/api/library-purchases', authMiddleware, libraryPurchaseRoutes); // 试
 // 企业相关路由
 app.use('/api/enterprises', authMiddleware, enterpriseRoutes); // 企业管理路由（仅superadmin）
 app.use('/api/my-enterprise', authMiddleware, myEnterpriseRoutes); // 我的企业路由
+
+// 草稿相关路由
+app.use('/api/question-drafts', questionDraftRoutes); // 题目草稿路由
 
 // 健康检查端点
 app.get('/health', (req, res) => {

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, 
@@ -39,6 +39,16 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
   const [error, setError] = useState<string>('');
   const [isClipboardSupported, setIsClipboardSupported] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 清理blob URL的useEffect
+  useEffect(() => {
+    return () => {
+      // 组件卸载时清理blob URL
+      if (previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   // 检查剪切板支持
   React.useEffect(() => {

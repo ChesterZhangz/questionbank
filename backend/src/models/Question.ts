@@ -10,6 +10,7 @@ export interface IQuestionImage {
   uploadedBy: string;   // 上传者ID
   filename: string;     // 原始文件名
   url: string;          // 图片访问URL
+  cosKey?: string;      // 腾讯云COS中的文件键
 }
 
 // TikZ代码接口
@@ -232,6 +233,10 @@ const questionSchema = new Schema<IQuestion>({
       url: {
         type: String,
         required: true
+      },
+      cosKey: {
+        type: String,
+        required: false
       }
     }],
     default: []

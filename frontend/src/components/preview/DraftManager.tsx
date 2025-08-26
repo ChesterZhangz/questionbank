@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Save, 
@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
-import { useQuestionPreviewStore, type QuestionDraft } from '../../stores/questionPreviewStore';
+import { useQuestionPreviewStore } from '../../stores/questionPreviewStore';
+import type { QuestionDraft } from '../../services/questionDraftAPI';
 import { useModal } from '../../hooks/useModal';
 import RightSlideModal from '../ui/RightSlideModal';
 import ConfirmModal from '../ui/ConfirmModal';
@@ -21,9 +22,10 @@ interface DraftManagerProps {
   onClose: () => void;
   onEnterEdit?: (draft: QuestionDraft) => void;
   onUserSaveDraft?: () => void; // 用户主动保存草稿的回调
+  onDraftSaved?: (draftId: string) => void; // 草稿保存成功后的回调，用于更新URL
 }
 
-const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdit, onUserSaveDraft }) => {
+const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdit, onUserSaveDraft, onDraftSaved }) => {
   // 弹窗状态管理
   const { 
     showConfirm,
@@ -40,19 +42,29 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
     currentDraftId,
     isDraftMode,
     questions,
+    isLoadingDrafts,
     saveDraft,
     loadDraft,
     deleteDraft,
-    updateDraft
+    updateDraft,
+    fetchDrafts
   } = useQuestionPreviewStore();
+
+  // 当草稿管理器打开时，获取最新的草稿列表
+  useEffect(() => {
+    if (isOpen) {
+      fetchDrafts();
+    }
+  }, [isOpen, fetchDrafts]);
 
   const [showSaveForm, setShowSaveForm] = useState(false);
   const [draftName, setDraftName] = useState('');
   const [draftDescription, setDraftDescription] = useState('');
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [editingDraftName, setEditingDraftName] = useState('');
+  const [loadingDraftId, setLoadingDraftId] = useState<string | null>(null);
 
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
     if (!draftName.trim()) {
       showErrorRightSlide('输入错误', '请输入草稿名称');
       return;
@@ -64,8 +76,20 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
     }
 
     // 检查是否存在内容重复的草稿
-    const { checkDuplicateQuestions } = useQuestionPreviewStore.getState();
-    const duplicateDraft = checkDuplicateQuestions(questions);
+    const duplicateDraft = drafts.find(draft => {
+      // 如果题目数量不同，内容肯定不同
+      if (draft.questions.length !== questions.length) return false;
+      
+      // 检查每个题目是否相同（基于内容和类型）
+      return draft.questions.every((draftQuestion, index) => {
+        const currentQuestion = questions[index];
+        return (
+          draftQuestion.content.stem === currentQuestion.content.stem &&
+          draftQuestion.type === currentQuestion.type &&
+          draftQuestion.source === currentQuestion.source
+        );
+      });
+    });
     
     if (duplicateDraft) {
       const confirmMessage = `检测到与草稿"${duplicateDraft.name}"内容完全相同的习题集.\n\n是否要覆盖现有草稿？\n\n注意：这将更新草稿"${duplicateDraft.name}"的内容，而不是创建新的草稿.`;
@@ -76,12 +100,12 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
         () => {
           // 覆盖现有草稿
           const { updateDraft, setCurrentDraftId, setIsDraftMode } = useQuestionPreviewStore.getState();
-          updateDraft(duplicateDraft.id, {
+          updateDraft(duplicateDraft._id, {
             name: draftName.trim(),
             description: draftDescription.trim() || undefined,
             questions: questions
           });
-          setCurrentDraftId(duplicateDraft.id);
+          setCurrentDraftId(duplicateDraft._id);
           setIsDraftMode(true);
           
           setDraftName('');
@@ -101,34 +125,66 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
     }
 
     // 正常保存新草稿
-    saveDraft(draftName.trim(), draftDescription.trim() || undefined);
-    setDraftName('');
-    setDraftDescription('');
-    setShowSaveForm(false);
-    showSuccessRightSlide('保存成功', '草稿保存成功');
-    
-    // 通知父组件用户已主动保存草稿
-    if (onUserSaveDraft) {
-      onUserSaveDraft();
+    try {
+      const newDraft = await saveDraft(draftName.trim(), draftDescription.trim() || undefined);
+      setDraftName('');
+      setDraftDescription('');
+      setShowSaveForm(false);
+      showSuccessRightSlide('保存成功', `草稿"${draftName.trim()}"保存成功`);
+      
+      // 通知父组件用户已主动保存草稿
+      if (onUserSaveDraft) {
+        onUserSaveDraft();
+      }
+      
+      // 通知父组件草稿保存成功，用于更新URL
+      if (onDraftSaved && newDraft._id) {
+        onDraftSaved(newDraft._id);
+      }
+    } catch (error) {
+      console.error('保存草稿失败:', error);
+      showErrorRightSlide('保存失败', error instanceof Error ? error.message : '保存草稿失败，请重试');
     }
   };
 
-  const handleLoadDraft = (draft: QuestionDraft) => {
-    if (isDraftMode && currentDraftId && currentDraftId !== draft.id) {
+  const handleLoadDraft = async (draft: QuestionDraft) => {
+    if (isDraftMode && currentDraftId && currentDraftId !== draft._id) {
       showConfirm(
         '确认加载',
         '当前有未保存的草稿，确定要加载其他草稿吗？',
-        () => {
-          loadDraft(draft.id);
-          showSuccessRightSlide('加载成功', `已加载草稿：${draft.name}`);
-          closeConfirm();
+        async () => {
+          try {
+            setLoadingDraftId(draft._id);
+            await loadDraft(draft._id);
+            showSuccessRightSlide('加载成功', `已加载草稿：${draft.name}`);
+          } catch (error) {
+            console.error('加载草稿失败:', error);
+            showErrorRightSlide('加载失败', error instanceof Error ? error.message : '加载草稿失败，请重试');
+          } finally {
+            setLoadingDraftId(null);
+            closeConfirm();
+          }
         }
       );
       return;
     }
     
-    loadDraft(draft.id);
-    showSuccessRightSlide('加载成功', `已加载草稿：${draft.name}`);
+    try {
+      setLoadingDraftId(draft._id);
+      
+      // 添加一个小的延迟来显示加载状态，提升用户体验
+      const loadPromise = loadDraft(draft._id);
+      const timeoutPromise = new Promise(resolve => setTimeout(resolve, 300));
+      
+      await Promise.all([loadPromise, timeoutPromise]);
+      
+      showSuccessRightSlide('加载成功', `已加载草稿：${draft.name}`);
+    } catch (error) {
+      console.error('加载草稿失败:', error);
+      showErrorRightSlide('加载失败', error instanceof Error ? error.message : '加载草稿失败，请重试');
+    } finally {
+      setLoadingDraftId(null);
+    }
   };
 
   const handleDeleteDraft = (draft: QuestionDraft) => {
@@ -136,7 +192,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
       '确认删除',
       `确定要删除草稿"${draft.name}"吗？`,
       () => {
-        deleteDraft(draft.id);
+        deleteDraft(draft._id);
         showSuccessRightSlide('删除成功', '草稿删除成功');
         closeConfirm();
       }
@@ -150,7 +206,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
   };
 
   const handleStartRename = (draft: QuestionDraft) => {
-    setEditingDraftId(draft.id);
+          setEditingDraftId(draft._id);
     setEditingDraftName(draft.name);
   };
 
@@ -166,7 +222,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
     }
 
     // 检查名称是否重复
-    const existingDraft = drafts.find(d => d.name === editingDraftName.trim() && d.id !== editingDraftId);
+    const existingDraft = drafts.find(d => d.name === editingDraftName.trim() && d._id !== editingDraftId);
     if (existingDraft) {
       showErrorRightSlide('名称重复', '草稿名称已存在');
       return;
@@ -196,7 +252,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
   };
 
   const getCurrentDraft = () => {
-    return drafts.find(d => d.id === currentDraftId);
+    return drafts.find(d => d._id === currentDraftId);
   };
 
   return (
@@ -331,7 +387,12 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                   草稿列表 ({drafts.length})
                 </h4>
                 
-                {drafts.length === 0 ? (
+                {isLoadingDrafts ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <div className="h-8 w-8 mx-auto mb-3 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                    <p>正在加载草稿...</p>
+                  </div>
+                ) : drafts.length === 0 ? (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
                     <p>暂无草稿</p>
@@ -342,20 +403,20 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                     <AnimatePresence>
                       {drafts.map((draft, index) => (
                         <motion.div
-                          key={draft.id}
+                          key={draft._id}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -20 }}
                           transition={{ delay: index * 0.05 }}
                         >
                           <Card className={`p-3 transition-all duration-200 ${
-                            currentDraftId === draft.id 
+                            currentDraftId === draft._id 
                               ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20' 
                               : 'hover:shadow-md'
                           }`}>
                             <div className="space-y-2">
                               <div className="flex items-center justify-between">
-                                {editingDraftId === draft.id ? (
+                                {editingDraftId === draft._id ? (
                                   <div className="flex-1 mr-2">
                                     <input
                                       type="text"
@@ -394,7 +455,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                               </div>
                               
                               <div className="flex items-center justify-between">
-                                {editingDraftId === draft.id ? (
+                                {editingDraftId === draft._id ? (
                                   <div className="flex space-x-1">
                                     <Button
                                       variant="outline"
@@ -422,10 +483,19 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                                       size="sm"
                                       onClick={() => handleLoadDraft(draft)}
                                       className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-xs px-2 py-1"
-                                      disabled={currentDraftId === draft.id}
+                                      disabled={currentDraftId === draft._id || loadingDraftId === draft._id}
                                     >
-                                      <FolderOpen className="h-3 w-3 mr-1" />
-                                      {currentDraftId === draft.id ? '当前草稿' : '加载'}
+                                      {loadingDraftId === draft._id ? (
+                                        <>
+                                          <div className="h-3 w-3 mr-1 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                                          正在加载...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <FolderOpen className="h-3 w-3 mr-1" />
+                                          {currentDraftId === draft._id ? '当前草稿' : '加载'}
+                                        </>
+                                      )}
                                     </Button>
                                     
                                     <Button
@@ -433,7 +503,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                                       size="sm"
                                       onClick={() => handleStartRename(draft)}
                                       className="text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 text-xs px-2 py-1"
-                                      disabled={editingDraftId === draft.id}
+                                      disabled={editingDraftId === draft._id}
                                     >
                                       <Edit3 className="h-3 w-3 mr-1" />
                                       重命名
@@ -458,7 +528,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                                   size="sm"
                                   onClick={() => handleDeleteDraft(draft)}
                                   className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs px-2 py-1"
-                                  disabled={editingDraftId === draft.id}
+                                                                          disabled={editingDraftId === draft._id}
                                 >
                                   <Trash2 className="h-3 w-3" />
                                 </Button>
@@ -476,8 +546,8 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
             {/* 底部信息 */}
             <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
               <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                <p>草稿保存在本地存储中</p>
-                <p>最多保留 20 个草稿</p>
+                <p>草稿保存在云端数据库中</p>
+                <p>数据安全可靠，支持多设备同步</p>
               </div>
             </div>
           </motion.div>

@@ -860,7 +860,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                       >
                                         题目标签
                                       </motion.div>
-                                      <div className="flex flex-wrap gap-2">
+                                  <div className="flex flex-wrap gap-2">
                                         {allTags.map((tag, index) => {
                                           // 判断标签类型：前几个是小题型，后面是知识点
                                           const isCategory = index < categories.length;
@@ -868,7 +868,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                           
                                           return (
                                             <motion.span
-                                              key={`tag-${index}`}
+                                        key={`tag-${index}`}
                                               className={`${tagClass} inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200`}
                                               initial={{ opacity: 0, scale: 0.7, y: 5 }}
                                               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -877,13 +877,13 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                                 delay: 0.14 + index * 0.02, 
                                                 ease: "easeOut" 
                                               }}
-                                            >
-                                              {tag}
+                                      >
+                                        {tag}
                                             </motion.span>
                                           );
                                         })}
-                                      </div>
-                                    </div>
+                                  </div>
+                              </div>
                                   ) : null;
                                 })()}
                               </motion.div>
@@ -981,6 +981,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                         </MagicTextTransition>
                                         
                                                                          {/* 题目图片和TikZ显示 */}
+                                        {(() => { console.log('QuestionView images:', currentQuestion?.images, 'tikzCodes:', currentQuestion?.tikzCodes); return null; })()}
                                  {((currentQuestion?.images && currentQuestion.images.length > 0) || (currentQuestion?.tikzCodes && currentQuestion.tikzCodes.length > 0)) && (
                                           <div className="mt-4 space-y-3">
                                             {/* 媒体内容标题 */}
@@ -1390,7 +1391,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                 animate={{ opacity: 1, scale: 1, rotate: 0 }}
                                 transition={{ duration: 0.08, delay: 0.17, ease: "easeOut" }}
                               >
-                                <TrendingUp className="w-5 h-5 mr-2 text-blue-500" />
+                              <TrendingUp className="w-5 h-5 mr-2 text-blue-500" />
                               </motion.div>
                               题目信息
                             </motion.h3>

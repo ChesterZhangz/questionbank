@@ -19,7 +19,7 @@ interface QuestionBankRequest extends AuthRequest {
 const checkQuestionBankPermission = async (req: QuestionBankRequest, res: any, next: any) => {
   try {
     const { bid } = req.params;
-    const userId = req.user._id;
+    const userId = req.user._id || req.user.id;
     
     const questionBank = await QuestionBank.findOne({ bid });
     if (!questionBank) {
@@ -85,7 +85,7 @@ const checkQuestionBankPermission = async (req: QuestionBankRequest, res: any, n
 // 获取题库列表
 router.get('/', authMiddleware, async (req: QuestionBankRequest, res: any) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user._id || req.user.id;
     const user = await User.findById(userId);
     
     if (!user) {

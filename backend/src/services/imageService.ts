@@ -23,11 +23,9 @@ export interface ImageUploadResult {
 
 export class ImageService {
   private uploadDir: string;
-  private baseUrl: string;
 
   constructor() {
     this.uploadDir = path.join(process.cwd(), 'uploads', 'questions');
-    this.baseUrl = process.env.BASE_URL || 'http://localhost:3001' || 'https://www.mareate.com';
     this.ensureUploadDir();
   }
 
@@ -144,8 +142,8 @@ export class ImageService {
       // 获取文件大小
       const stats = fs.statSync(outputPath);
       
-      // 生成访问URL
-      const url = `${this.baseUrl}/uploads/questions/${questionId}/images/${filename}`;
+      // 生成访问URL - 使用相对路径，让前端代理处理
+      const url = `/uploads/questions/${questionId}/images/${filename}`;
 
       return {
         id: imageId,

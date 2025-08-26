@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import {
   DndContext,
@@ -43,6 +43,7 @@ import SimilarityDetectionModal from '../../components/similarity/SimilarityDete
 const QuestionPreviewPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
   const {
     // 状态
     questions,
@@ -91,8 +92,7 @@ const QuestionPreviewPage: React.FC = () => {
     // 草稿方法
     loadDraft,
     setCurrentDraftId,
-    setIsDraftMode,
-    autoSaveDraft
+    setIsDraftMode
   } = useQuestionPreviewStore();
 
   // 弹窗状态管理
@@ -249,7 +249,7 @@ const QuestionPreviewPage: React.FC = () => {
         // 自动保存当前状态
         const currentDrafts = useQuestionPreviewStore.getState().drafts;
         const updatedDrafts = currentDrafts.map(draft => 
-          draft.id === currentDraftId 
+          draft._id === currentDraftId 
             ? { ...draft, questions, updatedAt: new Date() }
             : draft
         );
@@ -275,12 +275,152 @@ const QuestionPreviewPage: React.FC = () => {
           draftId?: string;
         };
 
+        // 优先从URL参数中获取草稿ID（用于页面刷新后的恢复）
+        const urlDraftId = params.draftId;
+        
         // 如果有草稿ID，优先加载草稿数据
-        if (routeData?.isFromDraft && routeData?.draftId) {
+        if (urlDraftId) {
+          // 从URL参数获取草稿ID，说明是刷新页面后的恢复
+          setCurrentDraftId(urlDraftId);
+          setIsDraftMode(true);
+          loadDraft(urlDraftId);
+          // 不直接返回，继续加载题库列表
+        } else if (routeData?.isFromDraft && routeData?.draftId) {
+          // 从草稿管理器进入
           setCurrentDraftId(routeData.draftId);
           setIsDraftMode(true);
           loadDraft(routeData.draftId);
           // 不直接返回，继续加载题库列表
+        } else if (routeData?.questions) {
+          // 从批量上传页面进入时，先检查是否有相同内容的草稿
+          // 如果有就使用现有的草稿，如果没有才创建新的
+          try {
+            // 先设置临时状态
+            const tempDraftId = `temp-${Date.now()}`;
+            setCurrentDraftId(tempDraftId);
+            setIsDraftMode(true);
+            
+            // 异步处理草稿检查和创建
+            setTimeout(async () => {
+              try {
+                const { userDraftAPI } = await import('../../services/questionDraftAPI');
+                
+                // 先获取用户的草稿列表
+                const draftsResponse = await userDraftAPI.getDrafts();
+                const existingDrafts = draftsResponse.drafts || [];
+                
+                // 转换题目数据
+                const processedQuestions = routeData.questions.map((q, index) => {
+                  let content;
+                  if (typeof q.content === 'string') {
+                    let options: Array<{text: string, isCorrect: boolean}> = [];
+                    if ((q as any).options && Array.isArray((q as any).options)) {
+                      options = (q as any).options.map((optionText: string) => ({
+                        text: optionText,
+                        isCorrect: false
+                      }));
+                    }
+                    
+                    content = {
+                      stem: q.content,
+                      options,
+                      answer: (q as any).answer || '',
+                      fillAnswers: (q as any).fillAnswers || [],
+                      solutionAnswers: (q as any).solutionAnswers || [],
+                      solution: (q as any).solution || ''
+                    };
+                  } else {
+                    let options: Array<{text: string, isCorrect: boolean}> = [];
+                    if (q.content?.options) {
+                      if (Array.isArray(q.content.options)) {
+                        const firstOption = q.content.options[0];
+                        if (firstOption && typeof firstOption === 'string') {
+                          options = (q.content.options as unknown as string[]).map((optionText: string) => ({
+                            text: optionText,
+                            isCorrect: false
+                          }));
+                        } else if (firstOption && typeof firstOption === 'object' && 'text' in firstOption) {
+                          options = q.content.options as Array<{text: string, isCorrect: boolean}>;
+                        }
+                      }
+                    }
+                    
+                    content = {
+                      ...q.content,
+                      options,
+                      stem: q.content?.stem || '',
+                      answer: q.content?.answer || '',
+                      fillAnswers: q.content?.fillAnswers || [],
+                      solutionAnswers: q.content?.solutionAnswers || [],
+                      solution: q.content?.solution || ''
+                    };
+                  }
+
+                  return {
+                    ...q,
+                    id: q.id || q._id || `temp-${index}`,
+                    content,
+                    isSelected: false,
+                    tags: q.tags || []
+                  };
+                });
+                
+                // 检查是否有相同内容的草稿
+                const duplicateDraft = existingDrafts.find((draft: any) => {
+                  // 如果题目数量不同，内容肯定不同
+                  if (draft.questions.length !== processedQuestions.length) return false;
+                  
+                  // 检查每个题目是否相同（基于内容和类型）
+                  return draft.questions.every((draftQuestion: any, index: number) => {
+                    const currentQuestion = processedQuestions[index];
+                    return (
+                      draftQuestion.content.stem === currentQuestion.content.stem &&
+                      draftQuestion.type === currentQuestion.type &&
+                      draftQuestion.source === currentQuestion.source
+                    );
+                  });
+                });
+                
+                let finalDraftId: string;
+                
+                if (duplicateDraft) {
+                  // 使用现有的草稿
+                  finalDraftId = duplicateDraft._id;
+                  console.log('找到相同内容的草稿，使用现有草稿:', duplicateDraft.name);
+                } else {
+                  // 创建新的草稿
+                  const draftData = {
+                    name: `批量上传草稿_${new Date().toLocaleString()}`,
+                    description: '从批量上传自动创建的草稿',
+                    questions: [],
+                    tags: []
+                  };
+                  
+                  const newDraft = await userDraftAPI.createDraft(draftData);
+                  finalDraftId = newDraft._id;
+                  console.log('创建新的草稿:', newDraft.name);
+                }
+                
+                // 更新为真实的草稿ID
+                setCurrentDraftId(finalDraftId);
+                setQuestions(processedQuestions);
+                
+                // 立即保存到后端
+                await userDraftAPI.updateDraft(finalDraftId, { questions: processedQuestions });
+                
+                // 更新URL
+                navigate(`/batch-upload/preview-edit/${finalDraftId}`, { replace: true });
+                
+              } catch (error) {
+                console.error('处理草稿失败:', error);
+                showErrorRightSlide('初始化失败', '处理草稿失败，请重试');
+              }
+            }, 100);
+            
+          } catch (error) {
+            console.error('初始化失败:', error);
+            showErrorRightSlide('初始化失败', '页面初始化失败，请重试');
+          }
         }
 
         if (routeData?.questions) {
@@ -456,24 +596,19 @@ const QuestionPreviewPage: React.FC = () => {
       // 1. 先进行AI分析获取标签
       const results = await batchAnalyzeQuestions(selectedQuestions);
       
-      // 2. 立即应用标签并更新UI
-      const questionsWithTags = questions.map((question) => {
-        const resultIndex = selectedQuestions.findIndex(q => q.id === question.id);
-        if (resultIndex !== -1 && results[resultIndex]) {
-          const result = results[resultIndex];
-          return {
-            ...question,
+      // 2. 立即应用标签并更新UI - 使用updateQuestion确保保存到草稿
+      for (let i = 0; i < selectedQuestions.length; i++) {
+        const question = selectedQuestions[i];
+        const result = results[i];
+        if (question.id && result) {
+          await updateQuestion(question.id, {
             category: Array.isArray(result.category) ? result.category : [result.category].filter(Boolean),
             tags: result.tags,
             difficulty: result.difficulty,
             type: result.questionType
-          };
+          });
         }
-        return question;
-      });
-      
-      // 3. 立即更新UI显示标签
-      setQuestions(questionsWithTags);
+      }
       
       // 同时保存到分析结果中
       const newResults = { ...analysisResults };
@@ -484,9 +619,6 @@ const QuestionPreviewPage: React.FC = () => {
       });
       setAnalysisResults(newResults);
 
-      // 自动保存草稿以持久化AI分析结果
-      autoSaveDraft();
-      
       // 4. 显示标签分析完成的消息
       showSuccessRightSlide("操作成功", `已完成 ${selectedQuestions.length} 道题目的AI分析`);
       
@@ -533,19 +665,18 @@ const QuestionPreviewPage: React.FC = () => {
           if (answerResult.data?.data) {
             const answerData = answerResult.data.data;
             
-            // 更新单个题目的答案
-            setQuestions(questions.map(q => 
-              q.id === question.id ? {
-                ...q,
-                content: {
-                  ...q.content,
-                  answer: answerData.answer || '',
-                  solution: answerData.solution || '',
-                  fillAnswers: answerData.fillAnswers || [],
-                  solutionAnswers: answerData.solutionAnswers || []
-                }
-              } : q
-            ));
+            // 更新单个题目的答案 - 使用updateQuestion确保状态最新
+            // 注意：这里只更新答案相关字段，不覆盖标签等已更新的字段
+            await updateQuestion(question.id!, {
+              content: {
+                stem: question.content.stem,
+                options: question.content.options,
+                answer: answerData.answer || '',
+                solution: answerData.solution || '',
+                fillAnswers: answerData.fillAnswers || [],
+                solutionAnswers: answerData.solutionAnswers || []
+              }
+            });
             // 从“等待生成答案”队列移除
             setAnswerGeneratingQuestions(prev => prev.filter(id => id !== question.id));
             
@@ -561,8 +692,6 @@ const QuestionPreviewPage: React.FC = () => {
       // 答案生成完成后显示提示
       if (completedCount > 0) {
         showSuccessRightSlide("答案生成完成", `已为 ${completedCount} 道低难度题目生成答案和解析`);
-        // 重新保存草稿以包含答案
-        autoSaveDraft();
       }
     } catch (error) {
       // 错误日志已清理
@@ -589,11 +718,13 @@ const QuestionPreviewPage: React.FC = () => {
         type: result.questionType
       };
       
-      // 3. 立即更新UI显示标签
-      const updatedQuestions = questions.map(q => 
-        q.id === questionId ? updatedQuestion : q
-      );
-      setQuestions(updatedQuestions);
+      // 3. 立即更新UI显示标签 - 使用updateQuestion确保保存到草稿
+      await updateQuestion(questionId, {
+        category: Array.isArray(result.category) ? result.category : [result.category].filter(Boolean),
+        tags: result.tags,
+        difficulty: result.difficulty,
+        type: result.questionType
+      });
       
       // 同时保存到分析结果中
       setAnalysisResults({
@@ -601,8 +732,7 @@ const QuestionPreviewPage: React.FC = () => {
         [questionId]: result
       });
 
-      // 自动保存草稿以持久化AI分析结果
-      autoSaveDraft();
+
       
       // 4. 显示标签分析完成的消息
       showSuccessRightSlide("操作成功", 'AI分析完成，已应用到题目');
@@ -610,7 +740,7 @@ const QuestionPreviewPage: React.FC = () => {
       // 5. 如果难度为3星及以下，异步生成答案
       if (result.difficulty <= 3) {
         setAnswerGeneratingQuestions(prev => Array.from(new Set([...(prev || []), questionId])));
-        generateSingleAnswerInBackground(questionId, question, result);
+        generateSingleAnswerInBackground(questionId, updatedQuestion, result);
       }
       
     } catch (error) {
@@ -634,22 +764,20 @@ const QuestionPreviewPage: React.FC = () => {
       if (answerResult.data?.data) {
         const answerData = answerResult.data.data;
         
-        // 更新题目的答案和解析
-        setQuestions(questions.map(q => 
-          q.id === questionId ? {
-            ...q,
-            content: {
-              ...q.content,
-              answer: answerData.answer || '',
-              solution: answerData.solution || '',
-              fillAnswers: answerData.fillAnswers || [],
-              solutionAnswers: answerData.solutionAnswers || []
-            }
-          } : q
-        ));
+        // 更新题目的答案和解析 - 使用updateQuestion确保状态最新
+        // 注意：这里只更新答案相关字段，不覆盖标签等已更新的字段
+        await updateQuestion(questionId, {
+          content: {
+            stem: question.content.stem,
+            options: question.content.options,
+            answer: answerData.answer || '',
+            solution: answerData.solution || '',
+            fillAnswers: answerData.fillAnswers || [],
+            solutionAnswers: answerData.solutionAnswers || []
+          }
+        });
         
-        // 重新保存草稿以包含答案
-        autoSaveDraft();
+
         
         // 显示答案生成完成的消息
         showSuccessRightSlide("答案生成完成", '已为题目生成答案和解析');
@@ -679,7 +807,7 @@ const QuestionPreviewPage: React.FC = () => {
             stem: question.content.stem.trim(),
             type: 'choice',
             difficulty: 3,
-            category: '',
+            category: Array.isArray(question.category) ? question.category : (question.category ? [question.category] : []),
             tags: question.tags || [],
             threshold: 0.75, // 提高阈值，只显示高相似度的题目
             excludeQuestionId: question.id || question._id // 排除当前题目本身
@@ -844,8 +972,7 @@ const QuestionPreviewPage: React.FC = () => {
       setQuestions(finalQuestions);
       // 移除直接设置filteredQuestions，让筛选逻辑处理
       
-      // 自动保存草稿
-      autoSaveDraft();
+
       
       showSuccessRightSlide("操作成功", `已将题目分割为 ${newQuestions.length} 道新题目`);
     } catch (error) {
@@ -853,7 +980,7 @@ const QuestionPreviewPage: React.FC = () => {
     } finally {
       setSplittingQuestion(null);
     }
-  }, [splittingQuestion, questions, setQuestions, autoSaveDraft]);
+  }, [splittingQuestion, questions, setQuestions]);
 
   // 处理编辑保存
   const handleSaveEdit = useCallback(async (updatedQuestion: Partial<Question>) => {
@@ -1044,7 +1171,7 @@ const QuestionPreviewPage: React.FC = () => {
       if (hasUserSavedDraft && isDraftMode && currentDraftId) {
         const currentDrafts = useQuestionPreviewStore.getState().drafts;
         const updatedDrafts = currentDrafts.map(draft => 
-          draft.id === currentDraftId 
+          draft._id === currentDraftId 
             ? { ...draft, questions, updatedAt: new Date() }
             : draft
         );
@@ -1071,6 +1198,21 @@ const QuestionPreviewPage: React.FC = () => {
     // 关闭草稿提醒
     setShowDraftReminder(false);
     setIsEditModeReminder(false);
+    
+    // 刷新草稿列表，确保新保存的草稿能够显示
+    if (showDraftManager) {
+      // 如果草稿管理器是打开的，延迟一下再刷新，确保后端数据已经保存
+      setTimeout(() => {
+        const { fetchDrafts } = useQuestionPreviewStore.getState();
+        fetchDrafts();
+      }, 500);
+    }
+  };
+
+  // 处理草稿保存成功，更新URL
+  const handleDraftSaved = (draftId: string) => {
+    // 更新URL，添加草稿ID，这样刷新页面后能正确恢复
+    navigate(`/batch-upload/preview-edit/${draftId}`, { replace: true });
   };
 
   // 处理草稿保存成功
@@ -1304,6 +1446,7 @@ const QuestionPreviewPage: React.FC = () => {
         isOpen={showDraftManager}
         onClose={() => setShowDraftManager(false)}
         onUserSaveDraft={handleUserSaveDraft}
+        onDraftSaved={handleDraftSaved}
       />
 
       {/* 草稿提醒模态框 */}

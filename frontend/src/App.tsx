@@ -284,7 +284,17 @@ const App: React.FC = () => {
             />
 
             <Route 
-                              path="/batch-upload/preview-edit" 
+              path="/batch-upload/preview-edit" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <QuestionPreviewPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/batch-upload/preview-edit/:draftId" 
               element={
                 <ProtectedRoute>
                   <AppLayout>

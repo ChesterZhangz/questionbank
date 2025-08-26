@@ -265,7 +265,7 @@ const CreateQuestionPage: React.FC = () => {
         stem: content.stem.trim(),
         type: 'choice', // 固定值，不影响检测
         difficulty: 3,  // 固定值，不影响检测
-        category: '',   // 固定值，不影响检测
+        category: [],   // 固定值，不影响检测
         tags: content.tags || [],
         threshold: 0.6
       });

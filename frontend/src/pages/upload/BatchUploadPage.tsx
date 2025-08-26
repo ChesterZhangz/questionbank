@@ -79,20 +79,47 @@ import {
     };
   }
 
-// 题目接口定义
+// 题目接口定义 - 使用标准Question结构
 interface Question {
+  _id: string;
   id: string;
-  documentId: string;
-  title: string;
-  content: string;
+  qid: string;
+  bid: string;
   type: 'choice' | 'fill' | 'solution';
-  options?: string[];
-  blanks?: number[];
-  source?: string;
-  confidence?: number;
-  difficulty?: number;
-  tags?: string[];
+  content: {
+    stem: string;
+    options?: Array<{
+      text: string;
+      isCorrect: boolean;
+    }>;
+    answer: string;
+    fillAnswers?: string[];
+    solutionAnswers?: string[];
+    solution?: string;
+  };
   category?: string[];
+  tags?: string[];
+  source?: string;
+  creator: any;
+  questionBank: string;
+  status: 'draft' | 'published' | 'archived';
+  difficulty: number;
+  views: number;
+  favorites?: string[];
+  images?: Array<{
+    id: string;
+    url: string;
+    filename: string;
+    order: number;
+  }>;
+  tikzCodes?: Array<{
+    id: string;
+    code: string;
+    format: 'svg' | 'png';
+    order: number;
+  }>;
+  createdAt: string;
+  updatedAt: string;
   isSelected: boolean;
   isEditing: boolean;
 }
@@ -480,6 +507,16 @@ const BatchUploadPage: React.FC = () => {
     setShowDraftReminder(false);
   }, []);
 
+  // 处理用户主动保存草稿
+  const handleUserSaveDraft = useCallback(() => {
+    // 在批量上传页面，用户保存草稿后不需要特殊处理
+  }, []);
+
+  // 处理草稿保存成功，更新URL
+  const handleDraftSaved = useCallback((_draftId: string) => {
+    // 在批量上传页面，草稿保存成功后不需要更新URL
+  }, []);
+
   // 新增：文件名长度检测和优化建议
   const checkFileNameLength = (fileName: string) => {
     const maxLength = 100; // 建议的最大长度
@@ -822,20 +859,37 @@ const BatchUploadPage: React.FC = () => {
       try { progressEventSourcesRef.current[document.id]?.close(); } catch {}
       delete progressEventSourcesRef.current[document.id];
       
-      // 处理后端返回的真实题目数据
+      // 处理后端返回的真实题目数据，转换为标准Question结构
       const questions = (result.questions || []).map((q: any, index: number) => ({
-        id: `${document.id}-Q${index + 1}`,
-        documentId: document.id,
-        title: `T${index + 1}`,
-        content: q.content || q.stem || '',
+        _id: `temp-${document.id}-Q${index + 1}`,  // 临时ID
+        id: `${document.id}-Q${index + 1}`,        // 本地ID
+        qid: `temp-${document.id}-Q${index + 1}`,  // 临时题目ID
+        bid: '',  // 待分配题库ID
         type: q.type || 'solution',
-        options: q.options || [],
-        blanks: q.blanks || [],
-        source: document.fileName,
-        confidence: q.confidence || 0.95,
-        difficulty: q.difficulty || 3,
-        tags: q.tags || ['待分类'],
+        content: {
+          stem: q.content || '',  // 题干
+          options: q.options?.map((opt: string) => ({
+            text: opt,
+            isCorrect: false  // 需要AI判断或用户设置
+          })) || [],
+          answer: '',  // 需要AI生成或用户输入
+          fillAnswers: q.blanks ? new Array(q.blanks).fill('') : [],
+          solutionAnswers: [],
+          solution: ''  // 需要AI生成或用户输入
+        },
         category: q.category || [],
+        tags: q.tags || ['待分类'],
+        source: document.fileName,
+        creator: null,  // 待设置
+        questionBank: '',  // 待设置
+        status: 'draft',
+        difficulty: q.difficulty || 3,
+        views: 0,
+        favorites: [],
+        images: [],
+        tikzCodes: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         isSelected: false,
         isEditing: false
       }));
@@ -1023,20 +1077,37 @@ const BatchUploadPage: React.FC = () => {
       try { progressEventSourcesRef.current[document.id]?.close(); } catch {}
       delete progressEventSourcesRef.current[document.id];
       
-      // 处理后端返回的真实题目数据
+      // 处理后端返回的真实题目数据，转换为标准Question结构
       const questions = (result.questions || []).map((q: any, index: number) => ({
-        id: `${document.id}-Q${index + 1}`,
-        documentId: document.id,
-        title: `T${index + 1}`,
-        content: q.content || q.stem || '',
+        _id: `temp-${document.id}-Q${index + 1}`,  // 临时ID
+        id: `${document.id}-Q${index + 1}`,        // 本地ID
+        qid: `temp-${document.id}-Q${index + 1}`,  // 临时题目ID
+        bid: '',  // 待分配题库ID
         type: q.type || 'solution',
-        options: q.options || [],
-        blanks: q.blanks || [],
-        source: document.fileName,
-        confidence: q.confidence || 0.95,
-        difficulty: q.difficulty || 3,
-        tags: q.tags || ['待分类'],
+        content: {
+          stem: q.content || '',  // 题干
+          options: q.options?.map((opt: string) => ({
+            text: opt,
+            isCorrect: false  // 需要AI判断或用户设置
+          })) || [],
+          answer: '',  // 需要AI生成或用户输入
+          fillAnswers: q.blanks ? new Array(q.blanks).fill('') : [],
+          solutionAnswers: [],
+          solution: ''  // 需要AI生成或用户输入
+        },
         category: q.category || [],
+        tags: q.tags || ['待分类'],
+        source: document.fileName,
+        creator: null,  // 待设置
+        questionBank: '',  // 待设置
+        status: 'draft',
+        difficulty: q.difficulty || 3,
+        views: 0,
+        favorites: [],
+        images: [],
+        tikzCodes: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         isSelected: false,
         isEditing: false
       }));
@@ -1169,13 +1240,13 @@ const BatchUploadPage: React.FC = () => {
 
         // 删除本地状态
         setDocuments(prev => prev.filter(doc => doc.id !== docId));
-        setAllQuestions(prev => prev.filter(q => q.documentId !== docId));
+        setAllQuestions(prev => prev.filter(q => q.id.split('-Q')[0] !== docId));
 
       } catch (error) {
         console.error('删除文档失败:', error);
         // 即使出错也要删除本地状态
         setDocuments(prev => prev.filter(doc => doc.id !== docId));
-        setAllQuestions(prev => prev.filter(q => q.documentId !== docId));
+        setAllQuestions(prev => prev.filter(q => q.id.split('-Q')[0] !== docId));
       }
       
       // 关闭确认弹窗
@@ -1823,6 +1894,8 @@ const BatchUploadPage: React.FC = () => {
           isOpen={showDraftManager}
           onClose={() => setShowDraftManager(false)}
           onEnterEdit={handleEnterEdit}
+          onUserSaveDraft={handleUserSaveDraft}
+          onDraftSaved={handleDraftSaved}
         />
 
         {/* 草稿提醒模态框 */}

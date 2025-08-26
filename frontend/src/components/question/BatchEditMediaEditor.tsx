@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Image, Palette, Plus, Trash2, Upload } from 'lucide-react';
 import TikZHighlightInput from '../tikz/core/TikZHighlightInput';
+import { useAuthStore } from '../../stores/authStore';
 
 import Button from '../ui/Button';
 
@@ -24,6 +25,7 @@ interface BatchEditMediaEditorProps {
   onTikzCodesChange: (codes: TikZCode[]) => void;
   images?: QuestionImage[];
   onImagesChange?: (images: QuestionImage[]) => void;
+  bid?: string; // 题库ID，用于图片上传
   className?: string;
 }
 
@@ -32,10 +34,16 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
   onTikzCodesChange,
   images = [],
   onImagesChange: _onImagesChange = () => {},
+  bid,
   className = ''
 }) => {
+  const { token } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'images' | 'tikz'>('images');
   const [editingTikzId, setEditingTikzId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+
+
 
   // 添加新的 TikZ 代码
   const handleAddTikZ = () => {
@@ -69,44 +77,87 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
   };
 
   // 图片上传处理
-  const handleImageUpload = () => {
+  const handleImageUpload = async () => {
+    if (!bid) {
+      alert('题库ID不存在，无法上传图片');
+      return;
+    }
+
     // 创建隐藏的文件输入元素
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/*';
     fileInput.multiple = true;
     
-    fileInput.onchange = (event) => {
+    fileInput.onchange = async (event) => {
       const target = event.target as HTMLInputElement;
       const files = target.files;
       
       if (files && files.length > 0) {
-        const newImages: QuestionImage[] = [];
+        setIsUploading(true);
         
-        Array.from(files).forEach((file, index) => {
-          // 检查文件大小（限制为5MB）
-          if (file.size > 5 * 1024 * 1024) {
-            alert(`文件 ${file.name} 过大，请选择小于5MB的图片`);
-            return;
+        try {
+          const newImages: QuestionImage[] = [];
+          
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            
+            // 检查文件大小（限制为5MB）
+            if (file.size > 5 * 1024 * 1024) {
+              alert(`文件 ${file.name} 过大，请选择小于5MB的图片`);
+              continue;
+            }
+            
+            try {
+              // 创建FormData用于文件上传
+              const formData = new FormData();
+              formData.append('image', file);
+              formData.append('bid', bid);
+              
+              // 调用临时图片上传API
+              const response = await fetch('/api/questions/upload', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              });
+
+              if (!response.ok) {
+                throw new Error('图片上传失败');
+              }
+
+              const uploadResult = await response.json();
+              
+              if (uploadResult.success) {
+                const newImage: QuestionImage = {
+                  id: uploadResult.data.id,
+                  url: uploadResult.data.url,
+                  filename: uploadResult.data.filename || file.name,
+                  order: images.length + i
+                };
+                
+                newImages.push(newImage);
+              } else {
+                throw new Error(uploadResult.error || '图片上传失败');
+              }
+            } catch (uploadError) {
+              console.error('单个图片上传失败:', uploadError);
+              alert(`图片 ${file.name} 上传失败: ${uploadError}`);
+              continue;
+            }
           }
           
-          // 创建本地URL预览
-          const imageUrl = URL.createObjectURL(file);
-          
-          const newImage: QuestionImage = {
-            id: `img-${Date.now()}-${index}`,
-            url: imageUrl,
-            filename: file.name,
-            order: images.length + index
-          };
-          
-          newImages.push(newImage);
-        });
-        
-        // 更新图片列表
-        if (newImages.length > 0) {
-          const updatedImages = [...images, ...newImages];
-          _onImagesChange(updatedImages);
+          // 更新图片列表
+          if (newImages.length > 0) {
+            const updatedImages = [...images, ...newImages];
+            _onImagesChange(updatedImages);
+          }
+        } catch (error) {
+          console.error('图片上传失败:', error);
+          alert('图片上传失败，请重试');
+        } finally {
+          setIsUploading(false);
         }
       }
       
@@ -188,10 +239,11 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
                   <Button
                     variant="outline"
                     onClick={handleImageUpload}
+                    disabled={isUploading}
                     className="flex items-center space-x-2 mx-auto"
                   >
                     <Upload className="w-4 h-4" />
-                    <span>上传图片</span>
+                    <span>{isUploading ? '上传中...' : '上传图片'}</span>
                   </Button>
                 </div>
               ) : (

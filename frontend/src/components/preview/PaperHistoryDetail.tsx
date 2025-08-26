@@ -19,18 +19,45 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 
 interface Question {
+  _id: string;
   id: string;
-  documentId: string;
-  title: string;
-  content: string;
+  qid: string;
+  bid: string;
   type: 'choice' | 'fill' | 'solution';
-  options?: string[];
-  blanks?: number[];
-  source?: string;
-  confidence?: number;
-  difficulty?: number;
-  tags?: string[];
+  content: {
+    stem: string;
+    options?: Array<{
+      text: string;
+      isCorrect: boolean;
+    }>;
+    answer: string;
+    fillAnswers?: string[];
+    solutionAnswers?: string[];
+    solution?: string;
+  };
   category?: string[];
+  tags?: string[];
+  source?: string;
+  creator: any;
+  questionBank: string;
+  status: 'draft' | 'published' | 'archived';
+  difficulty: number;
+  views: number;
+  favorites?: string[];
+  images?: Array<{
+    id: string;
+    url: string;
+    filename: string;
+    order: number;
+  }>;
+  tikzCodes?: Array<{
+    id: string;
+    code: string;
+    format: 'svg' | 'png';
+    order: number;
+  }>;
+  createdAt: string;
+  updatedAt: string;
   isSelected: boolean;
   isEditing: boolean;
 }
@@ -65,6 +92,14 @@ interface DocumentItem {
   retryCount?: number;
   maxRetries?: number;
   retryDelay?: number;
+  processingInfo?: {
+    totalTime: number;
+    questionsCount: number;
+    choiceCount: number;
+    fillCount: number;
+    solutionCount: number;
+    averageTimePerQuestion: number;
+  };
 }
 
 interface PaperHistoryDetailProps {

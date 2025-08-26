@@ -9,9 +9,18 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
   // 检查文件类型
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
   
+  console.log('文件上传检查:', {
+    filename: file.originalname,
+    mimetype: file.mimetype,
+    size: file.size,
+    buffer: file.buffer ? `Buffer(${file.buffer.length} bytes)` : 'undefined'
+  });
+  
   if (allowedTypes.includes(file.mimetype)) {
+    console.log('✅ 文件类型验证通过');
     cb(null, true);
   } else {
+    console.log('❌ 文件类型被拒绝:', file.mimetype);
     cb(null, false);
   }
 };

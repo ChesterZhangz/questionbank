@@ -623,6 +623,7 @@ const EditQuestionPage: React.FC = () => {
                    <div className="space-y-4">
                      <h4 className="font-medium text-gray-700 dark:text-gray-200">图形管理</h4>
                      <IntegratedMediaEditor
+                       bid={questionBank?._id}
                        tikzCodes={tikzCodes}
                        onTikzCodesChange={setTikzCodes}
                        images={images}

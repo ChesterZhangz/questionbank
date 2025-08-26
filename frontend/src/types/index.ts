@@ -103,6 +103,8 @@ export interface User {
 }
 
 // 题目相关类型
+
+
 export interface Question {
   _id: string;
   id?: string; // 本地ID，用于拖拽等操作
@@ -139,6 +141,7 @@ export interface Question {
     format?: string;
     uploadedAt?: Date;
     uploadedBy?: string;
+    cosKey?: string;
   }>;
   tikzCodes?: Array<{
     id: string;

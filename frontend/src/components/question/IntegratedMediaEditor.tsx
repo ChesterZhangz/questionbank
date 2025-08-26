@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Image, Palette, Plus, Trash2, Upload } from 'lucide-react';
 import TikZHighlightInput from '../tikz/core/TikZHighlightInput';
 import TikZPreview from '../tikz/core/TikZPreview';
 import { QuestionImageManager } from './QuestionImageManager';
+import { useAuthStore } from '../../stores/authStore';
+import { CustomInputModal } from '../ui/CustomInputModal';
+import { useModal } from '../../hooks/useModal';
 
 import Button from '../ui/Button';
 
@@ -23,6 +26,7 @@ interface QuestionImage {
   format: string;
   uploadedAt: Date;
   uploadedBy: string;
+  cosKey?: string; // 腾讯云COS的键值
 }
 
 interface IntegratedMediaEditorProps {
@@ -42,8 +46,17 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
   onImagesChange: _onImagesChange = () => {},
   className = ''
 }) => {
+  const { token } = useAuthStore();
+  const { showSuccessRightSlide, showErrorRightSlide } = useModal();
   const [activeTab, setActiveTab] = useState<'images' | 'tikz'>('images');
   const [editingTikzId, setEditingTikzId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  
+  // 自定义输入框状态
+  const [isInputModalOpen, setIsInputModalOpen] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingFileIndex, setPendingFileIndex] = useState(0);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   // 添加新的 TikZ 代码
   const handleAddTikZ = () => {
@@ -76,8 +89,90 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
     onTikzCodesChange(updatedCodes);
   };
 
+  // 处理自定义名称输入
+  const handleCustomNameSubmit = useCallback(async (customName: string) => {
+    if (!pendingFile || !bid) return;
+
+    setIsUploading(true);
+
+    try {
+      // 检查文件大小（限制为5MB）
+      if (pendingFile.size > 5 * 1024 * 1024) {
+        alert(`文件 ${pendingFile.name} 过大，请选择小于5MB的图片`);
+        return;
+      }
+
+      // 创建FormData用于文件上传
+      const formData = new FormData();
+      formData.append('image', pendingFile);
+      formData.append('bid', bid);
+      formData.append('customName', customName || pendingFile.name);
+
+      // 调用临时图片上传API
+      const response = await fetch('/api/questions/upload', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('图片上传失败');
+      }
+
+      const uploadResult = await response.json();
+      
+      if (uploadResult.success) {
+        const newImage: QuestionImage = {
+          id: uploadResult.data.id,
+          bid: uploadResult.data.bid || bid,
+          url: uploadResult.data.url,
+          filename: uploadResult.data.filename || pendingFile.name,
+          order: images.length + pendingFileIndex,
+          format: uploadResult.data.format || pendingFile.type.split('/')[1] || 'unknown',
+          uploadedAt: new Date(uploadResult.data.uploadedAt || Date.now()),
+          uploadedBy: uploadResult.data.uploadedBy || 'current-user',
+          cosKey: uploadResult.data.cosKey
+        };
+        
+        // 更新图片列表
+        const updatedImages = [...images, newImage];
+        _onImagesChange(updatedImages);
+        
+        // 显示成功提示
+        showSuccessRightSlide('上传成功', `图片 "${customName || pendingFile.name}" 上传成功`);
+      } else {
+        throw new Error(uploadResult.error || '图片上传失败');
+      }
+    } catch (uploadError) {
+      console.error('图片上传失败:', uploadError);
+      const errorMessage = uploadError instanceof Error ? uploadError.message : '图片上传失败';
+      showErrorRightSlide('上传失败', `图片 ${pendingFile.name} 上传失败: ${errorMessage}`);
+    } finally {
+      // 处理下一个文件或完成
+      const nextIndex = pendingFileIndex + 1;
+      if (nextIndex < pendingFiles.length) {
+        setPendingFileIndex(nextIndex);
+        setPendingFile(pendingFiles[nextIndex]);
+        setIsInputModalOpen(true);
+      } else {
+        // 所有文件处理完成
+        setIsUploading(false);
+        setPendingFiles([]);
+        setPendingFile(null);
+        setPendingFileIndex(0);
+      }
+    }
+  }, [pendingFile, pendingFileIndex, pendingFiles, bid, token, images, _onImagesChange]);
+
   // 图片上传处理
   const handleImageUpload = () => {
+    if (!bid) {
+      alert('题库ID不存在，无法上传图片');
+      return;
+    }
+
     // 创建隐藏的文件输入元素
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -89,37 +184,11 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
       const files = target.files;
       
       if (files && files.length > 0) {
-        const newImages: QuestionImage[] = [];
-        
-        Array.from(files).forEach((file, index) => {
-          // 检查文件大小（限制为5MB）
-          if (file.size > 5 * 1024 * 1024) {
-            alert(`文件 ${file.name} 过大，请选择小于5MB的图片`);
-            return;
-          }
-          
-          // 创建本地URL预览
-          const imageUrl = URL.createObjectURL(file);
-          
-          const newImage: QuestionImage = {
-            id: `img-${Date.now()}-${index}`,
-            bid: bid || 'temp-bid',
-            url: imageUrl,
-            filename: file.name,
-            order: images.length + index,
-            format: file.type.split('/')[1] || 'unknown',
-            uploadedAt: new Date(),
-            uploadedBy: 'current-user'
-          };
-          
-          newImages.push(newImage);
-        });
-        
-        // 更新图片列表
-        if (newImages.length > 0) {
-          const updatedImages = [...images, ...newImages];
-          _onImagesChange(updatedImages);
-        }
+        // 设置待处理的文件列表
+        setPendingFiles(Array.from(files));
+        setPendingFileIndex(0);
+        setPendingFile(files[0]);
+        setIsInputModalOpen(true);
       }
       
       // 清理文件输入
@@ -200,10 +269,11 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
                   <Button
                     variant="outline"
                     onClick={handleImageUpload}
+                    disabled={isUploading}
                     className="flex items-center space-x-2 mx-auto"
                   >
                     <Upload className="w-4 h-4" />
-                    <span>上传图片</span>
+                    <span>{isUploading ? '上传中...' : '上传图片'}</span>
                   </Button>
                 </div>
               ) : (
@@ -258,7 +328,6 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
                           图形 {index + 1}
                         </h4>
                         <div className="flex items-center space-x-2">
-
                           <Button
                             variant="outline"
                             size="sm"
@@ -335,6 +404,25 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
           )}
         </AnimatePresence>
       </div>
+
+      {/* 自定义输入框模态框 */}
+      <CustomInputModal
+        isOpen={isInputModalOpen}
+        onClose={() => {
+          setIsInputModalOpen(false);
+          setPendingFiles([]);
+          setPendingFile(null);
+          setPendingFileIndex(0);
+        }}
+        onSubmit={handleCustomNameSubmit}
+        title={`为图片命名 (${pendingFileIndex + 1}/${pendingFiles.length})`}
+        placeholder={`请输入图片 "${pendingFile?.name}" 的描述性名称`}
+        defaultValue={pendingFile?.name.replace(/\.[^/.]+$/, '') || ''}
+        submitText="上传"
+        cancelText="取消"
+        maxLength={50}
+        required={false}
+      />
     </div>
   );
 };

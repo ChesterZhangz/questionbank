@@ -23,6 +23,7 @@ interface QuestionEditModalProps {
 const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
   isOpen,
   question,
+  questionBank,
   onClose,
   onSave
 }) => {
@@ -592,6 +593,7 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
                           onImagesChange={setImages}
                           tikzCodes={tikzCodes}
                           onTikzCodesChange={setTikzCodes}
+                          bid={questionBank?._id}
                         />
                       </div>
                     )}
