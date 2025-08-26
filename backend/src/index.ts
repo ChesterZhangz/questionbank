@@ -98,9 +98,10 @@ if (process.env.NODE_ENV === 'production') {
     message: '登录尝试过于频繁，请稍后再试'
   });
 
-  // 应用限流
+  // 应用限流 - 只对特定路径应用，避免干扰正常API
   app.use('/api/auth', authLimiter);
-  app.use('/api/', generalLimiter);
+  // 注意：不要对 /api/ 应用通用限流，会干扰所有API
+  // app.use('/api/', generalLimiter); // 注释掉这行
 } else {
   console.log('🔓 开发环境：限流已禁用');
 }
@@ -354,12 +355,7 @@ app.use('/api/enterprises', authMiddleware, enterpriseRoutes); // 企业管理�
 app.use('/api/my-enterprise', authMiddleware, myEnterpriseRoutes); // 我的企业路由
 
 // 草稿相关路由
-app.use('/api/question-drafts', (req, res, next) => {
-  console.log(`📋 草稿API请求: ${req.method} ${req.originalUrl}`);
-  console.log(`📋 请求头Origin: ${req.headers.origin}`);
-  console.log(`📋 请求头Authorization: ${req.headers.authorization ? '存在' : '不存在'}`);
-  next();
-}, questionDraftRoutes); // 题目草稿路由
+app.use('/api/question-drafts', questionDraftRoutes); // 题目草稿路由
 
 // 健康检查端点
 app.get('/health', (req, res) => {
