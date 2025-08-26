@@ -504,22 +504,42 @@ export const useQuestionPreviewStore = create<QuestionPreviewState & QuestionPre
 
     batchAnalyzeQuestions: async (questions) => {
       try {
-        const promises = questions.map(q => {
-          const content = typeof q.content === 'string' ? q.content : q.content.stem;
-          if (!content) return null;
-          return questionAnalysisAPI.analyzeQuestion(content);
-        });
-        const results = await Promise.all(promises.filter(Boolean));
-        return results.map(r => {
-          const analysis = r?.data?.analysis;
-          if (analysis) {
-            return {
-              ...analysis,
-              category: Array.isArray(analysis.category) ? analysis.category : [analysis.category].filter(Boolean)
-            };
+        const results: AIAnalysisResult[] = [];
+        
+        // 改为串行处理，避免同时发送太多请求
+        for (let i = 0; i < questions.length; i++) {
+          const question = questions[i];
+          const content = typeof question.content === 'string' ? question.content : question.content.stem;
+          
+          if (!content) {
+            results.push(null as any);
+            continue;
           }
-          return analysis;
-        }).filter(Boolean) as AIAnalysisResult[];
+          
+          try {
+            const response = await questionAnalysisAPI.analyzeQuestion(content);
+            const analysis = response?.data?.analysis;
+            
+            if (analysis) {
+              results.push({
+                ...analysis,
+                category: Array.isArray(analysis.category) ? analysis.category : [analysis.category].filter(Boolean)
+              });
+            } else {
+              results.push(null as any);
+            }
+            
+            // 添加小延迟，避免API限流
+            if (i < questions.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 200));
+            }
+          } catch (error) {
+            console.error(`AI分析失败 (题目 ${i + 1}):`, error);
+            results.push(null as any);
+          }
+        }
+        
+        return results.filter(Boolean) as AIAnalysisResult[];
       } catch (error) {
         console.error('批量AI分析失败:', error);
         throw error;

@@ -13,11 +13,14 @@ export const authMiddleware = async (
   next: NextFunction
 ) => {
   try {
-    console.log('🔐 认证中间件被调用');
-    console.log('🔐 Authorization header:', req.header('Authorization'));
-    
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    console.log('🔐 提取的token:', token ? `${token.substring(0, 10)}...` : 'undefined');
+    
+    // 只在开发环境下输出详细日志
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔐 认证中间件被调用');
+      console.log('🔐 Authorization header:', req.header('Authorization'));
+      console.log('🔐 提取的token:', token ? `${token.substring(0, 10)}...` : 'undefined');
+    }
 
     if (!token) {
       return res.status(401).json({ error: '访问被拒绝，没有提供令牌' });

@@ -595,6 +595,9 @@ const QuestionPreviewPage: React.FC = () => {
     try {
       setAnalyzingQuestions(selectedQuestions.map(q => q.id!).filter(Boolean));
       
+      // 显示开始分析提示
+      showSuccessRightSlide("开始分析", `正在分析 ${selectedQuestions.length} 道题目，请稍候...`);
+      
       // 1. 先进行AI分析获取标签
       const results = await batchAnalyzeQuestions(selectedQuestions);
       

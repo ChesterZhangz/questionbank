@@ -148,7 +148,7 @@ class QuestionAnalysisService {
 分析结果：`;
 
     const response = await axios.post(`${this.baseURL}/chat/completions`, {
-              model: 'deepseek-reasoner',
+      model: 'deepseek-chat', // 使用chat模型，速度快，适合标签分析
       messages: [
         {
           role: 'user',
