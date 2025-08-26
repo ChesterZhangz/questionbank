@@ -249,7 +249,7 @@ const QuestionPreviewPage: React.FC = () => {
         // 自动保存当前状态
         const currentDrafts = useQuestionPreviewStore.getState().drafts || [];
         const updatedDrafts = currentDrafts.map(draft => 
-          draft._id === currentDraftId 
+          draft && draft._id === currentDraftId 
             ? { ...draft, questions, updatedAt: new Date() }
             : draft
         );
@@ -383,7 +383,7 @@ const QuestionPreviewPage: React.FC = () => {
                 
                 let finalDraftId: string;
                 
-                if (duplicateDraft) {
+                if (duplicateDraft && duplicateDraft._id) {
                   // 使用现有的草稿
                   finalDraftId = duplicateDraft._id;
                   console.log('找到相同内容的草稿，使用现有草稿:', duplicateDraft.name);
@@ -397,8 +397,12 @@ const QuestionPreviewPage: React.FC = () => {
                   };
                   
                   const newDraft = await userDraftAPI.createDraft(draftData);
-                  finalDraftId = newDraft._id;
-                  console.log('创建新的草稿:', newDraft.name);
+                  if (newDraft && newDraft._id) {
+                    finalDraftId = newDraft._id;
+                    console.log('创建新的草稿:', newDraft.name);
+                  } else {
+                    throw new Error('创建草稿失败：返回的草稿数据无效');
+                  }
                 }
                 
                 // 更新为真实的草稿ID
@@ -1171,7 +1175,7 @@ const QuestionPreviewPage: React.FC = () => {
       if (hasUserSavedDraft && isDraftMode && currentDraftId) {
         const currentDrafts = useQuestionPreviewStore.getState().drafts || [];
         const updatedDrafts = currentDrafts.map(draft => 
-          draft._id === currentDraftId 
+          draft && draft._id === currentDraftId 
             ? { ...draft, questions, updatedAt: new Date() }
             : draft
         );

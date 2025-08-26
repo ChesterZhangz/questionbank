@@ -132,14 +132,49 @@ export const userDraftAPI = {
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
   }): Promise<DraftListResponse> => {
-    const response = await questionDraftAPI.get('/user', { params });
-    return response.data.data;
+    try {
+      const response = await questionDraftAPI.get('/user', { params });
+      
+      // 检查响应结构
+      if (!response || !response.data) {
+        console.error('草稿API响应结构异常:', response);
+        throw new Error('API响应结构异常');
+      }
+      
+      // 检查data字段
+      if (!response.data.data) {
+        console.error('草稿API data字段缺失:', response.data);
+        throw new Error('API数据字段缺失');
+      }
+      
+      // 检查drafts字段
+      if (!response.data.data.drafts || !Array.isArray(response.data.data.drafts)) {
+        console.error('草稿API drafts字段异常:', response.data.data);
+        throw new Error('草稿数据格式异常');
+      }
+      
+      return response.data.data;
+    } catch (error) {
+      console.error('获取草稿列表API调用失败:', error);
+      throw error;
+    }
   },
 
   // 获取单个草稿详情
   getDraftById: async (id: string): Promise<QuestionDraft> => {
-    const response = await questionDraftAPI.get(`/user/${id}`);
-    return response.data.data;
+    try {
+      const response = await questionDraftAPI.get(`/user/${id}`);
+      
+      if (!response || !response.data || !response.data.data) {
+        console.error('草稿详情API响应异常:', response);
+        throw new Error('草稿详情获取失败');
+      }
+      
+      return response.data.data;
+    } catch (error) {
+      console.error('获取草稿详情API调用失败:', error);
+      throw error;
+    }
   },
 
   // 创建草稿

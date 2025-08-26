@@ -182,6 +182,12 @@ export const useQuestionPreviewStore = create<QuestionPreviewState & QuestionPre
         const draftsWithDetails = await Promise.all(
           result.drafts.map(async (draft) => {
             try {
+              // 检查草稿是否有效
+              if (!draft || !draft._id) {
+                console.warn('跳过无效草稿:', draft);
+                return null;
+              }
+              
               // 如果草稿没有完整的题目数据，则获取详细数据
               if (!draft.questions || draft.questions.length === 0) {
                 const detailedDraft = await userDraftAPI.getDraftById(draft._id);
@@ -189,13 +195,16 @@ export const useQuestionPreviewStore = create<QuestionPreviewState & QuestionPre
               }
               return draft;
             } catch (error) {
-              console.error(`预加载草稿 ${draft._id} 失败:`, error);
+              console.error(`预加载草稿 ${draft?._id || 'unknown'} 失败:`, error);
               return draft; // 返回原始数据
             }
           })
         );
         
-        set({ drafts: draftsWithDetails, isLoadingDrafts: false });
+        // 过滤掉无效的草稿
+        const validDrafts = draftsWithDetails.filter(draft => draft !== null);
+        
+        set({ drafts: validDrafts, isLoadingDrafts: false });
       } catch (error) {
         console.error('获取草稿列表失败:', error);
         set({ 
