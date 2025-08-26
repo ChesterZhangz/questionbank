@@ -71,7 +71,9 @@ export interface DraftListResponse {
 
 // 创建axios实例
 const questionDraftAPI = axios.create({
-  baseURL: `${config.apiUrl}/question-drafts`,
+  baseURL: import.meta.env.DEV 
+    ? `${config.apiUrl}/api/question-drafts`  // 本地环境：http://localhost:3001/api/question-drafts
+    : `${config.apiUrl}/question-drafts`,     // 服务器环境：https://www.mareate.com/api/question-drafts
   timeout: 15000, // 减少超时时间到15秒
   headers: {
     'Content-Type': 'application/json',

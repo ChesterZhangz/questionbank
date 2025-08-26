@@ -282,7 +282,7 @@ const BatchUploadPage: React.FC = () => {
             // PDF处理步骤权重
             const stepWeights: Record<string, number> = {
               '文件上传': 0.05,
-              'Mathpix提取': 0.25,
+              '提取': 0.25,
               '题目分割': 0.15,
               'AI处理': 0.45,
               '结果优化': 0.10
@@ -305,7 +305,7 @@ const BatchUploadPage: React.FC = () => {
             .reduce((sum, s) => {
               let weight = 1;
               if (doc.fileType === 'pdf') {
-                const pdfWeights: Record<string, number> = { '文件上传': 0.05, 'Mathpix提取': 0.25, '题目分割': 0.15, 'AI处理': 0.45, '结果优化': 0.10 };
+                const pdfWeights: Record<string, number> = { '文件上传': 0.05, '提取': 0.25, '题目分割': 0.15, 'AI处理': 0.45, '结果优化': 0.10 };
                 weight = pdfWeights[s.step] || 1;
               } else if (doc.fileType === 'tex') {
                 const texWeights: Record<string, number> = { '文件上传': 0.05, 'DeepSeek AI解析': 0.60, '题目识别': 0.25, '结果优化': 0.10 };
@@ -619,7 +619,7 @@ const BatchUploadPage: React.FC = () => {
       // PDF文档使用6步流程
       processingSteps = [
         { step: '文件上传', status: 'pending', progress: 0 },
-        { step: 'Mathpix提取', status: 'pending', progress: 0 },
+        { step: '提取', status: 'pending', progress: 0 },
         { step: '题目分割', status: 'pending', progress: 0 },
         { step: 'AI处理', status: 'pending', progress: 0 },
         { step: '结果优化', status: 'pending', progress: 0 }
@@ -730,7 +730,7 @@ const BatchUploadPage: React.FC = () => {
     
     try {
       // 步骤1: Mathpix提取MMD内容并分割
-      updateProcessingStep(document.id, 'Mathpix提取', 'processing', 10);
+      updateProcessingStep(document.id, '提取', 'processing', 10);
       
       // 在开发环境中使用本地后端，生产环境使用远程API
       const apiBaseUrl = import.meta.env.DEV 
@@ -756,10 +756,10 @@ const BatchUploadPage: React.FC = () => {
               // 精确匹配后端发送的步骤名称
               if (step === '开始处理PDF') {
                 updateProcessingStep(document.id, '文件上传', 'completed', 100);
-              } else if (step === 'Mathpix提取') {
-                updateProcessingStep(document.id, 'Mathpix提取', 'processing', p);
-              } else if (step === 'Mathpix提取完成') {
-                updateProcessingStep(document.id, 'Mathpix提取', 'completed', 100);
+              } else if (step === '提取') {
+                updateProcessingStep(document.id, '提取', 'processing', p);
+              } else if (step === '提取完成') {
+                updateProcessingStep(document.id, '提取', 'completed', 100);
               } else if (step === '题目分割完成') {
                 updateProcessingStep(document.id, '题目分割', 'completed', 100);
               } else if (step === 'AI处理开始') {
@@ -986,10 +986,10 @@ const BatchUploadPage: React.FC = () => {
               // 精确匹配后端发送的步骤名称
               if (step === '开始处理PDF') {
                 updateProcessingStep(document.id, '文件上传', 'completed', 100);
-              } else if (step === 'Mathpix提取') {
-                updateProcessingStep(document.id, 'Mathpix提取', 'processing', p);
-              } else if (step === 'Mathpix提取完成') {
-                updateProcessingStep(document.id, 'Mathpix提取', 'completed', 100);
+              } else if (step === '提取') {
+                updateProcessingStep(document.id, '提取', 'processing', p);
+              } else if (step === '提取完成') {
+                updateProcessingStep(document.id, '提取', 'completed', 100);
               } else if (step === '题目分割完成') {
                 updateProcessingStep(document.id, '题目分割', 'completed', 100);
               } else if (step === 'AI处理开始') {

@@ -31,7 +31,7 @@ export const processOptimizedPDFDocument = async (req: Request, res: Response): 
     const pdfBuffer = req.file.buffer;
     
     // 1. Mathpix提取MMD内容
-    emitProgress(docId, { type: 'status', step: 'Mathpix提取', progress: 10 });
+    emitProgress(docId, { type: 'status', step: '提取', progress: 10 });
     if (isCancelled(docId)) {
       emitProgress(docId, { type: 'cancelled' });
       res.status(499).json({ cancelled: true });
@@ -42,7 +42,7 @@ export const processOptimizedPDFDocument = async (req: Request, res: Response): 
     let mathpixProgress = 10;
     const updateMathpixProgress = (progress: number) => {
       mathpixProgress = Math.min(35, 10 + Math.round((progress / 100) * 25)); // 10%到35%之间
-      emitProgress(docId, { type: 'status', step: 'Mathpix提取', progress: mathpixProgress });
+      emitProgress(docId, { type: 'status', step: '提取', progress: mathpixProgress });
     };
     
     const sections = await processPDF(pdfBuffer, updateMathpixProgress);
@@ -51,7 +51,7 @@ export const processOptimizedPDFDocument = async (req: Request, res: Response): 
       res.status(499).json({ cancelled: true });
       return;
     }
-    emitProgress(docId, { type: 'status', step: 'Mathpix提取完成', progress: 35 });
+    emitProgress(docId, { type: 'status', step: '提取完成', progress: 35 });
     
 
     
