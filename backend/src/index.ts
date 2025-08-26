@@ -366,6 +366,22 @@ app.get('/health', (req, res) => {
   });
 });
 
+// 草稿API调试端点
+app.get('/debug/question-drafts', (req, res) => {
+  res.json({
+    message: '草稿API调试端点',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    routes: {
+      '/api/question-drafts/user': '获取用户草稿列表',
+      '/api/question-drafts/user/:id': '获取草稿详情',
+      '/api/question-drafts/public': '获取公开草稿列表'
+    },
+    auth: '需要认证',
+    middleware: 'authMiddleware'
+  });
+});
+
 // 调试端点 - 检查静态资源路径
 app.get('/debug/static', (req, res) => {
   const staticPath = path.join(process.cwd(), '..', 'frontend', 'dist');
@@ -398,11 +414,17 @@ app.get('/debug/spa-assets/:filename', (req, res) => {
   });
 });
 
-// 404处理 - 前端路由回退
+// 404处理 - 前端路由回退（只处理非API请求）
 app.use('*', (req, res) => {
-  // 如果是API请求，返回JSON错误
+  // 确保API请求不会被这个中间件处理
   if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ error: '接口不存在' });
+    console.log(`❌ API路由未找到: ${req.path}`);
+    return res.status(404).json({ 
+      success: false, 
+      error: '接口不存在',
+      path: req.path,
+      method: req.method
+    });
   }
   
   // 如果是静态资源请求，返回404

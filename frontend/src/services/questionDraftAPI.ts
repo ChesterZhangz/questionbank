@@ -135,22 +135,32 @@ export const userDraftAPI = {
       
       // 检查响应结构
       if (!response || !response.data) {
+        console.warn('草稿API响应结构异常:', response);
         throw new Error('API响应结构异常');
       }
       
       // 检查data字段
       if (!response.data.data) {
+        console.warn('草稿API data字段缺失:', response.data);
         throw new Error('API数据字段缺失');
       }
       
       // 检查drafts字段
       if (!response.data.data.drafts || !Array.isArray(response.data.data.drafts)) {
+        console.warn('草稿API drafts字段异常:', response.data.data);
         throw new Error('草稿数据格式异常');
       }
       
       return response.data.data;
     } catch (error) {
-      throw error;
+      // 如果是网络错误或API错误，提供更详细的错误信息
+      if (error instanceof Error) {
+        if (error.message.includes('API数据字段缺失')) {
+          throw new Error('服务器返回了无效的数据格式，请检查网络连接或联系管理员');
+        }
+        throw error;
+      }
+      throw new Error('获取草稿列表失败，请稍后重试');
     }
   },
 

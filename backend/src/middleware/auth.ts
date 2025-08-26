@@ -68,7 +68,12 @@ export const authMiddleware = async (
     return next();
   } catch (error) {
     console.error('认证中间件错误:', error);
-    return res.status(401).json({ error: '令牌无效' });
+    // 确保返回JSON格式的错误响应
+    return res.status(401).json({ 
+      success: false,
+      error: '令牌无效',
+      details: error instanceof Error ? error.message : '未知错误'
+    });
   }
 };
 
