@@ -244,16 +244,12 @@ const QuestionPreviewPage: React.FC = () => {
         e.returnValue = '您有未保存的题目，确定要离开吗？';
         return '您有未保存的题目，确定要离开吗？';
       }
-      // 如果用户已经保存过草稿，自动保存当前状态
-      else if (hasUserSavedDraft && isDraftMode && currentDraftId) {
-        // 自动保存当前状态
-        const currentDrafts = useQuestionPreviewStore.getState().drafts || [];
-        const updatedDrafts = currentDrafts.map(draft => 
-          draft && draft._id === currentDraftId 
-            ? { ...draft, questions, updatedAt: new Date() }
-            : draft
-        );
-        useQuestionPreviewStore.getState().setDrafts(updatedDrafts);
+      // 在页面离开时，我们只能做同步操作，无法进行异步的草稿保存
+      // 但可以提示用户数据可能会丢失
+      if (questions.length > 0 && !hasUserSavedDraft) {
+        e.preventDefault();
+        e.returnValue = '您有未保存的题目，建议先保存草稿再离开';
+        return '您有未保存的题目，建议先保存草稿再离开';
       }
     };
 
@@ -289,140 +285,80 @@ const QuestionPreviewPage: React.FC = () => {
           // 从草稿管理器进入
           setCurrentDraftId(routeData.draftId);
           setIsDraftMode(true);
-          loadDraft(routeData.draftId);
+          // 确保草稿数据正确加载
+          try {
+            await loadDraft(routeData.draftId);
+          } catch (error) {
+            console.error('加载草稿失败:', error);
+            // 如果加载失败，至少设置状态
+            setCurrentDraftId(routeData.draftId);
+            setIsDraftMode(true);
+          }
           // 不直接返回，继续加载题库列表
         } else if (routeData?.questions) {
-          // 从批量上传页面进入时，先检查是否有相同内容的草稿
-          // 如果有就使用现有的草稿，如果没有才创建新的
-          try {
-            // 先设置临时状态
-            const tempDraftId = `temp-${Date.now()}`;
-            setCurrentDraftId(tempDraftId);
-            setIsDraftMode(true);
-            
-            // 异步处理草稿检查和创建
-            setTimeout(async () => {
-              try {
-                const { userDraftAPI } = await import('../../services/questionDraftAPI');
-                
-                // 先获取用户的草稿列表
-                const draftsResponse = await userDraftAPI.getDrafts();
-                const existingDrafts = draftsResponse?.drafts || [];
-                
-                // 转换题目数据
-                const processedQuestions = routeData.questions.map((q, index) => {
-                  let content;
-                  if (typeof q.content === 'string') {
-                    let options: Array<{text: string, isCorrect: boolean}> = [];
-                    if ((q as any).options && Array.isArray((q as any).options)) {
-                      options = (q as any).options.map((optionText: string) => ({
-                        text: optionText,
-                        isCorrect: false
-                      }));
-                    }
-                    
-                    content = {
-                      stem: q.content,
-                      options,
-                      answer: (q as any).answer || '',
-                      fillAnswers: (q as any).fillAnswers || [],
-                      solutionAnswers: (q as any).solutionAnswers || [],
-                      solution: (q as any).solution || ''
-                    };
-                  } else {
-                    let options: Array<{text: string, isCorrect: boolean}> = [];
-                    if (q.content?.options) {
-                      if (Array.isArray(q.content.options)) {
-                        const firstOption = q.content.options[0];
-                        if (firstOption && typeof firstOption === 'string') {
-                          options = (q.content.options as unknown as string[]).map((optionText: string) => ({
-                            text: optionText,
-                            isCorrect: false
-                          }));
-                        } else if (firstOption && typeof firstOption === 'object' && 'text' in firstOption) {
-                          options = q.content.options as Array<{text: string, isCorrect: boolean}>;
-                        }
-                      }
-                    }
-                    
-                    content = {
-                      ...q.content,
-                      options,
-                      stem: q.content?.stem || '',
-                      answer: q.content?.answer || '',
-                      fillAnswers: q.content?.fillAnswers || [],
-                      solutionAnswers: q.content?.solutionAnswers || [],
-                      solution: q.content?.solution || ''
-                    };
-                  }
-
-                  return {
-                    ...q,
-                    id: q.id || q._id || `temp-${index}`,
-                    content,
-                    isSelected: false,
-                    tags: q.tags || []
-                  };
-                });
-                
-                // 检查是否有相同内容的草稿
-                const duplicateDraft = existingDrafts.find((draft: any) => {
-                  // 如果题目数量不同，内容肯定不同
-                  if (draft.questions.length !== processedQuestions.length) return false;
-                  
-                  // 检查每个题目是否相同（基于内容和类型）
-                  return draft.questions.every((draftQuestion: any, index: number) => {
-                    const currentQuestion = processedQuestions[index];
-                    return (
-                      draftQuestion.content.stem === currentQuestion.content.stem &&
-                      draftQuestion.type === currentQuestion.type &&
-                      draftQuestion.source === currentQuestion.source
-                    );
-                  });
-                });
-                
-                let finalDraftId: string;
-                
-                if (duplicateDraft && duplicateDraft._id) {
-                  // 使用现有的草稿
-                  finalDraftId = duplicateDraft._id;
-                  } else {
-                  // 创建新的草稿
-                  const draftData = {
-                    name: `批量上传草稿_${new Date().toLocaleString()}`,
-                    description: '从批量上传自动创建的草稿',
-                    questions: [],
-                    tags: []
-                  };
-                  
-                  const newDraft = await userDraftAPI.createDraft(draftData);
-                  if (newDraft && newDraft._id) {
-                    finalDraftId = newDraft._id;
-                    } else {
-                    throw new Error('创建草稿失败：返回的草稿数据无效');
+          // 从批量上传页面进入，立即设置题目数据并显示
+          const processedQuestions = routeData.questions.map((q, index) => {
+            let content;
+            if (typeof q.content === 'string') {
+              let options: Array<{text: string, isCorrect: boolean}> = [];
+              if ((q as any).options && Array.isArray((q as any).options)) {
+                options = (q as any).options.map((optionText: string) => ({
+                  text: optionText,
+                  isCorrect: false
+                }));
+              }
+              
+              content = {
+                stem: q.content,
+                options,
+                answer: (q as any).answer || '',
+                fillAnswers: (q as any).fillAnswers || [],
+                solutionAnswers: (q as any).solutionAnswers || [],
+                solution: (q as any).solution || ''
+              };
+            } else {
+              let options: Array<{text: string, isCorrect: boolean}> = [];
+              if (q.content?.options) {
+                if (Array.isArray(q.content.options)) {
+                  const firstOption = q.content.options[0];
+                  if (firstOption && typeof firstOption === 'string') {
+                    options = (q.content.options as unknown as string[]).map((optionText: string) => ({
+                      text: optionText,
+                      isCorrect: false
+                    }));
+                  } else if (firstOption && typeof firstOption === 'object' && 'text' in firstOption) {
+                    options = q.content.options as Array<{text: string, isCorrect: boolean}>;
                   }
                 }
-                
-                // 更新为真实的草稿ID
-                setCurrentDraftId(finalDraftId);
-                setQuestions(processedQuestions);
-                
-                // 立即保存到后端
-                await userDraftAPI.updateDraft(finalDraftId, { questions: processedQuestions });
-                
-                // 更新URL
-                navigate(`/batch-upload/preview-edit/${finalDraftId}`, { replace: true });
-                
-              } catch (error) {
-                console.error('处理草稿失败:', error);
-                showErrorRightSlide('初始化失败', '处理草稿失败，请重试');
               }
-            }, 100);
-            
-          } catch (error) {
-            console.error('初始化失败:', error);
-            showErrorRightSlide('初始化失败', '页面初始化失败，请重试');
-          }
+              
+              content = {
+                ...q.content,
+                options,
+                stem: q.content?.stem || '',
+                answer: q.content?.answer || '',
+                fillAnswers: q.content?.fillAnswers || [],
+                solutionAnswers: q.content?.solutionAnswers || [],
+                solution: q.content?.solution || ''
+              };
+            }
+
+            return {
+              ...q,
+              id: q.id || q._id || `temp-${index}`,
+              content,
+              isSelected: false,
+              tags: q.tags || []
+            };
+          });
+          
+          // 立即设置题目数据，确保用户能看到
+          setQuestions(processedQuestions);
+          setCurrentDraftId(`temp-${Date.now()}`);
+          setIsDraftMode(true);
+          
+          // 显示数据加载成功提示
+          showSuccessRightSlide('数据已加载', `已加载 ${processedQuestions.length} 道题目，请及时保存草稿`);
         }
 
         if (routeData?.questions) {
@@ -1167,20 +1103,26 @@ const QuestionPreviewPage: React.FC = () => {
   }, [selectedQuestions, questions, saveQuestions, setSavingQuestions, setSaveProgress, setShowSavePanel, navigate]);
 
   // 返回批量上传页面
-  const handleBack = () => {
+  const handleBack = async () => {
     // 如果用户没有保存过草稿且当前有题目，显示确认对话框
     if (!hasUserSavedDraft && !isDraftMode && questions.length > 0) {
       setShowLeaveConfirm(true);
     } else {
-      // 如果用户已经保存过草稿，自动保存当前状态
-      if (hasUserSavedDraft && isDraftMode && currentDraftId) {
-        const currentDrafts = useQuestionPreviewStore.getState().drafts || [];
-        const updatedDrafts = currentDrafts.map(draft => 
-          draft && draft._id === currentDraftId 
-            ? { ...draft, questions, updatedAt: new Date() }
-            : draft
-        );
-        useQuestionPreviewStore.getState().setDrafts(updatedDrafts);
+      // 无论是否手动保存过，都进行自动保存（保护用户数据）
+      if (questions.length > 0) {
+        try {
+          if (currentDraftId && isDraftMode) {
+            // 更新现有草稿到后端
+            const { updateDraft } = useQuestionPreviewStore.getState();
+            await updateDraft(currentDraftId, { questions });
+          } else if (hasUserSavedDraft) {
+            // 如果用户之前保存过草稿但当前没有ID，创建新草稿
+            const { saveDraft } = useQuestionPreviewStore.getState();
+            await saveDraft(`自动保存_${new Date().toLocaleString('zh-CN')}`, '系统自动保存的草稿');
+          }
+        } catch (error) {
+          console.error('自动保存草稿失败:', error);
+        }
       }
       navigate('/batch-upload');
     }

@@ -127,7 +127,12 @@ interface Question {
 
 const BatchUploadPage: React.FC = () => {
   const navigate = useNavigate();
-  const { drafts = [] } = useQuestionPreviewStore();
+  const { 
+    drafts = [], 
+    currentDraftId, 
+    isDraftMode, 
+    fetchDrafts 
+  } = useQuestionPreviewStore();
 
   // 弹窗状态管理
   const { 
@@ -333,11 +338,19 @@ const BatchUploadPage: React.FC = () => {
 
   // 保存当前会话状态
   const saveCurrentSession = useCallback(() => {
-    // 只保存未完成的文档到当前会话
-    const activeDocuments = documents.filter(doc => doc.status !== 'completed');
-    localStorage.setItem('batchUploadCurrentDocuments', JSON.stringify(activeDocuments));
+    // 保存所有文档（包括已完成的，因为包含题目数据）
+    localStorage.setItem('batchUploadCurrentDocuments', JSON.stringify(documents));
     localStorage.setItem('batchUploadCurrentQuestions', JSON.stringify(allQuestions));
     localStorage.setItem('batchUploadGlobalStatus', JSON.stringify(globalProcessingStatus));
+    
+    // 额外保存题目数据到专门的存储键，确保数据不丢失
+    if (allQuestions.length > 0) {
+      localStorage.setItem('batchUploadQuestionsData', JSON.stringify({
+        questions: allQuestions,
+        timestamp: Date.now(),
+        documentCount: documents.length
+      }));
+    }
   }, [documents, allQuestions, globalProcessingStatus]);
 
   // 加载当前会话状态
@@ -345,47 +358,63 @@ const BatchUploadPage: React.FC = () => {
     const savedDocuments = localStorage.getItem('batchUploadCurrentDocuments');
     const savedQuestions = localStorage.getItem('batchUploadCurrentQuestions');
     const savedGlobalStatus = localStorage.getItem('batchUploadGlobalStatus');
+    const savedQuestionsData = localStorage.getItem('batchUploadQuestionsData');
+    
+    // 优先从专门的题目数据存储加载
+    if (savedQuestionsData) {
+      try {
+        const questionsData = JSON.parse(savedQuestionsData);
+        const { questions, timestamp } = questionsData;
+        
+        // 检查数据是否过期（24小时）
+        const isExpired = Date.now() - timestamp > 24 * 60 * 60 * 1000;
+        if (!isExpired && questions && questions.length > 0) {
+          setAllQuestions(questions);
+          console.log(`从localStorage恢复了 ${questions.length} 道题目数据`);
+        }
+      } catch (error) {
+        console.error('加载题目数据失败:', error);
+      }
+    }
     
     if (savedDocuments) {
       try {
         const documents = JSON.parse(savedDocuments);
-        // 恢复Date对象，但只保留未完成的文档
-        const restoredDocuments = documents
-          .filter((doc: any) => doc.status !== 'completed') // 过滤掉已完成的文档
-          .map((doc: any) => ({
-            ...doc,
-            uploadTime: new Date(doc.uploadTime),
-            processTime: doc.processTime ? new Date(doc.processTime) : undefined,
-            startTime: doc.startTime ? new Date(doc.startTime) : undefined,
-            lastUpdateTime: doc.lastUpdateTime ? new Date(doc.lastUpdateTime) : undefined,
-            processingSteps: doc.processingSteps?.map((step: any) => ({
-              ...step,
-              startTime: step.startTime ? new Date(step.startTime) : undefined,
-              endTime: step.endTime ? new Date(step.endTime) : undefined
-            }))
-          }));
+        // 恢复Date对象，保留所有文档（包括已完成的）
+        const restoredDocuments = documents.map((doc: any) => ({
+          ...doc,
+          uploadTime: new Date(doc.uploadTime),
+          processTime: doc.processTime ? new Date(doc.processTime) : undefined,
+          startTime: doc.startTime ? new Date(doc.startTime) : undefined,
+          lastUpdateTime: doc.lastUpdateTime ? new Date(doc.lastUpdateTime) : undefined,
+          processingSteps: doc.processingSteps?.map((step: any) => ({
+            ...step,
+            startTime: step.startTime ? new Date(step.startTime) : undefined,
+            endTime: step.endTime ? new Date(step.endTime) : undefined
+          }))
+        }));
         setDocuments(restoredDocuments);
-              } catch (error) {
-          showErrorRightSlide('加载失败', '加载当前文档状态失败');
-        }
+      } catch (error) {
+        showErrorRightSlide('加载失败', '加载当前文档状态失败');
+      }
     }
     
     if (savedQuestions) {
       try {
         const questions = JSON.parse(savedQuestions);
         setAllQuestions(questions);
-              } catch (error) {
-          showErrorRightSlide('加载失败', '加载当前题目状态失败');
-        }
+      } catch (error) {
+        showErrorRightSlide('加载失败', '加载当前题目状态失败');
+      }
     }
     
     if (savedGlobalStatus) {
       try {
         const globalStatus = JSON.parse(savedGlobalStatus);
         setGlobalProcessingStatus(globalStatus);
-              } catch (error) {
-          showErrorRightSlide('加载失败', '加载全局处理状态失败');
-        }
+      } catch (error) {
+        showErrorRightSlide('加载失败', '加载全局处理状态失败');
+      }
     }
   }, []);
 
@@ -400,6 +429,14 @@ const BatchUploadPage: React.FC = () => {
     loadUploadHistory();
     loadCurrentSession();
   }, []);
+  
+  // 监听草稿状态变化，确保状态同步
+  useEffect(() => {
+    // 当草稿状态变化时，重新获取草稿列表以保持同步
+    if (currentDraftId || isDraftMode) {
+      fetchDrafts();
+    }
+  }, [currentDraftId, isDraftMode, fetchDrafts]);
 
   // 监听状态变化，自动保存当前会话
   useEffect(() => {
@@ -497,13 +534,18 @@ const BatchUploadPage: React.FC = () => {
 
   // 从草稿进入编辑
   const handleEnterEdit = useCallback((draft: any) => {
+    // 先更新store中的当前草稿ID，确保状态同步
+    const { setCurrentDraftId, setIsDraftMode } = useQuestionPreviewStore.getState();
+    setCurrentDraftId(draft._id);
+    setIsDraftMode(true);
+    
     // 跳转到题目预览编辑页面，传递草稿数据
     navigate('/batch-upload/preview-edit', {
       state: {
         questions: draft.questions,
         documentInfo: draft.documentInfo,
         isFromDraft: true,
-        draftId: draft.id
+        draftId: draft._id // 使用 _id 而不是 id
       }
     });
     setShowDraftManager(false);

@@ -314,11 +314,21 @@ export const useQuestionPreviewStore = create<QuestionPreviewState & QuestionPre
         await userDraftAPI.deleteDraft(draftId);
         
         // 更新本地草稿列表
-        set(state => ({
-          drafts: state.drafts.filter(d => d._id !== draftId),
-          currentDraftId: state.currentDraftId === draftId ? undefined : state.currentDraftId,
-          isDraftMode: state.currentDraftId === draftId ? false : state.isDraftMode
-        }));
+        set(state => {
+          const updatedDrafts = state.drafts.filter(d => d._id !== draftId);
+          const shouldClearCurrentDraft = state.currentDraftId === draftId;
+          
+          return {
+            drafts: updatedDrafts,
+            currentDraftId: shouldClearCurrentDraft ? undefined : state.currentDraftId,
+            isDraftMode: shouldClearCurrentDraft ? false : state.isDraftMode,
+            // 如果删除的是当前草稿，清空题目列表
+            questions: shouldClearCurrentDraft ? [] : state.questions,
+            filteredQuestions: shouldClearCurrentDraft ? [] : state.filteredQuestions
+          };
+        });
+        
+        console.log(`草稿 ${draftId} 删除成功，本地状态已更新`);
       } catch (error) {
         console.error('删除草稿失败:', error);
         throw error;
@@ -504,42 +514,49 @@ export const useQuestionPreviewStore = create<QuestionPreviewState & QuestionPre
 
     batchAnalyzeQuestions: async (questions) => {
       try {
-        const results: AIAnalysisResult[] = [];
+        // 使用并行处理，但分批执行避免API限流
+        const batchSize = 3; // 每批处理3道题
+        const allResults: (AIAnalysisResult | null)[] = [];
         
-        // 改为串行处理，避免同时发送太多请求
-        for (let i = 0; i < questions.length; i++) {
-          const question = questions[i];
-          const content = typeof question.content === 'string' ? question.content : question.content.stem;
+        for (let i = 0; i < questions.length; i += batchSize) {
+          const batch = questions.slice(i, i + batchSize);
           
-          if (!content) {
-            results.push(null as any);
-            continue;
-          }
-          
-          try {
-            const response = await questionAnalysisAPI.analyzeQuestion(content);
-            const analysis = response?.data?.analysis;
+          // 并行处理当前批次
+          const batchPromises = batch.map(async (question, batchIndex) => {
+            const content = typeof question.content === 'string' ? question.content : question.content.stem;
             
-            if (analysis) {
-              results.push({
-                ...analysis,
-                category: Array.isArray(analysis.category) ? analysis.category : [analysis.category].filter(Boolean)
-              });
-            } else {
-              results.push(null as any);
+            if (!content) {
+              return null;
             }
             
-            // 添加小延迟，避免API限流
-            if (i < questions.length - 1) {
-              await new Promise(resolve => setTimeout(resolve, 200));
+            try {
+              const response = await questionAnalysisAPI.analyzeQuestion(content);
+              const analysis = response?.data?.analysis;
+              
+              if (analysis) {
+                return {
+                  ...analysis,
+                  category: Array.isArray(analysis.category) ? analysis.category : [analysis.category].filter(Boolean)
+                };
+              }
+              return null;
+            } catch (error) {
+              console.error(`AI分析失败 (题目 ${i + batchIndex + 1}):`, error);
+              return null;
             }
-          } catch (error) {
-            console.error(`AI分析失败 (题目 ${i + 1}):`, error);
-            results.push(null as any);
+          });
+          
+          // 等待当前批次完成
+          const batchResults = await Promise.all(batchPromises);
+          allResults.push(...batchResults);
+          
+          // 批次间添加短暂延迟，避免API限流
+          if (i + batchSize < questions.length) {
+            await new Promise(resolve => setTimeout(resolve, 100));
           }
         }
         
-        return results.filter(Boolean) as AIAnalysisResult[];
+        return allResults.filter(Boolean) as AIAnalysisResult[];
       } catch (error) {
         console.error('批量AI分析失败:', error);
         throw error;

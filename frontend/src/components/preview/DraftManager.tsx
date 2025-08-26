@@ -31,6 +31,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
     showConfirm,
     confirmModal,
     closeConfirm,
+    setConfirmLoading,
     rightSlideModal,
     showSuccessRightSlide,
     showErrorRightSlide,
@@ -63,6 +64,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [editingDraftName, setEditingDraftName] = useState('');
   const [loadingDraftId, setLoadingDraftId] = useState<string | null>(null);
+  const [deletingDraftId, setDeletingDraftId] = useState<string | null>(null);
 
   const handleSaveDraft = async () => {
     if (!draftName.trim()) {
@@ -75,54 +77,71 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
       return;
     }
 
-    // 检查是否存在内容重复的草稿
+    // 检查是否存在高度相似的草稿（允许一定的差异）
     const duplicateDraft = drafts.find(draft => {
-      // 如果题目数量不同，内容肯定不同
-      if (draft.questions.length !== questions.length) return false;
+      // 如果题目数量差异很大，认为不是重复
+      if (Math.abs(draft.questions.length - questions.length) > 2) return false;
       
-      // 检查每个题目是否相同（基于内容和类型）
-      return draft.questions.every((draftQuestion, index) => {
-        const currentQuestion = questions[index];
-        return (
-          draftQuestion.content.stem === currentQuestion.content.stem &&
-          draftQuestion.type === currentQuestion.type &&
-          draftQuestion.source === currentQuestion.source
-        );
+      // 计算相似度（基于题目内容和类型）
+      let similarCount = 0;
+      const minSimilarity = 0.7; // 70%相似度才认为是重复
+      
+      questions.forEach((currentQuestion, index) => {
+        if (index < draft.questions.length) {
+          const draftQuestion = draft.questions[index];
+          if (
+            draftQuestion.content.stem === currentQuestion.content.stem &&
+            draftQuestion.type === currentQuestion.type
+          ) {
+            similarCount++;
+          }
+        }
       });
+      
+      const similarity = similarCount / Math.max(questions.length, draft.questions.length);
+      return similarity >= minSimilarity;
     });
     
-    if (duplicateDraft) {
-      const confirmMessage = `检测到与草稿"${duplicateDraft.name}"内容完全相同的习题集.\n\n是否要覆盖现有草稿？\n\n注意：这将更新草稿"${duplicateDraft.name}"的内容，而不是创建新的草稿.`;
-      
-      showConfirm(
-        '确认覆盖',
-        confirmMessage,
-        () => {
-          // 覆盖现有草稿
-          const { updateDraft, setCurrentDraftId, setIsDraftMode } = useQuestionPreviewStore.getState();
-          updateDraft(duplicateDraft._id, {
-            name: draftName.trim(),
-            description: draftDescription.trim() || undefined,
-            questions: questions
+          if (duplicateDraft) {
+        const confirmMessage = `检测到与草稿"${duplicateDraft.name}"高度相似的习题集.\n\n相似度：${Math.round((duplicateDraft.questions.filter((_, index) => 
+          index < questions.length && 
+          duplicateDraft.questions[index]?.content.stem === questions[index]?.content.stem &&
+          duplicateDraft.questions[index]?.type === questions[index]?.type
+        ).length / Math.max(questions.length, duplicateDraft.questions.length)) * 100)}%\n\n是否要覆盖现有草稿？\n\n注意：这将更新草稿"${duplicateDraft.name}"的内容，而不是创建新的草稿.`;
+        
+        showConfirm(
+          '确认覆盖',
+          confirmMessage,
+          async () => {
+            try {
+              // 覆盖现有草稿
+              const { updateDraft, setCurrentDraftId, setIsDraftMode } = useQuestionPreviewStore.getState();
+              await updateDraft(duplicateDraft._id, {
+                name: draftName.trim(),
+                description: draftDescription.trim() || undefined,
+                questions: questions
+              });
+              setCurrentDraftId(duplicateDraft._id);
+              setIsDraftMode(true);
+              
+              setDraftName('');
+              setDraftDescription('');
+              setShowSaveForm(false);
+              showSuccessRightSlide('更新成功', `已更新草稿：${duplicateDraft.name}`);
+              
+              // 通知父组件用户已主动保存草稿
+              if (onUserSaveDraft) {
+                onUserSaveDraft();
+              }
+            } catch (error) {
+              showErrorRightSlide('更新失败', '草稿更新失败，请重试');
+            }
+            
+            // 关闭确认弹窗
+            closeConfirm();
           });
-          setCurrentDraftId(duplicateDraft._id);
-          setIsDraftMode(true);
-          
-          setDraftName('');
-          setDraftDescription('');
-          setShowSaveForm(false);
-          showSuccessRightSlide('更新成功', `已更新草稿：${duplicateDraft.name}`);
-          
-          // 通知父组件用户已主动保存草稿
-          if (onUserSaveDraft) {
-            onUserSaveDraft();
-          }
-          
-          // 关闭确认弹窗
-          closeConfirm();
-        });
-      return;
-    }
+        return;
+      }
 
     // 正常保存新草稿
     try {
@@ -187,20 +206,35 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
     }
   };
 
-  const handleDeleteDraft = (draft: QuestionDraft) => {
+  const handleDeleteDraft = async (draft: QuestionDraft) => {
     showConfirm(
       '确认删除',
       `确定要删除草稿"${draft.name}"吗？`,
-      () => {
-        deleteDraft(draft._id);
-        showSuccessRightSlide('删除成功', '草稿删除成功');
-        closeConfirm();
+      async () => {
+        try {
+          setDeletingDraftId(draft._id);
+          setConfirmLoading(true, '正在删除...');
+          await deleteDraft(draft._id);
+          showSuccessRightSlide('删除成功', '草稿删除成功');
+          closeConfirm();
+        } catch (error) {
+          console.error('删除草稿失败:', error);
+          showErrorRightSlide('删除失败', error instanceof Error ? error.message : '草稿删除失败，请重试');
+        } finally {
+          setDeletingDraftId(null);
+          setConfirmLoading(false);
+        }
       }
     );
   };
 
   const handleEnterEdit = (draft: QuestionDraft) => {
     if (onEnterEdit) {
+      // 在进入编辑前，先同步草稿状态
+      const { setCurrentDraftId, setIsDraftMode } = useQuestionPreviewStore.getState();
+      setCurrentDraftId(draft._id);
+      setIsDraftMode(true);
+      
       onEnterEdit(draft);
     }
   };
@@ -523,14 +557,24 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                                   </div>
                                 )}
                                 
-                                <Button
+                                                                <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleDeleteDraft(draft)}
                                   className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs px-2 py-1"
-                                                                          disabled={editingDraftId === draft._id}
+                                  disabled={editingDraftId === draft._id || deletingDraftId === draft._id}
                                 >
-                                  <Trash2 className="h-3 w-3" />
+                                  {deletingDraftId === draft._id ? (
+                                    <>
+                                      <div className="h-3 w-3 mr-1 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
+                                      正在删除...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Trash2 className="h-3 w-3 mr-1" />
+                                      删除
+                                    </>
+                                  )}
                                 </Button>
                               </div>
                             </div>

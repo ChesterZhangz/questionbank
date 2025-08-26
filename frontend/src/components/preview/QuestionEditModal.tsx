@@ -488,6 +488,9 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
                               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 选项 ({getQuestionTypeDisplayName(editedQuestion.type || question?.type)}) <span className="text-red-500">*</span>
                               </label>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                选择题答案通过勾选正确答案选项来设置
+                              </div>
                               <div className="flex items-center space-x-2">
                                 <Button
                                   variant="outline"
@@ -717,8 +720,11 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
                           </div>
                         )}
 
-                        {/* 答案编辑 - LaTeX编辑器（非填空题且非解答题） */}
-                        {(editedQuestion.type || question?.type) !== 'fill' && (editedQuestion.type || question?.type) !== 'solution' && (
+                        {/* 答案编辑 - LaTeX编辑器（非选择题、非填空题且非解答题） */}
+                        {(editedQuestion.type || question?.type) !== 'choice' && 
+                         (editedQuestion.type || question?.type) !== 'multiple-choice' &&
+                         (editedQuestion.type || question?.type) !== 'fill' && 
+                         (editedQuestion.type || question?.type) !== 'solution' && (
                           <div className="mb-6">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                               答案
