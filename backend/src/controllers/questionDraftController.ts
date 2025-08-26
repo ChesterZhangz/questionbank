@@ -6,8 +6,15 @@ import { IQuestionDraft } from '../models/QuestionDraft';
 // 获取用户的所有草稿
 export const getUserDrafts = async (req: AuthRequest, res: Response): Promise<Response | void> => {
   try {
+    console.log('🔍 getUserDrafts 被调用');
+    console.log('🔍 req.user:', req.user);
+    console.log('🔍 req.headers:', req.headers);
+    
     const userId = req.user?.id;
+    console.log('🔍 userId:', userId);
+    
     if (!userId) {
+      console.log('❌ 用户ID缺失，返回401');
       return res.status(401).json({ success: false, message: '未授权访问' });
     }
 
@@ -30,13 +37,21 @@ export const getUserDrafts = async (req: AuthRequest, res: Response): Promise<Re
 
     const skip = (Number(page) - 1) * Number(limit);
     
+    console.log('🔍 查询条件:', query);
+    console.log('🔍 排序条件:', sort);
+    console.log('🔍 分页参数:', { skip, limit: Number(limit) });
+    
     const drafts = await QuestionDraft.find(query)
       .sort(sort)
       .skip(skip)
       .limit(Number(limit))
       .populate('creator', 'name email');
+    
+    console.log('🔍 查询到的草稿数量:', drafts.length);
+    console.log('🔍 草稿数据:', drafts);
 
     const total = await QuestionDraft.countDocuments(query);
+    console.log('🔍 总草稿数量:', total);
 
     res.json({
       success: true,
