@@ -70,14 +70,13 @@ class QuestionEvaluationService {
       const prompt = this.generateEvaluationPrompt(request);
       
       const response = await axios.post(`${this.baseURL}/chat/completions`, {
-        model: 'deepseek-chat',
+        model: 'deepseek-reasoner',
         messages: [
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.1,
         max_tokens: 2000,
         stream: false
       }, {
@@ -196,14 +195,13 @@ class QuestionEvaluationService {
       const prompt = this.generateAbilityAssessmentPrompt(questionData);
       
       const response = await axios.post(`${this.baseURL}/chat/completions`, {
-        model: 'deepseek-chat',
+        model: 'deepseek-reasoner',
         messages: [
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.1,
         max_tokens: 1500,
         stream: false
       }, {
@@ -355,10 +353,11 @@ ${solution ? `解析：${solution}` : ''}
 | 分数 | 标准描述 (针对题目本身) |
 | :--- | :--- |
 | **0** | 无数据、文本或信息需要处理；或所需信息可直接使用，无需任何分析。 |
-| **1-3** | 只需提取单一数据点或进行最直接的比较，需要的分析极少，逻辑链条基本一下子就能解决. |
-| **4-6** | 从题目本身出发无法得到结论相关的任何条件，需要学生对题目有进一步的思考，拉长逻辑链条. |
-| **7-8** | 在上一个标准的基础上，更加拉长逻辑线条，对于题目的问题需要有不同维度的理解，结合不同数学领域进行分析. |
-| **9-10** | 题目包含大量、复杂或模糊的数据集/信息，其核心要求是进行高阶分析，如推断潜在变量、构建预测模型、或进行严密的系统优化分析，需要有创新性的分析与非常独到的理解！ |
+| **1-2** | 题目条件简单明确，无需深入分析。 |
+| **3-4** | 需要处理2-3个条件或数据点，进行简单的比较或计算，但分析路径仍然较短，逻辑链条在3-5步内可以完成。 |
+| **5-6** | 需要分析多个相关条件，进行中等复杂度的数据处理，逻辑链条需要6-8步，需要学生有一定的分析思维。 |
+| **7-8** | 题目包含多个维度的信息，需要系统性分析，逻辑链条复杂（8-12步），需要结合不同数学领域进行分析，分析路径较长。 |
+| **9-10** | 题目包含大量、复杂或模糊的数据集/信息，其核心要求是进行高阶分析，如推断潜在变量、构建预测模型、或进行严密的系统优化分析。分析路径必须超过12步，需要有创新性的分析与非常独到的理解！ |
 
 ### 5. **创造性思维 (creativeThinking)**
 评估题目在鼓励突破常规、采用非常规方法或产生新颖解决方案方面的内在潜力。

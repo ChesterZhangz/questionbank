@@ -65,18 +65,14 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadError, setUploadError] = useState<string>('');
   
-  // 自定义输入框状态
-  const [isInputModalOpen, setIsInputModalOpen] = useState(false);
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [pendingFileIndex, setPendingFileIndex] = useState(0);
-  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  // 不再需要自定义输入框状态，直接上传
   
   // 编辑名称状态
   const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
   const [editingImage, setEditingImage] = useState<QuestionImage | null>(null);
   const [isRenaming, setIsRenaming] = useState(false);
 
-  // 处理文件上传
+  // 处理文件上传 - 直接上传不需要命名
   const handleFileUpload = useCallback(async (files: File[]) => {
     if (images.length + files.length > maxImages) {
       alert(`最多只能上传${maxImages}张图片`);
@@ -88,105 +84,88 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
       return;
     }
 
-    // 设置待处理的文件列表
-    setPendingFiles(files);
-    setPendingFileIndex(0);
-    setPendingFile(files[0]);
-    setIsInputModalOpen(true);
-  }, [images.length, maxImages, bid]);
-
-  // 处理自定义名称输入
-  const handleCustomNameSubmit = useCallback(async (customName: string) => {
-    if (!pendingFile || !bid) return;
-
-    // 立即关闭模态框
-    setIsInputModalOpen(false);
-
-    // 确保上传状态正确设置
+    // 直接开始上传，使用原文件名
     setIsUploading(true);
     setUploadStatus('uploading');
-    setUploadProgress((pendingFileIndex / pendingFiles.length) * 100);
     setUploadError('');
     
-    // 添加模拟进度过渡效果
-    setTimeout(() => setUploadProgress(30), 300);
-    setTimeout(() => setUploadProgress(70), 800);
-
-    try {
-      // 创建FormData用于文件上传
-      const formData = new FormData();
-      formData.append('image', pendingFile);
-      formData.append('bid', bid);
-      formData.append('customName', customName || pendingFile.name);
-
-      // 调用临时图片上传API
-      const response = await fetch('/api/questions/upload', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('图片上传失败');
-      }
-
-      const uploadResult = await response.json();
+    let successCount = 0;
+    const totalFiles = files.length;
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      setUploadProgress(((i + 0.3) / totalFiles) * 100);
       
-      if (uploadResult.success) {
-        
-        const newImage: QuestionImage = {
-          id: uploadResult.data.id,
-          bid: uploadResult.data.bid || bid,
-          order: images.length + pendingFileIndex,
-          format: uploadResult.data.format || pendingFile.type.split('/')[1] || 'unknown',
-          uploadedAt: new Date(uploadResult.data.uploadedAt || Date.now()),
-          uploadedBy: uploadResult.data.uploadedBy || 'current-user',
-          filename: uploadResult.data.filename || pendingFile.name,
-          url: uploadResult.data.url,
-          cosKey: uploadResult.data.cosKey
-        };
-        
-        // 更新图片列表
-        const updatedImages = [...images, newImage];
-        onImagesChange(updatedImages);
-        
-        // 显示成功状态
-        setUploadStatus('success');
-        showSuccessRightSlide('上传成功', `图片 "${customName || pendingFile.name}" 上传成功`);
-        
-        setTimeout(() => setUploadStatus('idle'), 2000);
-      } else {
-        throw new Error(uploadResult.error || '图片上传失败');
-      }
-    } catch (uploadError) {
-      console.error('图片上传失败:', uploadError);
-      const errorMessage = uploadError instanceof Error ? uploadError.message : '图片上传失败';
-      setUploadError(errorMessage);
-      setUploadStatus('error');
-      setTimeout(() => setUploadStatus('idle'), 3000);
-    } finally {
-              // 处理下一个文件或完成
-        const nextIndex = pendingFileIndex + 1;
-        if (nextIndex < pendingFiles.length) {
-          setPendingFileIndex(nextIndex);
-          setPendingFile(pendingFiles[nextIndex]);
-          // 不再自动打开模态框，让用户手动选择是否继续上传
-        } else {
-          // 所有文件处理完成
-          setIsUploading(false);
-          setUploadProgress(100);
-          setTimeout(() => {
-            setUploadProgress(0);
-            setUploadStatus('idle');
-          }, 1000);
-          setPendingFiles([]);
-          setPendingFile(null);
-          setPendingFileIndex(0);
+      try {
+        // 创建FormData用于文件上传
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('bid', bid);
+        formData.append('customName', file.name); // 使用原文件名
+
+        // 调用临时图片上传API
+        const response = await fetch('/api/questions/upload', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`图片 ${file.name} 上传失败`);
         }
+
+        const uploadResult = await response.json();
+        
+        if (uploadResult.success) {
+          const newImage: QuestionImage = {
+            id: uploadResult.data.id,
+            bid: uploadResult.data.bid || bid,
+            order: images.length + i,
+            format: uploadResult.data.format || file.type.split('/')[1] || 'unknown',
+            uploadedAt: new Date(uploadResult.data.uploadedAt || Date.now()),
+            uploadedBy: uploadResult.data.uploadedBy || 'current-user',
+            filename: uploadResult.data.filename || file.name,
+            url: uploadResult.data.url,
+            cosKey: uploadResult.data.cosKey
+          };
+          
+          // 更新图片列表
+          const updatedImages = [...images, newImage];
+          onImagesChange(updatedImages);
+          successCount++;
+          
+          setUploadProgress(((i + 1) / totalFiles) * 100);
+        } else {
+          throw new Error(uploadResult.error || `图片 ${file.name} 上传失败`);
+        }
+      } catch (error) {
+        console.error(`图片 ${file.name} 上传失败:`, error);
+        showErrorRightSlide('上传失败', error instanceof Error ? error.message : `图片 ${file.name} 上传失败`);
+      }
     }
-  }, [pendingFile, pendingFileIndex, pendingFiles, bid, token, images, onImagesChange]);
+    
+    // 显示最终结果
+    if (successCount === totalFiles) {
+      showSuccessRightSlide('上传完成', `成功上传 ${successCount} 张图片`);
+      setUploadStatus('success');
+    } else if (successCount > 0) {
+      showSuccessRightSlide('部分成功', `成功上传 ${successCount}/${totalFiles} 张图片`);
+      setUploadStatus('success');
+    } else {
+      setUploadStatus('error');
+    }
+    
+    // 清理状态
+    setTimeout(() => {
+      setIsUploading(false);
+      setUploadProgress(0);
+      setUploadStatus('idle');
+    }, 2000);
+  }, [images.length, maxImages, bid, token, onImagesChange, showSuccessRightSlide, showErrorRightSlide]);
+
+  // 移除了handleCustomNameSubmit函数，因为现在直接上传不需要命名
 
   // 删除图片
   const handleDeleteImage = useCallback(async (imageId: string) => {
@@ -425,8 +404,8 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
         progress={uploadProgress}
         error={uploadError}
         success={uploadStatus === 'success'}
-        currentFile={pendingFile?.name}
-        totalFiles={pendingFiles.length}
+        currentFile=""
+        totalFiles={1}
         className="mt-4"
       />
 
@@ -538,24 +517,7 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
         </div>
       )}
 
-      {/* 自定义输入框模态框 */}
-      <CustomInputModal
-        isOpen={isInputModalOpen}
-        onClose={() => {
-          setIsInputModalOpen(false);
-          setPendingFiles([]);
-          setPendingFile(null);
-          setPendingFileIndex(0);
-        }}
-        onSubmit={handleCustomNameSubmit}
-        title={`为图片命名 (${pendingFileIndex + 1}/${pendingFiles.length})`}
-        placeholder={`请输入图片 "${pendingFile?.name}" 的描述性名称`}
-        defaultValue={pendingFile?.name.replace(/\.[^/.]+$/, '') || ''}
-        submitText="上传"
-        cancelText="取消"
-        maxLength={50}
-        required={false}
-      />
+      {/* 移除了自定义输入框模态框，现在直接上传 */}
 
       {/* 编辑图片名称模态框 */}
       <CustomInputModal

@@ -80,8 +80,10 @@ export const CustomInputModal: React.FC<CustomInputModalProps> = ({
     
     setError('');
     onSubmit(trimmedValue);
-    // 不在加载状态下才关闭模态框，让父组件决定何时关闭
-    // onClose();
+    // 如果不是加载状态，立即关闭模态框
+    if (!isLoading) {
+      onClose();
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -148,7 +148,7 @@ class QuestionAnalysisService {
 分析结果：`;
 
     const response = await axios.post(`${this.baseURL}/chat/completions`, {
-      model: 'deepseek-chat',
+              model: 'deepseek-reasoner',
       messages: [
         {
           role: 'user',
