@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button';
 import { useQuestionPreviewStore } from '../../stores/questionPreviewStore';
 import DraftManager from '../../components/preview/DraftManager';
 import DraftReminderModal from '../../components/preview/DraftReminderModal';
+import { cleanupOldStorage, checkMigrationStatus } from '../../utils/dataMigration';
 import ProcessingProgressCard from '../../components/preview/ProcessingProgressCard';
 import ProcessingResultPreview from '../../components/preview/ProcessingResultPreview';
 import PaperHistoryDetail from '../../components/preview/PaperHistoryDetail';
@@ -390,6 +391,13 @@ const BatchUploadPage: React.FC = () => {
 
   // 组件挂载时加载数据
   useEffect(() => {
+    // 检查并清理旧的localStorage数据
+    const migrationStatus = checkMigrationStatus();
+    if (migrationStatus.oldDataExists) {
+      console.log('🔄 发现旧的localStorage数据，开始清理...');
+      cleanupOldStorage();
+    }
+    
     loadUploadHistory();
     loadCurrentSession();
   }, []);
