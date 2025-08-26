@@ -13,7 +13,7 @@ RUN npm ci
 COPY frontend/ ./
 
 # 构建前端
-ENV VITE_API_URL=https://www.mareate.com/api
+ENV VITE_API_URL=https://www.mareate.com
 ENV VITE_BASE_URL=/
 RUN npm run build
 
