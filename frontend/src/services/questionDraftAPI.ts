@@ -1,7 +1,7 @@
 import axios from 'axios';
 const config = {
-  apiUrl: process.env.NODE_ENV === 'production' 
-    ? 'https://api.mareate.com' 
+  apiUrl: import.meta.env.PROD 
+    ? (import.meta.env.VITE_API_URL || 'https://www.mareate.com/api')
     : 'http://localhost:3001'
 };
 import type { Question } from '../types';
