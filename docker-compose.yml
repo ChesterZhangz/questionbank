@@ -16,6 +16,12 @@ services:
     restart: unless-stopped
     networks:
       - mareate-network
+    # 确保日志输出到主机
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   nginx:
     image: nginx:alpine
