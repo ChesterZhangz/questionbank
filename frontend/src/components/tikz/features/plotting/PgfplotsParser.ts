@@ -96,12 +96,6 @@ export class PgfplotsParser {
         result.plots[index].legend = legend;
       }
     });
-    
-    => ({
-      index: i,
-      legend: p.legend,
-      type: p.type
-    })));
 
     return result;
   }

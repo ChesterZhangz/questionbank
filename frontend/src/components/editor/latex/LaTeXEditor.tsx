@@ -328,10 +328,6 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
     // 清理填充字符，将字母替换为空的大括号，但保护LaTeX环境名称
     let cleanedSymbol = symbol;
     
-    // 添加调试信息
-    );
-    );
-    
     // 首先检查是否包含LaTeX环境命令，如果是则完全跳过清理
     if (symbol.includes('\\begin') || symbol.includes('\\end')) {
       cleanedSymbol = symbol; // 保持原样，不进行任何清理
