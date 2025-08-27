@@ -99,6 +99,7 @@ router.get('/', authMiddleware, async (req: QuestionBankRequest, res: any) => {
         { creator: userId },
         { managers: userId },
         { collaborators: userId },
+        { viewers: userId }, // 添加查看者权限检查
         { 
           emailSuffix: user.emailSuffix, 
           allowCollaboration: true,
@@ -113,6 +114,7 @@ router.get('/', authMiddleware, async (req: QuestionBankRequest, res: any) => {
     }).populate('creator', 'name email')
       .populate('managers', 'name email')
       .populate('collaborators', 'name email')
+      .populate('viewers', 'name email') // 添加查看者信息
       .sort({ updatedAt: -1 });
 
     // 为每个题库添加用户权限信息
@@ -144,10 +146,17 @@ router.get('/', authMiddleware, async (req: QuestionBankRequest, res: any) => {
         return collaboratorId === userIdStr;
       })) {
         userRole = 'collaborator';
+      } else if (bank.viewers && bank.viewers.some(viewer => {
+        const viewerId = typeof viewer === 'object' && viewer._id 
+          ? viewer._id.toString() 
+          : viewer.toString();
+        return viewerId === userIdStr;
+      })) {
+        userRole = 'viewer';
       } else if (user.enterpriseId && 
                  bank.emailSuffix === user.emailSuffix && 
                  bank.allowCollaboration) {
-        userRole = 'viewer';
+        userRole = 'enterprise_viewer';
       } else if (bank.isPublic) {
         userRole = 'viewer';
       }
@@ -260,7 +269,8 @@ router.get('/:bid', authMiddleware, checkQuestionBankPermission, async (req: Que
     const populatedQuestionBank = await QuestionBank.findById(questionBank._id)
       .populate('creator', 'name email')
       .populate('managers', 'name email')
-      .populate('collaborators', 'name email');
+      .populate('collaborators', 'name email')
+      .populate('viewers', 'name email'); // 添加查看者信息
 
     return res.json({
       success: true,

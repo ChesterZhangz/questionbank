@@ -1090,12 +1090,21 @@ router.delete('/account', authMiddleware, async (req: AuthRequest, res: Response
       return res.status(400).json({ success: false, error: '不能删除超级管理员账户' });
     }
 
-    // TODO: 删除用户相关的所有数据（题库、题目等）
+    // 导入用户清理服务
+    const { UserCleanupService } = require('../services/userCleanupService');
+    
+    // 执行完整的级联删除，清理所有用户相关数据
+    console.log(`用户 ${user.email} 正在注销账户，开始清理所有相关数据...`);
+    await UserCleanupService.cascadeDeleteUser(user._id as mongoose.Types.ObjectId, user.enterpriseId);
+    
+    // 删除用户记录
     await User.findByIdAndDelete(req.user?._id);
+
+    console.log(`用户 ${user.email} 账户删除成功，所有相关数据已清理`);
 
     return res.json({
       success: true,
-      message: '账户删除成功'
+      message: '账户删除成功，所有相关数据已清理'
     });
   } catch (error) {
     console.error('删除账户失败:', error);

@@ -3,6 +3,7 @@ import { body, validationResult } from 'express-validator';
 import { User } from '../models/User';
 import { AuthRequest, authMiddleware } from '../middleware/auth';
 import mongoose from 'mongoose';
+import { UserCleanupService } from '../services/userCleanupService';
 
 const router = express.Router();
 
