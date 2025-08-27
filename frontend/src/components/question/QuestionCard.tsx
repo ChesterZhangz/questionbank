@@ -217,11 +217,11 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
   // 难度文本
   const getDifficultyText = (difficulty: number) => {
     switch (difficulty) {
-      case 1: return '简单';
-      case 2: return '较易';
+      case 1: return '非常简单';
+      case 2: return '简单';
       case 3: return '中等';
-      case 4: return '较难';
-      case 5: return '困难';
+      case 4: return '困难';
+      case 5: return '非常困难';
       default: return '未知';
     }
   };

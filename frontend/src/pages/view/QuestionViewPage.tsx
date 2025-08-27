@@ -241,11 +241,11 @@ const QuestionViewPage: React.FC = () => {
   // 难度文本和颜色
   const getDifficultyInfo = (difficulty: number) => {
     switch (difficulty) {
-      case 1: return { text: '简单', color: 'from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700/50' };
-      case 2: return { text: '较易', color: 'from-blue-100 to-cyan-100 dark:from-blue-900/40 dark:to-cyan-900/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700/50' };
+      case 1: return { text: '非常简单', color: 'from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700/50' };
+      case 2: return { text: '简单', color: 'from-blue-100 to-cyan-100 dark:from-blue-900/40 dark:to-cyan-900/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700/50' };
       case 3: return { text: '中等', color: 'from-yellow-100 to-orange-100 dark:from-yellow-900/40 dark:to-orange-900/40 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700/50' };
-      case 4: return { text: '较难', color: 'from-orange-100 to-red-100 dark:from-orange-900/40 dark:to-red-900/40 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700/50' };
-      case 5: return { text: '困难', color: 'from-red-100 to-pink-100 dark:from-red-900/40 dark:to-pink-900/40 text-red-800 dark:text-red-200 border-red-200 dark:border-red-700/50' };
+      case 4: return { text: '困难', color: 'from-orange-100 to-red-100 dark:from-orange-900/40 dark:to-red-900/40 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700/50' };
+      case 5: return { text: '非常困难', color: 'from-red-100 to-pink-100 dark:from-red-900/40 dark:to-pink-900/40 text-red-800 dark:text-red-200 border-red-200 dark:border-red-700/50' };
       default: return { text: '未知', color: 'from-gray-100 to-slate-100 dark:from-gray-900/40 dark:to-slate-900/40 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700/50' };
     }
   };
