@@ -160,12 +160,29 @@ const EditQuestionPage: React.FC = () => {
 
     try {
       setSaving(true);
-      // 合并最新的媒体数据到题目对象
+      
+      // 保存前确保content.answer字段被正确设置
       const updatedQuestion = {
         ...question,
         images: images,
         tikzCodes: tikzCodes
       };
+      
+      // 根据题型确保answer字段有值
+      if (updatedQuestion.content) {
+        if (updatedQuestion.type === 'fill' && updatedQuestion.content.fillAnswers) {
+          // 填空题：将fillAnswers合并为answer
+          updatedQuestion.content.answer = updatedQuestion.content.fillAnswers.join('; ');
+        } else if (updatedQuestion.type === 'solution' && updatedQuestion.content.solutionAnswers) {
+          // 解答题：将solutionAnswers合并为answer
+          updatedQuestion.content.answer = updatedQuestion.content.solutionAnswers.join('; ');
+        } else if (updatedQuestion.type === 'choice' || updatedQuestion.type === 'multiple-choice') {
+          // 选择题：确保answer字段有值
+          if (!updatedQuestion.content.answer || updatedQuestion.content.answer.trim() === '') {
+            updatedQuestion.content.answer = '待选择';
+          }
+        }
+      }
       
       const response = await questionAPI.updateQuestion(qid!, updatedQuestion);
       
@@ -345,8 +362,16 @@ const EditQuestionPage: React.FC = () => {
     
     const newFillAnswers = [...(question.content.fillAnswers || [])];
     newFillAnswers[index] = value;
+    
+    // 同时更新fillAnswers和answer字段
+    const newContent = { 
+      ...question.content, 
+      fillAnswers: newFillAnswers,
+      answer: newFillAnswers.join('; ') // 同步更新answer字段
+    };
+    
     handleQuestionChange({
-      content: { ...question.content, fillAnswers: newFillAnswers }
+      content: newContent
     });
   };
 
@@ -356,8 +381,16 @@ const EditQuestionPage: React.FC = () => {
     
     const newSolutionAnswers = [...(question.content.solutionAnswers || [])];
     newSolutionAnswers[index] = value;
+    
+    // 同时更新solutionAnswers和answer字段
+    const newContent = { 
+      ...question.content, 
+      solutionAnswers: newSolutionAnswers,
+      answer: newSolutionAnswers.join('; ') // 同步更新answer字段
+    };
+    
     handleQuestionChange({
-      content: { ...question.content, solutionAnswers: newSolutionAnswers }
+      content: newContent
     });
   };
 
@@ -374,6 +407,89 @@ const EditQuestionPage: React.FC = () => {
   // 处理来源变化
   const handleSourceChange = (value: string) => {
     handleQuestionChange({ source: value });
+  };
+
+  // 处理题型变化
+  const handleQuestionTypeChange = (type: Question['type']) => {
+    // 直接切换题型，并根据新题型正确设置答案字段
+    if (question) {
+      const updatedQuestion = { ...question };
+      
+      if (updatedQuestion.content) {
+        if (type === 'choice' || type === 'multiple-choice') {
+          // 切换到选择题：只清空答案相关字段，保留解析
+          updatedQuestion.content.answer = '';
+          updatedQuestion.content.fillAnswers = undefined;
+          updatedQuestion.content.solutionAnswers = undefined;
+          // 不清空 solution，保留解析内容
+          
+          // 如果没有选项，初始化默认选项
+          if (!updatedQuestion.content.options || updatedQuestion.content.options.length === 0) {
+            updatedQuestion.content.options = [
+              { text: '', isCorrect: false },
+              { text: '', isCorrect: false },
+              { text: '', isCorrect: false },
+              { text: '', isCorrect: false }
+            ];
+          }
+        } else if (type === 'fill') {
+          // 切换到填空题：保留现有填空答案，只清空选择题相关字段
+          updatedQuestion.content.options = undefined;
+          updatedQuestion.content.solutionAnswers = undefined;
+          // 不清空 solution，保留解析内容
+          // 不清空 fillAnswers，保留现有填空答案
+          
+          // 如果没有填空答案，才初始化
+          if (!updatedQuestion.content.fillAnswers || updatedQuestion.content.fillAnswers.length === 0) {
+            const fillCount = getFillCount(question.content.stem || '');
+            if (fillCount > 0) {
+              updatedQuestion.content.fillAnswers = Array(fillCount).fill('');
+            } else {
+              updatedQuestion.content.fillAnswers = [''];
+            }
+          }
+          
+          // 为填空题设置answer字段（后端要求）
+          if (updatedQuestion.content.fillAnswers && updatedQuestion.content.fillAnswers.length > 0) {
+            updatedQuestion.content.answer = updatedQuestion.content.fillAnswers.join('; ');
+          } else {
+            updatedQuestion.content.answer = '待填写';
+          }
+        } else if (type === 'solution') {
+          // 切换到解答题：保留现有解答答案，只清空其他题型字段
+          updatedQuestion.content.options = undefined;
+          updatedQuestion.content.fillAnswers = undefined;
+          // 不清空 solution，保留解析内容
+          // 不清空 solutionAnswers，保留现有解答答案
+          
+          // 如果没有解答答案，才初始化
+          if (!updatedQuestion.content.solutionAnswers || updatedQuestion.content.solutionAnswers.length === 0) {
+            const answerInfo = getSolutionAnswerInfo(question.content.stem || '');
+            if (answerInfo.length > 0) {
+              updatedQuestion.content.solutionAnswers = Array(answerInfo.length).fill('');
+            } else {
+              updatedQuestion.content.solutionAnswers = [''];
+            }
+          }
+          
+          // 为解答题设置answer字段（后端要求）
+          if (updatedQuestion.content.solutionAnswers && updatedQuestion.content.solutionAnswers.length > 0) {
+            updatedQuestion.content.answer = updatedQuestion.content.solutionAnswers.join('; ');
+          } else {
+            updatedQuestion.content.answer = '待填写';
+          }
+        }
+      }
+      
+      // 更新题型
+      updatedQuestion.type = type;
+      
+      // 更新本地状态
+      setQuestion(updatedQuestion);
+      setHasChanges(true);
+      
+      showSuccessRightSlide('题型切换成功', '题型已切换！');
+    }
   };
 
   if (loading) {
@@ -467,6 +583,42 @@ const EditQuestionPage: React.FC = () => {
                   <span>有未保存的更改</span>
                 </span>
               )}
+              
+              {/* 题型切换 */}
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                  <button
+                    onClick={() => handleQuestionTypeChange('choice')}
+                    className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                      question.type === 'choice' || question.type === 'multiple-choice'
+                        ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm'
+                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
+                    }`}
+                  >
+                    选择题
+                  </button>
+                  <button
+                    onClick={() => handleQuestionTypeChange('fill')}
+                    className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                      question.type === 'fill'
+                        ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm'
+                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
+                    }`}
+                  >
+                    填空题
+                  </button>
+                  <button
+                    onClick={() => handleQuestionTypeChange('solution')}
+                    className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                      question.type === 'solution'
+                        ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm'
+                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
+                    }`}
+                  >
+                    解答题
+                  </button>
+                </div>
+              </div>
               
               <Button
                 variant="outline"
@@ -686,7 +838,7 @@ const EditQuestionPage: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                  {question.content.answer && (
+                  {question.content.answer && (question.type === 'choice' || question.type === 'multiple-choice') && (
                     <div className="mt-3 p-2 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         已选择答案：<span className="font-medium text-gray-900 dark:text-gray-100">{question.content.answer}</span>

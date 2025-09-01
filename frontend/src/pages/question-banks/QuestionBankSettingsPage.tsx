@@ -4,16 +4,14 @@ import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   Save,
-  Upload,
   Users,
   Lock,
   Unlock,
-  Bell,
   Database,
   Settings,
   Tag,
   Image,
-  AlertCircle,
+  AlertCircle
 } from 'lucide-react';
 import { questionBankAPI } from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
@@ -21,10 +19,14 @@ import type { QuestionBank } from '../../types';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
+import { SimpleSelect } from '../../components/ui/menu';
 import LoadingPage from '../../components/ui/LoadingPage';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import { useModal } from '../../hooks/useModal';
+
+import { EXPORT_TEMPLATES } from '../../constants/questionBankOptions';
+import { getMathCategories } from '../../constants/questionCategories';
 
 interface QuestionBankSettings {
   // 基本信息
@@ -32,23 +34,17 @@ interface QuestionBankSettings {
   description: string;
   category: string;
   tags: string[];
-  cover?: string;
   
   // 权限设置
   isPublic: boolean;
   allowCollaboration: boolean;
-  autoInvite: boolean;
   
   // 高级设置
   maxQuestions?: number;
   exportTemplate: string;
-  autoBackup: boolean;
-  backupFrequency: 'daily' | 'weekly' | 'monthly';
-  notifications: {
-    memberChange: boolean;
-    questionUpdate: boolean;
-    systemAlert: boolean;
-  };
+  
+  // 自定义颜色
+  cardColor: string;
 }
 
 const QuestionBankSettingsPage: React.FC = () => {
@@ -78,19 +74,11 @@ const QuestionBankSettingsPage: React.FC = () => {
     description: '',
     category: '',
     tags: [],
-    cover: '',
     isPublic: false,
     allowCollaboration: true,
-    autoInvite: true,
     maxQuestions: undefined,
     exportTemplate: 'default',
-    autoBackup: false,
-    backupFrequency: 'weekly',
-    notifications: {
-      memberChange: true,
-      questionUpdate: true,
-      systemAlert: false
-    }
+    cardColor: '#4f46e5' // Default card color
   });
 
   // 标签输入
@@ -116,19 +104,11 @@ const QuestionBankSettingsPage: React.FC = () => {
           description: bank.description || '',
           category: bank.category || '',
           tags: bank.tags || [],
-          cover: bank.cover || '',
           isPublic: bank.isPublic,
           allowCollaboration: bank.allowCollaboration,
-          autoInvite: true, // 默认值
           maxQuestions: undefined,
           exportTemplate: 'default',
-          autoBackup: false,
-          backupFrequency: 'weekly',
-          notifications: {
-            memberChange: true,
-            questionUpdate: true,
-            systemAlert: false
-          }
+          cardColor: (bank as any).cardColor || '#4f46e5' // Default to #4f46e5 if not set
         });
       } else {
         setError(response.data.error || '获取题库信息失败');
@@ -171,7 +151,8 @@ const QuestionBankSettingsPage: React.FC = () => {
         category: formData.category,
         tags: formData.tags,
         isPublic: formData.isPublic,
-        allowCollaboration: formData.allowCollaboration
+        allowCollaboration: formData.allowCollaboration,
+        cardColor: formData.cardColor // Save card color
       });
 
       if (!basicResponse.data.success) {
@@ -181,10 +162,7 @@ const QuestionBankSettingsPage: React.FC = () => {
       // 保存高级设置
       const advancedResponse = await questionBankAPI.updateSettings(bid!, {
         maxQuestions: formData.maxQuestions,
-        exportTemplate: formData.exportTemplate,
-        autoBackup: formData.autoBackup,
-        backupFrequency: formData.backupFrequency,
-        notifications: formData.notifications
+        exportTemplate: formData.exportTemplate
       });
 
       if (!advancedResponse.data.success) {
@@ -243,9 +221,9 @@ const QuestionBankSettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* 页面头部 */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
@@ -259,8 +237,8 @@ const QuestionBankSettingsPage: React.FC = () => {
                 返回
               </Button>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">题库设置</h1>
-                <p className="text-sm text-gray-500">{questionBank.name}</p>
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">题库设置</h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{questionBank.name}</p>
               </div>
             </div>
             
@@ -284,11 +262,11 @@ const QuestionBankSettingsPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6"
+            className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-6"
           >
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-yellow-600" />
-              <p className="text-yellow-800">
+              <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+              <p className="text-yellow-800 dark:text-yellow-200">
                 您当前的角色是 <span className="font-medium">{userRole === 'collaborator' ? '协作者' : '查看者'}</span>，
                 只有创建者和管理者可以修改题库设置.
               </p>
@@ -297,13 +275,13 @@ const QuestionBankSettingsPage: React.FC = () => {
         )}
 
         {/* 标签页导航 */}
-        <div className="flex space-x-1 bg-white rounded-lg p-1 mb-6 shadow-sm">
+        <div className="flex space-x-1 bg-white dark:bg-gray-800 rounded-lg p-1 mb-6 shadow-sm">
           <button
             onClick={() => setActiveTab('basic')}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
               activeTab === 'basic'
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
             }`}
           >
             <Settings className="w-4 h-4 inline mr-2" />
@@ -313,8 +291,8 @@ const QuestionBankSettingsPage: React.FC = () => {
             onClick={() => setActiveTab('permissions')}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
               activeTab === 'permissions'
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                : 'text-gray-600 dark:text-gray-400 hover:hover:text-gray-900 dark:hover:text-gray-100'
             }`}
           >
             <Lock className="w-4 h-4 inline mr-2" />
@@ -324,8 +302,8 @@ const QuestionBankSettingsPage: React.FC = () => {
             onClick={() => setActiveTab('advanced')}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
               activeTab === 'advanced'
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
             }`}
           >
             <Database className="w-4 h-4 inline mr-2" />
@@ -343,13 +321,13 @@ const QuestionBankSettingsPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Settings className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                    <Settings className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     基本信息
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         题库名称 *
                       </label>
                       <Input
@@ -359,13 +337,13 @@ const QuestionBankSettingsPage: React.FC = () => {
                         disabled={!canEdit}
                         maxLength={50}
                       />
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {formData.name.length}/50 字符
                       </p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         题库描述
                       </label>
                       <textarea
@@ -375,31 +353,33 @@ const QuestionBankSettingsPage: React.FC = () => {
                         disabled={!canEdit}
                         maxLength={500}
                         rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {formData.description.length}/500 字符
                       </p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        分类
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        题库分类
                       </label>
-                      <select
-                        value={formData.category}
-                        onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                      <SimpleSelect
+                        options={getMathCategories().map(category => ({
+                          value: category.value,
+                          label: category.label,
+                          icon: category.icon
+                        }))}
+                        value={formData.category || ''}
+                        onChange={(value) => setFormData(prev => ({ ...prev, category: value as string }))}
+                        placeholder="选择题库分类"
+                        theme="blue"
+                        variant="outline"
+                        size="md"
+                        showIcon={true}
+                        clearable={true}
                         disabled={!canEdit}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
-                      >
-                        <option value="">选择分类</option>
-                        <option value="数学">数学</option>
-                        <option value="物理">物理</option>
-                        <option value="化学">化学</option>
-                        <option value="生物">生物</option>
-                        <option value="计算机">计算机</option>
-                        <option value="其他">其他</option>
-                      </select>
+                      />
                     </div>
                   </div>
                 </div>
@@ -407,13 +387,13 @@ const QuestionBankSettingsPage: React.FC = () => {
 
               <Card>
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Tag className="w-5 h-5 text-green-600" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                    <Tag className="w-5 h-5 text-green-600 dark:text-green-400" />
                     标签管理
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         添加标签
                       </label>
                       <div className="flex gap-2 mb-2">
@@ -435,22 +415,22 @@ const QuestionBankSettingsPage: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         当前标签 ({formData.tags.length})
                       </label>
-                      <div className="flex flex-wrap gap-2 min-h-[60px] p-3 bg-gray-50 rounded-lg">
+                      <div className="flex flex-wrap gap-2 min-h-[60px] p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                         {formData.tags.length > 0 ? (
                           formData.tags.map((tag, index) => (
                             <span
                               key={index}
-                              className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                              className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-full text-sm"
                             >
                               <Tag className="w-3 h-3" />
                               {tag}
                               {canEdit && (
                                 <button
                                   onClick={() => handleRemoveTag(tag)}
-                                  className="ml-1 hover:text-blue-600 transition-colors"
+                                  className="ml-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                                 >
                                   ×
                                 </button>
@@ -458,7 +438,7 @@ const QuestionBankSettingsPage: React.FC = () => {
                             </span>
                           ))
                         ) : (
-                          <span className="text-gray-400 text-sm">暂无标签</span>
+                          <span className="text-gray-400 dark:text-gray-500 text-sm">暂无标签</span>
                         )}
                       </div>
                     </div>
@@ -469,51 +449,55 @@ const QuestionBankSettingsPage: React.FC = () => {
 
             <Card>
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Image className="w-5 h-5 text-purple-600" />
-                  封面设置
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                  <Image className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  卡片颜色设置
                 </h3>
                 <div className="flex items-center gap-6">
                   <div className="flex-shrink-0">
-                    {formData.cover ? (
-                      <img
-                        src={formData.cover}
-                        alt="题库封面"
-                        className="w-24 h-24 object-cover rounded-lg border shadow-sm"
-                      />
-                    ) : (
-                      <div className="w-24 h-24 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
-                        <Image className="w-10 h-10 text-gray-400" />
+                    <div className="w-24 h-24 bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-600 shadow-sm flex flex-col items-center justify-center p-3">
+                      <div 
+                        className="text-lg font-bold mb-1"
+                        style={{ color: formData.cardColor }}
+                      >
+                        {questionBank?.name?.charAt(0) || 'Q'}
                       </div>
-                    )}
+                      <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                        预览效果
+                      </div>
+                    </div>
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 mb-2">题库封面</h4>
-                    <p className="text-sm text-gray-500 mb-4">
-                      上传一张封面图片，让您的题库更加美观和专业
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">题库卡片颜色</h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      自定义题库名称、图标和标签的颜色，让您的题库更加个性化
                     </p>
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 items-center">
+                      <input
+                        type="color"
+                        value={formData.cardColor}
+                        onChange={(e) => setFormData(prev => ({ ...prev, cardColor: e.target.value }))}
+                        disabled={!canEdit}
+                        className="w-12 h-12 rounded border border-gray-300 dark:border-gray-600 cursor-pointer disabled:cursor-not-allowed"
+                      />
+                      <Input
+                        value={formData.cardColor}
+                        onChange={(e) => setFormData(prev => ({ ...prev, cardColor: e.target.value }))}
+                        placeholder="#4f46e5"
+                        disabled={!canEdit}
+                        className="w-32"
+                      />
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => setFormData(prev => ({ ...prev, cardColor: '#4f46e5' }))}
                         disabled={!canEdit}
-                        className="flex items-center gap-2"
                       >
-                        <Upload className="w-4 h-4" />
-                        上传图片
+                        重置
                       </Button>
-                      {formData.cover && canEdit && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center gap-2 text-red-600 hover:text-red-700"
-                        >
-                          移除
-                        </Button>
-                      )}
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      支持 JPG、PNG 格式，建议尺寸 400x400，最大 2MB
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      支持十六进制颜色值，例如 #4f46e5、#ff6b6b 等
                     </p>
                   </div>
                 </div>
@@ -532,21 +516,21 @@ const QuestionBankSettingsPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Lock className="w-5 h-5 text-red-600" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                    <Lock className="w-5 h-5 text-red-600 dark:text-red-400" />
                     访问权限
                   </h3>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div className="flex items-center gap-3">
                         {formData.isPublic ? (
-                          <Unlock className="w-5 h-5 text-green-600" />
+                          <Unlock className="w-5 h-5 text-green-600 dark:text-green-400" />
                         ) : (
-                          <Lock className="w-5 h-5 text-gray-600" />
+                          <Lock className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                         )}
                         <div>
-                          <h4 className="font-medium text-gray-900">公开题库</h4>
-                          <p className="text-sm text-gray-500">
+                          <h4 className="font-medium text-gray-900 dark:text-gray-100">公开题库</h4>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
                             {formData.isPublic ? '所有用户都可以查看此题库' : '只有成员可以查看此题库'}
                           </p>
                         </div>
@@ -563,12 +547,12 @@ const QuestionBankSettingsPage: React.FC = () => {
                       </label>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <Users className="w-5 h-5 text-blue-600" />
+                        <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         <div>
-                          <h4 className="font-medium text-gray-900">允许协作</h4>
-                          <p className="text-sm text-gray-500">
+                          <h4 className="font-medium text-gray-900 dark:text-gray-100">允许协作</h4>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
                             {formData.allowCollaboration ? '成员可以添加和编辑题目' : '只有创建者和管理者可以编辑题目'}
                           </p>
                         </div>
@@ -590,39 +574,17 @@ const QuestionBankSettingsPage: React.FC = () => {
 
               <Card>
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Users className="w-5 h-5 text-green-600" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                    <Users className="w-5 h-5 text-green-600 dark:text-green-400" />
                     成员管理
                   </h3>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <Users className="w-5 h-5 text-green-600" />
-                        <div>
-                          <h4 className="font-medium text-gray-900">自动邀请</h4>
-                          <p className="text-sm text-gray-500">
-                            {formData.autoInvite ? '自动邀请同企业邮箱用户成为协作者' : '手动邀请用户加入题库'}
-                          </p>
-                        </div>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.autoInvite}
-                          onChange={(e) => setFormData(prev => ({ ...prev, autoInvite: e.target.checked }))}
-                          disabled={!canEdit}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
-                    </div>
-
-                    <div className="p-4 bg-blue-50 rounded-lg">
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
                       <div className="flex items-center gap-2 mb-2">
-                        <AlertCircle className="w-4 h-4 text-blue-600" />
-                        <h4 className="font-medium text-blue-900">权限说明</h4>
+                        <AlertCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <h4 className="font-medium text-blue-900 dark:text-blue-200">权限说明</h4>
                       </div>
-                      <ul className="text-sm text-blue-800 space-y-1">
+                      <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                         <li>• 创建者：拥有所有权限，可以删除题库</li>
                         <li>• 管理者：可以管理成员和设置</li>
                         <li>• 协作者：可以添加和编辑题目</li>
@@ -646,13 +608,13 @@ const QuestionBankSettingsPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Database className="w-5 h-5 text-purple-600" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                    <Database className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                     数据管理
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         题目数量限制
                       </label>
                       <Input
@@ -666,167 +628,25 @@ const QuestionBankSettingsPage: React.FC = () => {
                         disabled={!canEdit}
                         min={1}
                       />
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         留空表示不限制题目数量
                       </p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         导出模板
                       </label>
                       <select
                         value={formData.exportTemplate}
                         onChange={(e) => setFormData(prev => ({ ...prev, exportTemplate: e.target.value }))}
                         disabled={!canEdit}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       >
-                        <option value="default">默认模板</option>
-                        <option value="simple">简洁模板</option>
-                        <option value="detailed">详细模板</option>
-                        <option value="custom">自定义模板</option>
+                        {EXPORT_TEMPLATES.map(template => (
+                          <option key={template.value} value={template.value}>{template.label}</option>
+                        ))}
                       </select>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <Database className="w-5 h-5 text-purple-600" />
-                        <div>
-                          <h4 className="font-medium text-gray-900">自动备份</h4>
-                          <p className="text-sm text-gray-500">
-                            {formData.autoBackup ? '定期自动备份题库数据' : '手动备份题库数据'}
-                          </p>
-                        </div>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.autoBackup}
-                          onChange={(e) => setFormData(prev => ({ ...prev, autoBackup: e.target.checked }))}
-                          disabled={!canEdit}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
-                    </div>
-
-                    {formData.autoBackup && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          备份频率
-                        </label>
-                        <select
-                          value={formData.backupFrequency}
-                          onChange={(e) => setFormData(prev => ({ 
-                            ...prev, 
-                            backupFrequency: e.target.value as 'daily' | 'weekly' | 'monthly' 
-                          }))}
-                          disabled={!canEdit}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
-                        >
-                          <option value="daily">每日</option>
-                          <option value="weekly">每周</option>
-                          <option value="monthly">每月</option>
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Card>
-
-              <Card>
-                <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Bell className="w-5 h-5 text-orange-600" />
-                    通知设置
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <Users className="w-4 h-4 text-blue-600" />
-                        <div>
-                          <h4 className="font-medium text-gray-900">成员变更通知</h4>
-                          <p className="text-xs text-gray-500">当有成员加入或离开时通知</p>
-                        </div>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.notifications.memberChange}
-                          onChange={(e) => setFormData(prev => ({
-                            ...prev,
-                            notifications: {
-                              ...prev.notifications,
-                              memberChange: e.target.checked
-                            }
-                          }))}
-                          disabled={!canEdit}
-                          className="sr-only peer"
-                        />
-                        <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <Bell className="w-4 h-4 text-green-600" />
-                        <div>
-                          <h4 className="font-medium text-gray-900">题目更新通知</h4>
-                          <p className="text-xs text-gray-500">当题目被添加或修改时通知</p>
-                        </div>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.notifications.questionUpdate}
-                          onChange={(e) => setFormData(prev => ({
-                            ...prev,
-                            notifications: {
-                              ...prev.notifications,
-                              questionUpdate: e.target.checked
-                            }
-                          }))}
-                          disabled={!canEdit}
-                          className="sr-only peer"
-                        />
-                        <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <AlertCircle className="w-4 h-4 text-yellow-600" />
-                        <div>
-                          <h4 className="font-medium text-gray-900">系统警告通知</h4>
-                          <p className="text-xs text-gray-500">系统维护或重要更新通知</p>
-                        </div>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.notifications.systemAlert}
-                          onChange={(e) => setFormData(prev => ({
-                            ...prev,
-                            notifications: {
-                              ...prev.notifications,
-                              systemAlert: e.target.checked
-                            }
-                          }))}
-                          disabled={!canEdit}
-                          className="sr-only peer"
-                        />
-                        <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
-                    </div>
-
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <AlertCircle className="w-4 h-4 text-blue-600" />
-                        <h4 className="font-medium text-blue-900">通知说明</h4>
-                      </div>
-                      <p className="text-xs text-blue-800">
-                        通知将通过邮件和系统内消息发送.您可以在个人设置中管理通知偏好.
-                      </p>
                     </div>
                   </div>
                 </div>

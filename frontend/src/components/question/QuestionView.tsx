@@ -851,15 +851,6 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                   const allTags = [...categories, ...tags];
                                   
                                   return allTags.length > 0 ? (
-                                    <div className="space-y-2">
-                                      <motion.div 
-                                        className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                                        initial={{ opacity: 0, scale: 0.9, x: -5 }}
-                                        animate={{ opacity: 1, scale: 1, x: 0 }}
-                                        transition={{ duration: 0.08, delay: 0.12, ease: "easeOut" }}
-                                      >
-                                        题目标签
-                                      </motion.div>
                                   <div className="flex flex-wrap gap-2">
                                         {allTags.map((tag, index) => {
                                           // 判断标签类型：前几个是小题型，后面是知识点
@@ -883,7 +874,6 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                           );
                                         })}
                                   </div>
-                              </div>
                                   ) : null;
                                 })()}
                               </motion.div>

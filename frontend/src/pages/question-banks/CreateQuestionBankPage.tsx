@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, ArrowLeft, Tag, Save } from 'lucide-react';
+import { ArrowLeft, Tag, Save, Calculator } from 'lucide-react';
 import { questionBankAPI } from '../../services/api';
 import type { CreateQuestionBankRequest } from '../../types';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
+import { SimpleSelect } from '../../components/ui/menu';
+import { getMathCategories } from '../../constants/questionCategories';
 
 const CreateQuestionBankPage: React.FC = () => {
   const navigate = useNavigate();
@@ -22,7 +24,7 @@ const CreateQuestionBankPage: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
     
@@ -151,7 +153,7 @@ const CreateQuestionBankPage: React.FC = () => {
                   error={errors.name}
                   placeholder="请输入题库名称"
                   required
-                  icon={<BookOpen className="w-5 h-5" />}
+                  icon={<Calculator className="w-5 h-5" />}
                 />
               </motion.div>
 
@@ -185,13 +187,21 @@ const CreateQuestionBankPage: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <Input
+                <SimpleSelect
+                  options={getMathCategories().map(category => ({
+                    value: category.value,
+                    label: category.label,
+                    icon: category.icon
+                  }))}
+                  value={formData.category || ''}
+                  onChange={(value) => setFormData(prev => ({ ...prev, category: value as string }))}
+                  placeholder="选择题库分类"
                   label="题库分类"
-                  name="category"
-                  type="text"
-                  value={formData.category}
-                  onChange={handleChange}
-                  placeholder="如：数学、几何、代数"
+                  theme="blue"
+                  variant="outline"
+                  size="md"
+                  showIcon={true}
+                  clearable={true}
                 />
               </motion.div>
 

@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import Avatar from '../ui/Avatar';
+import { useTheme } from '../../hooks/useTheme';
+import { getLogoPath, getSiteName, getSiteTagline } from '../../config/siteConfig';
 
 interface NavItem {
   id: string;
@@ -50,6 +52,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const [activeSection, setActiveSection] = useState('dashboard');
+  const { isDark } = useTheme();
 
   // 检查用户权限
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
@@ -86,7 +89,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       setActiveSection('profile');
     } else if (currentPath === '/version') {
       setActiveSection('version');
-    } else if (currentPath === '/LaTeXGuide' || currentPath.startsWith('/guide/')) {
+        } else if (currentPath === '/LaTeXGuide' || currentPath.startsWith('/guide/')) {
       setActiveSection('LaTeXGuide');
     }
   }, [location.pathname]);
@@ -150,12 +153,21 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
               className="flex items-center"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <BookOpen className="w-6 h-6 text-white" />
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
+                  <img 
+                    src={getLogoPath(isDark)} 
+                    alt="网站Logo" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // 如果头像加载失败，使用彩色logo作为fallback
+                      const target = e.target as HTMLImageElement;
+                      target.src = getLogoPath(isDark, true);
+                    }}
+                  />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Mareate</h1>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">题库管理系统</p>
+                  <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">{getSiteName()}</h1>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{getSiteTagline()}</p>
                 </div>
               </div>
             </motion.div>
@@ -379,6 +391,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
             </AnimatePresence>
           </button>
         </div>
+
+
 
         {/* 版本信息 */}
         <div className="mt-4 pt-4 border-t border-gray-200/50 dark:border-gray-700/50">

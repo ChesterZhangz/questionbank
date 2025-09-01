@@ -38,6 +38,7 @@ const TikZFunctionsGuide = lazy(() => import('./pages/guide/tikz-functions'));
 const TikZEffectsGuide = lazy(() => import('./pages/guide/tikz-effects'));
 const FunctionPlottingTestPage = lazy(() => import('./pages/FunctionPlottingTestPage'));
 
+
 import { useAuthStore } from './stores/authStore';
 import { BackgroundTaskProvider } from './contexts/BackgroundTaskContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -480,7 +481,7 @@ const App: React.FC = () => {
               } 
             />
 
- 
+
 
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             

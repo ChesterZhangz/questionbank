@@ -17,7 +17,7 @@ import { useAuthStore } from '../../stores/authStore';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
-import FuzzySelect from '../../components/ui/FuzzySelect';
+import { FuzzySelect } from '../../components/ui/menu';
 import LoadingPage from '../../components/ui/LoadingPage';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useModal } from '../../hooks/useModal';

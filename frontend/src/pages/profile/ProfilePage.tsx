@@ -41,7 +41,7 @@ import {
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import FuzzySelect from '../../components/ui/FuzzySelect';
+import { FuzzySelect } from '../../components/ui/menu';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import { useModal } from '../../hooks/useModal';

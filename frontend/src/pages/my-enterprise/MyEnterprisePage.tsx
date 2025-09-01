@@ -23,8 +23,7 @@ import Input from '../../components/ui/Input';
 import { useModal } from '../../hooks/useModal';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
-import FuzzySelect from '../../components/ui/FuzzySelect';
-import MultiSelect from '../../components/ui/MultiSelect';
+import { FuzzySelect, MultiSelect } from '../../components/ui/menu';
 
 import Avatar from '../../components/ui/Avatar';
 import LoadingPage from '../../components/ui/LoadingPage';

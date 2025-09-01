@@ -118,7 +118,7 @@ export const BackgroundTaskProvider: React.FC<BackgroundTaskProviderProps> = ({ 
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(title, {
         body: message,
-        icon: '/favicon.ico',
+        icon: '/avatar/avatar.png',
         tag: 'background-task',
         requireInteraction: type === 'error'
       });

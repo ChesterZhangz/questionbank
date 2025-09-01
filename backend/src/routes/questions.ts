@@ -965,7 +965,50 @@ router.post('/bank/:bid', authMiddleware, [
     });
   } catch (error) {
     console.error('创建题目失败:', error);
-    return res.status(500).json({ success: false, error: '创建题目失败' });
+    
+    // 提供更详细的错误信息
+    let errorMessage = '创建题目失败';
+    let statusCode = 500;
+    
+    if (error && typeof error === 'object' && 'name' in error) {
+      // Mongoose验证错误
+      if (error.name === 'ValidationError') {
+        statusCode = 400;
+        const validationError = error as any;
+        
+        // 提取具体的验证错误信息
+        if (validationError.errors) {
+          const fieldErrors = Object.keys(validationError.errors).map(field => {
+            const fieldError = validationError.errors[field];
+            return `${field}: ${fieldError.message}`;
+          });
+          errorMessage = `数据验证失败:\n${fieldErrors.join('\n')}`;
+        } else {
+          errorMessage = `数据验证失败: ${validationError.message || '未知验证错误'}`;
+        }
+      }
+      // 数据库重复键错误
+      else if (error.name === 'MongoError' && (error as any).code === 11000) {
+        statusCode = 400;
+        errorMessage = '题目ID重复，请重试';
+      }
+      // 权限错误
+      else if ((error as any).message && typeof (error as any).message === 'string' && 
+                ((error as any).message.includes('权限') || (error as any).message.includes('permission'))) {
+        statusCode = 403;
+        errorMessage = '权限不足，无法在此题库中创建题目';
+      }
+      // 其他已知错误
+      else if ((error as any).message) {
+        errorMessage = (error as any).message;
+      }
+    }
+    
+    return res.status(statusCode).json({ 
+      success: false, 
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+    });
   }
 });
 

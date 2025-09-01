@@ -3,8 +3,7 @@ import { motion } from 'framer-motion';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
-import FuzzySelect from '../ui/FuzzySelect';
-import MultiSelect from '../ui/MultiSelect';
+import { FuzzySelect, MultiSelect } from '../ui/menu';
 import { 
   Grid3X3, 
   List, 

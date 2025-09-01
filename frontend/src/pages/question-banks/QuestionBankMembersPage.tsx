@@ -26,8 +26,7 @@ import LoadingPage from '../../components/ui/LoadingPage';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import { useModal } from '../../hooks/useModal';
-import MultiSelect from '../../components/ui/MultiSelect';
-import FuzzySelect from '../../components/ui/FuzzySelect';
+import { MultiSelect, FuzzySelect } from '../../components/ui/menu';
 import Avatar from '../../components/ui/Avatar';
 
 interface MemberInfo {

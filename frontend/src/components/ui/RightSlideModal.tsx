@@ -232,7 +232,7 @@ const RightSlideModal: React.FC<RightSlideModalProps> = ({
                 exit={{ x: -20, opacity: 0 }}
                 transition={{ delay: 0.3, duration: 0.25 }}
               >
-                <p className={`text-xs ${config.textColor} leading-tight`}>
+                <p className={`text-xs ${config.textColor} leading-tight whitespace-pre-line max-h-32 overflow-y-auto dark:text-white`}>
                   {message}
                 </p>
               </motion.div>

@@ -289,7 +289,8 @@ router.put('/:bid', authMiddleware, checkQuestionBankPermission, [
   body('category').optional().trim(),
   body('tags').optional().isArray(),
   body('isPublic').optional().isBoolean(),
-  body('allowCollaboration').optional().isBoolean()
+  body('allowCollaboration').optional().isBoolean(),
+  body('cardColor').optional().isHexColor().withMessage('卡片颜色必须是有效的十六进制颜色值')
 ], async (req: QuestionBankRequest, res: any) => {
   try {
     const errors = validationResult(req);
@@ -309,7 +310,7 @@ router.put('/:bid', authMiddleware, checkQuestionBankPermission, [
       return res.status(403).json({ success: false, error: '权限不足' });
     }
 
-    const { name, description, category, tags, isPublic, allowCollaboration } = req.body;
+    const { name, description, category, tags, isPublic, allowCollaboration, cardColor } = req.body;
 
     // 更新字段
     if (name !== undefined) questionBank.name = name;
@@ -318,6 +319,7 @@ router.put('/:bid', authMiddleware, checkQuestionBankPermission, [
     if (tags !== undefined) questionBank.tags = tags;
     if (isPublic !== undefined) questionBank.isPublic = isPublic;
     if (allowCollaboration !== undefined) questionBank.allowCollaboration = allowCollaboration;
+    if (cardColor !== undefined) questionBank.cardColor = cardColor;
 
     questionBank.lastUpdated = new Date();
     await questionBank.save();
@@ -732,12 +734,7 @@ router.get('/:bid/stats', authMiddleware, checkQuestionBankPermission, async (re
 router.put('/:bid/settings', authMiddleware, checkQuestionBankPermission, [
   body('maxQuestions').optional().isInt({ min: 1 }).withMessage('题目数量限制必须是正整数'),
   body('exportTemplate').optional().isIn(['default', 'simple', 'detailed', 'custom']).withMessage('导出模板无效'),
-  body('autoBackup').optional().isBoolean().withMessage('自动备份必须是布尔值'),
-  body('backupFrequency').optional().isIn(['daily', 'weekly', 'monthly']).withMessage('备份频率无效'),
-  body('notifications').optional().isObject().withMessage('通知设置必须是对象'),
-  body('notifications.memberChange').optional().isBoolean().withMessage('成员变更通知必须是布尔值'),
-  body('notifications.questionUpdate').optional().isBoolean().withMessage('题目更新通知必须是布尔值'),
-  body('notifications.systemAlert').optional().isBoolean().withMessage('系统警告通知必须是布尔值')
+  body('cardColor').optional().isHexColor().withMessage('卡片颜色必须是有效的十六进制颜色值')
 ], async (req: QuestionBankRequest, res: any) => {
   try {
     const errors = validationResult(req);
@@ -760,17 +757,13 @@ router.put('/:bid/settings', authMiddleware, checkQuestionBankPermission, [
     const { 
       maxQuestions, 
       exportTemplate, 
-      autoBackup, 
-      backupFrequency, 
-      notifications 
+      cardColor
     } = req.body;
 
     // 更新高级设置
     if (maxQuestions !== undefined) questionBank.maxQuestions = maxQuestions;
     if (exportTemplate !== undefined) questionBank.exportTemplate = exportTemplate;
-    if (autoBackup !== undefined) questionBank.autoBackup = autoBackup;
-    if (backupFrequency !== undefined) questionBank.backupFrequency = backupFrequency;
-    if (notifications !== undefined) questionBank.notifications = notifications;
+    if (cardColor !== undefined) questionBank.cardColor = cardColor;
 
     questionBank.lastUpdated = new Date();
     await questionBank.save();

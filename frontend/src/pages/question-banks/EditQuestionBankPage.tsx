@@ -4,15 +4,17 @@ import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
   Save, 
-  BookOpen, 
-  Plus
+  Plus,
+  Calculator
 } from 'lucide-react';
 import { questionBankAPI } from '../../services/api';
 import type { QuestionBank, UpdateQuestionBankRequest } from '../../types';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
+import { SimpleSelect } from '../../components/ui/menu';
 import LoadingPage from '../../components/ui/LoadingPage';
+import { getMathCategories } from '../../constants/questionCategories';
 
 const EditQuestionBankPage: React.FC = () => {
   const { bid } = useParams<{ bid: string }>();
@@ -30,6 +32,8 @@ const EditQuestionBankPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+
 
   useEffect(() => {
     if (bid) {
@@ -191,7 +195,7 @@ const EditQuestionBankPage: React.FC = () => {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="请输入题库名称"
-                    icon={<BookOpen className="w-5 w-5" />}
+                    icon={<Calculator className="w-5 w-5" />}
                     required
                   />
                 </div>
@@ -224,18 +228,22 @@ const EditQuestionBankPage: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    分类
-                  </label>
-                  <Input
-                    name="category"
-                    type="text"
-                    value={formData.category}
-                    onChange={handleChange}
-                    placeholder="请输入分类"
-                  />
-                </div>
+                              <SimpleSelect
+                options={getMathCategories().map(category => ({
+                  value: category.value,
+                  label: category.label,
+                  icon: category.icon
+                }))}
+                value={formData.category || ''}
+                onChange={(value) => setFormData(prev => ({ ...prev, category: value as string }))}
+                placeholder="选择题库分类"
+                label="题库分类"
+                theme="blue"
+                variant="outline"
+                size="md"
+                showIcon={true}
+                clearable={true}
+              />
               </motion.div>
 
               {/* 标签 */}

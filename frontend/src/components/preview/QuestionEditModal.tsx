@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Eye, EyeOff, ChevronUp, ChevronDown, CheckCircle, Type, FileText } from 'lucide-react';
 import Button from '../ui/Button';
-import FuzzySelect from '../ui/FuzzySelect';
+import { FuzzySelect } from '../ui/menu';
 import { LaTeXEditor } from '../editor';
 import LaTeXPreview from '../editor/preview/LaTeXPreview';
 import QuestionTypeSelector from '../editor/question/QuestionTypeSelector';
@@ -166,6 +166,16 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
       tikzCodes: tikzCodes
     };
     
+    // 为填空题自动生成answer字段（后端要求）
+    if (updatedQuestion.type === 'fill' && updatedQuestion.content?.fillAnswers) {
+      updatedQuestion.content.answer = updatedQuestion.content.fillAnswers.join('; ');
+    }
+    
+    // 为解答题自动生成answer字段（后端要求）
+    if (updatedQuestion.type === 'solution' && updatedQuestion.content?.solutionAnswers) {
+      updatedQuestion.content.answer = updatedQuestion.content.solutionAnswers.join('; ');
+    }
+    
     onSave(updatedQuestion);
     onClose();
   };
@@ -186,10 +196,52 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
   };
 
   const updateField = (field: string, value: any) => {
-    setEditedQuestion(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setEditedQuestion(prev => {
+      // 特殊处理题目类型切换
+      if (field === 'type') {
+        const oldType = prev.type;
+        const newType = value;
+        
+        // 如果题目类型发生变化，清理旧题型的答案字段
+        if (oldType !== newType) {
+          const newContent: any = { ...prev.content };
+          
+          // 清理旧题型的答案字段
+          if (oldType === 'choice' || oldType === 'multiple-choice') {
+            delete newContent.options;
+            delete newContent.answer;
+          } else if (oldType === 'fill') {
+            delete newContent.fillAnswers;
+          } else if (oldType === 'solution') {
+            delete newContent.solutionAnswers;
+            delete newContent.solution;
+          }
+          
+          // 初始化新题型的答案字段
+          if (newType === 'choice' || newType === 'multiple-choice') {
+            newContent.options = [];
+            newContent.answer = '';
+          } else if (newType === 'fill') {
+            newContent.fillAnswers = [];
+          } else if (newType === 'solution') {
+            newContent.solutionAnswers = [];
+            newContent.solution = '';
+          }
+          
+          return {
+            ...prev,
+            [field]: value,
+            content: newContent
+          };
+        }
+      }
+      
+      // 普通字段更新
+      return {
+        ...prev,
+        [field]: value
+      };
+    });
   };
 
   // 切换区域展开/收缩
@@ -426,6 +478,9 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
                               label="题目类型"
                               className="w-full"
                             />
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              切换题目类型时会自动清理旧答案，请重新填写新题型的答案
+                            </p>
                           </div>
 
                           {/* 难度选择 */}

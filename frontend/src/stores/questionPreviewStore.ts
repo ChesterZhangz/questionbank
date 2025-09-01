@@ -100,7 +100,15 @@ export interface QuestionPreviewActions {
   batchDeleteQuestions: (ids: string[]) => Promise<void>;
   analyzeQuestion: (content: string) => Promise<AIAnalysisResult>;
   batchAnalyzeQuestions: (questions: Question[]) => Promise<AIAnalysisResult[]>;
-  saveQuestions: (questions: Question[], targetBankId: string) => Promise<{ success: boolean; savedCount: number; totalQuestions: number }>;
+  saveQuestions: (questions: Question[], targetBankId: string) => Promise<{ 
+      success: boolean; 
+      savedCount: number; 
+      failedCount: number;
+      totalQuestions: number;
+      failedQuestions: Array<{id: string, error: string, question: any}>;
+      hasFailures: boolean;
+      validationErrors?: boolean;
+    }>;
   
   // 工具方法
   reset: () => void;
@@ -569,6 +577,127 @@ export const useQuestionPreviewStore = create<QuestionPreviewState & QuestionPre
         
         const totalQuestions = questions.length;
         let savedCount = 0;
+        const failedQuestions: Array<{id: string, error: string, question: any}> = [];
+
+        // 保存前数据验证
+        const validationErrors: Array<{id: string, error: string, question: any}> = [];
+        
+        for (const question of questions) {
+          // 验证必填字段
+          if (!question.content?.stem?.trim()) {
+            validationErrors.push({
+              id: question.id || question._id || 'unknown',
+              error: '题干内容不能为空',
+              question: question
+            });
+            continue;
+          }
+          
+          if (!question.type) {
+            validationErrors.push({
+              id: question.id || question._id || 'unknown',
+              error: '题目类型不能为空',
+              question: question
+            });
+            continue;
+          }
+          
+          if (!question.difficulty || question.difficulty < 1 || question.difficulty > 5) {
+            validationErrors.push({
+              id: question.id || question._id || 'unknown',
+              error: '题目难度必须在1-5之间',
+              question: question
+            });
+            continue;
+          }
+          
+          // 验证答案字段 - 根据题目类型检查相应的答案
+          if (question.type === 'choice') {
+            // 选择题：必须有选项和答案
+            if (!question.content?.options || question.content.options.length === 0) {
+              validationErrors.push({
+                id: question.id || question._id || 'unknown',
+                error: '选择题必须包含选项',
+                question: question
+              });
+              continue;
+            }
+            if (!question.content?.answer?.trim()) {
+              validationErrors.push({
+                id: question.id || question._id || 'unknown',
+                error: '选择题答案不能为空',
+                question: question
+              });
+              continue;
+            }
+          } else if (question.type === 'fill') {
+            // 填空题：必须有填空答案
+            if (!question.content?.fillAnswers || question.content.fillAnswers.length === 0) {
+              validationErrors.push({
+                id: question.id || question._id || 'unknown',
+                error: '填空题必须包含答案',
+                question: question
+              });
+              continue;
+            }
+            // 检查每个填空答案是否为空
+            const emptyAnswers = question.content.fillAnswers.some((answer: string) => !answer?.trim());
+            if (emptyAnswers) {
+              validationErrors.push({
+                id: question.id || question._id || 'unknown',
+                error: '填空题的所有答案都不能为空',
+                question: question
+              });
+              continue;
+            }
+          } else if (question.type === 'solution') {
+            // 解答题：必须有解答步骤答案
+            if (!question.content?.solutionAnswers || question.content.solutionAnswers.length === 0) {
+              validationErrors.push({
+                id: question.id || question._id || 'unknown',
+                error: '解答题必须包含解答步骤',
+                question: question
+              });
+              continue;
+            }
+            // 检查每个解答步骤是否为空
+            const emptySteps = question.content.solutionAnswers.some((step: string) => !step?.trim());
+            if (emptySteps) {
+              validationErrors.push({
+                id: question.id || question._id || 'unknown',
+                error: '解答题的所有步骤都不能为空',
+                question: question
+              });
+              continue;
+            }
+          }
+          
+          // 通用答案验证：确保有某种形式的答案
+          if (!question.content?.answer?.trim() && 
+              (!question.content?.fillAnswers || question.content.fillAnswers.length === 0) &&
+              (!question.content?.solutionAnswers || question.content.solutionAnswers.length === 0)) {
+            validationErrors.push({
+              id: question.id || question._id || 'unknown',
+              error: '题目必须包含答案内容',
+              question: question
+            });
+            continue;
+          }
+        }
+        
+        // 如果有验证错误，直接返回
+        if (validationErrors.length > 0) {
+          set({ savingQuestions: [], saveProgress: 0 });
+          return {
+            success: false,
+            savedCount: 0,
+            failedCount: validationErrors.length,
+            totalQuestions,
+            failedQuestions: validationErrors,
+            hasFailures: true,
+            validationErrors: true
+          };
+        }
         
         for (const question of questions) {
           try {
@@ -579,20 +708,38 @@ export const useQuestionPreviewStore = create<QuestionPreviewState & QuestionPre
               questionBank: targetBankId
             };
             
-                         // 保存题目
-             await questionAPI.createQuestion(targetBankId, questionData);
+            // 为填空题自动生成answer字段（后端要求）
+            if (questionData.type === 'fill' && questionData.content?.fillAnswers) {
+              questionData.content.answer = questionData.content.fillAnswers.join('; ');
+            }
+            
+            // 为解答题自动生成answer字段（后端要求）
+            if (questionData.type === 'solution' && questionData.content?.solutionAnswers) {
+              questionData.content.answer = questionData.content.solutionAnswers.join('; ');
+            }
+            
+            // 保存题目
+            await questionAPI.createQuestion(targetBankId, questionData);
             savedCount++;
             
             // 更新进度
             set({ saveProgress: Math.round((savedCount / totalQuestions) * 100) });
           } catch (error) {
             console.error(`保存题目失败: ${question.id}`, error);
+            failedQuestions.push({ id: question.id || 'unknown', error: error instanceof Error ? error.message : String(error), question: question });
           }
         }
         
         set({ savingQuestions: [], saveProgress: 100 });
         
-        return { success: true, savedCount, totalQuestions };
+        return { 
+          success: true, 
+          savedCount, 
+          failedCount: failedQuestions.length,
+          totalQuestions,
+          failedQuestions,
+          hasFailures: failedQuestions.length > 0
+        };
       } catch (error) {
         set({ savingQuestions: [], saveProgress: 0 });
         console.error('批量保存题目失败:', error);

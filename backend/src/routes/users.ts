@@ -185,6 +185,81 @@ async function cascadeDeleteUser(userId: mongoose.Types.ObjectId, enterpriseId?:
       console.error('删除企业成员记录失败:', memberError);
     }
 
+    // 14. 删除题目图片和TikZ代码
+    try {
+      const QuestionImage = mongoose.model('QuestionImage');
+      const QuestionTikZ = mongoose.model('QuestionTikZ');
+      
+      const deletedImages = await QuestionImage.deleteMany({ uploadedBy: userId });
+      const deletedTikZ = await QuestionTikZ.deleteMany({ createdBy: userId });
+      
+      console.log(`删除了 ${deletedImages.deletedCount} 个题目图片`);
+      console.log(`删除了 ${deletedTikZ.deletedCount} 个TikZ代码`);
+    } catch (mediaError) {
+      console.error('删除题目媒体文件失败:', mediaError);
+    }
+
+    // 15. 删除题目草稿
+    try {
+      const QuestionDraft = mongoose.model('QuestionDraft');
+      const deletedDrafts = await QuestionDraft.deleteMany({ creator: userId });
+      console.log(`删除了 ${deletedDrafts.deletedCount} 个题目草稿`);
+    } catch (draftError) {
+      console.error('删除题目草稿失败:', draftError);
+    }
+
+    // 16. 删除题目评估和分析数据
+    try {
+      const QuestionEvaluation = mongoose.model('QuestionEvaluation');
+      const QuestionAnalysis = mongoose.model('QuestionAnalysis');
+      
+      const deletedEvaluations = await QuestionEvaluation.deleteMany({ 
+        $or: [
+          { evaluator: userId },
+          { questionCreator: userId }
+        ]
+      });
+      const deletedAnalyses = await QuestionAnalysis.deleteMany({ 
+        $or: [
+          { analyst: userId },
+          { questionCreator: userId }
+        ]
+      });
+      
+      console.log(`删除了 ${deletedEvaluations.deletedCount} 个题目评估`);
+      console.log(`删除了 ${deletedAnalyses.deletedCount} 个题目分析`);
+    } catch (analysisError) {
+      console.error('删除题目评估分析失败:', analysisError);
+    }
+
+    // 17. 删除相似性检测数据
+    try {
+      const SimilarityDetection = mongoose.model('SimilarityDetection');
+      const deletedSimilarities = await SimilarityDetection.deleteMany({ 
+        $or: [
+          { detector: userId },
+          { questionCreator: userId }
+        ]
+      });
+      console.log(`删除了 ${deletedSimilarities.deletedCount} 个相似性检测记录`);
+    } catch (similarityError) {
+      console.error('删除相似性检测数据失败:', similarityError);
+    }
+
+    // 18. 删除企业消息
+    try {
+      const EnterpriseMessage = mongoose.model('EnterpriseMessage');
+      const deletedMessages = await EnterpriseMessage.deleteMany({ 
+        $or: [
+          { sender: userId },
+          { recipients: userId }
+        ]
+      });
+      console.log(`删除了 ${deletedMessages.deletedCount} 条企业消息`);
+    } catch (messageError) {
+      console.error('删除企业消息失败:', messageError);
+    }
+
     console.log(`用户 ${userId} 的所有相关数据级联删除完成`);
     
   } catch (error) {

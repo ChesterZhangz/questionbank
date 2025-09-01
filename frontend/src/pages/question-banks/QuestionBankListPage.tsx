@@ -22,6 +22,7 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import { useModal } from '../../hooks/useModal';
 import { getUserRoleStats } from '../../utils/statsUtils';
+import { getCategoryLabel } from '../../constants/questionCategories';
 
 const QuestionBankListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -255,122 +256,155 @@ const QuestionBankListPage: React.FC = () => {
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {questionBanks.map((bank, index) => (
-              <motion.div
-                key={bank.bid}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card className="h-full hover:shadow-lg transition-shadow">
-                  <div className="p-6">
-                    {/* 题库头部 */}
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-text-primary mb-1">
-                          {bank.name}
-                        </h3>
-                        <p className="text-sm text-text-tertiary">
-                          {getUserRole(bank)} • {bank.category || '未分类'}
-                        </p>
-                      </div>
-                      <div className="relative group">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="p-1"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                        {/* 下拉菜单 */}
-                        <div className="absolute right-0 mt-2 w-48 bg-bg-elevated rounded-md shadow-lg border border-border-primary z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                          <div className="py-1">
-                            <button
-                              onClick={() => handleViewBank(bank.bid)}
-                              className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-bg-secondary"
-                            >
-                              <Eye className="w-4 h-4 mr-2" />
-                              查看题库
-                            </button>
-                            {(bank.creator._id === user?._id || bank.managers.some(m => m._id === user?._id)) && (
-                              <>
-                                <button
-                                  onClick={() => handleEditBank(bank.bid)}
-                                  className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-bg-secondary"
-                                >
-                                  <Edit className="w-4 h-4 mr-2" />
-                                  编辑题库
-                                </button>
-                                <button
-                                  onClick={() => handleManageMembers(bank.bid)}
-                                  className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-bg-secondary"
-                                >
-                                  <Users className="w-4 h-4 mr-2" />
-                                  成员管理
-                                </button>
-                              </>
-                            )}
-                            {bank.creator._id === user?._id && (
+            {questionBanks.map((bank, index) => {
+              // 调试信息
+              console.log(`题库 ${bank.name} 的 cardColor:`, (bank as any).cardColor);
+              
+              return (
+                <motion.div
+                  key={bank.bid}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card className="h-full hover:shadow-lg transition-shadow">
+                    <div className="p-6">
+                      {/* 题库头部 */}
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1">
+                          <h3 
+                            className="text-lg font-semibold mb-1"
+                            style={{ color: (bank as any).cardColor || '#4f46e5' }}
+                          >
+                            {bank.name}
+                          </h3>
+                          <p className="text-sm text-text-tertiary">
+                            {getUserRole(bank)} • {bank.category ? getCategoryLabel(bank.category) : '未分类'}
+                          </p>
+                        </div>
+                        <div className="relative group">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="p-1"
+                            style={{ 
+                              borderColor: (bank as any).cardColor || '#4f46e5',
+                              color: (bank as any).cardColor || '#4f46e5'
+                            }}
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                          {/* 下拉菜单 */}
+                          <div className="absolute right-0 mt-2 w-48 bg-bg-elevated rounded-md shadow-lg border border-border-primary z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                            <div className="py-1">
                               <button
-                                onClick={() => handleDeleteBank(bank.bid)}
-                                className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={() => handleViewBank(bank.bid)}
+                                className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-bg-secondary"
                               >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                删除题库
+                                <Eye className="w-4 h-4 mr-2" />
+                                查看题库
                               </button>
-                            )}
+                              {(bank.creator._id === user?._id || bank.managers.some(m => m._id === user?._id)) && (
+                                <>
+                                  <button
+                                    onClick={() => handleEditBank(bank.bid)}
+                                    className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-bg-secondary"
+                                  >
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    编辑题库
+                                  </button>
+                                  <button
+                                    onClick={() => handleManageMembers(bank.bid)}
+                                    className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-bg-secondary"
+                                  >
+                                    <Users className="w-4 h-4 mr-2" />
+                                    成员管理
+                                  </button>
+                                </>
+                              )}
+                              {bank.creator._id === user?._id && (
+                                <button
+                                  onClick={() => handleDeleteBank(bank.bid)}
+                                  className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  删除题库
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* 题库描述 */}
-                    {bank.description && (
-                      <p className="text-text-secondary text-sm mb-4 line-clamp-2">
-                        {bank.description}
-                      </p>
-                    )}
+                      {/* 题库描述 */}
+                      {bank.description && (
+                        <p className="text-text-secondary text-sm mb-4 line-clamp-2">
+                          {bank.description}
+                        </p>
+                      )}
 
-                    {/* 题库标签 */}
-                    {bank.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-4">
-                        {bank.tags.slice(0, 3).map((tag, tagIndex) => (
-                          <span
-                            key={tagIndex}
-                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                        {bank.tags.length > 3 && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-bg-secondary text-text-tertiary">
-                            +{bank.tags.length - 3}
-                          </span>
-                        )}
+                      {/* 题库标签 */}
+                      {bank.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-4">
+                          {bank.tags.slice(0, 3).map((tag, tagIndex) => (
+                            <span
+                              key={tagIndex}
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border"
+                              style={{ 
+                                backgroundColor: `${(bank as any).cardColor || '#4f46e5'}20`,
+                                color: (bank as any).cardColor || '#4f46e5',
+                                borderColor: (bank as any).cardColor || '#4f46e5'
+                              }}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {bank.tags.length > 3 && (
+                            <span 
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                              style={{ 
+                                backgroundColor: `${(bank as any).cardColor || '#4f46e5'}20`,
+                                color: (bank as any).cardColor || '#4f46e5',
+                                borderColor: (bank as any).cardColor || '#4f46e5'
+                              }}
+                            >
+                              +{bank.tags.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* 题库统计 */}
+                      <div className="flex items-center justify-between text-sm text-text-tertiary">
+                        <div className="flex items-center">
+                          <BookOpen 
+                            className="w-4 h-4 mr-1" 
+                            style={{ color: (bank as any).cardColor || '#4f46e5' }}
+                          />
+                          {bank.questionCount} 道题
+                        </div>
+                        <div className="flex items-center">
+                          <Users 
+                            className="w-4 h-4 mr-1" 
+                            style={{ color: (bank as any).cardColor || '#4f46e5' }}
+                          />
+                          {bank.managers.length + bank.collaborators.length + 1} 人
+                        </div>
                       </div>
-                    )}
 
-                    {/* 题库统计 */}
-                    <div className="flex items-center justify-between text-sm text-text-tertiary">
-                      <div className="flex items-center">
-                        <BookOpen className="w-4 h-4 mr-1" />
-                        {bank.questionCount} 道题
-                      </div>
-                      <div className="flex items-center">
-                        <Users className="w-4 h-4 mr-1" />
-                        {bank.managers.length + bank.collaborators.length + 1} 人
+                      {/* 最后更新 */}
+                      <div className="mt-3 text-xs text-text-tertiary">
+                        <Calendar 
+                          className="w-3 h-4 inline mr-1" 
+                          style={{ color: (bank as any).cardColor || '#4f46e5' }}
+                        />
+                        最后更新: {new Date(bank.lastUpdated).toLocaleDateString()}
                       </div>
                     </div>
-
-                    {/* 最后更新 */}
-                    <div className="mt-3 text-xs text-text-tertiary">
-                      <Calendar className="w-3 h-4 inline mr-1" />
-                      最后更新: {new Date(bank.lastUpdated).toLocaleDateString()}
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>

@@ -1087,15 +1087,55 @@ const QuestionPreviewPage: React.FC = () => {
         return latestQ || selectedQ;
       });
 
-      await saveQuestions(latestQuestions, targetBankId);
+      const saveResult = await saveQuestions(latestQuestions, targetBankId);
       
-      showSuccessRightSlide("操作成功",  `已保存 ${selectedQuestions.length} 道题目到题库`);
-      setShowSavePanel(false);
-      
-      // 跳转到题库详情页
-      navigate(`/question-banks/${targetBankId}`);
-    } catch (error) {
-      showErrorRightSlide("操作失败", '保存题目失败');
+      // 显示详细的保存结果
+      if (saveResult.validationErrors) {
+        // 数据验证失败
+        const validationDetails = saveResult.failedQuestions.map(fq => 
+          `题目 ${fq.question.content?.stem?.substring(0, 30)}...: ${fq.error}`
+        ).join('\n');
+        
+        showErrorRightSlide(
+          "数据验证失败", 
+          `请检查以下题目的数据完整性：\n\n${validationDetails}`,
+          { autoClose: 8000, width: 'lg' }
+        );
+        
+        // 不跳转，让用户修复问题
+        setShowSavePanel(false);
+      } else if (saveResult.hasFailures) {
+        // 有失败的题目，显示详细结果
+        const failedDetails = saveResult.failedQuestions.map(fq => 
+          `题目 ${fq.question.content?.stem?.substring(0, 30)}...: ${fq.error}`
+        ).join('\n');
+        
+        showErrorRightSlide(
+          "保存完成，但有部分失败", 
+          `成功保存 ${saveResult.savedCount} 道题目，失败 ${saveResult.failedCount} 道题目。\n\n失败详情：\n${failedDetails}`,
+          { autoClose: 8000, width: 'lg' }
+        );
+        
+        // 不跳转，让用户查看失败原因
+        setShowSavePanel(false);
+      } else {
+        // 全部成功
+        showSuccessRightSlide(
+          "保存成功", 
+          `已成功保存 ${saveResult.savedCount} 道题目到题库`,
+          { autoClose: 2000 }
+        );
+        
+        setShowSavePanel(false);
+        
+        // 延迟跳转，让用户看到成功提示
+        setTimeout(() => {
+          navigate(`/question-banks/${targetBankId}`);
+        }, 2000);
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || '保存题目失败';
+      showErrorRightSlide("操作失败", errorMessage, { autoClose: 3000 });
     } finally {
       setSavingQuestions([]);
       setSaveProgress(0);
@@ -1350,7 +1390,7 @@ const QuestionPreviewPage: React.FC = () => {
       <QuestionEditModal
         isOpen={!!editingQuestion}
         question={editingQuestion}
-        questionBank={null} // 这里可以传入当前题库信息
+        questionBank={selectedQuestionBank ? questionBanks.find(bank => bank.bid === selectedQuestionBank) || null : null}
         onClose={handleCancelEdit}
         onSave={handleSaveEdit}
       />

@@ -268,6 +268,7 @@ export interface UpdateQuestionBankRequest {
   tags?: string[];
   isPublic?: boolean;
   allowCollaboration?: boolean;
+  cardColor?: string; // 自定义卡片颜色
 }
 
 export interface QuestionBankMember {

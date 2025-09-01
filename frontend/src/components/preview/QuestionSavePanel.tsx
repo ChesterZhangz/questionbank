@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
-import FuzzySelect from '../ui/FuzzySelect';
+import { FuzzySelect } from '../ui/menu';
 import { X, Save, Database, CheckCircle, AlertCircle } from 'lucide-react';
 import type { QuestionBank } from '../../types';
 
@@ -65,7 +65,7 @@ const QuestionSavePanel: React.FC<QuestionSavePanelProps> = ({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <Save className="h-5 w-5 text-green-600" />
-              <h3 className="text-lg font-semibold text-gray-900">保存题目到题库</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">保存题目到题库</h3>
             </div>
             <Button
               variant="ghost"
@@ -99,10 +99,10 @@ const QuestionSavePanel: React.FC<QuestionSavePanelProps> = ({
             )}
 
             {/* 题目统计 */}
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-2">
+            <div className="p-3 bg-gray-50 rounded-lg dark:bg-gray-700">
+              <div className="flex items-center space-x-2 dark:text-gray-300">
                 <CheckCircle className="h-4 w-4 text-green-600" />
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-gray-700 dark:text-gray-300">
                   准备保存 {selectedCount} 道题目
                 </span>
               </div>
@@ -110,7 +110,7 @@ const QuestionSavePanel: React.FC<QuestionSavePanelProps> = ({
 
             {/* 题库选择 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 选择目标题库
               </label>
               <FuzzySelect
@@ -129,9 +129,9 @@ const QuestionSavePanel: React.FC<QuestionSavePanelProps> = ({
                 <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5" />
                 <div className="text-sm text-yellow-700">
                   <p className="font-medium">保存说明：</p>
-                  <p>• 题目将保存到选中的题库中</p>
-                  <p>• 保存后可在题库管理页面查看</p>
-                  <p>• 保存过程中请勿关闭页面</p>
+                  <p>题目将保存到选中的题库中</p>
+                  <p>保存后可在题库管理页面查看</p>
+                  <p>保存过程中请勿关闭页面</p>
                 </div>
               </div>
             </div>

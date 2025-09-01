@@ -2,16 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Menu,
+  ChevronDown, 
   Settings,
   LogOut,
   User,
-  ChevronDown,
-  BookOpen,
-  Building2
+  Building2,
+  Menu
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import Avatar from '../ui/Avatar';
+import { useTheme } from '../../hooks/useTheme';
+import { getLogoPath, getSiteName, getSiteTagline } from '../../config/siteConfig';
 
 interface HeaderProps {
   sidebarCollapsed: boolean;
@@ -30,6 +31,7 @@ const Header: React.FC<HeaderProps> = ({
   const { user, logout } = useAuthStore();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const { isDark } = useTheme();
 
   // 检查用户权限
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
@@ -70,12 +72,21 @@ const Header: React.FC<HeaderProps> = ({
           )}
           
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-              <BookOpen className="w-7 h-7 text-white" />
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
+              <img 
+                src={getLogoPath(isDark)} 
+                alt="网站Logo" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // 如果头像加载失败，使用彩色logo作为fallback
+                  const target = e.target as HTMLImageElement;
+                  target.src = getLogoPath(isDark, true);
+                }}
+              />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Mareate</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">题库管理系统</p>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{getSiteName()}</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{getSiteTagline()}</p>
             </div>
           </div>
 

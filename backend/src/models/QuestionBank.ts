@@ -20,13 +20,7 @@ export interface IQuestionBank extends Document {
   status: 'active' | 'archived' | 'deleted'; // 状态
   // 高级设置
   exportTemplate?: 'default' | 'simple' | 'detailed' | 'custom'; // 导出模板
-  autoBackup?: boolean; // 自动备份
-  backupFrequency?: 'daily' | 'weekly' | 'monthly'; // 备份频率
-  notifications?: {
-    memberChange: boolean; // 成员变更通知
-    questionUpdate: boolean; // 题目更新通知
-    systemAlert: boolean; // 系统警告通知
-  };
+  cardColor?: string; // 自定义卡片颜色
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,7 +44,7 @@ const questionBankSchema = new Schema<IQuestionBank>({
     maxlength: 500
   },
   cover: {
-    type: String
+    type: String  // 恢复为字符串类型
   },
   creator: {
     type: Schema.Types.ObjectId,
@@ -112,28 +106,10 @@ const questionBankSchema = new Schema<IQuestionBank>({
     enum: ['default', 'simple', 'detailed', 'custom'],
     default: 'default'
   },
-  autoBackup: {
-    type: Boolean,
-    default: false
-  },
-  backupFrequency: {
+  cardColor: {
     type: String,
-    enum: ['daily', 'weekly', 'monthly'],
-    default: 'weekly'
-  },
-  notifications: {
-    memberChange: {
-      type: Boolean,
-      default: true
-    },
-    questionUpdate: {
-      type: Boolean,
-      default: true
-    },
-    systemAlert: {
-      type: Boolean,
-      default: false
-    }
+    trim: true,
+    maxlength: 7 // 例如 #123456 或 #abc123
   }
 }, {
   timestamps: true
@@ -160,6 +136,13 @@ questionBankSchema.set('toObject', { virtuals: true });
 
 // 中间件：当题库状态变为deleted时，自动删除相关题目
 questionBankSchema.pre('save', async function(next) {
+  // 处理cover字段：如果是对象，转换为分类字符串（去掉emoji）
+  if (this.cover && typeof this.cover === 'object') {
+    console.log(`[题库模型] 检测到对象类型的cover字段，正在转换为字符串: ${JSON.stringify(this.cover)}`);
+    // 如果是对象格式，将其转换为分类名称（不包含emoji）
+    this.cover = this.category || '数学'; // 使用分类作为封面，或默认为数学
+  }
+
   // 检查状态是否从其他状态变为deleted
   if (this.isModified('status') && this.status === 'deleted') {
     try {

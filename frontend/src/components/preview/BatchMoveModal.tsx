@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Move } from 'lucide-react';
 import Button from '../ui/Button';
-import FuzzySelect from '../ui/FuzzySelect';
+import { FuzzySelect } from '../ui/menu';
 import LaTeXPreview from '../editor/preview/LaTeXPreview';
 import { LaTeXRenderer } from '../../lib/latex/renderer/LaTeXRenderer';
 import type { Question } from '../../types';
