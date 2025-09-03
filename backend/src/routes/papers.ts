@@ -19,9 +19,9 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
     const owner = (req as any).user._id;
     const { libraryId, ...paperData } = req.body;
 
-    // 如果指定了试卷库，检查权限
+    // 如果指定了试卷集，检查权限
     if (libraryId) {
-      // 这里需要检查用户是否有权限在该试卷库中创建试卷
+      // 这里需要检查用户是否有权限在该试卷集中创建试卷
       // 暂时跳过，后续可以添加专门的权限检查
     }
 
@@ -68,7 +68,7 @@ router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: '没有有效的更新内容' });
     }
 
-    // 如果试卷属于试卷库，需要检查权限
+    // 如果试卷属于试卷集，需要检查权限
     if (paper.libraryId) {
       // 这里可以添加权限检查逻辑
       // 暂时跳过，后续可以添加专门的权限检查
@@ -95,7 +95,7 @@ router.put('/:id', authMiddleware, async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: '试卷不存在' });
     }
 
-    // 如果试卷属于试卷库，需要检查权限
+    // 如果试卷属于试卷集，需要检查权限
     if (paper.libraryId) {
       // 这里可以添加权限检查逻辑
     }
@@ -119,7 +119,7 @@ router.get('/:id', authMiddleware, async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: '试卷不存在' });
     }
 
-    // 如果试卷属于试卷库，需要检查权限
+    // 如果试卷属于试卷集，需要检查权限
     if (paper.libraryId) {
       // 这里可以添加权限检查逻辑
     }
@@ -137,7 +137,7 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
     const { status, keyword, page, limit, libraryId } = req.query as any;
     const owner = (req as any).user._id;
 
-    // 如果指定了试卷库，需要检查权限
+    // 如果指定了试卷集，需要检查权限
     if (libraryId) {
       // 这里可以添加权限检查逻辑
     }
@@ -158,7 +158,7 @@ router.post('/:id/publish', authMiddleware, async (req: Request, res: Response) 
       return res.status(404).json({ success: false, error: '试卷不存在' });
     }
 
-    // 如果试卷属于试卷库，需要检查权限
+    // 如果试卷属于试卷集，需要检查权限
     if (paper.libraryId) {
       // 这里可以添加权限检查逻辑
     }
@@ -182,7 +182,7 @@ router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: '试卷不存在' });
     }
 
-    // 如果试卷属于试卷库，检查删除权限
+    // 如果试卷属于试卷集，检查删除权限
     if (paper.libraryId) {
       // 这里可以添加权限检查逻辑
     }
@@ -214,8 +214,8 @@ router.patch('/:id/modify', authMiddleware, async (req: Request, res: Response) 
   }
 });
 
-// 试卷库内的试卷管理路由
-// 在试卷库内创建试卷
+// 试卷集内的试卷管理路由
+// 在试卷集内创建试卷
 router.post('/library/:libraryId', authMiddleware, libraryMemberMiddleware, requireLibraryRole('owner', 'admin', 'collaborator'), async (req: LibraryRequest, res: Response) => {
   try {
     const owner = (req as any).user._id;
@@ -226,11 +226,11 @@ router.post('/library/:libraryId', authMiddleware, libraryMemberMiddleware, requ
     return res.status(201).json({ success: true, data: paper });
   } catch (err) {
     console.error('create paper in library failed:', err);
-    return res.status(500).json({ success: false, error: '在试卷库中创建试卷失败' });
+    return res.status(500).json({ success: false, error: '在试卷集中创建试卷失败' });
   }
 });
 
-// 获取试卷库内的试卷列表
+// 获取试卷集内的试卷列表
 router.get('/library/:libraryId', authMiddleware, libraryMemberMiddleware, async (req: LibraryRequest, res: Response) => {
   try {
     const { status, keyword, page, limit } = req.query as any;
@@ -254,11 +254,11 @@ router.get('/library/:libraryId', authMiddleware, libraryMemberMiddleware, async
     return res.json({ success: true, data });
   } catch (err) {
     console.error('list papers in library failed:', err);
-    return res.status(500).json({ success: false, error: '获取试卷库试卷列表失败' });
+    return res.status(500).json({ success: false, error: '获取试卷集试卷列表失败' });
   }
 });
 
-// 在试卷库内更新试卷
+// 在试卷集内更新试卷
 router.put('/library/:libraryId/:paperId', authMiddleware, libraryMemberMiddleware, async (req: LibraryRequest, res: Response) => {
   try {
     const { paperId } = req.params;
@@ -286,7 +286,7 @@ router.put('/library/:libraryId/:paperId', authMiddleware, libraryMemberMiddlewa
   }
 });
 
-// 在试卷库内删除试卷
+// 在试卷集内删除试卷
 router.delete('/library/:libraryId/:paperId', authMiddleware, libraryMemberMiddleware, async (req: LibraryRequest, res: Response) => {
   try {
     const { paperId } = req.params;

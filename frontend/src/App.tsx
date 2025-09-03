@@ -23,7 +23,6 @@ const QuestionBankStatsPage = lazy(() => import('./pages/question-banks/Question
 const QuestionManagementPage = lazy(() => import('./pages/management/QuestionManagementPage'));
 const BatchUploadPage = lazy(() => import('./pages/upload/BatchUploadPage'));
 const QuestionPreviewPage = lazy(() => import('./pages/upload/QuestionPreviewPage'));
-const PaperGenerationPage = lazy(() => import('./pages/generation/PaperGenerationPage'));
 const UserManagementPage = lazy(() => import('./pages/management/UserManagementPage'));
 const SettingsPage = lazy(() => import('./pages/profile/SettingsPage'));
 const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
@@ -37,6 +36,11 @@ const TikZBasicsGuide = lazy(() => import('./pages/guide/tikz-basics'));
 const TikZFunctionsGuide = lazy(() => import('./pages/guide/tikz-functions'));
 const TikZEffectsGuide = lazy(() => import('./pages/guide/tikz-effects'));
 const FunctionPlottingTestPage = lazy(() => import('./pages/FunctionPlottingTestPage'));
+const PaperBankListPage = lazy(() => import('./pages/paper-banks/PaperBankListPage'));
+const CreatePaperBankPage = lazy(() => import('./pages/paper-banks/CreatePaperBankPage'));
+const EditPaperBankPage = lazy(() => import('./pages/paper-banks/EditPaperBankPage'));
+const PaperBankMembersPage = lazy(() => import('./pages/paper-banks/PaperBankMembersPage'));
+
 
 
 import { useAuthStore } from './stores/authStore';
@@ -53,7 +57,7 @@ import { setupGlobalErrorHandler } from './utils/errorHandler';
 // 错误页面
 import { Page400, Page403, Page404, Page500 } from './pages/errors';
 import ErrorDemoPage from './pages/errors/ErrorDemoPage';
-import IntroductionPage from './pages/view/IntroductionPage';
+import IntroductionPage from './pages/IntroductionPage';
 
 // 样式文件
 import './styles/theme.css';
@@ -262,6 +266,47 @@ const App: React.FC = () => {
               } 
             />
 
+            {/* 试卷集管理路由 */}
+            <Route 
+              path="/paper-banks" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <PaperBankListPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+                            <Route
+                  path="/paper-banks/create"
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <CreatePaperBankPage />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/paper-banks/:id/edit"
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <EditPaperBankPage />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/paper-banks/:id/members"
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <PaperBankMembersPage />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  }
+                />
             <Route 
               path="/questions" 
               element={
@@ -311,19 +356,6 @@ const App: React.FC = () => {
                 <ProtectedRoute>
                   <AppLayout>
                     <CreateQuestionPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-
-
-
-            <Route 
-              path="/paper-generation" 
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <PaperGenerationPage />
                   </AppLayout>
                 </ProtectedRoute>
               } 
@@ -483,7 +515,8 @@ const App: React.FC = () => {
 
 
 
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<IntroductionPage />} />
+            <Route path="/introduction" element={<IntroductionPage />} />
             
             {/* 错误页面路由 */}
             <Route path="/error/400" element={<Page400 />} />

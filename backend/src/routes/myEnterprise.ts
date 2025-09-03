@@ -72,7 +72,6 @@ router.get('/info', authMiddleware, async (req: AuthRequest, res: Response) => {
         _id: user._id,
         name: user.name,
         email: user.email,
-        avatar: user.avatar
       }
     });
   } catch (error) {

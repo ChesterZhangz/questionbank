@@ -127,23 +127,11 @@ router.post('/register', [
         role: user.role,
         enterpriseName: user.enterpriseName,
         enterpriseId: user.enterpriseId,
-        avatar: user.avatar,
-        nickname: user.nickname,
-        bio: user.bio,
-        phone: user.phone,
-        location: user.location,
-        website: user.website,
-        birthday: user.birthday,
-        gender: user.gender,
-        interests: user.interests,
-        skills: user.skills,
-        education: user.education,
-        occupation: user.occupation,
-        company: user.company,
-        position: user.position,
-        socialLinks: user.socialLinks,
         preferences: user.preferences,
+        isActive: user.isActive,
         isEmailVerified: user.isEmailVerified,
+        lastLogin: user.lastLogin,
+        emailSuffix: user.emailSuffix,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       }
@@ -239,23 +227,11 @@ router.get('/verify-email', async (req: Request, res: Response) => {
         role: user.role,
         enterpriseName: user.enterpriseName,
         enterpriseId: user.enterpriseId,
-        avatar: user.avatar,
-        nickname: user.nickname,
-        bio: user.bio,
-        phone: user.phone,
-        location: user.location,
-        website: user.website,
-        birthday: user.birthday,
-        gender: user.gender,
-        interests: user.interests,
-        skills: user.skills,
-        education: user.education,
-        occupation: user.occupation,
-        company: user.company,
-        position: user.position,
-        socialLinks: user.socialLinks,
         preferences: user.preferences,
+        isActive: user.isActive,
         isEmailVerified: user.isEmailVerified,
+        lastLogin: user.lastLogin,
+        emailSuffix: user.emailSuffix,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       }
@@ -405,22 +381,8 @@ router.post('/login', [
         role: user.role,
         enterpriseName: user.enterpriseName,
         enterpriseId: user.enterpriseId,
-        avatar: user.avatar,
-        nickname: user.nickname,
-        bio: user.bio,
-        phone: user.phone,
-        location: user.location,
-        website: user.website,
-        birthday: user.birthday,
-        gender: user.gender,
-        interests: user.interests,
-        skills: user.skills,
-        education: user.education,
-        occupation: user.occupation,
-        company: user.company,
-        position: user.position,
-        socialLinks: user.socialLinks,
         preferences: user.preferences,
+        isActive: user.isActive,
         lastLogin: user.lastLogin,
         isEmailVerified: user.isEmailVerified,
         createdAt: user.createdAt,
@@ -450,22 +412,8 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
         role: user.role,
         enterpriseName: user.enterpriseName,
         enterpriseId: user.enterpriseId,
-        avatar: user.avatar,
-        nickname: user.nickname,
-        bio: user.bio,
-        phone: user.phone,
-        location: user.location,
-        website: user.website,
-        birthday: user.birthday,
-        gender: user.gender,
-        interests: user.interests,
-        skills: user.skills,
-        education: user.education,
-        occupation: user.occupation,
-        company: user.company,
-        position: user.position,
-        socialLinks: user.socialLinks,
         preferences: user.preferences,
+        isActive: user.isActive,
         lastLogin: user.lastLogin,
         isEmailVerified: user.isEmailVerified,
         createdAt: user.createdAt,
@@ -622,22 +570,8 @@ router.put('/profile', authMiddleware, [
         role: user.role,
         enterpriseName: user.enterpriseName,
         enterpriseId: user.enterpriseId,
-        avatar: user.avatar,
-        nickname: user.nickname,
-        bio: user.bio,
-        phone: user.phone,
-        location: user.location,
-        website: user.website,
-        birthday: user.birthday,
-        gender: user.gender,
-        interests: user.interests,
-        skills: user.skills,
-        education: user.education,
-        occupation: user.occupation,
-        company: user.company,
-        position: user.position,
-        socialLinks: user.socialLinks,
         preferences: user.preferences,
+        isActive: user.isActive,
         lastLogin: user.lastLogin,
         isEmailVerified: user.isEmailVerified,
         createdAt: user.createdAt,
@@ -1112,78 +1046,179 @@ router.delete('/account', authMiddleware, async (req: AuthRequest, res: Response
   }
 });
 
-// 头像上传配置
-const avatarUpload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      const uploadDir = path.join(process.cwd(), 'public', 'avatars');
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-      cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, 'avatar-' + uniqueSuffix + path.extname(file.originalname));
-    }
-  }),
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB
-  },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('只允许上传图片文件'));
-    }
-  }
-});
 
-// 头像上传
-router.post('/upload-avatar', authMiddleware, avatarUpload.single('avatar'), async (req: AuthRequest, res: Response) => {
+
+
+// 获取用户资料
+router.get('/profile', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, error: '请选择要上传的头像文件' });
+    // 确保用户存在
+    if (!req.user?._id) {
+      return res.status(401).json({ success: false, error: '用户未认证' });
     }
 
-    const user = await User.findById(req.user?._id);
+    const user = await User.findById(req.user._id).select('-password -emailVerificationToken -emailVerificationExpires -passwordResetToken -passwordResetExpires');
+    
     if (!user) {
       return res.status(404).json({ success: false, error: '用户不存在' });
     }
 
-    // 删除旧头像文件
-    if (user.avatar && user.avatar.startsWith('/avatars/')) {
-      const oldAvatarPath = path.join(process.cwd(), 'public', user.avatar);
-      if (fs.existsSync(oldAvatarPath)) {
-        fs.unlinkSync(oldAvatarPath);
-      }
-    }
-
-    // 更新用户头像
-    const avatarUrl = '/avatars/' + req.file.filename;
-    user.avatar = avatarUrl;
-    await user.save();
-
     return res.json({
       success: true,
-      message: '头像上传成功',
-      avatarUrl: avatarUrl,
       user: {
         _id: user._id,
         email: user.email,
         name: user.name,
         role: user.role,
         enterpriseName: user.enterpriseName,
-        avatar: user.avatar,
-        lastLogin: user.lastLogin,
+        enterpriseId: user.enterpriseId,
+        preferences: user.preferences,
+        isActive: user.isActive,
         isEmailVerified: user.isEmailVerified,
+        lastLogin: user.lastLogin,
+        emailSuffix: user.emailSuffix,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       }
     });
   } catch (error) {
-    console.error('头像上传失败:', error);
-    return res.status(500).json({ success: false, error: '头像上传失败' });
+    console.error('获取用户资料失败:', error);
+    return res.status(500).json({ success: false, error: '获取用户资料失败' });
+  }
+});
+
+// 更新用户资料
+router.put('/profile', authMiddleware, [
+  body('name').optional().trim().isLength({ min: 1, max: 50 }).withMessage('姓名不能为空且不能超过50个字符'),
+  body('preferences.theme').optional().isIn(['light', 'dark', 'auto']).withMessage('无效的主题设置'),
+  body('preferences.language').optional().isIn(['zh-CN', 'en-US']).withMessage('无效的语言设置'),
+  body('preferences.timezone').optional().isString().withMessage('无效的时区设置'),
+  body('preferences.notifications.email').optional().isBoolean().withMessage('邮件通知设置必须是布尔值'),
+  body('preferences.notifications.push').optional().isBoolean().withMessage('推送通知设置必须是布尔值'),
+  body('preferences.notifications.sms').optional().isBoolean().withMessage('短信通知设置必须是布尔值')
+], async (req: AuthRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, error: '输入验证失败', details: errors.array() });
+    }
+
+    // 确保用户存在
+    if (!req.user?._id) {
+      return res.status(401).json({ success: false, error: '用户未认证' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: '用户不存在' });
+    }
+
+    // 更新允许的字段
+    if (req.body.name !== undefined) {
+      user.name = req.body.name;
+    }
+
+    if (req.body.preferences) {
+      if (req.body.preferences.theme !== undefined) {
+        user.preferences = user.preferences || {};
+        user.preferences.theme = req.body.preferences.theme;
+      }
+      if (req.body.preferences.language !== undefined) {
+        user.preferences = user.preferences || {};
+        user.preferences.language = req.body.preferences.language;
+      }
+      if (req.body.preferences.timezone !== undefined) {
+        user.preferences = user.preferences || {};
+        user.preferences.timezone = req.body.preferences.timezone;
+      }
+      if (req.body.preferences.notifications) {
+        user.preferences = user.preferences || {};
+        user.preferences.notifications = user.preferences.notifications || {};
+        if (req.body.preferences.notifications.email !== undefined) {
+          user.preferences.notifications.email = req.body.preferences.notifications.email;
+        }
+        if (req.body.preferences.notifications.push !== undefined) {
+          user.preferences.notifications.push = req.body.preferences.notifications.push;
+        }
+        if (req.body.preferences.notifications.sms !== undefined) {
+          user.preferences.notifications.sms = req.body.preferences.notifications.sms;
+        }
+      }
+    }
+
+    await user.save();
+
+    return res.json({
+      success: true,
+      message: '用户资料更新成功',
+      user: {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        enterpriseName: user.enterpriseName,
+        enterpriseId: user.enterpriseId,
+        preferences: user.preferences,
+        isActive: user.isActive,
+        isEmailVerified: user.isEmailVerified,
+        lastLogin: user.lastLogin,
+        emailSuffix: user.emailSuffix,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error('更新用户资料失败:', error);
+    return res.status(500).json({ success: false, error: '更新用户资料失败' });
+  }
+});
+
+// 修改密码
+router.post('/change-password', authMiddleware, [
+  body('currentPassword').notEmpty().withMessage('当前密码不能为空'),
+  body('newPassword').isLength({ min: 6 }).withMessage('新密码至少6位'),
+  body('confirmPassword').custom((value, { req }) => {
+    if (value !== req.body.newPassword) {
+      throw new Error('新密码和确认密码不一致');
+    }
+    return true;
+  })
+], async (req: AuthRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, error: '输入验证失败', details: errors.array() });
+    }
+
+    // 确保用户存在
+    if (!req.user?._id) {
+      return res.status(401).json({ success: false, error: '用户未认证' });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: '用户不存在' });
+    }
+
+    // 验证当前密码
+    const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ success: false, error: '当前密码错误' });
+    }
+
+    // 更新密码
+    user.password = newPassword;
+    await user.save();
+
+    return res.json({
+      success: true,
+      message: '密码修改成功'
+    });
+  } catch (error) {
+    console.error('修改密码失败:', error);
+    return res.status(500).json({ success: false, error: '修改密码失败' });
   }
 });
 

@@ -125,19 +125,41 @@ const SimpleSelect: React.FC<SimpleSelectProps> = ({
 
   const styles = getStyles();
 
-  // 计算下拉菜单位置 - 始终向下展开
+  // 计算下拉菜单位置 - 智能选择展开方向
   useEffect(() => {
     if (isOpen && containerRef.current) {
-      setDropdownStyle({
-        position: 'absolute',
-        top: '100%',
-        left: 0,
-        right: 0,
-        marginTop: '8px',
-        zIndex: 999999
-      });
+      const container = containerRef.current;
+      const rect = container.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const dropdownHeight = Math.min(options.length * 40 + 20, 240); // 估算下拉菜单高度
+      
+      // 检查下方空间是否足够
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      
+      // 如果下方空间不足，则向上展开
+      if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+        setDropdownStyle({
+          position: 'absolute',
+          bottom: '100%',
+          left: 0,
+          right: 0,
+          marginBottom: '8px',
+          zIndex: 999999
+        });
+      } else {
+        // 默认向下展开
+        setDropdownStyle({
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          right: 0,
+          marginTop: '8px',
+          zIndex: 999999
+        });
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, options.length]);
 
   // 点击外部关闭
   useEffect(() => {
@@ -233,11 +255,11 @@ const SimpleSelect: React.FC<SimpleSelectProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
             exit={{ opacity: 0, y: -10, scale: 0.95, rotateX: -15 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="absolute w-full z-[99999]"
+            className="absolute w-full z-[999999]"
             style={dropdownStyle}
           >
             {/* 自定义下拉菜单容器 */}
-            <div className="relative">
+            <div className="relative simple-select-dropdown">
               {/* 菜单背景 */}
               <div className={`relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-h-60 overflow-hidden ${styles.dropdown}`}>
                 {/* 顶部装饰条 */}

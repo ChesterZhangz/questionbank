@@ -600,6 +600,80 @@ export const enterpriseAPI = {
   deleteEnterprise: (enterpriseId: string) => import('./enterpriseService').then(m => m.enterpriseService.deleteEnterprise(enterpriseId)),
 };
 
+// VCount货币系统API
+export const vcountAPI = {
+  // 获取用户VCount余额
+  getBalance: () => api.get<{ success: boolean; data: any }>('/vcount/balance'),
+  
+  // 获取交易历史
+  getTransactions: (params?: { page?: number; limit?: number }) => 
+    api.get<{ success: boolean; data: any }>('/vcount/transactions', { params }),
+  
+  // 充值VCount
+  recharge: (data: { amount: number; description?: string }) => 
+    api.post<{ success: boolean; message: string; data: any }>('/vcount/recharge', data),
+  
+  // 消费VCount
+  spend: (data: { amount: number; description: string; relatedId?: string; relatedModel?: string }) => 
+    api.post<{ success: boolean; message: string; data: any }>('/vcount/spend', data),
+  
+  // 退款VCount
+  refund: (data: { amount: number; description: string; relatedId: string; relatedModel: string }) => 
+    api.post<{ success: boolean; message: string; data: any }>('/vcount/refund', data),
+};
+
+// 试卷集API
+export const paperBankAPI = {
+  // 获取试卷集列表
+  getPaperBanks: (params?: any) => 
+    api.get<{ success: boolean; data: { paperBanks: any[]; pagination: any } }>('/paper-banks', { params }),
+  
+  // 获取单个试卷集
+  getPaperBank: (id: string) => 
+    api.get<{ success: boolean; data: any }>(`/paper-banks/${id}`),
+  
+  // 创建试卷集
+  createPaperBank: (data: any) => 
+    api.post<{ success: boolean; data: any }>('/paper-banks', data),
+  
+  // 更新试卷集
+  updatePaperBank: (id: string, data: any) => 
+    api.put<{ success: boolean; data: any }>(`/paper-banks/${id}`, data),
+  
+  // 删除试卷集
+  deletePaperBank: (id: string) => 
+    api.delete<{ success: boolean; message: string }>(`/paper-banks/${id}`),
+  
+  // 发布试卷集
+  publishPaperBank: (id: string) => 
+    api.post<{ success: boolean; data: any }>(`/paper-banks/${id}/publish`),
+  
+  // 取消发布试卷集
+  unpublishPaperBank: (id: string) => 
+    api.post<{ success: boolean; data: any }>(`/paper-banks/${id}/unpublish`),
+  
+  // 获取试卷集成员列表
+  getPaperBankMembers: (id: string) => 
+    api.get<{ success: boolean; data: { members: any[]; total: number } }>(`/paper-banks/${id}/members`),
+  
+  // 邀请成员加入试卷集
+  invitePaperBankMember: (id: string, data: { email: string; role: string }) => 
+    api.post<{ success: boolean; data: any; message: string }>(`/paper-banks/${id}/members`, data),
+};
+
+// 用户资料API
+export const userProfileAPI = {
+  // 获取用户资料
+  getProfile: () => api.get<{ success: boolean; user: any }>('/auth/profile'),
+  
+  // 更新用户资料
+  updateProfile: (data: any) => api.put<{ success: boolean; message: string; user: any }>('/auth/profile', data),
+  
+  // 修改密码
+  changePassword: (data: { currentPassword: string; newPassword: string; confirmPassword: string }) => 
+    api.post<{ success: boolean; message: string }>('/auth/change-password', data),
+};
+
 // 我的企业API
 // 注意：企业相关API已迁移到 enterpriseService.ts，这里保留向后兼容的导出
 export const myEnterpriseAPI = {

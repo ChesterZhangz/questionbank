@@ -8,23 +8,23 @@ export interface LibraryRequest extends Request {
   userRole?: 'owner' | 'admin' | 'collaborator' | 'viewer';
 }
 
-// 检查用户是否是试卷库成员
+// 检查用户是否是试卷集成员
 export const libraryMemberMiddleware = async (req: LibraryRequest, res: Response, next: NextFunction) => {
   try {
     const libraryId = req.params.id;
     const userId = (req as any).user._id;
 
     if (!mongoose.Types.ObjectId.isValid(libraryId)) {
-      return res.status(400).json({ success: false, error: '无效的试卷库ID' });
+      return res.status(400).json({ success: false, error: '无效的试卷集ID' });
     }
 
     // 使用 lean() 提高性能，只返回普通对象
     const library = await Library.findById(libraryId).lean();
     if (!library) {
-      return res.status(404).json({ success: false, error: '试卷库不存在' });
+      return res.status(404).json({ success: false, error: '试卷集不存在' });
     }
 
-    // 检查用户是否是试卷库成员
+    // 检查用户是否是试卷集成员
     const member = library.members.find(m => m.user.toString() === userId.toString());
     
     if (member) {
@@ -34,7 +34,7 @@ export const libraryMemberMiddleware = async (req: LibraryRequest, res: Response
       return next();
     }
 
-    // 检查用户是否购买了试卷库
+    // 检查用户是否购买了试卷集
     if (library.status === 'published') {
       const purchase = await LibraryPurchase.findOne({
         libraryId: library._id,
@@ -43,7 +43,7 @@ export const libraryMemberMiddleware = async (req: LibraryRequest, res: Response
       }).lean();
 
       if (purchase) {
-        // 用户购买了试卷库，自动添加为查看者
+        // 用户购买了试卷集，自动添加为查看者
         if (!library.members.some(m => m.user.toString() === userId.toString())) {
           // 重新获取完整的 library 文档用于修改
           const fullLibrary = await Library.findById(libraryId);
@@ -66,14 +66,14 @@ export const libraryMemberMiddleware = async (req: LibraryRequest, res: Response
       }
     }
 
-    // 检查用户是否是试卷库所有者
+    // 检查用户是否是试卷集所有者
     if (library.owner.toString() === userId.toString()) {
       req.library = library;
       req.userRole = 'owner';
       return next();
     }
 
-    return res.status(403).json({ success: false, error: '您没有访问此试卷库的权限' });
+    return res.status(403).json({ success: false, error: '您没有访问此试卷集的权限' });
   } catch (error) {
     console.error('libraryMemberMiddleware error:', error);
     return res.status(500).json({ success: false, error: '权限检查失败' });
@@ -94,16 +94,16 @@ export const requireLibraryRole = (...roles: ('owner' | 'admin' | 'collaborator'
   };
 };
 
-// 检查试卷库状态访问权限
+// 检查试卷集状态访问权限
 export const checkLibraryStatusAccess = (req: LibraryRequest, res: Response, next: NextFunction): void => {
   if (!req.library) {
-    res.status(500).json({ success: false, error: '试卷库信息缺失' });
+    res.status(500).json({ success: false, error: '试卷集信息缺失' });
     return;
   }
 
-  // 查看者不能访问草稿状态的试卷库
+  // 查看者不能访问草稿状态的试卷集
   if (req.userRole === 'viewer' && req.library.status === 'draft') {
-    res.status(403).json({ success: false, error: '草稿状态的试卷库对查看者不可见' });
+    res.status(403).json({ success: false, error: '草稿状态的试卷集对查看者不可见' });
     return;
   }
 
@@ -156,19 +156,19 @@ export const checkMemberManagementPermission = (userRole: string): boolean => {
   return userRole === 'owner' || userRole === 'admin';
 };
 
-// 检查试卷库编辑权限
+// 检查试卷集编辑权限
 export const checkLibraryEditPermission = (userRole: string): boolean => {
   return userRole === 'owner';
 };
 
-// 检查试卷库发布权限
+// 检查试卷集发布权限
 export const checkLibraryPublishPermission = (userRole: string): boolean => {
   return userRole === 'owner';
 };
 
-// 检查试卷库购买权限
+// 检查试卷集购买权限
 export const checkLibraryPurchasePermission = (library: ILibrary, userId: string): boolean => {
-  // 只有已发布的试卷库才能购买
+  // 只有已发布的试卷集才能购买
   if (library.status !== 'published') {
     return false;
   }

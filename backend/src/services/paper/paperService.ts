@@ -2,6 +2,18 @@ import mongoose from 'mongoose';
 import { Paper, IPaper, IQuestionSnapshot } from '../../models/Paper';
 import { Question } from '../../models/Question';
 
+// 试卷服务 - 业务逻辑处理
+export class PaperService {
+  // 试卷相关业务逻辑
+  async createPaper(data: any) {
+    // 创建试卷逻辑
+  }
+
+  async updatePaper(id: string, data: any) {
+    // 更新试卷逻辑
+  }
+}
+
 export async function createDraft(input: Partial<IPaper> & { owner: string }): Promise<IPaper> {
   const doc = new Paper({
     name: input.name,

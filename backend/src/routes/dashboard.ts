@@ -3,6 +3,7 @@ import { authMiddleware, AuthRequest } from '../middleware/auth';
 import QuestionBank from '../models/QuestionBank';
 import { Question } from '../models/Question';
 import { User } from '../models/User';
+import PaperBank from '../models/PaperBank';
 
 const router = express.Router();
 
@@ -57,6 +58,14 @@ router.get('/stats', authMiddleware, async (req: AuthRequest, res: any) => {
 
     const questionsCount = await Question.countDocuments({
       bid: { $in: accessibleBankBids }
+    });
+
+    // 获取试卷集（Paper Bank）统计
+    const paperBanksCount = await PaperBank.countDocuments({
+      $or: [
+        { ownerId: userId },
+        { status: 'published' } // 已发布的试卷集对所有用户可见
+      ]
     });
 
     // 获取今日活动数 - 修复为实际的活动数量
@@ -121,6 +130,7 @@ router.get('/stats', authMiddleware, async (req: AuthRequest, res: any) => {
     const stats = {
       totalQuestionBanks: questionBanksCount,
       totalQuestions: questionsCount,
+      totalPaperBanks: paperBanksCount, // 新增：试卷集总数
       recentActivity,
       completionRate,
       userStats,

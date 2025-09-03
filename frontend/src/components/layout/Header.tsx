@@ -12,6 +12,7 @@ import {
 import { useAuthStore } from '../../stores/authStore';
 import Avatar from '../ui/Avatar';
 import { useTheme } from '../../hooks/useTheme';
+import { useUserAvatar } from '../../hooks/useUserAvatar';
 import { getLogoPath, getSiteName, getSiteTagline } from '../../config/siteConfig';
 
 interface HeaderProps {
@@ -32,6 +33,7 @@ const Header: React.FC<HeaderProps> = ({
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { isDark } = useTheme();
+  const { src: userAvatarSrc } = useUserAvatar();
 
   // 检查用户权限
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
@@ -95,6 +97,7 @@ const Header: React.FC<HeaderProps> = ({
               <NavLink to="/dashboard" label="仪表盘" />
               <NavLink to="/question-banks" label="题库管理" />
               <NavLink to="/questions" label="题目管理" />
+              <NavLink to="/paper-banks" label="试卷集" />
               <NavLink to="/paper-generation" label="组卷" />
               {(isAdmin || isAdminEmail) && (
                 <NavLink to="/users" label="用户管理" />
@@ -114,7 +117,7 @@ const Header: React.FC<HeaderProps> = ({
               aria-label="用户菜单"
             >
               <Avatar
-                src={user?.avatar}
+                src={userAvatarSrc}
                 name={user?.name}
                 size="md"
                 showAdminBadge={true}

@@ -135,6 +135,15 @@ export interface QuestionBankInvitationEmailData {
   lang?: 'zh' | 'en';
 }
 
+export interface PaperBankInvitationEmailData {
+  email: string;
+  role: string;
+  paperBankName: string;
+  inviterName: string;
+  acceptUrl: string;
+  lang?: 'zh' | 'en';
+}
+
 export const emailService = {
   // 生成验证令牌
   generateVerificationToken(): string {
@@ -312,19 +321,19 @@ export const emailService = {
 
       const rolePermissions = {
         'viewer': {
-          zh: '<li>查看试卷库中的所有内容</li>',
+          zh: '<li>查看试卷集中的所有内容</li>',
           en: '<li>View all content in the paper library</li>'
         },
         'editor': {
-          zh: '<li>编辑和创建试卷</li><li>查看试卷库中的所有内容</li>',
+          zh: '<li>编辑和创建试卷</li><li>查看试卷集中的所有内容</li>',
           en: '<li>Edit and create papers</li><li>View all content in the paper library</li>'
         },
         'admin': {
-          zh: '<li>管理试卷库成员</li><li>编辑和创建试卷</li><li>查看试卷库中的所有内容</li>',
+          zh: '<li>管理试卷集成员</li><li>编辑和创建试卷</li><li>查看试卷集中的所有内容</li>',
           en: '<li>Manage paper library members</li><li>Edit and create papers</li><li>View all content in the paper library</li>'
         },
         'owner': {
-          zh: '<li>完全控制试卷库</li><li>管理试卷库成员</li><li>编辑和创建试卷</li><li>查看试卷库中的所有内容</li>',
+          zh: '<li>完全控制试卷集</li><li>管理试卷集成员</li><li>编辑和创建试卷</li><li>查看试卷集中的所有内容</li>',
           en: '<li>Full control of the paper library</li><li>Manage paper library members</li><li>Edit and create papers</li><li>View all content in the paper library</li>'
         }
       };
@@ -332,7 +341,7 @@ export const emailService = {
       const hasLogo = getMareateLogoPath() !== null;
       const emailTemplate = createEmailTemplate({
         title: {
-          zh: '试卷库邀请',
+          zh: '试卷集邀请',
           en: 'Paper Library Invitation'
         },
         subtitle: {
@@ -345,12 +354,12 @@ export const emailService = {
         },
         content: {
           zh: `
-            <p><strong>${data.inviterName}</strong> 邀请您加入试卷库 <strong>"${data.libraryName}"</strong>，并担任 <strong>${roleText}</strong> 角色.</p>
+            <p><strong>${data.inviterName}</strong> 邀请您加入试卷集 <strong>"${data.libraryName}"</strong>，并担任 <strong>${roleText}</strong> 角色.</p>
             
             <div style="background: #e3f2fd; border: 1px solid #bbdefb; color: #1565c0; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
               <h3 style="margin: 0 0 15px 0; color: #1565c0;">邀请详情</h3>
               <div style="margin-bottom: 10px;">
-                <span style="font-weight: bold;">试卷库名称：</span>
+                <span style="font-weight: bold;">试卷集名称：</span>
                 <span>${data.libraryName}</span>
               </div>
               <div style="margin-bottom: 10px;">
@@ -413,7 +422,7 @@ export const emailService = {
         from: `"Mareate题库系统" <${process.env.QQ_EMAIL_USER}>`,
         to: data.email,
         subject: lang === 'zh' 
-          ? `Mareate题库系统 - 邀请加入试卷库：${data.libraryName}` 
+          ? `Mareate题库系统 - 邀请加入试卷集：${data.libraryName}` 
           : `Mareate Question Bank System - Invitation to Paper Library: ${data.libraryName}`,
         html: emailTemplate,
         attachments: getMareateLogoPath() ? [
@@ -560,6 +569,136 @@ export const emailService = {
       return true;
     } catch (error) {
       console.error('发送题库邀请邮件失败:', error);
+      return false;
+    }
+  },
+
+  // 发送试卷集邀请邮件
+  async sendPaperBankInvitationEmail(data: PaperBankInvitationEmailData): Promise<boolean> {
+    try {
+      const lang = data.lang || 'zh';
+      const roleText = {
+        'manager': lang === 'zh' ? '管理者' : 'Manager',
+        'collaborator': lang === 'zh' ? '协作者' : 'Collaborator',
+        'viewer': lang === 'zh' ? '查看者' : 'Viewer'
+      }[data.role] || data.role;
+
+      const rolePermissions = {
+        'manager': {
+          zh: '<li>管理试卷集成员</li><li>编辑和创建试卷</li><li>查看试卷集中的所有内容</li>',
+          en: '<li>Manage paper bank members</li><li>Edit and create papers</li><li>View all content in the paper bank</li>'
+        },
+        'collaborator': {
+          zh: '<li>编辑和创建试卷</li><li>查看试卷集中的所有内容</li>',
+          en: '<li>Edit and create papers</li><li>View all content in the paper bank</li>'
+        },
+        'viewer': {
+          zh: '<li>查看试卷集中的所有内容</li>',
+          en: '<li>View all content in the paper bank</li>'
+        }
+      };
+
+      const hasLogo = getMareateLogoPath() !== null;
+      const emailTemplate = createEmailTemplate({
+        title: {
+          zh: '试卷集邀请',
+          en: 'Paper Bank Invitation'
+        },
+        subtitle: {
+          zh: '您收到了来自Mareate试卷集系统的合作邀请',
+          en: 'You have received a collaboration invitation from the Mareate Paper Bank System'
+        },
+        greeting: {
+          zh: '您好！',
+          en: 'Hello!'
+        },
+        content: {
+          zh: `
+            <p><strong>${data.inviterName}</strong> 邀请您加入试卷集 <strong>"${data.paperBankName}"</strong>，并担任 <strong>${roleText}</strong> 角色.</p>
+            
+            <div style="background: #e3f2fd; border: 1px solid #bbdefb; color: #1565c0; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+              <h3 style="margin: 0 0 15px 0; color: #1565c0;">邀请详情</h3>
+              <div style="margin-bottom: 10px;">
+                <span style="font-weight: bold;">试卷集名称：</span>
+                <span>${data.paperBankName}</span>
+              </div>
+              <div style="margin-bottom: 10px;">
+                <span style="font-weight: bold;">邀请角色：</span>
+                <span style="color: #1976d2; font-weight: bold;">${roleText}</span>
+              </div>
+              <div>
+                <span style="font-weight: bold;">邀请人：</span>
+                <span>${data.inviterName}</span>
+              </div>
+            </div>
+            
+            <p>作为 <strong>${roleText}</strong>，您将拥有以下权限：</p>
+            
+            <ul style="color: #666; line-height: 1.8; margin-bottom: 25px; padding-left: 20px;">
+              ${rolePermissions[data.role as keyof typeof rolePermissions]?.zh || ''}
+            </ul>
+          `,
+          en: `
+            <p><strong>${data.inviterName}</strong> invites you to join the paper bank <strong>"${data.paperBankName}"</strong> as a <strong>${roleText}</strong>.</p>
+            
+            <div style="background: #e3f2fd; border: 1px solid #bbdefb; color: #1565c0; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+              <h3 style="margin: 0 0 15px 0; color: #1565c0;">Invitation Details</h3>
+              <div style="margin-bottom: 10px;">
+                <span style="font-weight: bold;">Paper Bank Name:</span>
+                <span>${data.paperBankName}</span>
+              </div>
+              <div style="margin-bottom: 10px;">
+                <span style="font-weight: bold;">Invited Role:</span>
+                <span style="color: #1976d2; font-weight: bold;">${roleText}</span>
+              </div>
+              <div>
+                <span style="font-weight: bold;">Inviter:</span>
+                <span>${data.inviterName}</span>
+              </div>
+            </div>
+            
+            <p>As a <strong>${roleText}</strong>, you will have the following permissions:</p>
+            
+            <ul style="color: #666; line-height: 1.8; margin-bottom: 25px; padding-left: 20px;">
+              ${rolePermissions[data.role as keyof typeof rolePermissions]?.en || ''}
+            </ul>
+          `
+        },
+        buttonText: {
+          zh: '接受邀请',
+          en: 'Accept Invitation'
+        },
+        buttonUrl: data.acceptUrl,
+        footerText: {
+          zh: '此邮件由系统自动发送，请勿回复.<br>如有问题请联系管理员：admin@viquard.com',
+          en: 'This email was sent automatically by the system. Please do not reply.<br>If you have any questions, please contact the administrator: admin@viquard.com'
+        },
+        color: '#0066cc',
+        lang,
+        hasLogo
+      });
+
+      const mailOptions = {
+        from: `"Mareate试卷集系统" <${process.env.QQ_EMAIL_USER}>`,
+        to: data.email,
+        subject: lang === 'zh' 
+          ? `Mareate试卷集系统 - 邀请加入试卷集：${data.paperBankName}` 
+          : `Mareate Paper Bank System - Invitation to Paper Bank: ${data.paperBankName}`,
+        html: emailTemplate,
+        attachments: getMareateLogoPath() ? [
+          {
+            filename: 'Mareate.png',
+            path: getMareateLogoPath()!,
+            cid: 'mareate-logo'
+          }
+        ] : []
+      };
+
+      const transporter = createTransporter();
+      await transporter.sendMail(mailOptions);
+      return true;
+    } catch (error) {
+      console.error('发送试卷集邀请邮件失败:', error);
       return false;
     }
   },

@@ -111,7 +111,7 @@ paperSchema.index({ bank: 1 });
 paperSchema.index({ libraryId: 1 });
 paperSchema.index({ status: 1 });
 paperSchema.index({ name: 'text', subject: 'text', grade: 'text' });
-// 添加复合索引优化试卷库查询
+// 添加复合索引优化试卷集查询
 paperSchema.index({ libraryId: 1, status: 1 });
 paperSchema.index({ libraryId: 1, createdAt: -1 });
 paperSchema.index({ libraryId: 1, status: 1, createdAt: -1 });

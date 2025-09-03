@@ -7,6 +7,7 @@ import { validateToken } from '../utils/authUtils';
 interface AuthStore extends AuthState {
   login: (user: User, token: string) => void;
   logout: () => void;
+  updateUser: (user: User) => void;
   setLoading: (loading: boolean) => void;
   initialize: () => void;
 }
@@ -44,6 +45,10 @@ export const useAuthStore = create<AuthStore>()(
           console.error('登出API调用失败:', error);
           // 本地状态已清除，忽略API错误
         }
+      },
+      
+      updateUser: (user: User) => {
+        set({ user });
       },
       
       setLoading: (loading: boolean) =>

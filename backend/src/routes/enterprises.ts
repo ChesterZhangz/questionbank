@@ -38,6 +38,8 @@ const enterpriseAvatarUpload = multer({
   }
 });
 
+// 企业统计API已移至主应用文件，作为公开API
+
 // 获取所有企业（仅superadmin可访问）
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {

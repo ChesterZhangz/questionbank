@@ -59,28 +59,7 @@ export interface User {
   name: string;
   role: 'superadmin' | 'admin' | 'teacher' | 'student';
   enterpriseName?: string; // 企业名称（用于显示）
-  avatar?: string;
   enterpriseId?: string; // 所属企业ID
-  // 个性化信息
-  nickname?: string;
-  bio?: string;
-  phone?: string;
-  location?: string;
-  website?: string;
-  birthday?: string;
-  gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
-  interests?: string[];
-  skills?: string[];
-  education?: string;
-  occupation?: string;
-  company?: string;
-  position?: string;
-  socialLinks?: {
-    github?: string;
-    linkedin?: string;
-    twitter?: string;
-    wechat?: string;
-  };
   preferences?: {
     theme?: 'light' | 'dark' | 'auto';
     language?: 'zh-CN' | 'en-US';
@@ -91,15 +70,16 @@ export interface User {
       sms?: boolean;
     };
   };
+  isActive: boolean;
   isEmailVerified: boolean;
   lastLogin?: string;
   emailSuffix: string;
+  createdAt: string;
+  updatedAt: string;
   // 社交功能
   followers?: string[]; // 粉丝列表（用户ID数组）
   following?: string[]; // 关注列表（用户ID数组）
   favorites?: string[]; // 收藏的题目（题目ID数组）
-  createdAt: string;
-  updatedAt: string;
 }
 
 // 题目相关类型

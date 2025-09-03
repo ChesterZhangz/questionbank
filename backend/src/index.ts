@@ -34,6 +34,8 @@ import gameRoutes from './routes/games';
 import paperRoutes from './routes/papers';
 import libraryRoutes from './routes/libraries';
 import libraryPurchaseRoutes from './routes/libraryPurchases';
+import vcountRoutes from './routes/vcount';
+import paperBankRoutes from './routes/paperBanks';
 
 // 企业相关路由
 import enterpriseRoutes from './routes/enterprises';
@@ -348,11 +350,78 @@ app.use('/api/search', searchRoutes); // 搜索路由
 app.use('/api/games', gameRoutes); // 游戏路由
 app.use('/api/papers', authMiddleware, paperRoutes); // 组卷路由
 app.use('/api/libraries', authMiddleware, libraryRoutes); // 试题库路由
-app.use('/api/library-purchases', authMiddleware, libraryPurchaseRoutes); // 试卷库购买路由
+app.use('/api/library-purchases', authMiddleware, libraryPurchaseRoutes); // 试卷集购买路由
+
+// 企业统计API（公开，无需认证）- 必须在企业路由之前注册
+app.get('/api/enterprises/stats', async (req, res) => {
+  try {
+    const { Enterprise } = require('./models/Enterprise');
+    const { User } = require('./models/User');
+    
+    // 方法1：通过企业_id统计（每个企业都有唯一的_id）
+    const totalEnterprisesById = await Enterprise.countDocuments({});
+    
+    // 方法2：通过邮箱后缀统计（每个企业都有唯一的emailSuffix）
+    const totalEnterprisesByEmailSuffix = await Enterprise.distinct('emailSuffix').then((suffixes: string[]) => suffixes.length);
+    
+    // 统计活跃状态的企业数量
+    const totalActiveEnterprises = await Enterprise.countDocuments({ status: 'active' });
+    
+    // 统计有企业关联的用户总数（通过enterpriseId字段）
+    const totalEnterpriseUsers = await User.countDocuments({ 
+      enterpriseId: { $exists: true, $ne: null } 
+    });
+    
+    // 统计通过EnterpriseMember关联的用户总数
+    const EnterpriseMember = require('./models/EnterpriseMember').default;
+    const totalMemberUsers = await EnterpriseMember.countDocuments({ 
+      status: 'active' 
+    });
+    
+    // 获取企业状态分布
+    const enterpriseStatusStats = await Enterprise.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+    
+    // 验证两种统计方法是否一致
+    const isConsistent = totalEnterprisesById === totalEnterprisesByEmailSuffix;
+    
+    return res.json({
+      success: true,
+      data: {
+        // 主要统计：使用_id统计的企业总数（推荐方法）
+        totalEnterprises: totalEnterprisesById,
+        // 备用统计：使用邮箱后缀统计的企业总数
+        totalEnterprisesByEmailSuffix: totalEnterprisesByEmailSuffix,
+        // 活跃企业数量
+        totalActiveEnterprises: totalActiveEnterprises,
+        // 企业用户统计
+        totalEnterpriseUsers: totalEnterpriseUsers,
+        totalMemberUsers: totalMemberUsers,
+        // 企业状态分布
+        enterpriseStatusDistribution: enterpriseStatusStats,
+        // 数据一致性验证
+        isConsistent: isConsistent,
+        // 统计方法说明
+        method: '通过企业_id统计，每个企业都有唯一的_id标识'
+      }
+    });
+  } catch (error) {
+    console.error('获取企业统计信息失败:', error);
+    return res.status(500).json({ success: false, error: '获取企业统计信息失败' });
+  }
+});
 
 // 企业相关路由
 app.use('/api/enterprises', authMiddleware, enterpriseRoutes); // 企业管理路由（仅superadmin）
 app.use('/api/my-enterprise', authMiddleware, myEnterpriseRoutes); // 我的企业路由
+app.use('/api/vcount', vcountRoutes); // VCount货币系统路由
+app.use('/api/paper-banks', paperBankRoutes); // 试卷集路由
 
 // 草稿相关路由
 app.use('/api/question-drafts', questionDraftRoutes); // 题目草稿路由

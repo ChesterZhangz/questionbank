@@ -14,11 +14,13 @@ import {
   // ClipboardList,
   Shield,
   Info,
-  Building2
+  Building2,
+  ClipboardList
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import Avatar from '../ui/Avatar';
 import { useTheme } from '../../hooks/useTheme';
+import { useUserAvatar } from '../../hooks/useUserAvatar';
 import { getLogoPath, getSiteName, getSiteTagline } from '../../config/siteConfig';
 
 interface NavItem {
@@ -31,14 +33,44 @@ interface NavItem {
   requiresSuperAdmin?: boolean;
 }
 
-const mainNavItems: NavItem[] = [
-  { id: 'dashboard', label: '仪表盘', icon: Home, path: '/dashboard' },
-  { id: 'question-banks', label: '题库管理', icon: BookOpen, path: '/question-banks' },
-  { id: 'questions', label: '题目管理', icon: FileText, path: '/questions' },
-  { id: 'batch-upload', label: '批量上传', icon: Upload, path: '/batch-upload' },
-  // { id: 'paper-generation', label: '组卷', icon: ClipboardList, path: '/paper-generation' },
-  { id: 'enterprise-management', label: '企业管理', icon: Shield, path: '/enterprise-management', requiresSuperAdmin: true },
-  { id: 'users', label: '用户管理', icon: Users, path: '/users', requiresAdmin: true },
+interface NavSection {
+  id: string;
+  title: string;
+  items: NavItem[];
+}
+
+const navSections: NavSection[] = [
+  {
+    id: 'overview',
+    title: '总览',
+    items: [
+      { id: 'dashboard', label: '仪表盘', icon: Home, path: '/dashboard' }
+    ]
+  },
+  {
+    id: 'questions',
+    title: '题目与题库',
+    items: [
+      { id: 'question-banks', label: '题库管理', icon: BookOpen, path: '/question-banks' },
+      { id: 'questions', label: '题目管理', icon: FileText, path: '/questions' },
+      { id: 'batch-upload', label: '批量上传', icon: Upload, path: '/batch-upload' }
+    ]
+  },
+  {
+    id: 'papers',
+    title: '试卷',
+    items: [
+      { id: 'paper-banks', label: '试卷集', icon: ClipboardList, path: '/paper-banks' },
+    ]
+  },
+  {
+    id: 'admin',
+    title: '管理者页面',
+    items: [
+      { id: 'enterprise-management', label: '企业管理', icon: Shield, path: '/enterprise-management', requiresSuperAdmin: true },
+      { id: 'users', label: '用户管理', icon: Users, path: '/users', requiresAdmin: true }
+    ]
+  }
 ];
 
 interface SidebarProps {
@@ -53,6 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const { user, logout } = useAuthStore();
   const [activeSection, setActiveSection] = useState('dashboard');
   const { isDark } = useTheme();
+  const { src: userAvatarSrc } = useUserAvatar();
 
   // 检查用户权限
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
@@ -73,6 +106,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       setActiveSection('questions');
     } else if (currentPath === '/batch-upload') {
       setActiveSection('batch-upload');
+    } else if (currentPath === '/paper-banks') {
+      setActiveSection('paper-banks');
     } else if (currentPath === '/paper-generation') {
       setActiveSection('paper-generation');
     } else if (currentPath === '/my-enterprise') {
@@ -119,15 +154,18 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   };
 
   // 过滤导航项（根据权限）
-  const filteredNavItems = mainNavItems.filter(item => {
-    if (item.requiresSuperAdmin && !isSuperAdmin && !isAdminEmail) {
-      return false;
-    }
-    if (item.requiresAdmin && !isAdmin && !isAdminEmail) {
-      return false;
-    }
-    return true;
-  });
+  const filteredNavSections = navSections.map(section => ({
+    ...section,
+    items: section.items.filter(item => {
+      if (item.requiresSuperAdmin && !isSuperAdmin && !isAdminEmail) {
+        return false;
+      }
+      if (item.requiresAdmin && !isAdmin && !isAdminEmail) {
+        return false;
+      }
+      return true;
+    })
+  })).filter(section => section.items.length > 0);
 
   return (
     <motion.aside 
@@ -186,47 +224,51 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       </div>
       
       {/* 导航菜单 */}
-      <nav className="flex-1 overflow-y-auto py-8">
-        <div className="mb-8">
-          <AnimatePresence>
-            {!collapsed && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="px-6 mb-6 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider"
-              >
-                主要功能
-              </motion.div>
-            )}
-          </AnimatePresence>
-          
-          <ul className="space-y-3 px-4">
-            {filteredNavItems.map((item) => (
-              <NavItem
-                key={item.id}
-                item={item}
-                active={activeSection === item.id}
-                collapsed={collapsed}
-                onClick={() => handleNavClick(item)}
-                isAdmin={isAdmin || isAdminEmail}
-                isSuperAdmin={isSuperAdmin || isAdminEmail}
-              />
-            ))}
-          </ul>
+      <nav className="flex-1 overflow-y-auto py-4">
+        <div className="space-y-6">
+          {filteredNavSections.map((section) => (
+            <div key={section.id} className="mb-6">
+              <AnimatePresence>
+                {!collapsed && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="px-6 mb-4 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider"
+                  >
+                    {section.title}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              <ul className="space-y-2 px-4">
+                {section.items.map((item) => (
+                  <NavItem
+                    key={item.id}
+                    item={item}
+                    active={activeSection === item.id}
+                    collapsed={collapsed}
+                    onClick={() => handleNavClick(item)}
+                    isAdmin={isAdmin || isAdminEmail}
+                    isSuperAdmin={isSuperAdmin || isAdminEmail}
+                  />
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </nav>
       
       {/* 用户信息和设置 */}
       <div className={`border-t border-gray-200/50 dark:border-gray-700/50 flex-shrink-0 bg-gradient-to-br from-gray-50/80 to-gray-100/80 dark:from-gray-800/80 dark:to-gray-900/80 backdrop-blur-sm ${
-        collapsed ? 'p-3' : 'p-6'
+        collapsed ? 'p-2' : 'p-4'
       }`}>
         {/* 用户信息 */}
-        <div className={`flex items-center gap-4 mb-4 ${
+        <div className={`flex items-center gap-3 mb-3 ${
           collapsed ? 'justify-center' : ''
         }`}>
           <Avatar
-            src={user?.avatar}
+            src={userAvatarSrc}
             name={user?.name}
             size="lg"
             showAdminBadge={true}
@@ -258,15 +300,15 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
         </div>
 
         {/* 设置和退出 */}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <button
             onClick={() => navigate('/profile')}
-            className={`w-full flex items-center gap-4 text-sm rounded-xl transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
+            className={`w-full flex items-center gap-3 text-sm rounded-xl transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
               activeSection === 'profile'
                 ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 hover:text-gray-900 dark:hover:text-gray-100'
             } ${
-              collapsed ? 'justify-center px-3 py-3' : 'px-4 py-3'
+              collapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'
             }`}
           >
             <User className={`w-4 h-4 transition-colors duration-300 ${
@@ -290,12 +332,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           {user?.enterpriseId && (
             <button
               onClick={() => navigate('/my-enterprise')}
-              className={`w-full flex items-center gap-4 text-sm rounded-xl transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
+              className={`w-full flex items-center gap-3 text-sm rounded-xl transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
                 activeSection === 'my-enterprise'
                   ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 hover:text-gray-900 dark:hover:text-gray-100'
               } ${
-                collapsed ? 'justify-center px-3 py-3' : 'px-4 py-3'
+                collapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'
               }`}
             >
               <Building2 className={`w-4 h-4 transition-colors duration-300 ${
@@ -318,12 +360,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           
           <button
             onClick={() => navigate('/settings')}
-            className={`w-full flex items-center gap-4 text-sm rounded-xl transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
+            className={`w-full flex items-center gap-3 text-sm rounded-xl transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
               activeSection === 'settings'
                 ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
                 : 'text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 hover:text-gray-900 dark:hover:text-gray-100'
             } ${
-              collapsed ? 'justify-center px-3 py-3' : 'px-4 py-3'
+              collapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'
             }`}
           >
             <Settings className={`w-4 h-4 transition-colors duration-300 ${
@@ -342,38 +384,11 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
               )}
             </AnimatePresence>
           </button>
-
-                  <button
-          onClick={() => navigate('/LaTeXGuide')}
-          className={`w-full flex items-center gap-4 text-sm rounded-xl transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
-            activeSection === 'LaTeXGuide'
-              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 hover:text-gray-900 dark:hover:text-gray-100'
-          } ${
-            collapsed ? 'justify-center px-3 py-3' : 'px-4 py-3'
-          }`}
-        >
-          <BookOpen className={`w-4 h-4 transition-colors duration-300 ${
-            activeSection === 'LaTeXGuide' ? 'text-white' : 'text-gray-300'
-          }`} />
-          <AnimatePresence>
-            {!collapsed && (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="font-medium"
-              >
-                LaTeX指导
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </button>
           
           <button
             onClick={handleLogout}
-            className={`w-full flex items-center gap-4 text-sm text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 rounded-xl transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
-              collapsed ? 'justify-center px-3 py-3' : 'px-4 py-3'
+            className={`w-full flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 rounded-xl transition-all duration-300 hover:shadow-md backdrop-blur-sm ${
+              collapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'
             }`}
           >
             <LogOut className="w-4 h-4 text-gray-600 dark:text-gray-400" />
@@ -395,15 +410,15 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
 
 
         {/* 版本信息 */}
-        <div className="mt-4 pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
+        <div className="mt-3 pt-3 border-t border-gray-200/50 dark:border-gray-700/50">
           <button
             onClick={() => navigate('/version')}
-            className={`w-full flex items-center gap-4 text-sm rounded-lg transition-all duration-300 ${
+            className={`w-full flex items-center gap-3 text-sm rounded-lg transition-all duration-300 ${
               activeSection === 'version'
                 ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-white/40 dark:hover:bg-gray-700/40'
             } ${
-              collapsed ? 'justify-center px-2 py-2' : 'px-3 py-2'
+              collapsed ? 'justify-center px-2 py-1.5' : 'px-3 py-1.5'
             }`}
           >
             <Info className={`w-3.5 h-3.5 transition-colors duration-300 ${
@@ -417,7 +432,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                   exit={{ opacity: 0 }}
                   className="flex items-center gap-2"
                 >
-                  <span className="text-xs">v0.75</span>
+                  <span className="text-xs">v0.78</span>
                   <span className="text-xs opacity-75">版本信息</span>
                 </motion.div>
               )}

@@ -6,7 +6,7 @@ import {
   Users, 
   FolderOpen,
   Plus,
-
+  Code,
   FileText,
   Settings,
   BarChart3,
@@ -185,7 +185,13 @@ const DashboardPage: React.FC = () => {
         onClick: () => navigate('/question-banks'),
         color: 'from-green-500 to-green-600'
       },
-
+      {
+        icon: <Code className="w-6 h-6" />,
+        title: 'LaTeX指导',
+        description: '学习LaTeX和TikZ语法',
+        onClick: () => navigate('/LaTeXGuide'),
+        color: 'from-purple-500 to-purple-600'
+      }
     ];
 
     const adminActions = [
@@ -583,6 +589,47 @@ const DashboardPage: React.FC = () => {
                           </div>
                         </motion.button>
                       ))}
+                    </div>
+                  </Card>
+
+                  {/* 网站介绍 */}
+                  <Card className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-text-primary">网站介绍</h3>
+                      <Button variant="outline" size="sm" onClick={() => navigate('/introduction')}>
+                        了解更多
+                      </Button>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200/50 dark:border-blue-700/50">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white">
+                          <BookOpen className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-text-primary">专业题库管理平台</p>
+                          <p className="text-sm text-text-secondary">支持LaTeX数学公式和TikZ图形绘制</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200/50 dark:border-green-700/50">
+                        <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center text-white">
+                          <Target className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-text-primary">智能组卷系统</p>
+                          <p className="text-sm text-text-secondary">基于AI的智能组卷，自动生成高质量试卷</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3 p-3 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200/50 dark:border-purple-700/50">
+                        <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center text-white">
+                          <Users className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-text-primary">团队协作支持</p>
+                          <p className="text-sm text-text-secondary">支持团队协作，共享题库和试卷资源</p>
+                        </div>
+                      </div>
                     </div>
                   </Card>
 

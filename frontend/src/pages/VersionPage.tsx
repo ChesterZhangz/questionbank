@@ -37,6 +37,95 @@ interface VersionUpdate {
 
 const versionUpdates: VersionUpdate[] = [
   {
+    version: 'v0.78',
+    date: '2025-08-27',
+    title: 'Logo系统重构 & 题库设置页面重构',
+    description: '重构Logo系统，支持浅色/深色模式自动切换；重构题库设置页面，移除未实现功能，新增自定义卡片颜色功能。',
+    features: [
+      'Logo系统重构：浅色/深色模式Logo自动切换',
+      '替换Mareate为题库管理系统',
+      '优化网页标签栏favicon配置',
+      'Sidebar Logo尺寸增大',
+      '题库设置页面重构：移除未实现功能（自动邀请、备份、通知、封面）',
+      '新增自定义卡片颜色功能',
+      '完善DarkMode适配',
+      '统一分类选择组件'
+    ],
+    improvements: [
+      'Logo显示效果优化：根据主题自动切换',
+      '题库设置界面简化：移除未实现功能',
+      '自定义颜色应用：卡片文字和元素颜色自定义',
+      '分类选择体验统一：与编辑题库页面保持一致',
+      'DarkMode完美支持：所有新增UI元素适配深色主题'
+    ],
+    fixes: [
+      '修复Logo主题切换不生效问题',
+      '解决题库分类显示英文标识问题',
+      '修复自定义颜色保存后不生效问题',
+      '解决题库设置页面功能混乱问题'
+    ],
+    icon: Palette,
+    color: 'from-pink-500 to-rose-600'
+  },
+  {
+    version: 'v0.77',
+    date: '2025-08-26',
+    title: 'UI组件重构',
+    description: '重构UI下拉组件，创建menu文件夹统一管理，优化组件样式和图标系统。',
+    features: [
+      '创建menu文件夹统一管理下拉组件',
+      '重构SimpleSelect、FuzzySelect、MultiSelect',
+      '优化组件样式和图标系统',
+      '移除UI演示页面',
+      'SimpleSelect样式与输入框保持一致',
+      '使用lucide-react图标替代emoji'
+    ],
+    improvements: [
+      '组件结构更清晰：统一放在menu文件夹中',
+      '样式一致性提升：SimpleSelect与输入框样式匹配',
+      '图标系统现代化：使用lucide-react图标库',
+      '代码组织优化：移除演示页面，专注核心功能',
+      '组件引用路径统一：所有引用都指向menu文件夹'
+    ],
+    fixes: [
+      '修复组件引用路径问题',
+      '解决样式不一致问题',
+      '优化组件组织结构',
+      '统一图标使用规范'
+    ],
+    icon: Settings,
+    color: 'from-violet-500 to-purple-600'
+  },
+  {
+    version: 'v0.76',
+    date: '2025-08-25',
+    title: '题库分类系统优化 & 后端功能增强',
+    description: '新增详细数学分类和子分类，实现分类中文名称显示；完善用户删除时的数据清理，优化题库保存和更新逻辑。',
+    features: [
+      '新增详细数学分类和子分类',
+      '实现分类中文名称显示',
+      '统一分类选择体验',
+      '完善用户删除时的数据清理',
+      '优化题库保存和更新逻辑',
+      '增强错误处理和验证'
+    ],
+    improvements: [
+      '分类系统完善：支持数学及其子分类',
+      '中文显示支持：英文标识自动转换为中文名称',
+      '用户体验提升：分类选择更加直观',
+      '数据完整性增强：用户删除时清理所有相关数据',
+      '错误处理优化：更友好的错误提示和验证'
+    ],
+    fixes: [
+      '修复题库分类显示英文标识问题',
+      '解决用户删除后数据残留问题',
+      '优化题库保存错误处理',
+      '完善数据验证机制'
+    ],
+    icon: Database,
+    color: 'from-cyan-500 to-blue-600'
+  },
+  {
     version: 'v0.75',
     date: '2025-08-26',
     title: 'AI评估系统升级 & 批量上传云端化 & 图片管理优化：全方位系统升级',
@@ -932,15 +1021,15 @@ const VersionPage: React.FC = () => {
           transition={{ delay: 0.1 }}
           className="mb-8"
         >
-          <Card className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-2xl">
+          <Card className="bg-gradient-to-r from-pink-500 to-rose-600 text-white border-0 shadow-2xl">
             <div className="p-8 text-center">
               <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Star className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">当前版本 v0.75</h2>
-              <p className="text-blue-100 text-lg mb-4">AI评估系统升级 & 批量上传云端化 & 图片管理优化：全方位系统升级</p>
-              <p className="text-blue-200">
-                重大升级：切换到DeepSeek-Reasoner AI模型，大幅提升题目评估准确性；批量上传草稿管理从本地存储迁移到云端数据库，实现多设备同步；简化图片上传流程，移除强制命名步骤；优化分析能力评分标准，解决评分偏高问题；完善图片管理和状态反馈，提供更加智能和用户友好的题目创建体验！
+              <h2 className="text-2xl font-bold mb-2">当前版本 v0.78</h2>
+              <p className="text-pink-100 text-lg mb-4">Logo系统重构 & 题库设置页面重构</p>
+              <p className="text-pink-200">
+                重构Logo系统，支持浅色/深色模式自动切换；重构题库设置页面，移除未实现功能，新增自定义卡片颜色功能。Logo根据主题自动切换，题库设置界面简化，自定义颜色应用，分类选择体验统一，DarkMode完美支持！
               </p>
             </div>
           </Card>

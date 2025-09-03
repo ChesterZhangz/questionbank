@@ -62,7 +62,21 @@ const LoginPage: React.FC = () => {
       const { token, user, success } = response.data || {};
       
       if (success && token && user) {
-        login(user, token);
+        // 登录成功后，获取完整的用户数据
+        try {
+          const profileResponse = await authAPI.getCurrentUser();
+          if (profileResponse.data.success && profileResponse.data.user) {
+            // 使用完整的用户数据登录
+            login(profileResponse.data.user, token);
+          } else {
+            // 如果获取完整数据失败，使用登录返回的数据
+            login(user, token);
+          }
+        } catch (error) {
+          // 如果获取完整数据失败，使用登录返回的数据
+          console.warn('获取完整用户数据失败，使用登录返回的数据:', error);
+          login(user, token);
+        }
         navigate('/dashboard');
       } else {
         setErrors({ general: '登录响应数据格式错误' });

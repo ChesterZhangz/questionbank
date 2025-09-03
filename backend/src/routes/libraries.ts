@@ -100,7 +100,7 @@ router.get('/:id', authMiddleware, libraryMemberMiddleware, checkLibraryStatusAc
 router.put('/:id', authMiddleware, libraryMemberMiddleware, checkLibraryStatusAccess, async (req: LibraryRequest, res: Response) => {
   try {
     if (!checkLibraryEditPermission(req.userRole!)) {
-      return res.status(403).json({ success: false, error: '只有拥有者可以编辑试卷库信息' });
+      return res.status(403).json({ success: false, error: '只有拥有者可以编辑试卷集信息' });
     }
 
     const { name, description, avatar, tags, price } = req.body;
@@ -123,7 +123,7 @@ router.put('/:id', authMiddleware, libraryMemberMiddleware, checkLibraryStatusAc
 router.post('/:id/publish', authMiddleware, libraryMemberMiddleware, async (req: LibraryRequest, res: Response) => {
   try {
     if (!checkLibraryPublishPermission(req.userRole!)) {
-      return res.status(403).json({ success: false, error: '只有拥有者可以发布试卷库' });
+      return res.status(403).json({ success: false, error: '只有拥有者可以发布试卷集' });
     }
 
     const lib = await Library.findByIdAndUpdate(
@@ -145,7 +145,7 @@ router.post('/:id/publish', authMiddleware, libraryMemberMiddleware, async (req:
 router.get('/:id/members', authMiddleware, libraryMemberMiddleware, checkLibraryStatusAccess, async (req: LibraryRequest, res: Response) => {
   try {
     if (!req.library) {
-      return res.status(500).json({ success: false, error: '试卷库信息缺失' });
+      return res.status(500).json({ success: false, error: '试卷集信息缺失' });
     }
     
     const memberIds = req.library.members.map((m: any) => m.user);
@@ -168,7 +168,7 @@ router.get('/:id/members', authMiddleware, libraryMemberMiddleware, checkLibrary
 router.post('/:id/invites', authMiddleware, libraryMemberMiddleware, checkLibraryStatusAccess, async (req: LibraryRequest, res: Response) => {
   try {
     if (!req.library) {
-      return res.status(500).json({ success: false, error: '试卷库信息缺失' });
+      return res.status(500).json({ success: false, error: '试卷集信息缺失' });
     }
     
     if (!checkMemberManagementPermission(req.userRole!)) {
@@ -202,7 +202,7 @@ router.patch('/:id/members/:userId', authMiddleware, libraryMemberMiddleware, ch
     }
 
     if (!req.library) {
-      return res.status(500).json({ success: false, error: '试卷库信息缺失' });
+      return res.status(500).json({ success: false, error: '试卷集信息缺失' });
     }
 
     const { role } = req.body as { role: 'owner'|'admin'|'collaborator'|'viewer' };
@@ -230,12 +230,12 @@ router.delete('/:id/members/:userId', authMiddleware, libraryMemberMiddleware, c
     }
 
     if (!req.library) {
-      return res.status(500).json({ success: false, error: '试卷库信息缺失' });
+      return res.status(500).json({ success: false, error: '试卷集信息缺失' });
     }
 
     // 禁止移除拥有者
     if (String(req.library.owner) === String(req.params.userId)) {
-      return res.status(400).json({ success: false, error: '不能移除试卷库拥有者' });
+      return res.status(400).json({ success: false, error: '不能移除试卷集拥有者' });
     }
     
     req.library.members = req.library.members.filter((m: any) => String(m.user) !== String(req.params.userId));
@@ -461,7 +461,7 @@ router.post('/:id/accept-invitation', async (req: Request, res: Response) => {
 
     const lib = await Library.findById(req.params.id);
     if (!lib) {
-      return res.status(404).json({ success: false, error: '试卷库不存在' });
+      return res.status(404).json({ success: false, error: '试卷集不存在' });
     }
 
     // 查找待处理的邀请
@@ -484,7 +484,7 @@ router.post('/:id/accept-invitation', async (req: Request, res: Response) => {
     // 检查用户是否已经是成员
     const isAlreadyMember = lib.members.some((m: any) => String(m.user) === String(currentUser));
     if (isAlreadyMember) {
-      return res.status(400).json({ success: false, error: '您已经是该试卷库的成员' });
+      return res.status(400).json({ success: false, error: '您已经是该试卷集的成员' });
     }
 
     // 添加用户到成员列表
@@ -496,7 +496,7 @@ router.post('/:id/accept-invitation', async (req: Request, res: Response) => {
 
     return res.json({ 
       success: true, 
-      message: '成功接受邀请，已加入试卷库',
+      message: '成功接受邀请，已加入试卷集',
       data: { role: invitation.role, libraryName: lib.name }
     });
   } catch (error) {

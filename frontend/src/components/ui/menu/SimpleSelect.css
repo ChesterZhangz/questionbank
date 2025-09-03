@@ -27,6 +27,12 @@
   background: linear-gradient(135deg, #334155, #1e293b);
 }
 
+/* 确保下拉菜单在最上层 */
+.simple-select-dropdown {
+  z-index: 999999 !important;
+  position: relative;
+}
+
 /* 自定义选择器样式 */
 .simple-select-enter {
   opacity: 0;

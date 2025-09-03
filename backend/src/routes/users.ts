@@ -336,7 +336,7 @@ router.get('/search', authMiddleware, async (req: AuthRequest, res: Response) =>
       name: user.name,
       email: user.email,
       enterpriseName: user.enterpriseName,
-      avatar: user.avatar
+
     }));
 
     return res.json({
@@ -556,8 +556,6 @@ router.get('/search/enterprise', authMiddleware, async (req: AuthRequest, res: R
         name: user.name,
         email: user.email,
         enterpriseName: user.enterpriseName,
-        company: user.company,
-        position: user.position
       }))
     });
   } catch (error) {

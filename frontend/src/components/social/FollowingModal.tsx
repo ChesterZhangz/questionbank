@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, UserPlus, Search, UserMinus, Mail, Calendar, MapPin } from 'lucide-react';
+import { X, UserPlus, Search, UserMinus, Mail, Calendar } from 'lucide-react';
 import { authAPI } from '../../services/api';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
@@ -59,7 +59,7 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose, userId
   const filteredFollowing = following.filter(user => 
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.nickname && user.nickname.toLowerCase().includes(searchTerm.toLowerCase()))
+    (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   useEffect(() => {
@@ -79,14 +79,7 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose, userId
     };
   }, [isOpen]);
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '未知';
-    try {
-      return new Date(dateString).toLocaleDateString('zh-CN');
-    } catch {
-      return '未知';
-    }
-  };
+
 
   const getRoleText = (role: string) => {
     switch (role) {
@@ -167,43 +160,26 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose, userId
                       <div className="flex items-center gap-4">
                         {/* 头像 */}
                         <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                          {user.avatar ? (
-                            <img
-                              src={user.avatar.startsWith('http') ? user.avatar : `${import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'}${user.avatar}`}
-                              alt={user.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-white font-semibold text-lg">
-                              {user.name.charAt(0).toUpperCase()}
-                            </span>
-                          )}
+                          <span className="text-white font-semibold text-lg">
+                            {user.name.charAt(0).toUpperCase()}
+                          </span>
                         </div>
 
                         {/* 用户信息 */}
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                              {user.nickname || user.name}
+                              {user.name}
                             </h4>
                             <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 rounded-full">
                               {getRoleText(user.role)}
                             </span>
                           </div>
                           <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{user.email}</p>
-                          {user.bio && (
-                            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{user.bio}</p>
-                          )}
                           <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                            {user.location && (
-                              <div className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                <span>{user.location}</span>
-                              </div>
-                            )}
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              <span>注册于 {formatDate(user.createdAt)}</span>
+                              <span>最近注册</span>
                             </div>
                           </div>
                         </div>

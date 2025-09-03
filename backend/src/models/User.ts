@@ -7,27 +7,6 @@ export interface IUser extends Document {
   name: string;
   role: 'superadmin' | 'admin' | 'teacher' | 'student';
   enterpriseName?: string; // 企业名称（用于显示，对应企业表中的name）
-  avatar?: string;
-  // 个性化信息
-  nickname?: string; // 昵称
-  bio?: string; // 个人简介
-  phone?: string; // 手机号
-  location?: string; // 所在地
-  website?: string; // 个人网站
-  birthday?: Date; // 生日
-  gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say'; // 性别
-  interests?: string[]; // 兴趣爱好
-  skills?: string[]; // 技能标签
-  education?: string; // 学历
-  occupation?: string; // 职业
-  company?: string; // 公司
-  position?: string; // 职位
-  socialLinks?: {
-    github?: string;
-    linkedin?: string;
-    twitter?: string;
-    wechat?: string;
-  };
   preferences?: {
     theme?: 'light' | 'dark' | 'auto';
     language?: 'zh-CN' | 'en-US';
@@ -83,95 +62,6 @@ const userSchema = new Schema<IUser>({
   enterpriseName: {
     type: String,
     trim: true
-  },
-  avatar: {
-    type: String
-  },
-  // 个性化信息
-  nickname: {
-    type: String,
-    trim: true,
-    maxlength: [30, '昵称不能超过30个字符']
-  },
-  bio: {
-    type: String,
-    trim: true,
-    maxlength: [200, '个人简介不能超过200个字符']
-  },
-  phone: {
-    type: String,
-    trim: true,
-    match: [/^1[3-9]\d{9}$/, '请输入有效的手机号码']
-  },
-  location: {
-    type: String,
-    trim: true,
-    maxlength: [100, '所在地不能超过100个字符']
-  },
-  website: {
-    type: String,
-    trim: true,
-    match: [/^https?:\/\/.+/, '请输入有效的网站地址']
-  },
-  birthday: {
-    type: Date
-  },
-  gender: {
-    type: String,
-    enum: ['male', 'female', 'other', 'prefer-not-to-say'],
-    default: 'prefer-not-to-say'
-  },
-  interests: [{
-    type: String,
-    trim: true,
-    maxlength: [20, '兴趣爱好不能超过20个字符']
-  }],
-  skills: [{
-    type: String,
-    trim: true,
-    maxlength: [20, '技能标签不能超过20个字符']
-  }],
-  education: {
-    type: String,
-    trim: true,
-    maxlength: [50, '学历不能超过50个字符']
-  },
-  occupation: {
-    type: String,
-    trim: true,
-    maxlength: [50, '职业不能超过50个字符']
-  },
-  company: {
-    type: String,
-    trim: true,
-    maxlength: [100, '公司名称不能超过100个字符']
-  },
-  position: {
-    type: String,
-    trim: true,
-    maxlength: [50, '职位不能超过50个字符']
-  },
-  socialLinks: {
-    github: {
-      type: String,
-      trim: true,
-      match: [/^https?:\/\/github\.com\/.+/, '请输入有效的GitHub地址']
-    },
-    linkedin: {
-      type: String,
-      trim: true,
-      match: [/^https?:\/\/linkedin\.com\/.+/, '请输入有效的LinkedIn地址']
-    },
-    twitter: {
-      type: String,
-      trim: true,
-      match: [/^https?:\/\/twitter\.com\/.+/, '请输入有效的Twitter地址']
-    },
-    wechat: {
-      type: String,
-      trim: true,
-      maxlength: [20, '微信号不能超过20个字符']
-    }
   },
   preferences: {
     theme: {

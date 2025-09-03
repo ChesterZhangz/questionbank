@@ -7,22 +7,22 @@ import { LibraryRequest } from '../middleware/libraryPermissions';
 
 const router = express.Router();
 
-// 购买试卷库
+// 购买试卷集
 router.post('/:libraryId/purchase', authMiddleware, async (req: Request, res: Response) => {
   try {
     const libraryId = req.params.libraryId;
     const userId = (req as any).user._id;
     const { paymentMethod, transactionId } = req.body;
 
-    // 检查试卷库是否存在
+    // 检查试卷集是否存在
     const library = await Library.findById(libraryId);
     if (!library) {
-      return res.status(404).json({ success: false, error: '试卷库不存在' });
+      return res.status(404).json({ success: false, error: '试卷集不存在' });
     }
 
     // 检查购买权限
     if (!checkLibraryPurchasePermission(library, userId)) {
-      return res.status(403).json({ success: false, error: '无法购买此试卷库' });
+      return res.status(403).json({ success: false, error: '无法购买此试卷集' });
     }
 
     // 检查是否已经购买过
@@ -33,7 +33,7 @@ router.post('/:libraryId/purchase', authMiddleware, async (req: Request, res: Re
 
     if (existingPurchase) {
       if (existingPurchase.status === 'completed') {
-        return res.status(400).json({ success: false, error: '您已经购买过此试卷库' });
+        return res.status(400).json({ success: false, error: '您已经购买过此试卷集' });
       } else if (existingPurchase.status === 'pending') {
         return res.status(400).json({ success: false, error: '您有未完成的购买订单' });
       }
@@ -52,7 +52,7 @@ router.post('/:libraryId/purchase', authMiddleware, async (req: Request, res: Re
 
     await purchase.save();
 
-    // 自动将用户添加为试卷库的查看者
+    // 自动将用户添加为试卷集的查看者
     if (!library.members.some(m => m.user.toString() === userId.toString())) {
       library.members.push({
         user: userId,
@@ -65,7 +65,7 @@ router.post('/:libraryId/purchase', authMiddleware, async (req: Request, res: Re
     return res.status(201).json({ 
       success: true, 
       data: purchase,
-      message: '购买成功，您已成为该试卷库的查看者'
+      message: '购买成功，您已成为该试卷集的查看者'
     });
   } catch (error) {
     console.error('Purchase library failed:', error);
@@ -106,7 +106,7 @@ router.get('/my-purchases', authMiddleware, async (req: Request, res: Response) 
   }
 });
 
-// 获取试卷库的购买记录（仅所有者和管理者可见）
+// 获取试卷集的购买记录（仅所有者和管理者可见）
 router.get('/:libraryId/purchases', authMiddleware, libraryMemberMiddleware, async (req: LibraryRequest, res: Response) => {
   try {
     const { userRole } = req;

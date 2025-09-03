@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Users, Search, UserPlus, Mail, Calendar, MapPin } from 'lucide-react';
+import { X, Users, Search, UserPlus, Mail, Calendar } from 'lucide-react';
 import { authAPI } from '../../services/api';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
@@ -43,7 +43,7 @@ const FollowersModal: React.FC<FollowersModalProps> = ({ isOpen, onClose, userId
   const filteredFollowers = followers.filter(follower => 
     follower.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     follower.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (follower.nickname && follower.nickname.toLowerCase().includes(searchTerm.toLowerCase()))
+    (follower.name && follower.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   useEffect(() => {
@@ -64,14 +64,7 @@ const FollowersModal: React.FC<FollowersModalProps> = ({ isOpen, onClose, userId
     };
   }, [isOpen]);
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '未知';
-    try {
-      return new Date(dateString).toLocaleDateString('zh-CN');
-    } catch {
-      return '未知';
-    }
-  };
+
 
   const getRoleText = (role: string) => {
     switch (role) {
@@ -160,43 +153,26 @@ const FollowersModal: React.FC<FollowersModalProps> = ({ isOpen, onClose, userId
                       <div className="flex items-center gap-4">
                         {/* 头像 */}
                         <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                          {follower.avatar ? (
-                            <img
-                              src={follower.avatar.startsWith('http') ? follower.avatar : `${import.meta.env.VITE_API_URL || 'https://www.mareate.com/api'}${follower.avatar}`}
-                              alt={follower.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-white font-semibold text-lg">
-                              {follower.name.charAt(0).toUpperCase()}
-                            </span>
-                          )}
+                          <span className="text-white font-semibold text-lg">
+                            {follower.name.charAt(0).toUpperCase()}
+                          </span>
                         </div>
 
                         {/* 用户信息 */}
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                              {follower.nickname || follower.name}
+                              {follower.name}
                             </h4>
                             <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-full">
                               {getRoleText(follower.role)}
                             </span>
                           </div>
                           <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{follower.email}</p>
-                          {follower.bio && (
-                            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{follower.bio}</p>
-                          )}
                           <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                            {follower.location && (
-                              <div className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                <span>{follower.location}</span>
-                              </div>
-                            )}
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              <span>注册于 {formatDate(follower.createdAt)}</span>
+                              <span>最近注册</span>
                             </div>
                           </div>
                         </div>
