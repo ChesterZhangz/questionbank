@@ -257,9 +257,6 @@ const QuestionBankListPage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {questionBanks.map((bank, index) => {
-              // 调试信息
-              console.log(`题库 ${bank.name} 的 cardColor:`, (bank as any).cardColor);
-              
               return (
                 <motion.div
                   key={bank.bid}

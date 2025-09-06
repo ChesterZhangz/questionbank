@@ -29,7 +29,7 @@ export interface ISection {
 
 export interface IPaper extends Document {
   name: string;
-  type: 'practice' | 'test';
+  type: 'lecture' | 'practice' | 'test';
   subject?: string;
   grade?: string;
   timeLimit?: number;
@@ -39,6 +39,11 @@ export interface IPaper extends Document {
   libraryId?: mongoose.Types.ObjectId; // Library（试题库，可选，后续可改为必填）
   status: 'draft' | 'published' | 'modified';
   sections: ISection[];
+  // 讲义特有字段
+  subtitle?: string; // 副标题
+  date?: Date; // 日期
+  tags?: string[]; // 标签
+  description?: string; // 描述
   // 自定义考生注意信息
   examInstructions?: {
     examDuration?: number; // 考试时长（分钟）
@@ -89,7 +94,7 @@ const examInstructionsSchema = new Schema({
 
 const paperSchema = new Schema<IPaper>({
   name: { type: String, required: true, trim: true },
-  type: { type: String, enum: ['practice', 'test'], required: true },
+  type: { type: String, enum: ['lecture', 'practice', 'test'], required: true },
   subject: { type: String, trim: true },
   grade: { type: String, trim: true },
   timeLimit: { type: Number, min: 0 },
@@ -99,6 +104,11 @@ const paperSchema = new Schema<IPaper>({
   libraryId: { type: Schema.Types.ObjectId, ref: 'Library' },
   status: { type: String, enum: ['draft', 'published', 'modified'], default: 'draft' },
   sections: { type: [sectionSchema], default: [] },
+  // 讲义特有字段
+  subtitle: { type: String, trim: true },
+  date: { type: Date },
+  tags: [{ type: String, trim: true }],
+  description: { type: String, trim: true },
   examInstructions: { type: examInstructionsSchema },
   version: { type: Number, default: 1 },
   publishedAt: { type: Date },

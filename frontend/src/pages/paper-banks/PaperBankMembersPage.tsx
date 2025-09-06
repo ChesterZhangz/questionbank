@@ -22,6 +22,7 @@ import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 import { useModal } from '../../hooks/useModal';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import RightSlideModal from '../../components/ui/RightSlideModal';
 import { paperBankAPI, authAPI } from '../../services/api';
 import { FuzzySelect } from '../../components/ui/menu';
 
@@ -53,6 +54,9 @@ const PaperBankMembersPage: React.FC = () => {
     showConfirm, 
     confirmModal,
     closeConfirm, 
+    setConfirmLoading,
+    rightSlideModal,
+    closeRightSlide,
     showErrorRightSlide, 
     showSuccessRightSlide
   } = useModal();
@@ -172,6 +176,7 @@ const PaperBankMembersPage: React.FC = () => {
     try {
       let success = 0;
       let failed = 0;
+      const newMembers: PaperBankMember[] = [];
 
       for (const user of selectedUsers) {
         try {
@@ -182,12 +187,29 @@ const PaperBankMembersPage: React.FC = () => {
           
           if (response.data.success) {
             success++;
+            // 创建新成员对象并添加到本地状态
+            const newMember: PaperBankMember = {
+              _id: response.data.data._id,
+              userId: user._id,
+              username: user.name,
+              email: user.email,
+              role: inviteRole,
+              joinedAt: new Date().toISOString(),
+              lastActiveAt: new Date().toISOString()
+            };
+            newMembers.push(newMember);
           } else {
             failed++;
           }
         } catch (error) {
           failed++;
         }
+      }
+
+      // 更新本地状态
+      if (newMembers.length > 0) {
+        setMembers(prev => [...prev, ...newMembers]);
+        setPaperBank(prev => prev ? { ...prev, memberCount: prev.memberCount + newMembers.length } : null);
       }
 
       if (failed === 0) {
@@ -199,7 +221,6 @@ const PaperBankMembersPage: React.FC = () => {
       setSelectedUsers([]);
       setSearchResults([]);
       setShowInviteForm(false);
-      fetchMembers();
     } catch (error: any) {
       showErrorRightSlide('邀请失败', '邀请成员失败');
     } finally {
@@ -213,9 +234,23 @@ const PaperBankMembersPage: React.FC = () => {
     setSearchResults([]);
   };
 
-  const handleChangeRole = (_memberId: string, _newRole: string) => {
-    // 这里应该调用API更改成员角色
-    showErrorRightSlide('功能开发中', '更改角色功能正在开发中');
+  const handleChangeRole = async (memberId: string, newRole: 'manager' | 'collaborator' | 'viewer') => {
+    try {
+      const response = await paperBankAPI.updatePaperBankMemberRole(id!, memberId, newRole);
+      if (response.data.success) {
+        // 更新本地状态中的成员角色
+        setMembers(prev => prev.map(member => 
+          member._id === memberId 
+            ? { ...member, role: newRole }
+            : member
+        ));
+        showSuccessRightSlide('角色更新成功', '成员角色已成功更新');
+      } else {
+        showErrorRightSlide('角色更新失败', response.data.message || '更新成员角色失败');
+      }
+    } catch (error: any) {
+      showErrorRightSlide('角色更新失败', '更新成员角色失败');
+    }
   };
 
   const handleRemoveMember = (memberId: string) => {
@@ -224,11 +259,21 @@ const PaperBankMembersPage: React.FC = () => {
       '确定要移除这个成员吗？移除后该成员将无法访问此试卷集。',
       async () => {
         try {
-          // 这里应该调用API移除成员
-          setMembers(prev => prev.filter(member => member._id !== memberId));
-          showSuccessRightSlide('移除成功', '成员已成功移除');
-          closeConfirm();
+          setConfirmLoading(true, '删除中...');
+          const response = await paperBankAPI.removePaperBankMember(id!, memberId);
+          if (response.data.success) {
+            // 直接从本地状态中移除成员，不刷新页面
+            setMembers(prev => prev.filter(member => member._id !== memberId));
+            // 更新试卷集成员数量
+            setPaperBank(prev => prev ? { ...prev, memberCount: prev.memberCount - 1 } : null);
+            closeConfirm();
+            showSuccessRightSlide('移除成功', '成员已成功移除');
+          } else {
+            setConfirmLoading(false);
+            showErrorRightSlide('移除失败', response.data.message || '移除成员失败');
+          }
         } catch (error: any) {
+          setConfirmLoading(false);
           showErrorRightSlide('移除失败', '移除成员失败');
         }
       }
@@ -581,6 +626,7 @@ const PaperBankMembersPage: React.FC = () => {
 
       {/* 弹窗组件 */}
       <ConfirmModal {...confirmModal} onCancel={closeConfirm} />
+      <RightSlideModal {...rightSlideModal} onClose={closeRightSlide} />
 
       {/* 邀请成员表单弹窗 */}
       {showInviteForm && (

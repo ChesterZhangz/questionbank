@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, X, Check, Search } from 'lucide-react';
+import type { LucideProps } from 'lucide-react';
 
 interface Option {
   value: string | number;
   label: string;
-  icon?: string;
+  icon?: string | React.ComponentType<LucideProps>;
 }
 
 interface MultiSelectProps {
@@ -195,7 +196,13 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                       }`}
                     >
                       {option.icon && (
-                        <span className="text-xs opacity-80">{option.icon}</span>
+                        <span className="text-xs opacity-80">
+                          {typeof option.icon === 'string' ? (
+                            option.icon
+                          ) : (
+                            <option.icon className="w-3 h-3" />
+                          )}
+                        </span>
                       )}
                       <span className="flex-1">{option.label}</span>
                       {isSelected && (

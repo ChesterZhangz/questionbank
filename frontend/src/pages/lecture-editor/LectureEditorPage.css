@@ -1,0 +1,444 @@
+/* A4纸模拟样式 */
+.a4-paper {
+  width: 210mm;
+  min-height: 297mm;
+  max-width: 100%;
+  background: white;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ddd;
+  position: relative;
+  margin: 0 auto;
+  page-break-after: always;
+}
+
+.a4-paper.dark,
+.a4-paper.dark\:dark {
+  background: #1a1a1a;
+  border-color: #444;
+  color: #fff;
+}
+
+/* 页面边距模拟 */
+.a4-margins {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 297mm;
+}
+
+/* 分页线模拟 */
+.a4-paper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    /* 水平分页线 */
+    linear-gradient(to bottom, transparent 0%, transparent calc(50% - 0.5px), #e5e7eb 50%, transparent calc(50% + 0.5px), transparent 100%),
+    /* 垂直边距线 */
+    linear-gradient(to right, transparent 0%, transparent calc(20mm - 0.5px), #f3f4f6 20mm, transparent calc(20mm + 0.5px), transparent calc(100% - 20mm - 0.5px), #f3f4f6 calc(100% - 20mm), transparent calc(100% - 20mm + 0.5px), transparent 100%),
+    /* 水平边距线 */
+    linear-gradient(to bottom, transparent 0%, transparent calc(20mm - 0.5px), #f3f4f6 20mm, transparent calc(20mm + 0.5px), transparent calc(100% - 20mm - 0.5px), #f3f4f6 calc(100% - 20mm), transparent calc(100% - 20mm + 0.5px), transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.a4-paper.dark::before,
+.a4-paper.dark\:dark::before {
+  background-image: 
+    /* 水平分页线 */
+    linear-gradient(to bottom, transparent 0%, transparent calc(50% - 0.5px), #374151 50%, transparent calc(50% + 0.5px), transparent 100%),
+    /* 垂直边距线 */
+    linear-gradient(to right, transparent 0%, transparent calc(20mm - 0.5px), #2d3748 20mm, transparent calc(20mm + 0.5px), transparent calc(100% - 20mm - 0.5px), #2d3748 calc(100% - 20mm), transparent calc(100% - 20mm + 0.5px), transparent 100%),
+    /* 水平边距线 */
+    linear-gradient(to bottom, transparent 0%, transparent calc(20mm - 0.5px), #2d3748 20mm, transparent calc(20mm + 0.5px), transparent calc(100% - 20mm - 0.5px), #2d3748 calc(100% - 20mm), transparent calc(100% - 20mm + 0.5px), transparent 100%);
+}
+
+/* 编辑器内容样式 */
+.lecture-editor-content {
+  font-family: 'Times New Roman', serif;
+  font-size: 12pt;
+  line-height: 1.5;
+  color: #000;
+  background: transparent;
+  min-height: calc(297mm - 40mm);
+  width: calc(210mm - 40mm);
+  padding: 0;
+  margin: 20mm auto;
+  position: relative;
+  z-index: 2;
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: normal;
+  writing-mode: horizontal-tb;
+}
+
+/* 确保contentEditable元素文字方向正确 */
+.lecture-editor-content [contenteditable] {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+  writing-mode: horizontal-tb !important;
+}
+
+/* 标题样式 */
+.lecture-editor-content h1 {
+  font-size: 24pt;
+  font-weight: bold;
+  text-align: center;
+  margin: 20pt 0 15pt 0;
+  color: #2c3e50;
+}
+
+.lecture-editor-content h2 {
+  font-size: 14pt;
+  font-weight: bold;
+  text-align: center;
+  color: #2c3e50;
+  margin: 15pt 0 10pt 0;
+}
+
+.lecture-editor-content h3 {
+  font-size: 16pt;
+  font-weight: bold;
+  margin: 12pt 0 8pt 0;
+  color: #34495e;
+}
+
+.lecture-editor-content h4 {
+  font-size: 13pt;
+  font-weight: bold;
+  margin: 10pt 0 6pt 0;
+  color: #2c3e50;
+}
+
+.lecture-editor-content h5 {
+  font-size: 12pt;
+  font-weight: bold;
+  margin: 8pt 0 4pt 0;
+  color: #34495e;
+}
+
+.lecture-editor-content h6 {
+  font-size: 11pt;
+  font-weight: bold;
+  margin: 6pt 0 4pt 0;
+  color: #7f8c8d;
+}
+
+/* 段落样式 */
+.lecture-editor-content p {
+  text-indent: 2em;
+  margin: 6pt 0;
+  line-height: 1.6;
+}
+
+/* 列表样式 */
+.lecture-editor-content ul {
+  list-style-type: disc;
+  margin: 8pt 0;
+  padding-left: 20pt;
+}
+
+.lecture-editor-content ol {
+  list-style-type: decimal;
+  margin: 8pt 0;
+  padding-left: 20pt;
+}
+
+.lecture-editor-content li {
+  margin: 4pt 0;
+  line-height: 1.5;
+}
+
+/* 引用块样式 */
+.lecture-editor-content blockquote {
+  font-family: 'Georgia', serif;
+  font-style: italic;
+  margin: 12pt 0;
+  padding: 10pt 15pt;
+  background: #f8f9fa;
+  border-left: 4px solid #6c757d;
+  border-radius: 0 4px 4px 0;
+  color: #495057;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.lecture-editor-content blockquote::before {
+  content: '"';
+  font-size: 24pt;
+  color: #dee2e6;
+  position: absolute;
+  top: -5pt;
+  left: 5pt;
+  font-family: 'Times New Roman', serif;
+}
+
+/* 代码块样式 */
+.lecture-editor-content pre {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 10pt;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  padding: 12pt;
+  margin: 8pt 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  position: relative;
+}
+
+/* 代码块语言选择按钮 */
+.code-language-selector {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.code-language-selector:hover {
+  opacity: 1;
+  background: #5a6268;
+}
+
+.lecture-editor-content pre:hover .code-language-selector {
+  opacity: 1;
+}
+
+.lecture-editor-content code {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 10pt;
+  background: #f1f3f4;
+  padding: 2pt 4pt;
+  border-radius: 3px;
+  color: #e83e8c;
+}
+
+/* 暗黑模式样式 */
+.lecture-editor-content.dark h1,
+.lecture-editor-content.dark\:dark h1 {
+  color: #ecf0f1;
+}
+
+.lecture-editor-content.dark h2,
+.lecture-editor-content.dark\:dark h2 {
+  color: #ecf0f1;
+}
+
+.lecture-editor-content.dark h3,
+.lecture-editor-content.dark\:dark h3 {
+  color: #ecf0f1;
+}
+
+.lecture-editor-content.dark h4,
+.lecture-editor-content.dark\:dark h4 {
+  color: #ecf0f1;
+}
+
+.lecture-editor-content.dark h5,
+.lecture-editor-content.dark\:dark h5 {
+  color: #bdc3c7;
+}
+
+.lecture-editor-content.dark h6,
+.lecture-editor-content.dark\:dark h6 {
+  color: #95a5a6;
+}
+
+.lecture-editor-content.dark blockquote,
+.lecture-editor-content.dark\:dark blockquote {
+  background: #2c3e50;
+  border-left-color: #6c757d;
+  color: #ecf0f1;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.lecture-editor-content.dark blockquote::before,
+.lecture-editor-content.dark\:dark blockquote::before {
+  color: #34495e;
+}
+
+.lecture-editor-content.dark pre,
+.lecture-editor-content.dark\:dark pre {
+  background: #2c3e50;
+  border-color: #34495e;
+  color: #ecf0f1;
+}
+
+.lecture-editor-content.dark .code-language-selector,
+.lecture-editor-content.dark\:dark .code-language-selector {
+  background: #34495e;
+  color: #ecf0f1;
+}
+
+.lecture-editor-content.dark .code-language-selector:hover,
+.lecture-editor-content.dark\:dark .code-language-selector:hover {
+  background: #2c3e50;
+}
+
+.lecture-editor-content.dark code,
+.lecture-editor-content.dark\:dark code {
+  background: #34495e;
+  color: #f39c12;
+}
+
+.lecture-editor-content.dark,
+.lecture-editor-content.dark\:dark {
+  background: transparent;
+  color: #fff;
+}
+
+/* 占位符样式 */
+.lecture-editor-content:empty:before {
+  content: attr(data-placeholder);
+  color: #999;
+  font-style: italic;
+  pointer-events: none;
+}
+
+.lecture-editor-content.dark:empty:before,
+.lecture-editor-content.dark\:dark:empty:before {
+  color: #666;
+}
+
+/* 左侧工具栏样式 */
+.lecture-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  background: transparent;
+  position: relative;
+  z-index: 100;
+}
+
+.lecture-toolbar .wysiwyg-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.lecture-toolbar .wysiwyg-toolbar > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.lecture-toolbar .wysiwyg-toolbar button {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.lecture-toolbar .wysiwyg-toolbar button:hover {
+  background: rgba(59, 130, 246, 0.1);
+  transform: scale(1.05);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .a4-paper {
+    width: 100%;
+    min-height: auto;
+    margin: 0;
+    box-shadow: none;
+    border: none;
+  }
+  
+  .lecture-editor-content {
+    font-size: 14pt;
+    min-height: 400px;
+    width: calc(100% - 40px);
+    margin: 20px auto;
+  }
+  
+  .lecture-toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #e5e7eb;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 8px 16px;
+  }
+  
+  .lecture-toolbar .wysiwyg-toolbar {
+    flex-direction: row;
+    gap: 4px;
+  }
+  
+  .lecture-toolbar .wysiwyg-toolbar > div {
+    flex-direction: row;
+    gap: 4px;
+  }
+  
+  .lecture-toolbar .wysiwyg-toolbar button {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .a4-paper {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    box-shadow: none;
+    border: none;
+    page-break-after: always;
+  }
+  
+  .a4-paper::before {
+    display: none; /* 打印时隐藏分页线和边距线 */
+  }
+  
+  .lecture-toolbar {
+    display: none;
+  }
+  
+  .lecture-editor-content {
+    font-size: 12pt;
+    line-height: 1.5;
+    color: #000;
+    background: #fff;
+    width: calc(210mm - 40mm);
+    margin: 20mm auto;
+    min-height: calc(297mm - 40mm);
+  }
+  
+  .a4-margins {
+    min-height: 297mm;
+  }
+}

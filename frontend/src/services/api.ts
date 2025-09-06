@@ -659,6 +659,76 @@ export const paperBankAPI = {
   // 邀请成员加入试卷集
   invitePaperBankMember: (id: string, data: { email: string; role: string }) => 
     api.post<{ success: boolean; data: any; message: string }>(`/paper-banks/${id}/members`, data),
+  
+  // 删除试卷集成员
+  removePaperBankMember: (id: string, memberId: string) => 
+    api.delete<{ success: boolean; message: string }>(`/paper-banks/${id}/members/${memberId}`),
+  
+  // 更新试卷集成员角色
+  updatePaperBankMemberRole: (id: string, memberId: string, role: string) => 
+    api.put<{ success: boolean; data: any; message: string }>(`/paper-banks/${id}/members/${memberId}/role`, { role }),
+  
+  // 获取试卷集讲义列表
+  getPaperBankLectures: (id: string) => 
+    api.get<{ success: boolean; data: any[] }>(`/paper-banks/${id}/lectures`),
+  
+  // 购买试卷集
+  purchasePaperBank: (id: string) => 
+    api.post<{ success: boolean; message: string; data: any }>(`/paper-banks/${id}/purchase`),
+  
+  // 获取试卷集统计数据
+  getPaperBankStatistics: (id: string) => 
+    api.get<{ success: boolean; data: any }>(`/paper-banks/${id}/statistics`),
+  
+  // 获取我的试卷列表
+  getMyPapers: (params?: any) => 
+    api.get<{ success: boolean; data: { papers: any[]; pagination: any } }>('/paper-banks/my-papers', { params }),
+};
+
+// 试卷API
+export const paperAPI = {
+  // 获取我的试卷列表
+  getMyPapers: (params?: any) =>
+    api.get<{ success: boolean; data: { papers: any[]; pagination: any } }>('/papers/my-papers', { params }),
+  
+  // 创建试卷
+  createPaper: (data: any) =>
+    api.post<{ success: boolean; data: any }>('/papers', data),
+  
+  // 获取试卷详情
+  getPaper: (id: string) =>
+    api.get<{ success: boolean; data: any }>(`/papers/${id}`),
+  
+  // 更新试卷
+  updatePaper: (id: string, data: any) =>
+    api.put<{ success: boolean; data: any }>(`/papers/${id}`, data),
+  
+  // 删除试卷
+  deletePaper: (id: string) =>
+    api.delete<{ success: boolean }>(`/papers/${id}`),
+};
+
+// 试卷集评价API
+export const paperBankReviewAPI = {
+  // 获取试卷集评价列表
+  getReviews: (paperBankId: string, params?: any) => 
+    api.get<{ success: boolean; data: { reviews: any[]; pagination: any } }>(`/paper-bank/${paperBankId}/reviews`, { params }),
+  
+  // 创建评价
+  createReview: (paperBankId: string, data: { rating: number; comment: string; isAnonymous?: boolean }) => 
+    api.post<{ success: boolean; message: string; data: any }>(`/paper-bank/${paperBankId}/reviews`, data),
+  
+  // 更新评价
+  updateReview: (paperBankId: string, reviewId: string, data: { rating?: number; comment?: string; isAnonymous?: boolean }) => 
+    api.put<{ success: boolean; message: string; data: any }>(`/paper-bank/${paperBankId}/reviews/${reviewId}`, data),
+  
+  // 删除评价
+  deleteReview: (paperBankId: string, reviewId: string) => 
+    api.delete<{ success: boolean; message: string }>(`/paper-bank/${paperBankId}/reviews/${reviewId}`),
+  
+  // 点赞评价
+  helpfulReview: (paperBankId: string, reviewId: string) => 
+    api.post<{ success: boolean; message: string; data: any }>(`/paper-bank/${paperBankId}/reviews/${reviewId}/helpful`),
 };
 
 // 用户资料API

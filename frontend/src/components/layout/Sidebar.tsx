@@ -61,6 +61,7 @@ const navSections: NavSection[] = [
     title: '试卷',
     items: [
       { id: 'paper-banks', label: '试卷集', icon: ClipboardList, path: '/paper-banks' },
+      { id: 'my-papers', label: '我的试卷', icon: FileText, path: '/my-papers' },
     ]
   },
   {
@@ -106,8 +107,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       setActiveSection('questions');
     } else if (currentPath === '/batch-upload') {
       setActiveSection('batch-upload');
-    } else if (currentPath === '/paper-banks') {
+    } else if (currentPath === '/paper-banks' || currentPath.startsWith('/paper-banks/')) {
       setActiveSection('paper-banks');
+    } else if (currentPath === '/my-papers' || currentPath.startsWith('/papers/')) {
+      setActiveSection('papers');
+    } else if (currentPath === '/markdown-demo') {
+      setActiveSection('markdown-demo');
     } else if (currentPath === '/paper-generation') {
       setActiveSection('paper-generation');
     } else if (currentPath === '/my-enterprise') {

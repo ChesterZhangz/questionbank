@@ -1,0 +1,753 @@
+/* 工具栏样式 */
+.wysiwyg-toolbar {
+  position: relative;
+  z-index: 10;
+}
+
+/* 字体定义 */
+@font-face {
+  font-family: 'WenYuanSerifSC';
+  src: url('/font/WenYuanSerifSC-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'WenYuanSerifSC';
+  src: url('/font/WenYuanSerifSC-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'WenYuanSansSCC';
+  src: url('/font/WenYuanSansSCC-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* WYSIWYG编辑器样式 */
+.wysiwyg-editor-with-toolbar {
+  border: 1px solid #e1e5e9;
+  border-radius: 12px;
+  overflow: visible;
+  background: #fff;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.wysiwyg-editor-with-toolbar:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.simple-wysiwyg-editor {
+  position: relative;
+  min-height: 200px;
+}
+
+.simple-wysiwyg-content {
+  min-height: 200px;
+  padding: 24px;
+  outline: none;
+  font-family: 'WenYuanSerifSC', 'WenYuanSansSCC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #1f2937;
+  background: #fff;
+  overflow-y: auto;
+  max-height: 600px;
+  transition: all 0.2s ease;
+}
+
+.simple-wysiwyg-content:empty:before {
+  content: attr(data-placeholder);
+  color: #999;
+  font-style: italic;
+  pointer-events: none;
+}
+
+/* 标题样式 */
+.simple-wysiwyg-content h1 {
+  font-size: 2.25em;
+  font-weight: 700;
+  margin: 1.2em 0 0.8em 0;
+  line-height: 1.2;
+  color: #111827;
+  border-bottom: 3px solid #3b82f6;
+  padding-bottom: 0.4em;
+  position: relative;
+}
+
+.simple-wysiwyg-content h1::before {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 2px;
+}
+
+.simple-wysiwyg-content h2 {
+  font-size: 1.875em;
+  font-weight: 600;
+  margin: 1.1em 0 0.7em 0;
+  line-height: 1.3;
+  color: #1f2937;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.3em;
+  position: relative;
+}
+
+.simple-wysiwyg-content h2::before {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(90deg, #10b981, #3b82f6);
+  border-radius: 1px;
+}
+
+.simple-wysiwyg-content h3 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 1em 0 0.6em 0;
+  line-height: 1.4;
+  color: #374151;
+  position: relative;
+  padding-left: 12px;
+}
+
+.simple-wysiwyg-content h3::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 1.2em;
+  background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+  border-radius: 2px;
+}
+
+.simple-wysiwyg-content h4 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 1.2em 0 0.5em 0;
+  line-height: 1.4;
+  color: #4b5563;
+}
+
+.simple-wysiwyg-content h5 {
+  font-size: 1.125em;
+  font-weight: 600;
+  margin: 1.3em 0 0.4em 0;
+  line-height: 1.4;
+  color: #6b7280;
+}
+
+.simple-wysiwyg-content h6 {
+  font-size: 0.85em;
+  font-weight: 600;
+  margin: 16px 0 8px 0;
+  line-height: 1.25;
+  color: #6a737d;
+}
+
+/* 段落样式 */
+.simple-wysiwyg-content p {
+  margin: 0 0 1.2em 0;
+  line-height: 1.7;
+  color: #374151;
+}
+
+.simple-wysiwyg-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* 引用样式 */
+.simple-wysiwyg-content blockquote {
+  margin: 1.5em 0;
+  padding: 1.5em 2em;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-left: 4px solid #3b82f6;
+  color: #475569;
+  font-style: italic;
+  border-radius: 0 8px 8px 0;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.simple-wysiwyg-content blockquote::before {
+  content: '"';
+  position: absolute;
+  top: -0.2em;
+  left: 0.5em;
+  font-size: 3em;
+  color: #3b82f6;
+  opacity: 0.3;
+  font-family: serif;
+}
+
+.simple-wysiwyg-content blockquote p {
+  margin: 0;
+}
+
+/* 列表样式 */
+.simple-wysiwyg-content ul,
+.simple-wysiwyg-content ol {
+  margin: 1.2em 0;
+  padding-left: 2em;
+}
+
+.simple-wysiwyg-content li {
+  margin: 0.6em 0;
+  line-height: 1.7;
+  color: #374151;
+}
+
+.simple-wysiwyg-content ul li {
+  list-style: none;
+  position: relative;
+  padding-left: 1.5em;
+}
+
+.simple-wysiwyg-content ul li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #3b82f6;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.simple-wysiwyg-content ol li {
+  list-style: none;
+  counter-increment: item;
+  position: relative;
+  padding-left: 2.5em;
+}
+
+.simple-wysiwyg-content ol {
+  counter-reset: item;
+}
+
+.simple-wysiwyg-content ol li::before {
+  content: counter(item) '.';
+  position: absolute;
+  left: 0;
+  color: #3b82f6;
+  font-weight: bold;
+  min-width: 2em;
+}
+
+.simple-wysiwyg-content ul ul,
+.simple-wysiwyg-content ol ol,
+.simple-wysiwyg-content ul ol,
+.simple-wysiwyg-content ol ul {
+  margin: 4px 0;
+}
+
+/* 代码样式 */
+.simple-wysiwyg-content pre {
+  margin: 1.5em 0;
+  padding: 1.5em;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 12px;
+  overflow: auto;
+  font-size: 0.9em;
+  line-height: 1.6;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  border: 1px solid #334155;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.simple-wysiwyg-content pre::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #10b981);
+  border-radius: 12px 12px 0 0;
+}
+
+.simple-wysiwyg-content code {
+  padding: 0.25em 0.5em;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border-radius: 6px;
+  font-size: 0.9em;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  color: #dc2626;
+  border: 1px solid #cbd5e1;
+  font-weight: 500;
+}
+
+.simple-wysiwyg-content pre code {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  font-size: 100%;
+  color: #e2e8f0;
+  border: none;
+  font-weight: normal;
+}
+
+/* 表格样式 */
+.simple-wysiwyg-content table {
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  background: #fff;
+}
+
+.simple-wysiwyg-content table th,
+.simple-wysiwyg-content table td {
+  padding: 1em 1.5em;
+  border: 1px solid #e5e7eb;
+  text-align: left;
+  vertical-align: top;
+}
+
+.simple-wysiwyg-content table th {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.simple-wysiwyg-content table tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+.simple-wysiwyg-content table tr:hover {
+  background: #f3f4f6;
+}
+
+/* 分隔线样式 */
+.simple-wysiwyg-content hr {
+  margin: 2em 0;
+  border: none;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #e5e7eb 20%, #3b82f6 50%, #e5e7eb 80%, transparent 100%);
+  border-radius: 1px;
+}
+
+/* 链接样式 */
+.simple-wysiwyg-content a {
+  color: #3b82f6;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  position: relative;
+}
+
+.simple-wysiwyg-content a:hover {
+  color: #1d4ed8;
+  border-bottom-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.simple-wysiwyg-content a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  transition: width 0.3s ease;
+}
+
+.simple-wysiwyg-content a:hover::after {
+  width: 100%;
+}
+
+/* 文本格式 */
+.simple-wysiwyg-content strong,
+.simple-wysiwyg-content b {
+  font-weight: 700;
+  color: #111827;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+}
+
+.simple-wysiwyg-content em,
+.simple-wysiwyg-content i {
+  font-style: italic;
+  color: #7c3aed;
+  font-weight: 500;
+}
+
+.simple-wysiwyg-content s,
+.simple-wysiwyg-content strike {
+  text-decoration: line-through;
+  color: #6b7280;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+}
+
+.simple-wysiwyg-content u {
+  text-decoration: underline;
+  text-decoration-color: #3b82f6;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+
+/* LaTeX样式 */
+.simple-wysiwyg-content .latex-editing {
+  display: inline-block;
+  padding: 0.5em 1em;
+  margin: 0 0.25em;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 2px dashed #3b82f6;
+  border-radius: 8px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.9em;
+  color: #1e40af;
+  min-width: 20px;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+}
+
+.simple-wysiwyg-content .latex-editing:focus {
+  border-color: #1d4ed8;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2), 0 4px 6px -1px rgba(59, 130, 246, 0.1);
+  transform: translateY(-1px);
+}
+
+.simple-wysiwyg-content .latex-rendered {
+  display: inline-block;
+  margin: 0 0.25em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+  pointer-events: auto;
+  /* 移除所有框架样式 */
+  background: transparent;
+  border: none;
+  padding: 0.25em 0.5em;
+  border-radius: 6px;
+  position: relative;
+}
+
+.simple-wysiwyg-content .latex-rendered:hover {
+  /* 悬停时添加渐变背景和阴影 */
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border-radius: 6px;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
+}
+
+.simple-wysiwyg-content .latex-inline {
+  display: inline;
+  vertical-align: baseline;
+}
+
+.simple-wysiwyg-content .latex-block {
+  display: block;
+  text-align: center;
+  margin: 16px 0;
+  /* 移除所有框架样式 */
+  background: transparent;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.simple-wysiwyg-content .latex-error {
+  background: #ffeef0;
+  border: 1px solid #fdbdbd;
+  color: #d73a49;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+/* 图片样式 */
+.simple-wysiwyg-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 8px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 暗色主题 */
+.dark .wysiwyg-editor-with-toolbar {
+  background: #0f172a;
+  border-color: #334155;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+.dark .wysiwyg-editor-with-toolbar:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+}
+
+.dark .simple-wysiwyg-content {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.dark .simple-wysiwyg-content:empty:before {
+  color: #64748b;
+}
+
+.dark .simple-wysiwyg-content h1 {
+  color: #f1f5f9;
+  border-bottom-color: #475569;
+}
+
+.dark .simple-wysiwyg-content h1::before {
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+
+.dark .simple-wysiwyg-content h2 {
+  color: #f1f5f9;
+  border-bottom-color: #475569;
+}
+
+.dark .simple-wysiwyg-content h2::before {
+  background: linear-gradient(90deg, #10b981, #3b82f6);
+}
+
+.dark .simple-wysiwyg-content h3 {
+  color: #e2e8f0;
+}
+
+.dark .simple-wysiwyg-content h3::before {
+  background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+}
+
+.dark .simple-wysiwyg-content h4,
+.dark .simple-wysiwyg-content h5,
+.dark .simple-wysiwyg-content h6 {
+  color: #cbd5e1;
+}
+
+.dark .simple-wysiwyg-content p {
+  color: #cbd5e1;
+}
+
+.dark .simple-wysiwyg-content blockquote {
+  color: #94a3b8;
+  border-left-color: #3b82f6;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+}
+
+.dark .simple-wysiwyg-content blockquote::before {
+  color: #3b82f6;
+}
+
+.dark .simple-wysiwyg-content li {
+  color: #cbd5e1;
+}
+
+.dark .simple-wysiwyg-content ul li::before {
+  color: #3b82f6;
+}
+
+.dark .simple-wysiwyg-content ol li::before {
+  color: #3b82f6;
+}
+
+.dark .simple-wysiwyg-content pre {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-color: #475569;
+}
+
+.dark .simple-wysiwyg-content pre::before {
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #10b981);
+}
+
+.dark .simple-wysiwyg-content code {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: #f87171;
+  border-color: #475569;
+}
+
+.dark .simple-wysiwyg-content pre code {
+  color: #e2e8f0;
+}
+
+.dark .simple-wysiwyg-content table {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.dark .simple-wysiwyg-content table th,
+.dark .simple-wysiwyg-content table td {
+  border-color: #475569;
+}
+
+.dark .simple-wysiwyg-content table th {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: #f1f5f9;
+}
+
+.dark .simple-wysiwyg-content table tr:nth-child(even) {
+  background: #334155;
+}
+
+.dark .simple-wysiwyg-content table tr:hover {
+  background: #475569;
+}
+
+.dark .simple-wysiwyg-content hr {
+  background: linear-gradient(90deg, transparent 0%, #475569 20%, #3b82f6 50%, #475569 80%, transparent 100%);
+}
+
+.dark .simple-wysiwyg-content a {
+  color: #4dabf7;
+}
+
+.dark .simple-wysiwyg-content .latex-editing {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  border-color: #3b82f6;
+  color: #dbeafe;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.dark .simple-wysiwyg-content .latex-editing:focus {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3), 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+}
+
+.dark .simple-wysiwyg-content .latex-rendered {
+  /* 移除所有框架样式 */
+  background: transparent;
+  border: none;
+  padding: 0.25em 0.5em;
+  border-radius: 6px;
+}
+
+.dark .simple-wysiwyg-content .latex-rendered:hover {
+  /* 悬停时添加渐变背景和阴影 */
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+  border-radius: 6px;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+}
+
+.dark .simple-wysiwyg-content .latex-block {
+  /* 移除所有框架样式 */
+  background: transparent;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.dark .simple-wysiwyg-content .latex-error {
+  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+  border: 1px solid #dc2626;
+  color: #fca5a5;
+  padding: 0.5em 1em;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .simple-wysiwyg-content {
+    padding: 12px;
+    font-size: 14px;
+  }
+  
+  .simple-wysiwyg-content h1 {
+    font-size: 1.75em;
+  }
+  
+  .simple-wysiwyg-content h2 {
+    font-size: 1.5em;
+  }
+  
+  .simple-wysiwyg-content h3 {
+    font-size: 1.25em;
+  }
+  
+  .simple-wysiwyg-content pre {
+    padding: 12px;
+    font-size: 13px;
+  }
+  
+  .simple-wysiwyg-content table {
+    font-size: 14px;
+  }
+  
+  .simple-wysiwyg-content table th,
+  .simple-wysiwyg-content table td {
+    padding: 6px 8px;
+  }
+}
+
+/* 滚动条样式 */
+.simple-wysiwyg-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.simple-wysiwyg-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.simple-wysiwyg-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.simple-wysiwyg-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.dark .simple-wysiwyg-content::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+.dark .simple-wysiwyg-content::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+.dark .simple-wysiwyg-content::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* 动画效果 */
+.simple-wysiwyg-content .latex-rendered,
+.simple-wysiwyg-content .latex-editing {
+  transition: all 0.2s ease;
+}
+
+/* 焦点样式 */
+.simple-wysiwyg-content:focus {
+  outline: none;
+}
+
+/* 选择样式 */
+.simple-wysiwyg-content::selection {
+  background: #b3d4fc;
+}
+
+.dark .simple-wysiwyg-content::selection {
+  background: #4a90e2;
+}

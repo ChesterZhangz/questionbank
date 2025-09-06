@@ -313,7 +313,7 @@ const EditPaperBankPage: React.FC = () => {
                         transition={{ duration: 0.3, delay: 0.3 }}
                       >
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          价格 (¥)
+                          价格 (V)
                         </label>
                         <Input
                           type="number"
@@ -523,7 +523,7 @@ const EditPaperBankPage: React.FC = () => {
                     <div>
                       <span className="text-gray-500 dark:text-gray-400">价格:</span>
                       <div className="mt-2 text-gray-900 dark:text-gray-100 font-medium">
-                        {originalData?.status === 'published' ? `¥${formData.price}` : '草稿状态不显示'}
+                        {originalData?.status === 'published' ? `${formData.price}V` : '草稿状态不显示'}
                       </div>
                     </div>
                     

@@ -1,0 +1,325 @@
+/* WYSIWYG 工具栏样式 */
+.wysiwyg-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e1e5e9;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 48px;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6c757d;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.toolbar-btn:active:not(:disabled) {
+  background: #dee2e6;
+  transform: translateY(1px);
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.toolbar-select {
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #e1e5e9;
+  border-radius: 4px;
+  background: #fff;
+  color: #495057;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.toolbar-select:hover:not(:disabled) {
+  border-color: #007bff;
+}
+
+.toolbar-select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.toolbar-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f8f9fa;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: #dee2e6;
+  margin: 0 4px;
+}
+
+/* 激活状态 */
+.toolbar-btn.active {
+  background: #007bff;
+  color: #fff;
+}
+
+.toolbar-btn.active:hover {
+  background: #0056b3;
+}
+
+/* 暗色主题 */
+.dark .wysiwyg-toolbar {
+  background: #2d2d2d;
+  border-bottom-color: #404040;
+}
+
+.dark .toolbar-btn {
+  color: #a0a0a0;
+}
+
+.dark .toolbar-btn:hover:not(:disabled) {
+  background: #404040;
+  color: #e1e1e1;
+}
+
+.dark .toolbar-btn:active:not(:disabled) {
+  background: #555;
+}
+
+.dark .toolbar-select {
+  background: #2d2d2d;
+  border-color: #404040;
+  color: #e1e1e1;
+}
+
+.dark .toolbar-select:hover:not(:disabled) {
+  border-color: #4dabf7;
+}
+
+.dark .toolbar-select:focus {
+  border-color: #4dabf7;
+  box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.25);
+}
+
+.dark .toolbar-select:disabled {
+  background: #2d2d2d;
+}
+
+.dark .toolbar-divider {
+  background: #404040;
+}
+
+.dark .toolbar-btn.active {
+  background: #4dabf7;
+  color: #fff;
+}
+
+.dark .toolbar-btn.active:hover {
+  background: #339af0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .wysiwyg-toolbar {
+    padding: 4px 8px;
+    gap: 2px;
+  }
+  
+  .toolbar-btn {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .toolbar-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .toolbar-select {
+    height: 28px;
+    padding: 0 6px;
+    font-size: 13px;
+    min-width: 70px;
+  }
+  
+  .toolbar-divider {
+    height: 16px;
+    margin: 0 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .wysiwyg-toolbar {
+    flex-wrap: wrap;
+    min-height: auto;
+  }
+  
+  .toolbar-group {
+    margin: 2px 0;
+  }
+  
+  .toolbar-divider {
+    display: none;
+  }
+}
+
+/* 工具提示 */
+.toolbar-btn[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.dark .toolbar-btn[title]:hover::after {
+  background: rgba(255, 255, 255, 0.9);
+  color: #000;
+}
+
+/* 动画效果 */
+.toolbar-btn,
+.toolbar-select {
+  transition: all 0.2s ease;
+}
+
+.toolbar-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.dark .toolbar-btn:focus {
+  box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.25);
+}
+
+/* 加载状态 */
+.toolbar-btn.loading {
+  position: relative;
+  color: transparent;
+}
+
+.toolbar-btn.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border: 2px solid #e1e5e9;
+  border-top: 2px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* 特殊按钮样式 */
+.toolbar-btn.danger:hover:not(:disabled) {
+  background: #dc3545;
+  color: #fff;
+}
+
+.toolbar-btn.success:hover:not(:disabled) {
+  background: #28a745;
+  color: #fff;
+}
+
+.toolbar-btn.warning:hover:not(:disabled) {
+  background: #ffc107;
+  color: #000;
+}
+
+/* 下拉菜单样式 */
+.toolbar-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.toolbar-dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  border: 1px solid #e1e5e9;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 120px;
+}
+
+.toolbar-dropdown:hover .toolbar-dropdown-content {
+  display: block;
+}
+
+.toolbar-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: #495057;
+  font-size: 14px;
+}
+
+.toolbar-dropdown-item:hover {
+  background: #f8f9fa;
+}
+
+.dark .toolbar-dropdown-content {
+  background: #2d2d2d;
+  border-color: #404040;
+}
+
+.dark .toolbar-dropdown-item {
+  color: #e1e1e1;
+}
+
+.dark .toolbar-dropdown-item:hover {
+  background: #404040;
+}

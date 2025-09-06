@@ -279,9 +279,7 @@ const PaperBankListPage: React.FC = () => {
     return Array.from(allTags).sort();
   };
 
-  if (loading) {
-    return <LoadingPage type="loading" title="加载试卷集" description="正在获取试卷集信息..." />;
-  }
+  // 移除全屏加载，改为局部加载
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -596,12 +594,11 @@ const PaperBankListPage: React.FC = () => {
 
         {/* 试卷集列表 */}
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-500 dark:text-gray-400">加载中...</p>
-            </div>
-          </div>
+          <LoadingPage 
+            title="正在加载试卷集..." 
+            description="请稍候，正在获取试卷集列表"
+            fullScreen={false}
+          />
         ) : sortedPaperBanks.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}

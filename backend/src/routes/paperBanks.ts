@@ -2,7 +2,9 @@ import express, { Request, Response } from 'express';
 import { body, query, validationResult } from 'express-validator';
 import PaperBank from '../models/PaperBank';
 import PaperBankMember from '../models/PaperBankMember';
+import { PaperBankReview } from '../models/PaperBankReview';
 import { User } from '../models/User';
+import { Paper } from '../models/Paper';
 import { authMiddleware } from '../middleware/auth';
 import { emailService } from '../services/emailService';
 
@@ -72,10 +74,16 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       PaperBank.countDocuments(query)
     ]);
 
+    // 为每个试卷集添加用户角色信息
+    const paperBanksWithRoles = paperBanks.map(paperBank => ({
+      ...paperBank,
+      userRole: 'owner' // 当前查询只返回用户拥有的试卷集
+    }));
+
     return res.json({
       success: true,
       data: {
-        paperBanks,
+        paperBanks: paperBanksWithRoles,
         pagination: {
           currentPage: Number(page),
           totalPages: Math.ceil(total / Number(limit)),
@@ -146,6 +154,100 @@ router.post('/', authMiddleware, [
   } catch (error: any) {
     console.error('创建试卷集失败:', error);
     return res.status(500).json({ success: false, error: '创建试卷集失败' });
+  }
+});
+
+// 获取用户有权限的试卷列表
+router.get('/my-papers', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: '未授权访问' });
+    }
+
+    const { 
+      search = '', 
+      category = '', 
+      subcategory = '', 
+      status = '', 
+      sortBy = 'createdAt', 
+      sortOrder = 'desc',
+      page = 1, 
+      limit = 20 
+    } = req.query;
+
+    // 构建查询条件
+    const query: any = {};
+    
+    // 搜索条件
+    if (search && typeof search === 'string') {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { tags: { $in: [new RegExp(search, 'i')] } }
+      ];
+    }
+
+    // 分类筛选
+    if (category) {
+      query.category = category;
+    }
+    if (subcategory) {
+      query.subcategory = subcategory;
+    }
+    if (status) {
+      query.status = status;
+    }
+
+    // 获取用户有权限的试卷集ID
+    const userMemberships = await PaperBankMember.find({ userId });
+    const accessiblePaperBankIds = userMemberships.map(member => member.paperBankId);
+
+    // 添加权限条件
+    query._id = { $in: accessiblePaperBankIds };
+
+    // 构建排序条件
+    const sort: any = {};
+    sort[sortBy as string] = sortOrder === 'asc' ? 1 : -1;
+
+    // 执行查询
+    const papers = await PaperBank.find(query)
+      .populate('ownerId', 'username avatar')
+      .sort(sort)
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(Number(limit));
+
+    // 获取总数
+    const total = await PaperBank.countDocuments(query);
+
+    // 为每个试卷添加用户角色信息
+    const papersWithRoles = papers.map(paper => {
+      const membership = userMemberships.find(member => 
+        member.paperBankId.toString() === (paper._id as any).toString()
+      );
+      return {
+        ...paper.toObject(),
+        userRole: membership?.role || 'viewer'
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        papers: papersWithRoles,
+        pagination: {
+          total,
+          page: Number(page),
+          limit: Number(limit),
+          totalPages: Math.ceil(total / Number(limit))
+        }
+      }
+    });
+    return;
+  } catch (error) {
+    console.error('获取我的试卷失败:', error);
+    res.status(500).json({ success: false, error: '获取我的试卷失败' });
+    return;
   }
 });
 
@@ -327,6 +429,47 @@ router.patch('/:id/publish', authMiddleware, async (req: AuthRequest, res: Respo
   }
 });
 
+// 获取试卷集讲义列表
+router.get('/:id/lectures', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, error: '未授权访问' });
+    }
+
+    // 检查用户是否有权限访问试卷集
+    const paperBank = await PaperBank.findOne({
+      _id: id,
+      $or: [
+        { ownerId: userId },
+        { 'members.userId': userId }
+      ]
+    });
+
+    if (!paperBank) {
+      return res.status(404).json({ success: false, error: '试卷集不存在或无权限访问' });
+    }
+
+    // 获取讲义列表（从试卷表中获取类型为 lecture 的试卷）
+    const lectures = await Paper.find({ 
+      libraryId: id,
+      type: 'lecture'
+    })
+    .populate('owner', 'username avatar')
+    .sort({ createdAt: -1 });
+
+    return res.json({
+      success: true,
+      data: lectures
+    });
+  } catch (error: any) {
+    console.error('获取试卷集讲义失败:', error);
+    return res.status(500).json({ success: false, error: '获取试卷集讲义失败' });
+  }
+});
+
 // 获取试卷集成员列表
 router.get('/:id/members', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
@@ -358,6 +501,107 @@ router.get('/:id/members', authMiddleware, async (req: AuthRequest, res: Respons
   } catch (error: any) {
     console.error('获取试卷集成员失败:', error);
     return res.status(500).json({ success: false, error: '获取试卷集成员失败' });
+  }
+});
+
+// 更新试卷集成员角色
+router.put('/:id/members/:memberId/role', authMiddleware, [
+  body('role').isIn(['manager', 'collaborator', 'viewer']).withMessage('角色必须是manager、collaborator或viewer')
+], async (req: AuthRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, error: errors.array()[0].msg });
+    }
+
+    const { id, memberId } = req.params;
+    const { role } = req.body;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, error: '未授权访问' });
+    }
+
+    // 检查用户是否有权限修改成员角色
+    const paperBank = await PaperBank.findOne({ _id: id, ownerId: userId });
+    if (!paperBank) {
+      return res.status(404).json({ success: false, error: '试卷集不存在或无权限访问' });
+    }
+
+    // 查找要修改的成员
+    const member = await PaperBankMember.findOne({ 
+      _id: memberId, 
+      paperBankId: id 
+    });
+    
+    if (!member) {
+      return res.status(404).json({ success: false, error: '成员不存在' });
+    }
+
+    // 不能修改所有者角色
+    if (member.role === 'owner') {
+      return res.status(400).json({ success: false, error: '不能修改试卷集所有者的角色' });
+    }
+
+    // 更新成员角色
+    member.role = role;
+    await member.save();
+
+    return res.json({
+      success: true,
+      data: member,
+      message: '成员角色更新成功'
+    });
+  } catch (error: any) {
+    console.error('更新试卷集成员角色失败:', error);
+    return res.status(500).json({ success: false, error: '更新试卷集成员角色失败' });
+  }
+});
+
+// 删除试卷集成员
+router.delete('/:id/members/:memberId', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id, memberId } = req.params;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, error: '未授权访问' });
+    }
+
+    // 检查用户是否有权限删除成员
+    const paperBank = await PaperBank.findOne({ _id: id, ownerId: userId });
+    if (!paperBank) {
+      return res.status(404).json({ success: false, error: '试卷集不存在或无权限访问' });
+    }
+
+    // 查找要删除的成员
+    const member = await PaperBankMember.findOne({ 
+      _id: memberId, 
+      paperBankId: id 
+    });
+    
+    if (!member) {
+      return res.status(404).json({ success: false, error: '成员不存在' });
+    }
+
+    // 不能删除所有者
+    if (member.role === 'owner') {
+      return res.status(400).json({ success: false, error: '不能删除试卷集所有者' });
+    }
+
+    // 删除成员
+    await PaperBankMember.deleteOne({ _id: memberId });
+
+    // 更新试卷集的成员数量
+    await PaperBank.findByIdAndUpdate(id, { $inc: { memberCount: -1 } });
+
+    return res.json({
+      success: true,
+      message: '成员删除成功'
+    });
+  } catch (error: any) {
+    console.error('删除试卷集成员失败:', error);
+    return res.status(500).json({ success: false, error: '删除试卷集成员失败' });
   }
 });
 
@@ -447,5 +691,147 @@ router.post('/:id/members', authMiddleware, [
     return res.status(500).json({ success: false, error: '邀请成员失败' });
   }
 });
+
+// 购买试卷集
+router.post('/:id/purchase', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?._id;
+    
+    if (!userId) {
+      return res.status(401).json({ success: false, error: '未授权访问' });
+    }
+    
+    // 检查试卷集是否存在
+    const paperBank = await PaperBank.findById(id);
+    if (!paperBank) {
+      return res.status(404).json({ success: false, error: '试卷集不存在' });
+    }
+    
+    // 检查试卷集是否已发布
+    if (paperBank.status !== 'published') {
+      return res.status(400).json({ success: false, error: '试卷集未发布，无法购买' });
+    }
+    
+    // 检查用户是否已经购买
+    const existingPurchase = await PaperBankMember.findOne({
+      paperBankId: id,
+      userId: userId,
+      role: { $in: ['manager', 'collaborator', 'viewer'] }
+    });
+    
+    if (existingPurchase) {
+      return res.status(400).json({ success: false, error: '您已经购买过此试卷集' });
+    }
+    
+    // 添加用户为试卷集成员（购买者）
+    const newMember = new PaperBankMember({
+      paperBankId: id,
+      userId: userId,
+      role: 'viewer', // 购买者默认为查看者角色
+      joinedAt: new Date()
+    });
+    
+    await newMember.save();
+    
+    // 更新试卷集购买次数
+    await PaperBank.findByIdAndUpdate(id, {
+      $inc: { purchaseCount: 1 }
+    });
+    
+    res.json({ 
+      success: true, 
+      message: '购买成功',
+      data: { memberId: newMember._id }
+    });
+    return;
+  } catch (error) {
+    console.error('购买试卷集失败:', error);
+    res.status(500).json({ success: false, error: '购买失败' });
+    return;
+  }
+});
+
+// 获取试卷集统计数据
+router.get('/:id/statistics', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    // 检查试卷集是否存在
+    const paperBank = await PaperBank.findById(id);
+    if (!paperBank) {
+      return res.status(404).json({ success: false, error: '试卷集不存在' });
+    }
+    
+    // 获取购买统计数据（最近7天）
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const dailyPurchases = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const endOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+      
+      const purchases = await PaperBankMember.countDocuments({
+        paperBankId: id,
+        role: 'viewer',
+        joinedAt: { $gte: startOfDay, $lt: endOfDay }
+      });
+      
+      dailyPurchases.push({
+        date: startOfDay.toISOString().split('T')[0],
+        purchases
+      });
+    }
+    
+    // 获取分类分布（基于试卷集本身的分类）
+    const categoryDistribution = [
+      { name: getCategoryLabel(paperBank.category), value: 100, color: '#8884d8' }
+    ];
+    
+    // 获取评分分布
+    const ratingDistribution = [];
+    for (let rating = 1; rating <= 5; rating++) {
+      const count = await PaperBankReview.countDocuments({
+        paperBankId: id,
+        rating: rating
+      });
+      ratingDistribution.push({ rating, count });
+    }
+    
+    res.json({
+      success: true,
+      data: {
+        dailyPurchases,
+        categoryDistribution,
+        ratingDistribution
+      }
+    });
+    return;
+  } catch (error) {
+    console.error('获取统计数据失败:', error);
+    res.status(500).json({ success: false, error: '获取统计数据失败' });
+    return;
+  }
+});
+
+// 辅助函数：获取分类标签
+function getCategoryLabel(category: string): string {
+  const categoryMap: { [key: string]: string } = {
+    'mathematics': '数学',
+    'physics': '物理',
+    'chemistry': '化学',
+    'biology': '生物',
+    'english': '英语',
+    'chinese': '语文',
+    'history': '历史',
+    'geography': '地理',
+    'politics': '政治',
+    'other': '其他'
+  };
+  return categoryMap[category] || category;
+}
 
 export default router;

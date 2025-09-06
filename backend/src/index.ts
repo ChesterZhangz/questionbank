@@ -36,6 +36,7 @@ import libraryRoutes from './routes/libraries';
 import libraryPurchaseRoutes from './routes/libraryPurchases';
 import vcountRoutes from './routes/vcount';
 import paperBankRoutes from './routes/paperBanks';
+import paperBankReviewRoutes from './routes/paperBankReviews';
 
 // 企业相关路由
 import enterpriseRoutes from './routes/enterprises';
@@ -421,6 +422,7 @@ app.get('/api/enterprises/stats', async (req, res) => {
 app.use('/api/enterprises', authMiddleware, enterpriseRoutes); // 企业管理路由（仅superadmin）
 app.use('/api/my-enterprise', authMiddleware, myEnterpriseRoutes); // 我的企业路由
 app.use('/api/vcount', vcountRoutes); // VCount货币系统路由
+app.use('/api', paperBankReviewRoutes); // 试卷集评价路由
 app.use('/api/paper-banks', paperBankRoutes); // 试卷集路由
 
 // 草稿相关路由

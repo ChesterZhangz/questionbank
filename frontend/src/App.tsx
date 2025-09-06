@@ -37,9 +37,15 @@ const TikZFunctionsGuide = lazy(() => import('./pages/guide/tikz-functions'));
 const TikZEffectsGuide = lazy(() => import('./pages/guide/tikz-effects'));
 const FunctionPlottingTestPage = lazy(() => import('./pages/FunctionPlottingTestPage'));
 const PaperBankListPage = lazy(() => import('./pages/paper-banks/PaperBankListPage'));
+const PaperBankDetailPage = lazy(() => import('./pages/paper-banks/PaperBankDetailPage'));
 const CreatePaperBankPage = lazy(() => import('./pages/paper-banks/CreatePaperBankPage'));
 const EditPaperBankPage = lazy(() => import('./pages/paper-banks/EditPaperBankPage'));
 const PaperBankMembersPage = lazy(() => import('./pages/paper-banks/PaperBankMembersPage'));
+const MyPapersPage = lazy(() => import('./pages/paper-banks/MyPapersPage'));
+const CreatePaperPage = lazy(() => import('./pages/papers/CreatePaperPage'));
+const LectureEditorPage = lazy(() => import('./pages/lecture-editor/LectureEditorPage'));
+const LaTeXTestDemo = lazy(() => import('./pages/LaTeXTestDemo'));
+
 
 
 
@@ -277,16 +283,46 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               } 
             />
-                            <Route
-                  path="/paper-banks/create"
-                  element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <CreatePaperBankPage />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  }
-                />
+            <Route 
+              path="/my-papers" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <MyPapersPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/papers/create" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <CreatePaperPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/paper-banks/:id" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <PaperBankDetailPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route
+              path="/paper-banks/create"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <CreatePaperBankPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
                 <Route
                   path="/paper-banks/:id/edit"
                   element={
@@ -307,6 +343,39 @@ const App: React.FC = () => {
                     </ProtectedRoute>
                   }
                 />
+
+            {/* 讲义编辑器路由 */}
+            <Route
+              path="/paper-banks/:paperBankId/lectures/create"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <LectureEditorPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/paper-banks/:paperBankId/lectures/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <LectureEditorPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/latex-test-demo"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <LaTeXTestDemo />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+
             <Route 
               path="/questions" 
               element={
@@ -512,11 +581,10 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               } 
             />
-
-
-
+            
             <Route path="/" element={<IntroductionPage />} />
             <Route path="/introduction" element={<IntroductionPage />} />
+
             
             {/* 错误页面路由 */}
             <Route path="/error/400" element={<Page400 />} />

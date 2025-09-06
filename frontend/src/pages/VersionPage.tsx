@@ -19,6 +19,7 @@ import {
   Bell,
   Info,
   BookOpen,
+  User,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/ui/Card';
@@ -36,6 +37,68 @@ interface VersionUpdate {
 }
 
 const versionUpdates: VersionUpdate[] = [
+  {
+    version: 'v0.80',
+    date: '2025-09-06',
+    title: '试卷集系统 & 试卷系统',
+    description: '新增试卷集管理系统和试卷系统，支持试卷的创建、编辑、管理和发布功能。',
+    features: [
+      '试卷集管理系统：创建、编辑、删除试卷集',
+      '试卷系统：支持讲义、练习、试卷三种类型',
+      '试卷编辑功能：A4纸模拟、WYSIWYG编辑器',
+      '试卷权限管理：查看、编辑、管理、拥有者权限',
+      '试卷状态管理：草稿、已发布、已修改状态',
+      '试卷筛选和搜索：按类型、状态、创建时间筛选',
+      '试卷集成员管理：添加、删除、权限分配',
+      '试卷集统计信息：题目数量、成员数量、访问统计'
+    ],
+    improvements: [
+      '试卷编辑体验优化：A4纸模拟、实时预览',
+      '权限管理完善：细粒度权限控制',
+      '搜索功能增强：多维度筛选和排序',
+      '用户界面统一：与题库管理保持一致的设计风格'
+    ],
+    fixes: [
+      '修复试卷创建权限验证问题',
+      '解决试卷编辑页面样式问题',
+      '优化试卷列表加载性能',
+      '修复试卷状态更新问题'
+    ],
+    icon: FileText,
+    color: 'from-blue-500 to-cyan-600'
+  },
+  {
+    version: 'v0.79',
+    date: '2025-08-31',
+    title: '个人信息页面重构 & VCount系统 & 时区设置',
+    description: '重构个人信息页面布局，新增VCount货币系统，添加时区个人偏好设置，优化默认导航页。',
+    features: [
+      '个人信息页面重新排版：更清晰的布局和视觉层次',
+      'VCount货币系统：余额显示、充值记录、消费统计',
+      '时区个人偏好设置：自动检测位置、手动选择时区',
+      '默认导航页设置：个性化首页导航',
+      '用户偏好管理：主题、语言、通知设置',
+      '社交功能完善：关注、粉丝、收藏管理',
+      '企业信息展示：关联企业、角色权限显示',
+      '个人资料编辑：头像、基本信息、联系方式'
+    ],
+    improvements: [
+      '页面布局优化：响应式设计、更好的视觉层次',
+      'VCount系统集成：统一的货币管理体验',
+      '时区设置智能化：自动检测用户位置推荐时区',
+      '导航体验提升：个性化默认页面设置',
+      '数据展示优化：更直观的统计信息展示',
+      '将LaTeX与TiKz的指南集成到了仪表盘当中',
+    ],
+    fixes: [
+      '修复个人信息页面布局混乱问题',
+      '解决时区设置不生效问题',
+      '优化VCount余额显示性能',
+      '修复默认导航页设置问题'
+    ],
+    icon: User,
+    color: 'from-green-500 to-emerald-600'
+  },
   {
     version: 'v0.78',
     date: '2025-08-27',
@@ -1026,10 +1089,10 @@ const VersionPage: React.FC = () => {
               <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Star className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">当前版本 v0.78</h2>
-              <p className="text-pink-100 text-lg mb-4">Logo系统重构 & 题库设置页面重构</p>
+              <h2 className="text-2xl font-bold mb-2">当前版本 v0.80</h2>
+              <p className="text-pink-100 text-lg mb-4">试卷集系统 & 试卷系统</p>
               <p className="text-pink-200">
-                重构Logo系统，支持浅色/深色模式自动切换；重构题库设置页面，移除未实现功能，新增自定义卡片颜色功能。Logo根据主题自动切换，题库设置界面简化，自定义颜色应用，分类选择体验统一，DarkMode完美支持！
+                新增试卷集管理系统和试卷系统，支持试卷的创建、编辑、管理和发布功能。试卷集管理、试卷编辑、权限控制、状态管理、筛选搜索、成员管理、统计信息等完整功能！
               </p>
             </div>
           </Card>

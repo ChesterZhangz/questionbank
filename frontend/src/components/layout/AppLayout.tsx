@@ -33,7 +33,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     if (isMobile) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'B') {
         e.preventDefault();
         toggleSidebar();
       }

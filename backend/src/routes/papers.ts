@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { authMiddleware } from '../middleware/auth';
 import { 
   libraryMemberMiddleware, 
@@ -8,6 +9,7 @@ import {
   checkPaperDeletePermission,
   LibraryRequest
 } from '../middleware/libraryPermissions';
+import PaperBank from '../models/PaperBank';
 import { Paper } from '../models/Paper';
 import { createDraft, updateDraft, getPaper, listPapers, publishPaper, deletePaper } from '../services/paper/paperService';
 
@@ -111,6 +113,92 @@ router.put('/:id', authMiddleware, async (req: Request, res: Response) => {
   }
 });
 
+// 获取我的试卷列表（包含所有有权限的试卷）
+router.get('/my-papers', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { search, category, type, status, sortBy, sortOrder, page, limit } = req.query;
+    const userId = (req as any).user._id;
+
+    // 构建查询条件
+    const query: any = {};
+
+    // 搜索条件
+    if (search && typeof search === 'string') {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { subject: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // 类型筛选
+    if (type && typeof type === 'string') {
+      query.type = type;
+    }
+
+    // 状态筛选
+    if (status && typeof status === 'string') {
+      query.status = status;
+    }
+
+    // 构建排序条件
+    const sort: any = {};
+    sort[sortBy as string] = sortOrder === 'asc' ? 1 : -1;
+
+    // 执行查询
+    const papers = await Paper.find(query)
+      .populate('owner', 'username avatar')
+      .sort(sort)
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(Number(limit));
+
+    // 获取总数
+    const total = await Paper.countDocuments(query);
+
+    // 为每个试卷添加用户角色信息（这里简化处理，实际应该根据权限系统确定）
+    const papersWithRoles = papers.map(paper => ({
+      ...paper.toObject(),
+      userRole: paper.owner._id.toString() === userId.toString() ? 'creator' : 'viewer'
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        papers: papersWithRoles,
+        pagination: {
+          total,
+          page: Number(page),
+          limit: Number(limit),
+          totalPages: Math.ceil(total / Number(limit))
+        }
+      }
+    });
+    return;
+  } catch (error) {
+    console.error('获取我的试卷失败:', error);
+    res.status(500).json({ success: false, error: '获取我的试卷失败' });
+    return;
+  }
+});
+
+// 获取试卷列表
+router.get('/', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { status, keyword, page, limit, libraryId } = req.query as any;
+    const owner = (req as any).user._id;
+
+    // 如果指定了试卷集，需要检查权限
+    if (libraryId) {
+      // 这里可以添加权限检查逻辑
+    }
+
+    const data = await listPapers({ owner, status, keyword, page: Number(page) || 1, limit: Number(limit) || 20, libraryId: libraryId as string });
+    return res.json({ success: true, data });
+  } catch (err) {
+    console.error('list papers failed:', err);
+    return res.status(500).json({ success: false, error: '获取试卷列表失败' });
+  }
+});
+
 // 获取试卷详情
 router.get('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
@@ -131,22 +219,84 @@ router.get('/:id', authMiddleware, async (req: Request, res: Response) => {
   }
 });
 
-// 获取试卷列表
-router.get('/', authMiddleware, async (req: Request, res: Response) => {
+// 创建试卷
+router.post('/', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { status, keyword, page, limit, libraryId } = req.query as any;
-    const owner = (req as any).user._id;
+    const { name, type, paperBankId, description, tags, subtitle, date } = req.body;
+    const userId = (req as any).user._id;
 
-    // 如果指定了试卷集，需要检查权限
-    if (libraryId) {
-      // 这里可以添加权限检查逻辑
+    // 验证必填字段
+    if (!name || !type || !paperBankId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '缺少必填字段：试卷名称、类型或试卷集ID' 
+      });
     }
 
-    const data = await listPapers({ owner, status, keyword, page: Number(page) || 1, limit: Number(limit) || 20, libraryId: libraryId as string });
-    return res.json({ success: true, data });
-  } catch (err) {
-    console.error('list papers failed:', err);
-    return res.status(500).json({ success: false, error: '获取试卷列表失败' });
+    // 验证试卷类型
+    if (!['lecture', 'practice', 'test'].includes(type)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '无效的试卷类型' 
+      });
+    }
+
+    // 检查试卷集是否存在且用户有权限
+    const paperBank = await PaperBank.findOne({
+      _id: paperBankId,
+      $or: [
+        { ownerId: userId },
+        { 'members.userId': userId, 'members.role': { $in: ['owner', 'manager', 'collaborator'] } }
+      ]
+    });
+
+    if (!paperBank) {
+      return res.status(403).json({ 
+        success: false, 
+        error: '试卷集不存在或您没有权限在此试卷集中创建试卷' 
+      });
+    }
+
+    // 创建试卷数据
+    const paperData: any = {
+      name,
+      type,
+      libraryId: paperBankId,
+      owner: userId,
+      status: 'draft',
+      totalScore: 0,
+      version: 1,
+      sections: [],
+      bank: (paperBank as any).bankId || new mongoose.Types.ObjectId(), // 使用试卷集的题库ID
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    // 添加可选字段
+    if (description) paperData.description = description;
+    if (tags && Array.isArray(tags)) paperData.tags = tags;
+
+    // 讲义特有字段
+    if (type === 'lecture') {
+      if (subtitle) paperData.subtitle = subtitle;
+      if (date) paperData.date = new Date(date);
+    }
+
+    const paper = new Paper(paperData);
+    await paper.save();
+
+    // 更新试卷集的试卷数量
+    await PaperBank.findByIdAndUpdate(paperBankId, {
+      $inc: { paperCount: 1 }
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: paper
+    });
+  } catch (error) {
+    console.error('创建试卷失败:', error);
+    return res.status(500).json({ success: false, error: '创建试卷失败' });
   }
 });
 
