@@ -437,7 +437,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                   exit={{ opacity: 0 }}
                   className="flex items-center gap-2"
                 >
-                  <span className="text-xs">v0.78</span>
+                  <span className="text-xs">v0.80</span>
                   <span className="text-xs opacity-75">版本信息</span>
                 </motion.div>
               )}
