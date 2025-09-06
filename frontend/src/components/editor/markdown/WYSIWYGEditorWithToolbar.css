@@ -7,7 +7,7 @@
 /* 字体定义 */
 @font-face {
   font-family: 'WenYuanSerifSC';
-  src: url('/font/WenYuanSerifSC-Regular.ttf') format('truetype');
+  src: url('../../../public/font/WenYuanSerifSC-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -15,7 +15,7 @@
 
 @font-face {
   font-family: 'WenYuanSerifSC';
-  src: url('/font/WenYuanSerifSC-Bold.ttf') format('truetype');
+  src: url('../../../public/font/WenYuanSerifSC-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -23,7 +23,7 @@
 
 @font-face {
   font-family: 'WenYuanSansSCC';
-  src: url('/font/WenYuanSansSCC-Regular.ttf') format('truetype');
+  src: url('../../../public/font/WenYuanSansSCC-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
