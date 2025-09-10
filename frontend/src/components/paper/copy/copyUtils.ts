@@ -11,6 +11,12 @@ export const defaultCopyConfig: CopyConfig = {
     default: '\\vspace{3cm}'
   },
   copyMethod: 'clipboard',
+  selectiveCopy: {
+    enabled: false,
+    selectedQuestions: [],
+    showDifficulty: true,
+    showSource: true
+  },
   normalConfig: {
     addDocumentEnvironment: false,
     paperSize: 'A4',
@@ -1032,4 +1038,89 @@ export const openInOverleaf = (paper: Paper, config: CopyConfig = defaultCopyCon
     form.submit();
     document.body.removeChild(form);
   }
+};
+
+// 生成选择性复制的LaTeX内容
+export const generateSelectiveCopyLaTeX = (
+  questions: Question[],
+  config: { showDifficulty: boolean; showSource: boolean; showAnswer: boolean }
+): string => {
+  let latex = '';
+  
+  questions.forEach((question, index) => {
+    // 添加题目编号
+    latex += `\\item `;
+    
+    // 添加难度标签和出处（如果启用）
+    if (config.showDifficulty && question.difficulty) {
+      const source = config.showSource && question.source ? question.source : undefined;
+      const difficultyMark = getDifficultyMark(question.difficulty, source);
+      latex += `${difficultyMark} `;
+    } else if (config.showSource && question.source) {
+      latex += `[${question.source}] `;
+    }
+    
+    // 处理题目内容
+    let questionContent = question.content.stem;
+    
+    // 处理选择题的选项
+    if (question.type === 'choice' && question.content.options) {
+      // 替换\choice为\dotfill
+      questionContent = questionContent.replace(/\\choice/g, '\\dotfill （\\qquad \\qquad）');
+      
+      // 添加选项
+      questionContent += '\n\\begin{tasks}(4)\n';
+      question.content.options.forEach(option => {
+        questionContent += `\\task ${option.text}\n`;
+      });
+      questionContent += '\\end{tasks}';
+    }
+    
+    // 处理填空题
+    if (question.type === 'fill') {
+      // 替换\underlines为\underline
+      questionContent = questionContent.replace(/\\underlines/g, '\\underline{\\hspace{3cm}}');
+    }
+    
+    // 处理解答题的小问
+    if (question.type === 'solution') {
+      // 替换\subp为\begin{enumerate}[label=(\arabic*)]
+      questionContent = questionContent.replace(/\\subp/g, '\\begin{enumerate}[label=(\\arabic*)]\n\\item');
+      questionContent = questionContent.replace(/\\subsubp/g, '\\begin{enumerate}[label=\\roman*)]\n\\item');
+      
+      // 处理结束标签
+      questionContent = questionContent.replace(/\\end{subp}/g, '\\end{enumerate}');
+      questionContent = questionContent.replace(/\\end{subsubp}/g, '\\end{enumerate}');
+    }
+    
+    // 处理图片和TikZ
+    const mediaContent = processQuestionMedia(question);
+    questionContent += mediaContent;
+    
+    latex += questionContent;
+    
+    // 添加答案（如果启用）
+    if (config.showAnswer && question.content.solution) {
+      latex += '\n\n\\begin{answer}\n';
+      let solutionContent = question.content.solution;
+      
+      // 处理解答题中的子问题
+      if (question.type === 'solution') {
+        solutionContent = solutionContent.replace(/\\subp/g, '\\begin{subproblem}\n\\item');
+        solutionContent = solutionContent.replace(/\\subsubp/g, '\\begin{subsubproblem}\n\\item');
+        solutionContent = solutionContent.replace(/\\end{subp}/g, '\\end{subproblem}');
+        solutionContent = solutionContent.replace(/\\end{subsubp}/g, '\\end{subsubproblem}');
+      }
+      
+      latex += solutionContent;
+      latex += '\n\\end{answer}';
+    }
+    
+    // 添加换行（除了最后一道题）
+    if (index < questions.length - 1) {
+      latex += '\n\n';
+    }
+  });
+  
+  return latex;
 };

@@ -56,6 +56,10 @@ export interface IPaper extends Document {
   publishedAt?: Date;
   modifiedAt?: Date;
   modifiedBy?: mongoose.Types.ObjectId; // 修改者
+  // Overleaf编辑链接相关字段
+  overleafEditLink?: string; // Overleaf编辑链接
+  overleafLinkAddedBy?: mongoose.Types.ObjectId; // 添加链接的用户
+  overleafLinkAddedAt?: Date; // 添加链接的时间
   createdAt: Date;
   updatedAt: Date;
 }
@@ -113,7 +117,11 @@ const paperSchema = new Schema<IPaper>({
   version: { type: Number, default: 1 },
   publishedAt: { type: Date },
   modifiedAt: { type: Date },
-  modifiedBy: { type: Schema.Types.ObjectId, ref: 'User' }
+  modifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  // Overleaf编辑链接相关字段
+  overleafEditLink: { type: String, trim: true },
+  overleafLinkAddedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  overleafLinkAddedAt: { type: Date }
 }, { timestamps: true });
 
 paperSchema.index({ owner: 1, createdAt: -1 });

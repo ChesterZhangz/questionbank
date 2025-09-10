@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, BookOpen, FileText, Clock, Users, Tag, CheckCircle, Menu, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowLeft, BookOpen, FileText, Clock, Users, Tag, CheckCircle, Menu, ChevronRight } from 'lucide-react';
 import Button from '../../ui/Button';
 import LaTeXPreview from '../../editor/preview/LaTeXPreview';
 import TikZPreview from '../../tikz/core/TikZPreview';
 import { useNavigate, useParams } from 'react-router-dom';
-import { paperAPI } from '../../../services/api';
+import { paperAPI, paperBankAPI } from '../../../services/api';
 import LoadingPage from '../../ui/LoadingPage';
 import { PaperCopyManager } from '../copy';
+import OverleafLinkManager from '../copy/OverleafLinkManager';
+import { useAuthStore } from '../../../stores/authStore';
 import './PracticePaperViewPage.css';
 
 interface PracticePaper {
@@ -56,24 +58,47 @@ interface PracticePaper {
   bank: {
     _id: string;
     name: string;
+    ownerId?: string;
   };
   createdAt: string;
   updatedAt: string;
   owner: {
-    username: string;
+    _id: string;
+    name: string;
   };
+  overleafEditLink?: string; // Overleaf编辑链接
+  overleafLinkAddedBy?: {
+    _id: string;
+    name: string;
+    email: string;
+    username: string;
+  }; // 添加链接的用户
+  overleafLinkAddedAt?: string; // 添加链接的时间
 }
 
 const PracticePaperViewPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuthStore();
   const [paper, setPaper] = useState<PracticePaper | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // 检查用户是否有试卷集管理权限
+  const [hasBankManagementPermission, setHasBankManagementPermission] = useState(false);
+  
   // 菜单栏状态
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set());
+  
+  // 题目选择状态
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
+  const [selectiveCopyConfig, setSelectiveCopyConfig] = useState({
+    showDifficulty: true,
+    showSource: true,
+    showAnswer: false
+  });
   
   // 滚动引用
   const sectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -103,6 +128,44 @@ const PracticePaperViewPage: React.FC = () => {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  };
+
+  // 切换选择模式
+  const toggleSelectMode = () => {
+    setIsSelectMode(!isSelectMode);
+    if (isSelectMode) {
+      setSelectedQuestions([]);
+    }
+  };
+
+  // 切换题目选择
+  const toggleQuestionSelection = (questionId: string) => {
+    setSelectedQuestions(prev => 
+      prev.includes(questionId)
+        ? prev.filter(id => id !== questionId)
+        : [...prev, questionId]
+    );
+  };
+
+  // 全选/取消全选
+  const toggleAllQuestions = () => {
+    if (!paper) return;
+    
+    const allQuestionIds = paper.sections.flatMap(section => 
+      section.items.map(item => item.question._id)
+    );
+    
+    if (selectedQuestions.length === allQuestionIds.length) {
+      setSelectedQuestions([]);
+    } else {
+      setSelectedQuestions(allQuestionIds);
+    }
+  };
+
+
+  // 更新选择性复制配置
+  const updateSelectiveCopyConfig = (updates: Partial<typeof selectiveCopyConfig>) => {
+    setSelectiveCopyConfig(prev => ({ ...prev, ...updates }));
   };
 
   // 切换部分展开状态
@@ -137,6 +200,48 @@ const PracticePaperViewPage: React.FC = () => {
       fetchPaper();
     }
   }, [id]);
+
+  // 检查用户是否有试卷集管理权限
+  useEffect(() => {
+    const checkBankPermission = async () => {
+      if (!paper || !user) return;
+      
+      try {
+        // 检查是否为试卷创建者
+        const isPaperOwner = paper.owner._id === user._id;
+        
+        // 检查是否为试卷集所有者
+        const isBankOwner = paper.bank?.ownerId === user._id;
+        
+        // 检查是否为试卷集成员（编辑者/管理者）
+        let isBankMember = false;
+        if (paper.bank?._id) {
+          try {
+            const response = await paperBankAPI.getPaperBankMembers(paper.bank._id);
+            if (response.data.success) {
+              const members = response.data.data.members;
+              const currentUserMember = members.find((member: any) => 
+                member.userId === user._id && 
+                ['owner', 'manager', 'collaborator'].includes(member.role)
+              );
+              isBankMember = !!currentUserMember;
+            }
+          } catch (err) {
+            console.error('check bank membership failed:', err);
+          }
+        }
+        
+        const hasPermission = isPaperOwner || isBankOwner || isBankMember;
+        
+        setHasBankManagementPermission(hasPermission);
+      } catch (err) {
+        console.error('check bank permission failed:', err);
+        setHasBankManagementPermission(false);
+      }
+    };
+
+    checkBankPermission();
+  }, [paper, user]);
 
   if (loading) {
     return <LoadingPage />;
@@ -246,11 +351,31 @@ const PracticePaperViewPage: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-3">
-              <PaperCopyManager
-                paper={paper}
-                showSettings={false}
-                className="flex-shrink-0"
-              />
+              {/* Overleaf编辑链接 - 所有有权限的用户都可以看到 */}
+              {hasBankManagementPermission && (
+                <OverleafLinkManager
+                  paper={paper}
+                  onUpdateLink={(link) => setPaper({ ...paper, overleafEditLink: link })}
+                  onRemoveLink={() => setPaper({ ...paper, overleafEditLink: undefined })}
+                  canEdit={hasBankManagementPermission || (paper.overleafLinkAddedBy?._id === user?._id)}
+                />
+              )}
+              
+              {/* 如果已有链接但用户没有管理权限，只显示链接 */}
+              {!hasBankManagementPermission && paper.overleafEditLink && (
+                <div className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                  <FileText className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                  <a 
+                    href={paper.overleafEditLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    Overleaf编辑链接
+                  </a>
+                </div>
+              )}
+              
               <Button
                 variant="outline"
                 onClick={() => navigate(`/paper-banks/${paper.bank._id}/practices/${paper._id}/edit`)}
@@ -266,72 +391,172 @@ const PracticePaperViewPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-6">
           {/* 左侧菜单栏 */}
-          <div className={`w-80 flex-shrink-0 transition-all duration-300 ${isMenuOpen ? 'block' : 'hidden lg:block'}`}>
+          <div className={`w-80 flex-shrink-0 transition-all duration-200 ${isMenuOpen ? 'block' : 'hidden lg:block'}`}>
             <div className="sticky top-8">
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">题目导航</h3>
-                  <button
-                    onClick={() => setIsMenuOpen(false)}
-                    className="lg:hidden p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="relative overflow-hidden bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm"
+              >
+                {/* 背景装饰 */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/3 via-purple-500/3 to-pink-500/3 dark:from-blue-500/8 dark:via-purple-500/8 dark:to-pink-500/8" />
+                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-400/8 to-blue-400/8 rounded-full -translate-y-10 translate-x-10" />
+                <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-purple-400/8 to-pink-400/8 rounded-full translate-y-8 -translate-x-8" />
+                
+                <div className="relative p-6">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.1 }}
+                    className="flex items-center justify-between mb-6"
                   >
-                    <ArrowLeft className="w-4 h-4" />
-                  </button>
-                </div>
-                
-                <div className="space-y-2">
-                  {paper.sections.map((section, sectionIndex) => (
-                    <div key={sectionIndex} className="border border-gray-200 dark:border-gray-700 rounded-lg">
-                      <button
-                        onClick={() => {
-                          scrollToSection(sectionIndex);
-                          toggleSection(sectionIndex);
-                        }}
-                        className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    <h3 className="text-xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">
+                      题目导航
+                    </h3>
+                    <button
+                      onClick={() => setIsMenuOpen(false)}
+                      className="lg:hidden p-2 hover:bg-gray-100/50 dark:hover:bg-gray-700/50 rounded-xl transition-colors"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                    </button>
+                  </motion.div>
+                  
+                  <div className="space-y-3">
+                    {paper.sections.map((section, sectionIndex) => (
+                      <motion.div 
+                        key={sectionIndex} 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2, delay: 0.2 + sectionIndex * 0.05 }}
+                        className="relative overflow-hidden bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-gray-700/50 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
                       >
-                        <div className="flex items-center space-x-2">
-                          <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                          <span className="font-medium text-gray-900 dark:text-white">
-                            {section.title}
-                          </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            ({section.items.length}题)
-                          </span>
-                        </div>
-                        {expandedSections.has(sectionIndex) ? (
-                          <ChevronDown className="w-4 h-4 text-gray-500" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4 text-gray-500" />
-                        )}
-                      </button>
-                      
-                      {expandedSections.has(sectionIndex) && (
-                        <div className="px-3 pb-2 space-y-1">
-                          {section.items.map((_, questionIndex) => (
-                            <button
-                              key={questionIndex}
-                              onClick={() => scrollToQuestion(sectionIndex, questionIndex)}
-                              className="w-full text-left p-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                        <button
+                          onClick={() => {
+                            scrollToSection(sectionIndex);
+                            toggleSection(sectionIndex);
+                          }}
+                          className="w-full flex items-center justify-between p-4 text-left hover:bg-gradient-to-r hover:from-blue-500/5 hover:to-purple-500/5 dark:hover:from-blue-500/10 dark:hover:to-purple-500/10 rounded-xl transition-all duration-200"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <motion.div 
+                              className="p-2 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg shadow-sm"
+                              whileHover={{ scale: 1.1, rotate: 5 }}
+                              transition={{ type: "spring", stiffness: 400, damping: 10 }}
                             >
-                              第{questionIndex + 1}题
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                              <CheckCircle className="w-4 h-4 text-white" />
+                            </motion.div>
+                            <div>
+                              <span className="font-semibold text-gray-900 dark:text-white text-sm">
+                                {section.title}
+                              </span>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                {section.items.length} 道题
+                              </div>
+                            </div>
+                          </div>
+                          <motion.div
+                            animate={{ rotate: expandedSections.has(sectionIndex) ? 90 : 0 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <ChevronRight className="w-4 h-4 text-gray-500" />
+                          </motion.div>
+                        </button>
+                        
+                        <motion.div
+                          initial={false}
+                          animate={{ 
+                            height: expandedSections.has(sectionIndex) ? 'auto' : 0,
+                            opacity: expandedSections.has(sectionIndex) ? 1 : 0
+                          }}
+                          transition={{ duration: 0.2, ease: "easeInOut" }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-4 pb-3 space-y-1">
+                            {section.items.map((_, questionIndex) => (
+                              <motion.button
+                                key={questionIndex}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.15, delay: questionIndex * 0.02 }}
+                                onClick={() => scrollToQuestion(sectionIndex, questionIndex)}
+                                className="w-full text-left p-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gradient-to-r hover:from-blue-500/5 hover:to-purple-500/5 dark:hover:from-blue-500/10 dark:hover:to-purple-500/10 rounded-lg transition-all duration-150 hover:text-gray-900 dark:hover:text-gray-200"
+                              >
+                                第{questionIndex + 1}题
+                              </motion.button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      </motion.div>
+                    ))}
+                  </div>
+                  
+                  {/* 复制模板 */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.4 }}
+                    className="mt-8"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">
+                        复制模板
+                      </h3>
+                      
+                      {/* 选择模式控制 */}
+                      <div className="flex items-center space-x-2">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={toggleSelectMode}
+                          className={`px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
+                            isSelectMode
+                              ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          {isSelectMode ? '退出选择' : '选择题目'}
+                        </motion.button>
+                        
+                        {isSelectMode && (
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 0.2 }}
+                            onClick={toggleAllQuestions}
+                            className="px-3 py-2 text-sm font-medium rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
+                          >
+                            {selectedQuestions.length === paper.sections.flatMap(s => s.items).length ? '取消全选' : '全选'}
+                          </motion.button>
+                        )}
+                      </div>
                     </div>
-                  ))}
+                       
+                    <PaperCopyManager
+                      paper={paper}
+                      showSettings={true}
+                      canEdit={false} // 在侧边栏不显示Overleaf链接管理
+                      onPaperUpdate={(updatedPaper) => setPaper(updatedPaper)}
+                      isSelectMode={isSelectMode}
+                      selectedQuestions={selectedQuestions}
+                      selectiveCopyConfig={selectiveCopyConfig}
+                      onSelectiveCopy={(latex) => {
+                        navigator.clipboard.writeText(latex).then(() => {
+                          // 可以添加成功提示
+                        }).catch(err => {
+                          console.error('复制失败:', err);
+                        });
+                      }}
+                      onSelectiveCopyConfigUpdate={updateSelectiveCopyConfig}
+                      currentUserId={user?._id}
+                      className="space-y-2"
+                    />
+                  </motion.div>
                 </div>
-                
-                {/* 复制模板 */}
-                <div className="mt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">复制模板</h3>
-                <PaperCopyManager
-                  paper={paper}
-                  showSettings={true}
-                  className="space-y-2"
-                />
-                </div>
-              </div>
+              </motion.div>
             </div>
           </div>
 
@@ -340,99 +565,258 @@ const PracticePaperViewPage: React.FC = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.2 }}
               className="space-y-8"
             >
-          {/* 基本信息卡片 */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="text-center">
-                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg w-fit mx-auto mb-2">
-                  <FileText className="w-6 h-6 text-green-600 dark:text-green-400" />
-                </div>
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {sectionCount}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">部分数</div>
-              </div>
-              
-              <div className="text-center">
-                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg w-fit mx-auto mb-2">
-                  <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {totalQuestions}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">总题数</div>
-              </div>
-              
-              <div className="text-center">
-                <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg w-fit mx-auto mb-2">
-                  <Clock className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div className="text-sm text-gray-900 dark:text-white">
-                  {new Date(paper.createdAt).toLocaleDateString()}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">创建时间</div>
-              </div>
-              
-              <div className="text-center">
-                <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg w-fit mx-auto mb-2">
-                  <Users className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                </div>
-                <div className="text-sm text-gray-900 dark:text-white">
-                  {paper.owner.username}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">创建者</div>
-              </div>
-            </div>
+          {/* 基本信息卡片 - 重新设计 */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="relative overflow-hidden bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm"
+          >
+            {/* 背景装饰 */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 dark:from-blue-500/10 dark:via-purple-500/10 dark:to-pink-500/10" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full -translate-y-16 translate-x-16" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-green-400/10 to-blue-400/10 rounded-full translate-y-12 -translate-x-12" />
+            
+            <div className="relative p-8">
+              {/* 标题区域 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.1 }}
+                className="text-center mb-8"
+              >
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent mb-2">
+                  {paper.name}
+                </h1>
+                <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto" />
+              </motion.div>
 
-            {/* 标签 */}
-            {paper.tags && paper.tags.length > 0 && (
-              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center">
-                  <Tag className="w-4 h-4 mr-1" />
-                  标签
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {paper.tags.map((tag, idx) => (
-                    <span
-                      key={idx}
-                      className="px-3 py-1 text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+              {/* 统计信息网格 */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                  className="group"
+                >
+                  <div className="relative p-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="relative text-center">
+                      <motion.div 
+                        className="inline-flex p-3 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl mb-3 shadow-lg"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                      >
+                        <FileText className="w-6 h-6 text-white" />
+                      </motion.div>
+                      <motion.div 
+                        className="text-3xl font-bold text-gray-900 dark:text-white mb-1"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.3, delay: 0.4, type: "spring", stiffness: 300 }}
+                      >
+                        {sectionCount}
+                      </motion.div>
+                      <div className="text-sm font-medium text-gray-600 dark:text-gray-400">部分数</div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="group"
+                >
+                  <div className="relative p-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="relative text-center">
+                      <motion.div 
+                        className="inline-flex p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl mb-3 shadow-lg"
+                        whileHover={{ scale: 1.1, rotate: -5 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                      >
+                        <BookOpen className="w-6 h-6 text-white" />
+                      </motion.div>
+                      <motion.div 
+                        className="text-3xl font-bold text-gray-900 dark:text-white mb-1"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.3, delay: 0.5, type: "spring", stiffness: 300 }}
+                      >
+                        {totalQuestions}
+                      </motion.div>
+                      <div className="text-sm font-medium text-gray-600 dark:text-gray-400">总题数</div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className="group"
+                >
+                  <div className="relative p-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="relative text-center">
+                      <motion.div 
+                        className="inline-flex p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl mb-3 shadow-lg"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                      >
+                        <Clock className="w-6 h-6 text-white" />
+                      </motion.div>
+                      <motion.div 
+                        className="text-3xl font-bold text-gray-900 dark:text-white mb-1"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.3, delay: 0.6, type: "spring", stiffness: 300 }}
+                      >
+                        {new Date(paper.createdAt).toLocaleDateString()}
+                      </motion.div>
+                      <div className="text-sm font-medium text-gray-600 dark:text-gray-400">创建时间</div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 0.5 }}
+                  className="group"
+                >
+                  <div className="relative p-6 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="relative text-center">
+                      <motion.div 
+                        className="inline-flex p-3 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl mb-3 shadow-lg"
+                        whileHover={{ scale: 1.1, rotate: -5 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                      >
+                        <Users className="w-6 h-6 text-white" />
+                      </motion.div>
+                      <motion.div 
+                        className="text-3xl font-bold text-gray-900 dark:text-white mb-1 truncate"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.3, delay: 0.7, type: "spring", stiffness: 300 }}
+                      >
+                        {paper.owner.name}
+                      </motion.div>
+                      <div className="text-sm font-medium text-gray-600 dark:text-gray-400">创建者</div>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
-            )}
-          </div>
+
+              {/* 标签区域 */}
+              {paper.tags && paper.tags.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.6 }}
+                  className="relative"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-gray-100/50 to-gray-200/50 dark:from-gray-700/50 dark:to-gray-800/50 rounded-2xl" />
+                  <div className="relative p-6">
+                    <motion.div 
+                      className="flex items-center justify-center mb-4"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.7 }}
+                    >
+                      <Tag className="w-5 h-5 text-gray-600 dark:text-gray-400 mr-2" />
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">标签</h3>
+                    </motion.div>
+                    <div className="flex flex-wrap justify-center gap-3">
+                      {paper.tags.map((tag, idx) => (
+                        <motion.span
+                          key={idx}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.4, delay: 0.8 + idx * 0.1 }}
+                          whileHover={{ scale: 1.05, y: -2 }}
+                          className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full shadow-md hover:shadow-lg transition-all duration-300 cursor-default"
+                        >
+                          {tag}
+                        </motion.span>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
 
           {/* 题目列表 */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-              题目列表
-            </h2>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+            className="relative overflow-hidden bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm"
+          >
+            {/* 背景装饰 */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/3 via-purple-500/3 to-pink-500/3 dark:from-blue-500/8 dark:via-purple-500/8 dark:to-pink-500/8" />
+            <div className="absolute top-0 left-0 w-24 h-24 bg-gradient-to-br from-green-400/8 to-blue-400/8 rounded-full -translate-y-12 -translate-x-12" />
+            <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-purple-400/8 to-pink-400/8 rounded-full translate-y-16 translate-x-16" />
             
-            <div className="space-y-8">
+            <div className="relative p-8">
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.3 }}
+                className="text-center mb-8"
+              >
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent mb-2">
+                  题目列表
+                </h2>
+                <div className="w-12 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto" />
+              </motion.div>
+            
+            <div className="space-y-6">
               {paper.sections.map((section, sectionIndex) => (
-                <div 
+                <motion.div 
                   key={sectionIndex} 
                   id={`section-${sectionIndex}`}
                   ref={(el) => { sectionRefs.current[`section-${sectionIndex}`] = el; }}
-                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.4 + sectionIndex * 0.05 }}
+                  className="relative overflow-hidden bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
                 >
-                  <div className="flex items-center space-x-3 mb-6">
-                    <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                      <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">
-                      {section.title}
-                    </h3>
-                    <span className="px-2 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full">
-                      {section.items.length} 道题
-                    </span>
-                  </div>
+                  {/* 悬停背景效果 */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 dark:from-green-500/10 dark:to-emerald-500/10 rounded-2xl opacity-0 hover:opacity-100 transition-opacity duration-300" />
+                  
+                  <div className="relative p-6">
+                    <motion.div 
+                      className="flex items-center space-x-4 mb-6"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: 0.5 + sectionIndex * 0.05 }}
+                    >
+                      <motion.div 
+                        className="p-3 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl shadow-lg"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                      >
+                        <CheckCircle className="w-5 h-5 text-white" />
+                      </motion.div>
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex-1">
+                        {section.title}
+                      </h3>
+                      <motion.span 
+                        className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full shadow-md"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.3, delay: 0.6 + sectionIndex * 0.05, type: "spring", stiffness: 300 }}
+                      >
+                        {section.items.length} 道题
+                      </motion.span>
+                    </motion.div>
                   
                   <div className="space-y-6">
                     {section.items.map((item, questionIndex) => {
@@ -452,17 +836,50 @@ const PracticePaperViewPage: React.FC = () => {
                       const tags = item.question.tags || [];
                       const allTags = [...categories, ...tags];
 
+                      const questionId = item.question._id;
+                      const isSelected = selectedQuestions.includes(questionId);
+                      
                       return (
                         <motion.div 
                           key={questionIndex} 
                           id={`question-${sectionIndex}-${questionIndex}`}
                           ref={(el) => { questionRefs.current[`question-${sectionIndex}-${questionIndex}`] = el; }}
-                          className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 question-card-enhanced"
-                          initial={{ opacity: 0, y: 10 }}
+                          className={`relative overflow-hidden rounded-2xl p-6 question-card-enhanced transition-all duration-300 ${
+                            isSelectMode
+                              ? `cursor-pointer border-2 ${
+                                  isSelected
+                                    ? 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 border-blue-500 dark:border-blue-400 shadow-lg'
+                                    : 'bg-white/40 dark:bg-gray-800/40 border-gray-200/50 dark:border-gray-600/50 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-md hover:-translate-y-1'
+                                }`
+                              : 'bg-white/40 dark:bg-gray-800/40 border border-gray-200/50 dark:border-gray-600/50 hover:shadow-md hover:-translate-y-1'
+                          }`}
+                          onClick={isSelectMode ? () => toggleQuestionSelection(questionId) : undefined}
+                          initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: questionIndex * 0.1 }}
+                          transition={{ duration: 0.2, delay: 0.6 + questionIndex * 0.02 }}
+                          whileHover={{ scale: 1.02 }}
                         >
-                          <div className="flex items-start space-x-4">
+                          {/* 背景装饰 */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-gray-50/50 to-gray-100/50 dark:from-gray-700/30 dark:to-gray-800/30 rounded-2xl opacity-0 hover:opacity-100 transition-opacity duration-300" />
+                          
+                          <div className="relative flex items-start space-x-4">
+                            {/* 选择模式下的选择框 */}
+                            {isSelectMode && (
+                              <div className="flex-shrink-0 mt-1">
+                                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                                  isSelected
+                                    ? 'bg-blue-500 border-blue-500 text-white'
+                                    : 'border-gray-300 dark:border-gray-600'
+                                }`}>
+                                  {isSelected && (
+                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            
                             <span className="flex-shrink-0 w-8 h-8 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full flex items-center justify-center text-sm font-medium">
                               {questionIndex + 1}
                             </span>
@@ -608,10 +1025,12 @@ const PracticePaperViewPage: React.FC = () => {
                       );
                     })}
                   </div>
-                </div>
+                  </div>
+                </motion.div>
               ))}
             </div>
-          </div>
+            </div>
+          </motion.div>
             </motion.div>
           </div>
         </div>

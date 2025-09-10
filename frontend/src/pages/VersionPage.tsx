@@ -38,6 +38,38 @@ interface VersionUpdate {
 
 const versionUpdates: VersionUpdate[] = [
   {
+    version: 'v0.81',
+    date: '2025-09-02',
+    title: '练习卷系统完善 & 试卷集显示修复',
+    description: '完善练习卷编辑功能，修复试卷集显示异常问题，优化用户体验和系统稳定性。',
+    features: [
+      '练习卷编辑器优化：保存后直接返回，无需确认弹窗',
+      '试卷集动态试卷数量：实时计算并显示正确的试卷数量',
+      '快速预览功能：试卷集详情页集成练习卷快速预览',
+      '试卷集API优化：动态计算试卷数量，修复显示为0的问题',
+      '练习卷预览优化：移除状态标签，修复创建者显示问题',
+      '题目显示优化：支持图片和TikZ代码的完整显示',
+      '用户体验提升：简化操作流程，减少不必要的确认步骤'
+    ],
+    improvements: [
+      '试卷集列表页面：修复封面显示试卷数量为0的问题',
+      '练习卷预览：统一题目显示样式，与详细预览保持一致',
+      '数据一致性：确保前后端数据同步，避免显示异常',
+      '界面简化：移除不必要的状态标签和按钮',
+      '加载性能：优化数据获取逻辑，提升页面响应速度'
+    ],
+    fixes: [
+      '修复试卷集封面显示试卷数量为0的严重问题',
+      '解决练习卷预览中创建者显示为"未知用户"的问题',
+      '修复快速预览中题目不显示的问题',
+      '解决试卷集详情页试卷数量计算错误的问题',
+      '修复练习卷卡片中状态标签显示问题',
+      '优化练习卷编辑器的保存和返回逻辑'
+    ],
+    icon: FileText,
+    color: 'from-green-500 to-emerald-600'
+  },
+  {
     version: 'v0.80',
     date: '2025-09-06',
     title: '试卷集系统 & 试卷系统',
@@ -1089,10 +1121,10 @@ const VersionPage: React.FC = () => {
               <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Star className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">当前版本 v0.80</h2>
-              <p className="text-pink-100 text-lg mb-4">试卷集系统 & 试卷系统</p>
+              <h2 className="text-2xl font-bold mb-2">当前版本 v0.81</h2>
+              <p className="text-pink-100 text-lg mb-4">练习卷系统完善 & 试卷集显示修复</p>
               <p className="text-pink-200">
-                新增试卷集管理系统和试卷系统，支持试卷的创建、编辑、管理和发布功能。试卷集管理、试卷编辑、权限控制、状态管理、筛选搜索、成员管理、统计信息等完整功能！
+                完善练习卷编辑功能，修复试卷集显示异常问题，优化用户体验和系统稳定性。动态试卷数量计算、快速预览功能、数据一致性修复等多项改进！
               </p>
             </div>
           </Card>

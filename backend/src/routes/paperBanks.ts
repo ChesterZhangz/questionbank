@@ -74,10 +74,14 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       PaperBank.countDocuments(query)
     ]);
 
-    // 为每个试卷集添加用户角色信息
-    const paperBanksWithRoles = paperBanks.map(paperBank => ({
-      ...paperBank,
-      userRole: 'owner' // 当前查询只返回用户拥有的试卷集
+    // 为每个试卷集添加用户角色信息和动态计算的试卷数量
+    const paperBanksWithRoles = await Promise.all(paperBanks.map(async (paperBank) => {
+      const paperCount = await Paper.countDocuments({ bank: paperBank._id });
+      return {
+        ...paperBank,
+        userRole: 'owner', // 当前查询只返回用户拥有的试卷集
+        paperCount: paperCount // 动态计算的试卷数量
+      };
     }));
 
     return res.json({
@@ -220,16 +224,18 @@ router.get('/my-papers', authMiddleware, async (req: AuthRequest, res: Response)
     // 获取总数
     const total = await PaperBank.countDocuments(query);
 
-    // 为每个试卷添加用户角色信息
-    const papersWithRoles = papers.map(paper => {
+    // 为每个试卷集添加用户角色信息和动态计算的试卷数量
+    const papersWithRoles = await Promise.all(papers.map(async (paper) => {
       const membership = userMemberships.find(member => 
         member.paperBankId.toString() === (paper._id as any).toString()
       );
+      const paperCount = await Paper.countDocuments({ bank: paper._id });
       return {
         ...paper.toObject(),
-        userRole: membership?.role || 'viewer'
+        userRole: membership?.role || 'viewer',
+        paperCount: paperCount // 动态计算的试卷数量
       };
-    });
+    }));
 
     res.json({
       success: true,
@@ -285,10 +291,14 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
       userRole = membership.role;
     }
 
+    // 动态计算试卷数量
+    const paperCount = await Paper.countDocuments({ bank: id });
+    
     // 添加用户角色信息到返回数据中
     const paperBankWithRole = {
       ...paperBank.toObject(),
-      userRole: userRole
+      userRole: userRole,
+      paperCount: paperCount // 使用动态计算的试卷数量
     };
 
     return res.json({
@@ -918,6 +928,7 @@ router.get('/:id/papers', authMiddleware, async (req: AuthRequest, res: Response
     // 获取试卷列表
     const papers = await Paper.find(query)
       .populate('bank', 'name')
+      .populate('owner', 'name username')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limitNum)

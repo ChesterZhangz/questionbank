@@ -58,12 +58,22 @@ export interface Paper {
   bank: {
     _id: string;
     name: string;
+    ownerId?: string;
   };
   createdAt: string;
   updatedAt: string;
   owner: {
-    username: string;
+    _id: string;
+    name: string;
   };
+  overleafEditLink?: string; // Overleaf编辑链接
+  overleafLinkAddedBy?: {
+    _id: string;
+    name: string;
+    email: string;
+    username: string;
+  }; // 添加链接的用户
+  overleafLinkAddedAt?: string; // 添加链接的时间
 }
 
 // 复制配置
@@ -78,6 +88,13 @@ export interface CopyConfig {
   };
   // 复制方式选择
   copyMethod: 'clipboard' | 'overleaf';
+  // 选择性复制配置
+  selectiveCopy?: {
+    enabled: boolean;
+    selectedQuestions: string[]; // 选中的题目ID列表
+    showDifficulty: boolean; // 是否显示难度标签
+    showSource: boolean; // 是否显示出处
+  };
   // 常规模式特有配置
   normalConfig?: {
     addDocumentEnvironment: boolean;

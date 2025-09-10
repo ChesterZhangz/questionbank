@@ -12,7 +12,9 @@ import {
   // Plus, // 暂时禁用讲义功能
   Star,
   TrendingUp,
-  DollarSign
+  DollarSign,
+  Eye,
+  Trash2
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 
@@ -20,7 +22,8 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
-import { paperBankAPI, vcountAPI, paperBankReviewAPI } from '../../services/api';
+import PracticePaperPreviewModal from '../../components/paper/preview/PracticePaperPreviewModal';
+import { paperBankAPI, vcountAPI, paperBankReviewAPI, paperAPI } from '../../services/api';
 import { paperBankCategories } from '../../config/paperBankCategories';
 import { useModal } from '../../hooks/useModal';
 
@@ -95,6 +98,8 @@ const PaperBankDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'practices' | 'members'>('overview');
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [previewPaper, setPreviewPaper] = useState<any>(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [reviewForm, setReviewForm] = useState({
     rating: 5,
     comment: '',
@@ -176,6 +181,39 @@ const PaperBankDetailPage: React.FC = () => {
   const handleManageMembers = () => {
     navigate(`/paper-banks/${id}/members`);
   };
+
+  const handleDeletePractice = (practice: any) => {
+    showConfirm(
+      '删除练习卷', 
+      `确定要删除练习卷"${practice.name}"吗？此操作不可撤销。`, 
+      async () => {
+        try {
+          const response = await paperAPI.deletePaper(practice._id);
+          if (response.data.success) {
+            // 从本地状态中移除已删除的练习卷
+            setPractices(prev => prev.filter(p => p._id !== practice._id));
+            showSuccessRightSlide('删除成功', `练习卷"${practice.name}"已删除`);
+          } else {
+            showErrorRightSlide('删除失败', '删除练习卷失败');
+          }
+        } catch (error: any) {
+          console.error('删除练习卷失败:', error);
+          showErrorRightSlide('删除失败', error.response?.data?.message || '删除练习卷时发生错误');
+        }
+      }
+    );
+  };
+
+  const handleQuickPreview = (practice: any) => {
+    setPreviewPaper(practice);
+    setShowPreviewModal(true);
+  };
+
+  const handleClosePreview = () => {
+    setShowPreviewModal(false);
+    setPreviewPaper(null);
+  };
+
 
   // 暂时禁用讲义功能
   // const handleCreateLecture = () => {
@@ -972,14 +1010,18 @@ const PaperBankDetailPage: React.FC = () => {
                     {practices.map((practice) => (
                       <div
                         key={practice._id}
-                        className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-                        onClick={() => navigate(`/paper-banks/${id}/practices/${practice._id}/edit`)}
+                        className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
-                            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                              {practice.name}
-                            </h4>
+                            <div className="flex items-center space-x-3 mb-2">
+                              <h4 className="text-lg font-medium text-gray-900 dark:text-white">
+                                {practice.name}
+                              </h4>
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                练习卷
+                              </span>
+                            </div>
                             <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                               <span className="flex items-center">
                                 <FileText className="w-4 h-4 mr-1" />
@@ -989,15 +1031,9 @@ const PaperBankDetailPage: React.FC = () => {
                                 <Calendar className="w-4 h-4 mr-1" />
                                 {new Date(practice.createdAt).toLocaleDateString()}
                               </span>
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                practice.status === 'draft' 
-                                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                                  : practice.status === 'published'
-                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                              }`}>
-                                {practice.status === 'draft' ? '草稿' : 
-                                 practice.status === 'published' ? '已发布' : '已修改'}
+                              <span className="flex items-center">
+                                <User className="w-4 h-4 mr-1" />
+                                {practice.owner?.name || '未知用户'}
                               </span>
                             </div>
                             {practice.tags && practice.tags.length > 0 && (
@@ -1021,13 +1057,51 @@ const PaperBankDetailPage: React.FC = () => {
                           <div className="flex items-center space-x-2">
                             <Button
                               size="sm"
-                              variant="ghost"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuickPreview(practice);
+                              }}
+                              className="flex items-center space-x-1 text-green-600 hover:text-green-700 border-green-200 hover:border-green-300"
+                            >
+                              <Eye className="w-4 h-4" />
+                              <span>快速预览</span>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/papers/${practice._id}/view`);
+                              }}
+                              className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300"
+                            >
+                              <Eye className="w-4 h-4" />
+                              <span>详细预览</span>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate(`/paper-banks/${id}/practices/${practice._id}/edit`);
                               }}
+                              className="flex items-center space-x-1"
                             >
                               <Edit className="w-4 h-4" />
+                              <span>编辑</span>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeletePractice(practice);
+                              }}
+                              className="flex items-center space-x-1 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              <span>删除</span>
                             </Button>
                           </div>
                         </div>
@@ -1086,6 +1160,13 @@ const PaperBankDetailPage: React.FC = () => {
       {/* 弹窗组件 */}
       <ConfirmModal {...confirmModal} onCancel={closeConfirm} />
       <RightSlideModal {...rightSlideModal} onClose={closeRightSlide} />
+      
+      {/* 练习卷快速预览模态框 */}
+                <PracticePaperPreviewModal
+                  paper={previewPaper}
+                  isOpen={showPreviewModal}
+                  onClose={handleClosePreview}
+                />
     </div>
   );
 };

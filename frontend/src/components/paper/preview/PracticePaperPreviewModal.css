@@ -1,0 +1,96 @@
+/* 题目卡片增强样式 */
+.question-card-enhanced {
+  position: relative;
+  overflow: hidden;
+}
+
+.question-card-enhanced::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #10b981, #059669, #047857);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.question-card-enhanced:hover::before {
+  opacity: 1;
+}
+
+/* 难度星级样式 */
+.difficulty-stars-enhanced {
+  color: #fbbf24;
+  text-shadow: 0 0 2px rgba(251, 191, 36, 0.3);
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+/* 题目标签样式 */
+.category-tag {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.knowledge-tag {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+}
+
+/* LaTeX内容样式 */
+.question-view-latex-content {
+  line-height: 1.6;
+}
+
+.question-view-latex-content .katex {
+  font-size: 1rem;
+}
+
+.question-view-latex-content .katex-display {
+  margin: 1rem 0;
+}
+
+/* 图片和TikZ容器样式 */
+.question-view-latex-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 选择题选项样式 */
+.question-view-latex-content .option {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: 0.375rem;
+  border-left: 3px solid #3b82f6;
+}
+
+/* 深色模式适配 */
+.dark .question-card-enhanced::before {
+  background: linear-gradient(90deg, #10b981, #059669, #047857);
+}
+
+.dark .category-tag {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.dark .knowledge-tag {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+}
+
+.dark .question-view-latex-content img {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark .question-view-latex-content .option {
+  background: rgba(59, 130, 246, 0.1);
+  border-left-color: #60a5fa;
+}

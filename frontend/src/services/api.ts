@@ -710,6 +710,10 @@ export const paperAPI = {
   // 删除试卷
   deletePaper: (id: string) =>
     api.delete<{ success: boolean }>(`/papers/${id}`),
+  
+  // 更新Overleaf编辑链接
+  updateOverleafLink: (id: string, overleafEditLink: string) =>
+    api.patch<{ success: boolean; data: any; message: string }>(`/papers/${id}/overleaf-link`, { overleafEditLink }),
 };
 
 // 试卷集评价API

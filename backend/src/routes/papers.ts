@@ -13,6 +13,36 @@ import PaperBank from '../models/PaperBank';
 import { Paper } from '../models/Paper';
 import { createDraft, updateDraft, getPaper, listPapers, publishPaper, deletePaper } from '../services/paper/paperService';
 
+// 检查用户是否为试卷集所有者
+async function checkPaperBankOwner(bankId: any, userId: any): Promise<boolean> {
+  try {
+    const bank = await PaperBank.findById(bankId);
+    return !!(bank && bank.ownerId.toString() === userId.toString());
+  } catch (err) {
+    console.error('check paper bank owner failed:', err);
+    return false;
+  }
+}
+
+// 检查用户是否有试卷集管理权限（编辑者/管理者/所有者）
+async function checkPaperBankManagementPermission(bankId: any, userId: any): Promise<boolean> {
+  try {
+    const PaperBankMember = require('../models/PaperBankMember').default;
+    const membership = await PaperBankMember.findOne({
+      paperBankId: bankId,
+      userId: userId
+    });
+    
+    const hasManagementRole = membership && ['owner', 'manager', 'collaborator'].includes(membership.role);
+    
+    
+    return hasManagementRole;
+  } catch (err) {
+    console.error('check paper bank management permission failed:', err);
+    return false;
+  }
+}
+
 const router = express.Router();
 
 // 创建草稿
@@ -122,14 +152,29 @@ router.get('/my-papers', authMiddleware, async (req: Request, res: Response) => 
     const { search, category, type, status, sortBy, sortOrder, page, limit, bank } = req.query;
     const userId = (req as any).user._id;
 
+    // 获取用户有权限访问的试卷集ID
+    const PaperBankMember = require('../models/PaperBankMember').default;
+    const userMemberships = await PaperBankMember.find({ userId });
+    const accessiblePaperBankIds = userMemberships.map((member: any) => member.paperBankId);
+    
     // 构建查询条件
-    const query: any = {};
+    const query: any = {
+      $or: [
+        { owner: userId }, // 用户创建的试卷
+        { bank: { $in: accessiblePaperBankIds } } // 用户有权限访问的试卷集中的试卷
+      ]
+    };
 
     // 搜索条件
     if (search && typeof search === 'string') {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { subject: { $regex: search, $options: 'i' } }
+      query.$and = [
+        query,
+        {
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+            { subject: { $regex: search, $options: 'i' } }
+          ]
+        }
       ];
     }
 
@@ -164,10 +209,30 @@ router.get('/my-papers', authMiddleware, async (req: Request, res: Response) => 
     // 获取总数
     const total = await Paper.countDocuments(query);
 
-    // 为每个试卷添加用户角色信息（这里简化处理，实际应该根据权限系统确定）
-    const papersWithRoles = papers.map(paper => ({
-      ...paper.toObject(),
-      userRole: paper.owner._id.toString() === userId.toString() ? 'creator' : 'viewer'
+    // 为每个试卷添加用户角色信息
+    const papersWithRoles = await Promise.all(papers.map(async (paper) => {
+      let userRole = 'viewer'; // 默认为查看者
+      
+      // 检查是否是试卷创建者
+      if (paper.owner._id.toString() === userId.toString()) {
+        userRole = 'creator';
+      } else if (paper.bank) {
+        // 检查用户在试卷集中的角色
+        const PaperBankMember = require('../models/PaperBankMember').default;
+        const membership = await PaperBankMember.findOne({
+          paperBankId: paper.bank._id,
+          userId: userId
+        });
+        
+        if (membership) {
+          userRole = membership.role;
+        }
+      }
+      
+      return {
+        ...paper.toObject(),
+        userRole
+      };
     }));
 
     res.json({
@@ -274,6 +339,74 @@ router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
   } catch (err) {
     console.error('delete paper failed:', err);
     return res.status(500).json({ success: false, error: '删除试卷失败' });
+  }
+});
+
+// 更新Overleaf编辑链接
+router.patch('/:id/overleaf-link', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const paper = await Paper.findById(req.params.id);
+    if (!paper) {
+      return res.status(404).json({ success: false, error: '试卷不存在' });
+    }
+
+    const userId = (req as any).user._id;
+    const { overleafEditLink } = req.body;
+
+
+    // 检查权限：
+    // 1. 试卷创建者可以添加/编辑/删除链接
+    // 2. 试卷集管理权限者（编辑者/管理者/所有者）可以添加链接
+    // 3. 只有添加链接的人和试卷集所有者可以编辑/删除链接
+    const isPaperOwner = paper.owner.toString() === userId.toString();
+    const hasBankManagementPermission = paper.bank ? await checkPaperBankManagementPermission(paper.bank, userId) : false;
+    const isBankOwner = paper.bank ? await checkPaperBankOwner(paper.bank, userId) : false;
+    const isLinkAddedBy = paper.overleafLinkAddedBy && paper.overleafLinkAddedBy.toString() === userId.toString();
+    
+    // 可以添加链接的条件
+    const canAddLink = isPaperOwner || hasBankManagementPermission;
+    // 可以编辑/删除链接的条件
+    const canEditLink = isPaperOwner || isBankOwner || isLinkAddedBy;
+    
+    // 如果是要添加链接，检查canAddLink；如果是要编辑/删除，检查canEditLink
+    const canEdit = overleafEditLink ? canAddLink : canEditLink;
+
+
+    if (!canEdit) {
+      return res.status(403).json({ success: false, error: '无权限更新Overleaf链接' });
+    }
+
+    // 更新Overleaf链接信息
+    const updateData: any = {
+      overleafEditLink: overleafEditLink || null,
+      updatedAt: new Date()
+    };
+
+    if (overleafEditLink) {
+      updateData.overleafLinkAddedBy = userId;
+      updateData.overleafLinkAddedAt = new Date();
+    } else {
+      // 如果清空链接，也清空添加者信息
+      updateData.overleafLinkAddedBy = null;
+      updateData.overleafLinkAddedAt = null;
+    }
+
+    const updatedPaper = await Paper.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    ).populate('owner', 'name email username')
+     .populate('overleafLinkAddedBy', 'name email username')
+     .populate('bank', 'name owner');
+
+    return res.json({ 
+      success: true, 
+      data: updatedPaper,
+      message: overleafEditLink ? 'Overleaf链接更新成功' : 'Overleaf链接已清除'
+    });
+  } catch (err) {
+    console.error('update overleaf link failed:', err);
+    return res.status(500).json({ success: false, error: '更新Overleaf链接失败' });
   }
 });
 

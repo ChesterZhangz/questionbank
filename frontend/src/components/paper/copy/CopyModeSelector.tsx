@@ -5,13 +5,21 @@ interface CopyModeSelectorProps {
   config: CopyConfig;
   onConfigChange: (config: CopyConfig) => void;
   className?: string;
+  disableOverleafOption?: boolean; // 是否禁用Overleaf选项
 }
 
 const CopyModeSelector: React.FC<CopyModeSelectorProps> = ({
   config,
   onConfigChange,
-  className = ''
+  className = '',
+  disableOverleafOption = false
 }) => {
+  // 如果禁用Overleaf选项且当前选择的是overleaf，自动切换到clipboard
+  React.useEffect(() => {
+    if (disableOverleafOption && config.copyMethod === 'overleaf') {
+      onConfigChange({ ...config, copyMethod: 'clipboard' });
+    }
+  }, [disableOverleafOption, config.copyMethod, config, onConfigChange]);
   const modes: Array<{ value: CopyMode; label: string; description: string }> = [
     {
       value: 'mareate',
@@ -96,24 +104,26 @@ const CopyModeSelector: React.FC<CopyModeSelectorProps> = ({
               </div>
             </div>
           </label>
-          <label className="flex items-start space-x-3 cursor-pointer">
-            <input
-              type="radio"
-              name="copyMethod"
-              value="overleaf"
-              checked={config.copyMethod === 'overleaf'}
-              onChange={() => handleCopyMethodChange('overleaf')}
-              className="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-            />
-            <div>
-              <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                在Overleaf中打开
+          {!disableOverleafOption && (
+            <label className="flex items-start space-x-3 cursor-pointer">
+              <input
+                type="radio"
+                name="copyMethod"
+                value="overleaf"
+                checked={config.copyMethod === 'overleaf'}
+                onChange={() => handleCopyMethodChange('overleaf')}
+                className="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+              />
+              <div>
+                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  在Overleaf中打开
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  直接在新标签页中打开Overleaf项目
+                </div>
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                直接在新标签页中打开Overleaf项目
-              </div>
-            </div>
-          </label>
+            </label>
+          )}
         </div>
       </div>
 

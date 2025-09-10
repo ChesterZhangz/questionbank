@@ -40,7 +40,7 @@ export async function updateDraft(id: string, input: Partial<IPaper>): Promise<I
 export async function getPaper(id: string): Promise<IPaper | null> {
   return Paper.findById(id)
     .populate('owner', 'name email')
-    .populate('bank', 'name')
+    .populate('bank', 'name ownerId')
     .populate({
       path: 'sections.items.question',
       model: 'Question'

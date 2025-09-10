@@ -296,6 +296,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [questionsLoaded, setQuestionsLoaded] = useState(false); // 新增：题目是否已加载完成
+  const [hasBeenSaved, setHasBeenSaved] = useState(false); // 新增：是否已经保存过
   
   // 试卷集和题目数据
   const [availableQuestions, setAvailableQuestions] = useState<Question[]>([]);
@@ -797,6 +798,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
             : section
         )
       );
+      setHasBeenSaved(false); // 重置保存状态
     }
   };
 
@@ -1340,6 +1342,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
           : section
       )
     );
+    setHasBeenSaved(false); // 重置保存状态
     
     // 从筛选结果中移除已添加的题目
     const newFiltered = filteredQuestions.filter(q => q._id !== question._id);
@@ -1377,6 +1380,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
           : section
       )
     );
+    setHasBeenSaved(false); // 重置保存状态
     
     // 将题目重新添加到筛选结果中
     if (questionToRemove) {
@@ -1447,6 +1451,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
           : section
       )
     );
+    setHasBeenSaved(false); // 重置保存状态
   };
 
   // 处理标题编辑
@@ -1473,6 +1478,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
   const handlePracticeTitleSave = (newTitle: string) => {
     if (newTitle.trim()) {
       setTitle(newTitle.trim());
+      setHasBeenSaved(false); // 重置保存状态
     }
     setEditingPracticeTitle(false);
   };
@@ -1491,6 +1497,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
     const newSections = [...sections];
     [newSections[fromIndex], newSections[toIndex]] = [newSections[toIndex], newSections[fromIndex]];
     setSections(newSections);
+    setHasBeenSaved(false); // 重置保存状态
   };
 
 
@@ -1541,6 +1548,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
       if (response.data.success) {
         const successMessage = practiceId ? '练习卷已更新' : '练习已保存到试卷集中';
         showSuccessRightSlide('保存成功', successMessage);
+        setHasBeenSaved(true); // 标记为已保存
         return true;
       } else {
         showErrorRightSlide('保存失败', '保存失败');
@@ -1573,6 +1581,12 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
 
   // 处理返回
   const handleBack = () => {
+    // 如果已经保存过，直接返回
+    if (hasBeenSaved) {
+      navigate(-1);
+      return;
+    }
+    
     if (hasActualChanges()) {
       setShowSaveModal(true);
     } else {
@@ -1589,11 +1603,15 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
       return;
     }
     
+    // 设置保存中状态
+    setIsSaving(true);
+    
     const success = await handleSave();
     if (success) {
       setShowSaveModal(false);
       navigate(-1);
     }
+    // 注意：setIsSaving(false) 在 handleSave 的 finally 中已经处理
   };
 
   // 取消保存
@@ -2147,7 +2165,10 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                   {editingPracticeTitle ? (
                     <Input
                       value={title}
-                      onChange={(e) => setTitle(e.target.value)}
+                      onChange={(e) => {
+                        setTitle(e.target.value);
+                        setHasBeenSaved(false); // 重置保存状态
+                      }}
                       placeholder="请输入练习标题"
                       className="text-lg font-medium flex-1"
                       autoFocus
@@ -2335,6 +2356,8 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
         confirmText="保存并退出"
         cancelText="不保存退出"
         type="warning"
+        confirmLoading={isSaving}
+        loadingText="正在保存..."
       />
 
       {/* 错误提示模态框 */}
