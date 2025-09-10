@@ -155,7 +155,6 @@ export const specialSymbols: SymbolDefinition[] = [
   { latex: '\\cdots', name: '居中省略号', category: 'special-symbols' },
   { latex: '\\vdots', name: '垂直省略号', category: 'special-symbols' },
   { latex: '\\ddots', name: '对角省略号', category: 'special-symbols' },
-  { latex: '\\triangle', name: '三角形', category: 'special-symbols' },
   { latex: '\\square', name: '正方形', category: 'special-symbols' },
   { latex: '\\odot', name: '圆形', category: 'special-symbols' },
   { latex: '\\diamond', name: '菱形', category: 'special-symbols' },
@@ -186,6 +185,7 @@ export const fontStyles: SymbolDefinition[] = [
 
 // 数学装饰
 export const mathDecorations: SymbolDefinition[] = [
+  { latex: '\\textcircled{a}', name: '圈字', category: 'math-decorations' },
   { latex: '\\hat{a}', name: '帽子', category: 'math-decorations' },
   { latex: '\\bar{a}', name: '横线', category: 'math-decorations' },
   { latex: '\\vec{a}', name: '向量', category: 'math-decorations' },

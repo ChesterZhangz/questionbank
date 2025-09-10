@@ -10,6 +10,7 @@ import LoadingPage from '../../components/ui/LoadingPage';
 import { useNavigate } from 'react-router-dom';
 import { useModal } from '../../hooks/useModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
+import { PracticePaperCard } from '../../components/paper';
 
 const animationStyles = `
   @keyframes fade-in {
@@ -76,17 +77,21 @@ interface Paper {
   modifiedAt?: string;
   createdAt: string;
   updatedAt: string;
+  bank?: {
+    _id: string;
+    name: string;
+  };
   owner: {
     _id: string;
-    username: string;
-    avatar?: string;
+    name: string;
+    email?: string;
   };
   userRole: 'creator' | 'manager' | 'collaborator' | 'viewer';
 }
 
 const MyPapersPage: React.FC = () => {
   const navigate = useNavigate();
-  const { showErrorRightSlide, rightSlideModal, closeRightSlide } = useModal();
+  const { rightSlideModal, closeRightSlide } = useModal();
   
   // 状态管理
   const [papers, setPapers] = useState<Paper[]>([]);
@@ -107,6 +112,7 @@ const MyPapersPage: React.FC = () => {
   const [totalPapers, setTotalPapers] = useState(0);
   
   // 视图模式
+  
   
   // 防抖搜索
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -137,7 +143,8 @@ const MyPapersPage: React.FC = () => {
   // 加载试卷集数据
   const loadPaperBanks = useCallback(async () => {
     try {
-      const response = await paperBankAPI.getPaperBanks();
+      // 使用getMyPapers API来获取用户有权限访问的所有试卷集（包括被邀请的）
+      const response = await paperBankAPI.getMyPapers();
       if (response.data.success) {
         // 试卷集数据已加载，但不再需要存储
       }
@@ -213,10 +220,27 @@ const MyPapersPage: React.FC = () => {
     setCurrentPage(1);
   };
 
-  // 创建试卷处理函数 - 暂时封禁
+  // 创建试卷处理函数
   const handleCreatePaper = () => {
-    showErrorRightSlide('功能维护中', '该功能正在维护，紧急开发中，新版本上线后可使用');
+    navigate('/papers/create');
   };
+
+  // 预览试卷
+  const handlePreviewPaper = (paper: any) => {
+    navigate(`/papers/${paper._id}/view`);
+  };
+
+
+
+  // 编辑试卷
+  const handleEditPaper = (paper: any) => {
+    if (paper.type === 'practice') {
+      navigate(`/paper-banks/${paper.bank._id}/practices/${paper._id}/edit`);
+    } else {
+      navigate(`/papers/${paper._id}/edit`);
+    }
+  };
+
 
   // 获取角色标签样式
   const getRoleBadgeStyle = (role: string) => {
@@ -258,6 +282,19 @@ const MyPapersPage: React.FC = () => {
 
   // 试卷卡片组件
   const PaperCard: React.FC<{ paper: Paper; index: number }> = ({ paper, index }) => {
+    // 根据试卷类型使用不同的卡片组件
+    if (paper.type === 'practice') {
+      return (
+        <PracticePaperCard
+          paper={paper as any}
+          index={index}
+          onEdit={handleEditPaper}
+          onPreview={handlePreviewPaper}
+        />
+      );
+    }
+
+    // 默认试卷卡片（非练习卷）
     const canEdit = ['creator', 'manager', 'collaborator'].includes(paper.userRole);
 
     return (
@@ -276,6 +313,7 @@ const MyPapersPage: React.FC = () => {
                   {paper.name}
                 </h3>
                 <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                  {paper.bank && <p>试卷集: {paper.bank.name}</p>}
                   {paper.subject && <p>科目: {paper.subject}</p>}
                   {paper.grade && <p>年级: {paper.grade}</p>}
                   <p>总分: {paper.totalScore}分</p>
@@ -294,7 +332,6 @@ const MyPapersPage: React.FC = () => {
                 </span>
               </div>
             </div>
-
 
             {/* 统计信息 */}
             <div className="grid grid-cols-2 gap-4 mb-4 text-sm text-gray-600 dark:text-gray-300">
@@ -315,18 +352,18 @@ const MyPapersPage: React.FC = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => navigate(`/papers/${paper._id}`)}
+                    onClick={() => handlePreviewPaper(paper)}
                     className="flex items-center space-x-1"
                   >
                     <Eye className="w-4 h-4" />
-                    <span>查看</span>
+                    <span>预览</span>
                   </Button>
                   
                   {canEdit && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/papers/${paper._id}/edit`)}
+                      onClick={() => handleEditPaper(paper)}
                       className="flex items-center space-x-1"
                     >
                       <Edit className="w-4 h-4" />
@@ -335,10 +372,19 @@ const MyPapersPage: React.FC = () => {
                   )}
                 </div>
                 
-                <div className="text-right">
+                <div className="flex items-center space-x-3">
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    创建者: {paper.owner.username}
+                    创建者: {paper.owner.name}
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditPaper(paper)}
+                    className="flex items-center space-x-1"
+                  >
+                    <Edit className="w-4 h-4" />
+                    <span>更新</span>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -771,6 +817,7 @@ const MyPapersPage: React.FC = () => {
         autoClose={rightSlideModal.autoClose}
         showProgress={rightSlideModal.showProgress}
       />
+
     </div>
   );
 };

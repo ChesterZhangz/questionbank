@@ -36,6 +36,7 @@ const CreatePaperPage: React.FC = () => {
   const [paperBanks, setPaperBanks] = useState<PaperBank[]>([]);
   const [loading, setLoading] = useState(false);
   const [showPaperBankModal, setShowPaperBankModal] = useState(false);
+  const [selectedPaperType, setSelectedPaperType] = useState<string>('');
 
   // 试卷类型选项
   const paperTypeOptions = [
@@ -43,8 +44,8 @@ const CreatePaperPage: React.FC = () => {
       value: 'lecture', 
       label: '讲义', 
       icon: BookOpen,
-      description: '教学讲义，用于知识传授',
-      enabled: true,
+      description: '教学讲义，用于知识传授（暂时禁用）',
+      enabled: false,
       color: 'blue'
     },
     { 
@@ -52,7 +53,7 @@ const CreatePaperPage: React.FC = () => {
       label: '练习', 
       icon: PenTool,
       description: '练习题，用于巩固知识',
-      enabled: false,
+      enabled: true,
       color: 'orange'
     },
     { 
@@ -73,15 +74,13 @@ const CreatePaperPage: React.FC = () => {
   const loadPaperBanks = async () => {
     try {
       setLoading(true);
-      const response = await paperBankAPI.getPaperBanks();
+      // 使用getMyPapers API来获取用户有权限访问的所有试卷集（包括被邀请的）
+      const response = await paperBankAPI.getMyPapers();
       if (response.data.success) {
-        console.log('获取到的试卷集数据:', response.data.data.paperBanks);
         // 只显示用户有编辑/管理/拥有者权限的试卷集
-        const accessibleBanks = response.data.data.paperBanks.filter((bank: PaperBank) => {
-          console.log(`试卷集 ${bank.name} 的用户角色:`, bank.userRole);
+        const accessibleBanks = response.data.data.papers.filter((bank: PaperBank) => {
           return ['owner', 'manager', 'collaborator'].includes(bank.userRole);
         });
-        console.log('过滤后的可访问试卷集:', accessibleBanks);
         setPaperBanks(accessibleBanks);
       }
     } catch (error) {
@@ -97,6 +96,9 @@ const CreatePaperPage: React.FC = () => {
 
   // 处理试卷类型选择
   const handlePaperTypeSelect = (type: string) => {
+    // 记录选择的试卷类型
+    setSelectedPaperType(type);
+    
     if (type === 'lecture') {
       // 如果URL中有paperBankId参数，直接跳转到讲义编辑页面
       const urlPaperBankId = searchParams.get('paperBankId');
@@ -105,6 +107,15 @@ const CreatePaperPage: React.FC = () => {
       } else {
         // 显示试卷集选择模态框
         showPaperBankSelection();
+      }
+    } else if (type === 'practice') {
+      // 练习模式：如果URL中有paperBankId参数，直接跳转到练习编辑页面
+      const urlPaperBankId = searchParams.get('paperBankId');
+      if (urlPaperBankId && paperBanks.find(bank => bank._id === urlPaperBankId)) {
+        navigate(`/paper-banks/${urlPaperBankId}/practices/create`);
+      } else {
+        // 显示试卷集选择模态框
+        showPracticeBankSelection();
       }
     } else {
       showErrorRightSlide('功能暂未开放', '该功能正在开发中，敬请期待！');
@@ -127,10 +138,37 @@ const CreatePaperPage: React.FC = () => {
     }
   };
 
+  // 显示练习模式试卷集选择
+  const showPracticeBankSelection = () => {
+    if (paperBanks.length === 0) {
+      showErrorRightSlide('无法创建练习', '您需要先创建试卷集或有编辑权限的试卷集才能创建练习');
+      return;
+    }
+    
+    if (paperBanks.length === 1) {
+      // 只有一个试卷集，直接跳转
+      navigate(`/paper-banks/${paperBanks[0]._id}/practices/create`);
+    } else {
+      // 多个试卷集，显示选择界面
+      setShowPaperBankModal(true);
+    }
+  };
+
   // 处理试卷集选择
   const handlePaperBankSelect = (paperBankId: string) => {
     setShowPaperBankModal(false);
-    navigate(`/paper-banks/${paperBankId}/lectures/create`);
+    // 根据用户选择的试卷类型跳转到对应页面
+    if (selectedPaperType === 'practice') {
+      navigate(`/paper-banks/${paperBankId}/practices/create`);
+    } else if (selectedPaperType === 'lecture') {
+      navigate(`/paper-banks/${paperBankId}/lectures/create`);
+    } else if (selectedPaperType === 'test') {
+      // 试卷类型暂时未实现，显示错误信息
+      showErrorRightSlide('功能暂未开放', '该功能正在开发中，敬请期待！');
+    } else {
+      // 默认跳转到练习页面
+      navigate(`/paper-banks/${paperBankId}/practices/create`);
+    }
   };
 
   // 如果没有权限，显示提示页面
@@ -319,16 +357,12 @@ const CreatePaperPage: React.FC = () => {
                 选择试卷集
               </h3>
               <p className="text-gray-600 dark:text-gray-300 mb-6">
-                请选择要在其中创建讲义的试卷集
+                请选择要在其中创建内容的试卷集
               </p>
               
               <div className="space-y-3 max-h-60 overflow-y-auto">
                 {paperBanks.map((bank) => (
-                  <motion.div
-                    key={bank._id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
+                  <div key={bank._id}>
                     <Card 
                       className="p-4 cursor-pointer hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600"
                       onClick={() => handlePaperBankSelect(bank._id)}
@@ -353,7 +387,7 @@ const CreatePaperPage: React.FC = () => {
                         </div>
                       </div>
                     </Card>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
               

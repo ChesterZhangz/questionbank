@@ -43,8 +43,12 @@ const EditPaperBankPage = lazy(() => import('./pages/paper-banks/EditPaperBankPa
 const PaperBankMembersPage = lazy(() => import('./pages/paper-banks/PaperBankMembersPage'));
 const MyPapersPage = lazy(() => import('./pages/paper-banks/MyPapersPage'));
 const CreatePaperPage = lazy(() => import('./pages/papers/CreatePaperPage'));
-const LectureEditorPage = lazy(() => import('./pages/lecture-editor/LectureEditorPage'));
-const LaTeXTestDemo = lazy(() => import('./pages/LaTeXTestDemo'));
+// 暂时禁用讲义功能
+// const LectureEditorPage = lazy(() => import('./pages/lecture-editor/LectureEditorPage'));
+const PracticePage = lazy(() => import('./pages/practice/PracticePage'));
+const PracticeEditorPage = lazy(() => import('./pages/practice-editor/PracticeEditorPage'));
+const PracticePaperViewPage = lazy(() => import('./components/paper/preview/PracticePaperViewPage'));
+// const LaTeXTestDemo = lazy(() => import('./pages/LaTeXTestDemo'));
 
 
 
@@ -344,8 +348,8 @@ const App: React.FC = () => {
                   }
                 />
 
-            {/* 讲义编辑器路由 */}
-            <Route
+            {/* 讲义编辑器路由 - 暂时禁用 */}
+            {/* <Route
               path="/paper-banks/:paperBankId/lectures/create"
               element={
                 <ProtectedRoute>
@@ -364,13 +368,60 @@ const App: React.FC = () => {
                   </AppLayout>
                 </ProtectedRoute>
               }
+            /> */}
+
+            {/* 练习模式路由 */}
+            <Route
+              path="/practice"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <PracticePage />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/paper-banks/:paperBankId/practices/create"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <PracticeEditorPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/paper-banks/:paperBankId/practices/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <PracticeEditorPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/papers/:id/view"
+              element={
+                <ProtectedRoute>
+                  <PracticePaperViewPage />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="/latex-test-demo"
               element={
                 <ProtectedRoute>
                   <AppLayout>
-                    <LaTeXTestDemo />
+                    <div className="p-8 text-center">
+                      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                        LaTeX 测试演示
+                      </h1>
+                      <p className="text-gray-600 dark:text-gray-300">
+                        此功能暂时不可用
+                      </p>
+                    </div>
                   </AppLayout>
                 </ProtectedRoute>
               }

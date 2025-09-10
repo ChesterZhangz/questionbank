@@ -242,7 +242,6 @@ const EditQuestionBankPage: React.FC = () => {
                 variant="outline"
                 size="md"
                 showIcon={true}
-                clearable={true}
               />
               </motion.div>
 

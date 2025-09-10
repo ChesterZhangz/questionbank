@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Bold, 
   Italic, 
@@ -32,6 +32,65 @@ interface ToolbarButton {
   shortcut: string;
   description: string;
 }
+
+// 智能悬浮提示组件
+const SmartTooltip: React.FC<{
+  description: string;
+  shortcut: string;
+}> = ({ description, shortcut }) => {
+  const [tooltipPosition, setTooltipPosition] = useState<'top' | 'bottom'>('top');
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const checkPosition = () => {
+      if (tooltipRef.current) {
+        const tooltip = tooltipRef.current;
+        const button = tooltip.parentElement?.querySelector('button');
+        
+        if (button) {
+          const rect = button.getBoundingClientRect();
+          const tooltipHeight = tooltip.offsetHeight;
+          const viewportHeight = window.innerHeight;
+          
+          // 检查上方空间是否足够
+          const spaceAbove = rect.top;
+          const spaceBelow = viewportHeight - rect.bottom;
+          
+          // 如果上方空间不足且下方空间足够，则显示在下方
+          if (spaceAbove < tooltipHeight + 10 && spaceBelow > tooltipHeight + 10) {
+            setTooltipPosition('bottom');
+          } else {
+            setTooltipPosition('top');
+          }
+        }
+      }
+    };
+
+    // 延迟检查，确保tooltip已经渲染
+    const timer = setTimeout(checkPosition, 10);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div 
+      ref={tooltipRef}
+      className={`absolute left-1/2 transform -translate-x-1/2 px-3 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[99999] ${
+        tooltipPosition === 'top' 
+          ? 'bottom-full mb-2' 
+          : 'top-full mt-2'
+      }`}
+    >
+      <div className="font-medium">{description}</div>
+      <div className="text-xs text-gray-300 dark:text-gray-600 mt-1">{shortcut}</div>
+      {/* 小箭头 */}
+      <div className={`absolute left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-transparent ${
+        tooltipPosition === 'top'
+          ? 'top-full border-t-4 border-t-gray-900 dark:border-t-gray-100'
+          : 'bottom-full border-b-4 border-b-gray-900 dark:border-b-gray-100'
+      }`}></div>
+    </div>
+  );
+};
 
 const WYSIWYGToolbar: React.FC<WYSIWYGToolbarProps> = ({ onFormat, disabled = false, vertical = false }) => {
   // 检测用户的操作系统，确定使用 Command 还是 Ctrl
@@ -210,19 +269,17 @@ const WYSIWYGToolbar: React.FC<WYSIWYGToolbarProps> = ({ onFormat, disabled = fa
           <IconComponent className="w-4 h-4" />
         </button>
         
-        {/* 悬浮提示 */}
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[9999]">
-          <div className="font-medium">{button.description}</div>
-          <div className="text-xs text-gray-300 dark:text-gray-600 mt-1">{button.shortcut}</div>
-          {/* 小箭头 */}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-100"></div>
-        </div>
+        {/* 智能悬浮提示 */}
+        <SmartTooltip 
+          description={button.description}
+          shortcut={button.shortcut}
+        />
       </div>
     );
   };
 
   return (
-    <div className="wysiwyg-toolbar relative z-10">
+    <div className="wysiwyg-toolbar relative z-[9999]">
       <div className={`flex ${vertical ? 'flex-col' : 'flex-row'} items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 rounded-t-lg shadow-sm`}>
         {toolbarButtons.map(renderButton)}
       </div>

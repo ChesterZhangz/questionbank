@@ -816,6 +816,25 @@ router.put('/:qid', authMiddleware, [
       return res.status(403).json({ success: false, error: '权限不足' });
     }
 
+    // 处理图片和TikZ代码，确保必需字段存在
+    if (updateData.images && Array.isArray(updateData.images)) {
+      updateData.images = updateData.images.map((image: any) => ({
+        ...image,
+        bid: image.bid || question.bid,
+        uploadedBy: image.uploadedBy || userId.toString(),
+        uploadedAt: image.uploadedAt || new Date()
+      }));
+    }
+
+    if (updateData.tikzCodes && Array.isArray(updateData.tikzCodes)) {
+      updateData.tikzCodes = updateData.tikzCodes.map((tikz: any) => ({
+        ...tikz,
+        bid: tikz.bid || question.bid,
+        createdBy: tikz.createdBy || userId.toString(),
+        createdAt: tikz.createdAt || new Date()
+      }));
+    }
+
     // 更新题目
     const updatedQuestion = await Question.findOneAndUpdate(
       { qid },
@@ -823,7 +842,7 @@ router.put('/:qid', authMiddleware, [
         ...updateData,
         updatedAt: new Date()
       },
-      { new: true }
+      { new: true, runValidators: true }
     ).populate('creator', 'name email');
 
     return res.json({
@@ -936,6 +955,17 @@ router.post('/bank/:bid', authMiddleware, [
       }
     }
 
+    // 处理TikZ代码，确保必需字段存在
+    let processedTikzCodes: any[] = [];
+    if (tikzCodes && Array.isArray(tikzCodes)) {
+      processedTikzCodes = tikzCodes.map((tikz: any) => ({
+        ...tikz,
+        bid: tikz.bid || bid,
+        createdBy: tikz.createdBy || userId,
+        createdAt: tikz.createdAt || new Date()
+      }));
+    }
+
     const question = new Question({
       qid,
       bid,
@@ -949,7 +979,7 @@ router.post('/bank/:bid', authMiddleware, [
       creator: req.user!._id,
       status: 'published',
       images: permanentImages,
-      tikzCodes: tikzCodes || []
+      tikzCodes: processedTikzCodes
     });
 
     await question.save();

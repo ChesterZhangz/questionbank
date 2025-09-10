@@ -92,7 +92,8 @@ const PaperBankListPage: React.FC = () => {
   const fetchPaperBanks = async () => {
     try {
       setLoading(true);
-      const response = await paperBankAPI.getPaperBanks({
+      // 使用getMyPapers API来获取用户有权限访问的所有试卷集（包括被邀请的）
+      const response = await paperBankAPI.getMyPapers({
         search: searchTerm,
         category: selectedCategory === 'all' ? '' : selectedCategory,
         subcategory: selectedSubcategory === 'all' ? '' : selectedSubcategory,
@@ -104,7 +105,8 @@ const PaperBankListPage: React.FC = () => {
       });
       
       if (response.data.success) {
-        setPaperBanks(response.data.data.paperBanks || []);
+        // getMyPapers返回的是papers字段，不是paperBanks字段
+        setPaperBanks(response.data.data.papers || []);
       } else {
         setError('获取试卷集列表失败');
       }

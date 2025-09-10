@@ -261,14 +261,39 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ success: false, error: '未授权访问' });
     }
 
-    const paperBank = await PaperBank.findOne({ _id: id, ownerId: userId });
+    // 首先检查用户是否是试卷集的所有者
+    let paperBank = await PaperBank.findOne({ _id: id, ownerId: userId });
+    let userRole = 'owner';
+
+    // 如果不是所有者，检查用户是否是被邀请的成员
     if (!paperBank) {
-      return res.status(404).json({ success: false, error: '试卷集不存在' });
+      const membership = await PaperBankMember.findOne({ 
+        paperBankId: id, 
+        userId: userId 
+      });
+      
+      if (!membership) {
+        return res.status(404).json({ success: false, error: '试卷集不存在或无权限访问' });
+      }
+
+      // 获取试卷集信息
+      paperBank = await PaperBank.findById(id);
+      if (!paperBank) {
+        return res.status(404).json({ success: false, error: '试卷集不存在' });
+      }
+
+      userRole = membership.role;
     }
+
+    // 添加用户角色信息到返回数据中
+    const paperBankWithRole = {
+      ...paperBank.toObject(),
+      userRole: userRole
+    };
 
     return res.json({
       success: true,
-      data: paperBank
+      data: paperBankWithRole
     });
   } catch (error: any) {
     console.error('获取试卷集失败:', error);
@@ -481,9 +506,22 @@ router.get('/:id/members', authMiddleware, async (req: AuthRequest, res: Respons
     }
 
     // 检查用户是否有权限访问这个试卷集
-    const paperBank = await PaperBank.findOne({ _id: id, ownerId: userId });
+    // 首先检查是否是所有者
+    let paperBank = await PaperBank.findOne({ _id: id, ownerId: userId });
+    let userRole = 'owner';
+
+    // 如果不是所有者，检查是否是被邀请的成员
     if (!paperBank) {
-      return res.status(404).json({ success: false, error: '试卷集不存在或无权限访问' });
+      const membership = await PaperBankMember.findOne({ 
+        paperBankId: id, 
+        userId: userId 
+      });
+      
+      if (!membership) {
+        return res.status(404).json({ success: false, error: '试卷集不存在或无权限访问' });
+      }
+
+      userRole = membership.role;
     }
 
     // 获取成员列表
@@ -495,7 +533,8 @@ router.get('/:id/members', authMiddleware, async (req: AuthRequest, res: Respons
       success: true,
       data: {
         members,
-        total: members.length
+        total: members.length,
+        userRole: userRole
       }
     });
   } catch (error: any) {
@@ -522,10 +561,10 @@ router.put('/:id/members/:memberId/role', authMiddleware, [
       return res.status(401).json({ success: false, error: '未授权访问' });
     }
 
-    // 检查用户是否有权限修改成员角色
+    // 检查用户是否是试卷集的所有者（只有所有者可以设置成员身份）
     const paperBank = await PaperBank.findOne({ _id: id, ownerId: userId });
     if (!paperBank) {
-      return res.status(404).json({ success: false, error: '试卷集不存在或无权限访问' });
+      return res.status(403).json({ success: false, error: '只有试卷集所有者可以设置成员身份' });
     }
 
     // 查找要修改的成员
@@ -833,5 +872,77 @@ function getCategoryLabel(category: string): string {
   };
   return categoryMap[category] || category;
 }
+
+// 获取试卷集下的试卷列表
+router.get('/:id/papers', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { type = '', page = 1, limit = 20 } = req.query;
+    
+    const userId = req.user?._id;
+    if (!userId) {
+      res.status(401).json({ success: false, error: '未授权访问' });
+      return;
+    }
+
+    // 检查试卷集是否存在
+    const paperBank = await PaperBank.findById(id);
+    if (!paperBank) {
+      res.status(404).json({ success: false, error: '试卷集不存在' });
+      return;
+    }
+
+    // 检查用户是否有权限访问该试卷集
+    const member = await PaperBankMember.findOne({
+      paperBankId: id,
+      userId: userId
+    });
+
+    if (!member && paperBank.ownerId.toString() !== userId) {
+      res.status(403).json({ success: false, error: '无权限访问该试卷集' });
+      return;
+    }
+
+    // 构建查询条件
+    const query: any = { bank: id };
+    
+    if (type && typeof type === 'string') {
+      query.type = type;
+    }
+
+    // 分页参数
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 20;
+    const skip = (pageNum - 1) * limitNum;
+
+    // 获取试卷列表
+    const papers = await Paper.find(query)
+      .populate('bank', 'name')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .lean();
+
+    // 获取总数
+    const total = await Paper.countDocuments(query);
+    const totalPages = Math.ceil(total / limitNum);
+
+    res.json({
+      success: true,
+      data: {
+        papers,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPages
+        }
+      }
+    });
+  } catch (error) {
+    console.error('获取试卷集试卷列表失败:', error);
+    res.status(500).json({ success: false, error: '服务器内部错误' });
+  }
+});
 
 export default router;

@@ -9,7 +9,7 @@ import {
   Calendar,
   User,
   Clock,
-  Plus,
+  // Plus, // 暂时禁用讲义功能
   Star,
   TrendingUp,
   DollarSign
@@ -55,17 +55,18 @@ interface PaperBankMember {
   lastActiveAt: string;
 }
 
-interface Lecture {
-  _id: string;
-  title: string;
-  description: string;
-  content: string;
-  paperBankId: string;
-  authorId: string;
-  authorName: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// 暂时禁用讲义功能
+// interface Lecture {
+//   _id: string;
+//   title: string;
+//   description: string;
+//   content: string;
+//   paperBankId: string;
+//   authorId: string;
+//   authorName: string;
+//   createdAt: string;
+//   updatedAt: string;
+// }
 
 interface Review {
   _id: string;
@@ -87,10 +88,12 @@ const PaperBankDetailPage: React.FC = () => {
   
   const [paperBank, setPaperBank] = useState<PaperBankInfo | null>(null);
   const [members, setMembers] = useState<PaperBankMember[]>([]);
-  const [lectures, setLectures] = useState<Lecture[]>([]);
+  // 暂时禁用讲义功能
+  // const [lectures, setLectures] = useState<Lecture[]>([]);
+  const [practices, setPractices] = useState<any[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'lectures' | 'members'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'practices' | 'members'>('overview');
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewForm, setReviewForm] = useState({
     rating: 5,
@@ -126,12 +129,13 @@ const PaperBankDetailPage: React.FC = () => {
   const fetchPaperBankDetails = async () => {
     try {
       setLoading(true);
-      const [paperBankResponse, membersResponse, lecturesResponse, reviewsResponse, statisticsResponse] = await Promise.all([
+      const [paperBankResponse, membersResponse, reviewsResponse, statisticsResponse, practicesResponse] = await Promise.all([
         paperBankAPI.getPaperBank(id!),
         paperBankAPI.getPaperBankMembers(id!),
-        paperBankAPI.getPaperBankLectures(id!),
+        // paperBankAPI.getPaperBankLectures(id!), // 暂时禁用讲义功能
         paperBankReviewAPI.getReviews(id!, { page: 1, limit: 10 }),
-        paperBankAPI.getPaperBankStatistics(id!)
+        paperBankAPI.getPaperBankStatistics(id!),
+        paperBankAPI.getPaperBankPapers(id!, { type: 'practice' })
       ]);
 
       if (paperBankResponse.data.success) {
@@ -142,9 +146,10 @@ const PaperBankDetailPage: React.FC = () => {
         setMembers(membersResponse.data.data.members || []);
       }
 
-      if (lecturesResponse.data.success) {
-        setLectures(lecturesResponse.data.data);
-      }
+      // 暂时禁用讲义功能
+      // if (lecturesResponse.data.success) {
+      //   setLectures(lecturesResponse.data.data);
+      // }
       
       if (reviewsResponse.data.success) {
         setReviews(reviewsResponse.data.data.reviews || []);
@@ -152,6 +157,10 @@ const PaperBankDetailPage: React.FC = () => {
       
       if (statisticsResponse.data.success) {
         setStatistics(statisticsResponse.data.data);
+      }
+      
+      if (practicesResponse.data.success) {
+        setPractices(practicesResponse.data.data.papers || []);
       }
     } catch (error) {
       console.error('获取试卷集详情失败:', error);
@@ -168,13 +177,14 @@ const PaperBankDetailPage: React.FC = () => {
     navigate(`/paper-banks/${id}/members`);
   };
 
-  const handleCreateLecture = () => {
-    navigate(`/paper-banks/${id}/lectures/create`);
-  };
+  // 暂时禁用讲义功能
+  // const handleCreateLecture = () => {
+  //   navigate(`/paper-banks/${id}/lectures/create`);
+  // };
 
-  const handleEditLecture = (lectureId: string) => {
-    navigate(`/paper-banks/${id}/lectures/${lectureId}/edit`);
-  };
+  // const handleEditLecture = (lectureId: string) => {
+  //   navigate(`/paper-banks/${id}/lectures/${lectureId}/edit`);
+  // };
 
   // 购买处理
   const handlePurchase = () => {
@@ -182,7 +192,7 @@ const PaperBankDetailPage: React.FC = () => {
     
     showConfirm(
       '确认购买',
-      `确定要购买试卷集"${paperBank.name}"吗？\n\n价格：${paperBank.price}V\n\n购买后即可查看所有讲义内容。`,
+      `确定要购买试卷集"${paperBank.name}"吗？\n\n价格：${paperBank.price}V\n\n购买后即可查看所有内容。`,
       () => executePurchase(),
       {
         confirmText: '确认购买',
@@ -236,7 +246,7 @@ const PaperBankDetailPage: React.FC = () => {
       // 4. 更新本地状态
       setPaperBank(prev => prev ? { ...prev, hasPurchased: true } : null);
       
-      showSuccessRightSlide('购买成功', `试卷集"${paperBank.name}"购买成功！您现在可以查看所有讲义内容。`);
+      showSuccessRightSlide('购买成功', `试卷集"${paperBank.name}"购买成功！您现在可以查看所有内容。`);
       
     } catch (error: any) {
       console.error('购买失败:', error);
@@ -525,6 +535,17 @@ const PaperBankDetailPage: React.FC = () => {
                 概览
               </button>
               <button
+                onClick={() => setActiveTab('practices')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'practices'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                练习卷 ({practices.length})
+              </button>
+              {/* 暂时禁用讲义标签页 */}
+              {/* <button
                 onClick={() => setActiveTab('lectures')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'lectures'
@@ -533,7 +554,7 @@ const PaperBankDetailPage: React.FC = () => {
                 }`}
               >
                 讲义 (0)
-              </button>
+              </button> */}
               <button
                 onClick={() => setActiveTab('members')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -848,7 +869,8 @@ const PaperBankDetailPage: React.FC = () => {
             </div>
           )}
 
-          {activeTab === 'lectures' && (
+          {/* 暂时禁用讲义内容区域 */}
+          {/* {activeTab === 'lectures' && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">讲义列表</h3>
@@ -915,6 +937,105 @@ const PaperBankDetailPage: React.FC = () => {
                   ))}
                 </div>
               )}
+            </div>
+          )} */}
+
+          {activeTab === 'practices' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">练习卷列表</h3>
+                <Button 
+                  onClick={() => navigate(`/paper-banks/${id}/practices/create`)}
+                  className="flex items-center"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  创建练习卷
+                </Button>
+              </div>
+
+              <Card className="p-6">
+                {practices.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">暂无练习卷</h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-6">开始创建您的第一个练习卷吧！</p>
+                    <Button 
+                      onClick={() => navigate(`/paper-banks/${id}/practices/create`)}
+                      className="flex items-center mx-auto"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      创建练习卷
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {practices.map((practice) => (
+                      <div
+                        key={practice._id}
+                        className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                        onClick={() => navigate(`/paper-banks/${id}/practices/${practice._id}/edit`)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                              {practice.name}
+                            </h4>
+                            <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                              <span className="flex items-center">
+                                <FileText className="w-4 h-4 mr-1" />
+                                {practice.sections?.reduce((total: number, section: any) => total + (section.items?.length || 0), 0) || 0} 题
+                              </span>
+                              <span className="flex items-center">
+                                <Calendar className="w-4 h-4 mr-1" />
+                                {new Date(practice.createdAt).toLocaleDateString()}
+                              </span>
+                              <span className={`px-2 py-1 rounded-full text-xs ${
+                                practice.status === 'draft' 
+                                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                  : practice.status === 'published'
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                              }`}>
+                                {practice.status === 'draft' ? '草稿' : 
+                                 practice.status === 'published' ? '已发布' : '已修改'}
+                              </span>
+                            </div>
+                            {practice.tags && practice.tags.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {practice.tags.slice(0, 3).map((tag: string, index: number) => (
+                                  <span
+                                    key={index}
+                                    className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                                {practice.tags.length > 3 && (
+                                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs rounded-full">
+                                    +{practice.tags.length - 3}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/paper-banks/${id}/practices/${practice._id}/edit`);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
             </div>
           )}
 

@@ -18,7 +18,7 @@ export { default as SymbolPanel } from './latex/SymbolPanel';
 export { default as AutoComplete } from './latex/AutoComplete';
 
 // Markdown编辑器组件
-export { WYSIWYGEditorWithToolbar, WYSIWYGToolbar } from './markdown';
+export { WYSIWYGToolbar } from './markdown';
 
 // 预览组件
 export { default as LaTeXPreview } from './preview/LaTeXPreview';

@@ -33,10 +33,10 @@ export const defaultSiteConfig: SiteConfig = {
   siteTagline: '智能题库管理平台',
   
   logo: {
-    light: '/avatar/avatar_light.png',
-    dark: '/avatar/avatar_dark.png',
-    fallback: '/avatar/avatar.png'
-  },
+    light: "/avatar/avatar_light.png", // 确保这两个路径存在
+    dark: "/avatar/avatar_dark.png", // 确保这两个路径存在
+    fallback: "/avatar/avatar.png"
+  }, 
   
   theme: {
     primaryColor: '#4f46e5',

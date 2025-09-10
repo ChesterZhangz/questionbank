@@ -680,6 +680,10 @@ export const paperBankAPI = {
   getPaperBankStatistics: (id: string) => 
     api.get<{ success: boolean; data: any }>(`/paper-banks/${id}/statistics`),
   
+  // 获取试卷集中的试卷列表
+  getPaperBankPapers: (id: string, params?: any) => 
+    api.get<{ success: boolean; data: { papers: any[]; pagination: any } }>(`/paper-banks/${id}/papers`, { params }),
+  
   // 获取我的试卷列表
   getMyPapers: (params?: any) => 
     api.get<{ success: boolean; data: { papers: any[]; pagination: any } }>('/paper-banks/my-papers', { params }),

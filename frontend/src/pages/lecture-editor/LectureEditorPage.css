@@ -35,12 +35,8 @@
   right: 0;
   bottom: 0;
   background-image: 
-    /* 水平分页线 */
-    linear-gradient(to bottom, transparent 0%, transparent calc(50% - 0.5px), #e5e7eb 50%, transparent calc(50% + 0.5px), transparent 100%),
-    /* 垂直边距线 */
-    linear-gradient(to right, transparent 0%, transparent calc(20mm - 0.5px), #f3f4f6 20mm, transparent calc(20mm + 0.5px), transparent calc(100% - 20mm - 0.5px), #f3f4f6 calc(100% - 20mm), transparent calc(100% - 20mm + 0.5px), transparent 100%),
-    /* 水平边距线 */
-    linear-gradient(to bottom, transparent 0%, transparent calc(20mm - 0.5px), #f3f4f6 20mm, transparent calc(20mm + 0.5px), transparent calc(100% - 20mm - 0.5px), #f3f4f6 calc(100% - 20mm), transparent calc(100% - 20mm + 0.5px), transparent 100%);
+    /* 只保留垂直边距线（左右边距） */
+    linear-gradient(to right, transparent 0%, transparent calc(20mm - 0.5px), #f3f4f6 20mm, transparent calc(20mm + 0.5px), transparent calc(100% - 20mm - 0.5px), #f3f4f6 calc(100% - 20mm), transparent calc(100% - 20mm + 0.5px), transparent 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -48,12 +44,8 @@
 .a4-paper.dark::before,
 .a4-paper.dark\:dark::before {
   background-image: 
-    /* 水平分页线 */
-    linear-gradient(to bottom, transparent 0%, transparent calc(50% - 0.5px), #374151 50%, transparent calc(50% + 0.5px), transparent 100%),
-    /* 垂直边距线 */
-    linear-gradient(to right, transparent 0%, transparent calc(20mm - 0.5px), #2d3748 20mm, transparent calc(20mm + 0.5px), transparent calc(100% - 20mm - 0.5px), #2d3748 calc(100% - 20mm), transparent calc(100% - 20mm + 0.5px), transparent 100%),
-    /* 水平边距线 */
-    linear-gradient(to bottom, transparent 0%, transparent calc(20mm - 0.5px), #2d3748 20mm, transparent calc(20mm + 0.5px), transparent calc(100% - 20mm - 0.5px), #2d3748 calc(100% - 20mm), transparent calc(100% - 20mm + 0.5px), transparent 100%);
+    /* 只保留垂直边距线（左右边距） */
+    linear-gradient(to right, transparent 0%, transparent calc(20mm - 0.5px), #2d3748 20mm, transparent calc(20mm + 0.5px), transparent calc(100% - 20mm - 0.5px), #2d3748 calc(100% - 20mm), transparent calc(100% - 20mm + 0.5px), transparent 100%);
 }
 
 /* 编辑器内容样式 */
@@ -63,10 +55,10 @@
   line-height: 1.5;
   color: #000;
   background: transparent;
-  min-height: calc(297mm - 40mm);
-  width: calc(210mm - 40mm);
+  min-height: 297mm;
+  width: calc(210mm - 40mm); /* 只减去左右边距 */
   padding: 0;
-  margin: 20mm auto;
+  margin: 0 auto; /* 只保留左右边距 */
   position: relative;
   z-index: 2;
   direction: ltr;
@@ -139,12 +131,14 @@
 .lecture-editor-content ul {
   list-style-type: disc;
   margin: 8pt 0;
+  margin-left: 24px; /* 添加左边缩进 */
   padding-left: 20pt;
 }
 
 .lecture-editor-content ol {
   list-style-type: decimal;
   margin: 8pt 0;
+  margin-left: 24px; /* 添加左边缩进 */
   padding-left: 20pt;
 }
 
@@ -158,13 +152,15 @@
   font-family: 'Georgia', serif;
   font-style: italic;
   margin: 12pt 0;
+  margin-left: 24px; /* 添加左边缩进 */
+  margin-right: 24px; /* 添加右边缩进 */
   padding: 10pt 15pt;
   background: #f8f9fa;
   border-left: 4px solid #6c757d;
   border-radius: 0 4px 4px 0;
   color: #495057;
   position: relative;
-  width: 100%;
+  width: calc(100% - 48px); /* 调整宽度以适应左右缩进 */
   box-sizing: border-box;
 }
 
@@ -187,6 +183,8 @@
   border-radius: 4px;
   padding: 12pt;
   margin: 8pt 0;
+  margin-left: 24px; /* 添加左边缩进 */
+  margin-right: 24px; /* 添加右边缩进 */
   overflow-x: auto;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -227,6 +225,10 @@
   padding: 2pt 4pt;
   border-radius: 3px;
   color: #e83e8c;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  display: block;
+  width: 100%;
 }
 
 /* 暗黑模式样式 */
@@ -265,7 +267,7 @@
   background: #2c3e50;
   border-left-color: #6c757d;
   color: #ecf0f1;
-  width: 100%;
+  width: calc(100% - 48px); /* 调整宽度以适应左右缩进 */
   box-sizing: border-box;
 }
 
@@ -296,6 +298,10 @@
 .lecture-editor-content.dark\:dark code {
   background: #34495e;
   color: #f39c12;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  display: block;
+  width: 100%;
 }
 
 .lecture-editor-content.dark,
@@ -409,6 +415,8 @@
   }
 }
 
+/* 移除分页相关样式 */
+
 /* 打印样式 */
 @media print {
   .a4-paper {
@@ -441,4 +449,130 @@
   .a4-margins {
     min-height: 297mm;
   }
+}
+
+/* 语法高亮样式 */
+.lecture-editor-content code .keyword {
+  color: #d73a49;
+  font-weight: bold;
+}
+
+.lecture-editor-content code .string {
+  color: #032f62;
+}
+
+.lecture-editor-content code .number {
+  color: #005cc5;
+}
+
+.lecture-editor-content code .comment {
+  color: #6a737d;
+  font-style: italic;
+}
+
+.lecture-editor-content code .literal {
+  color: #005cc5;
+  font-weight: bold;
+}
+
+.lecture-editor-content code .tag {
+  color: #22863a;
+  font-weight: bold;
+}
+
+.lecture-editor-content code .attr {
+  color: #6f42c1;
+}
+
+.lecture-editor-content code .selector {
+  color: #6f42c1;
+  font-weight: bold;
+}
+
+.lecture-editor-content code .property {
+  color: #005cc5;
+}
+
+.lecture-editor-content code .value {
+  color: #032f62;
+}
+
+.lecture-editor-content code .punctuation {
+  color: #24292e;
+}
+
+.lecture-editor-content code .key {
+  color: #032f62;
+  font-weight: bold;
+}
+
+.lecture-editor-content code .variable {
+  color: #e36209;
+  font-weight: bold;
+}
+
+/* 暗黑模式语法高亮 */
+.lecture-editor-content.dark code .keyword,
+.lecture-editor-content.dark\:dark code .keyword {
+  color: #ff7b72;
+}
+
+.lecture-editor-content.dark code .string,
+.lecture-editor-content.dark\:dark code .string {
+  color: #a5d6ff;
+}
+
+.lecture-editor-content.dark code .number,
+.lecture-editor-content.dark\:dark code .number {
+  color: #79c0ff;
+}
+
+.lecture-editor-content.dark code .comment,
+.lecture-editor-content.dark\:dark code .comment {
+  color: #8b949e;
+}
+
+.lecture-editor-content.dark code .literal,
+.lecture-editor-content.dark\:dark code .literal {
+  color: #79c0ff;
+}
+
+.lecture-editor-content.dark code .tag,
+.lecture-editor-content.dark\:dark code .tag {
+  color: #7ee787;
+}
+
+.lecture-editor-content.dark code .attr,
+.lecture-editor-content.dark\:dark code .attr {
+  color: #d2a8ff;
+}
+
+.lecture-editor-content.dark code .selector,
+.lecture-editor-content.dark\:dark code .selector {
+  color: #d2a8ff;
+}
+
+.lecture-editor-content.dark code .property,
+.lecture-editor-content.dark\:dark code .property {
+  color: #79c0ff;
+}
+
+.lecture-editor-content.dark code .value,
+.lecture-editor-content.dark\:dark code .value {
+  color: #a5d6ff;
+}
+
+.lecture-editor-content.dark code .punctuation,
+.lecture-editor-content.dark\:dark code .punctuation {
+  color: #c9d1d9;
+}
+
+.lecture-editor-content.dark code .key,
+.lecture-editor-content.dark\:dark code .key {
+  color: #a5d6ff;
+}
+
+.lecture-editor-content.dark code .variable,
+.lecture-editor-content.dark\:dark code .variable {
+  color: #ffa657;
 }

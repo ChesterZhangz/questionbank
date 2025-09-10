@@ -109,8 +109,10 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       setActiveSection('batch-upload');
     } else if (currentPath === '/paper-banks' || currentPath.startsWith('/paper-banks/')) {
       setActiveSection('paper-banks');
-    } else if (currentPath === '/my-papers' || currentPath.startsWith('/papers/')) {
-      setActiveSection('papers');
+    } else if (currentPath === '/my-papers') {
+      setActiveSection('my-papers');
+    } else if (currentPath.startsWith('/papers/')) {
+      setActiveSection('my-papers');
     } else if (currentPath === '/markdown-demo') {
       setActiveSection('markdown-demo');
     } else if (currentPath === '/paper-generation') {

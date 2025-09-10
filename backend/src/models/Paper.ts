@@ -16,7 +16,7 @@ export interface IQuestionSnapshot {
 export interface IQuestionItem {
   question: mongoose.Types.ObjectId; // 引用原题 _id
   qid?: string; // 业务ID（便于调试）
-  score: number;
+  score?: number; // 练习模式可以为空
   manualLines?: number; // Practice: 手动设置的答题区行数（优先于智能计算）
   snapshot?: IQuestionSnapshot; // 发布时生成
 }
@@ -73,7 +73,7 @@ const questionSnapshotSchema = new Schema<IQuestionSnapshot>({
 const questionItemSchema = new Schema<IQuestionItem>({
   question: { type: Schema.Types.ObjectId, ref: 'Question', required: true },
   qid: { type: String },
-  score: { type: Number, required: true, min: 0 },
+  score: { type: Number, min: 0 }, // 练习模式可以为空
   manualLines: { type: Number, min: 3, max: 30 },
   snapshot: { type: questionSnapshotSchema, required: false }
 }, { _id: false });
@@ -99,7 +99,7 @@ const paperSchema = new Schema<IPaper>({
   grade: { type: String, trim: true },
   timeLimit: { type: Number, min: 0 },
   totalScore: { type: Number, required: true, min: 0 },
-  bank: { type: Schema.Types.ObjectId, ref: 'QuestionBank', required: true },
+  bank: { type: Schema.Types.ObjectId, ref: 'PaperBank', required: true },
   owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   libraryId: { type: Schema.Types.ObjectId, ref: 'Library' },
   status: { type: String, enum: ['draft', 'published', 'modified'], default: 'draft' },

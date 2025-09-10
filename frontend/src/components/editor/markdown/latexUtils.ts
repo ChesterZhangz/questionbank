@@ -409,16 +409,7 @@ function isCursorInLatexEditing(): boolean {
 /**
  * 处理光标在LaTeX渲染元素中的定位
  */
-function handleCursorInRenderedLatex(element: HTMLElement, direction: 'left' | 'right'): void {
-  // 如果光标在LaTeX渲染元素中，根据方向决定是否进入编辑状态
-  if (direction === 'left') {
-    // 从右向左移动，进入编辑状态
-    editLatex(element);
-  } else {
-    // 从左向右移动，不强制移动光标位置
-    // 让用户保持当前的光标位置
-  }
-}
+// handleCursorInRenderedLatex函数已删除，因为它导致了远距离LaTeX编辑的问题
 
 /**
  * 检查光标是否在LaTeX边界之外（第一个$前或第二个$后）
@@ -748,30 +739,8 @@ export function setupLatexHandling(editorElement: HTMLElement): void {
     }
   }, true);
 
-  // 处理键盘导航 - 检测光标位置变化
-  editorElement.addEventListener('keyup', (e) => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-      setTimeout(() => {
-        const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          const container = range.commonAncestorContainer;
-          
-          // 检查光标是否在LaTeX渲染元素内
-          let element = container.nodeType === Node.TEXT_NODE ? container.parentElement : container as Element;
-          while (element && element !== editorElement) {
-            if (element.classList.contains(LATEX_RENDERED_CLASS)) {
-              // 光标在LaTeX渲染元素内，根据移动方向处理
-              const direction = e.key === 'ArrowLeft' ? 'left' : 'right';
-              handleCursorInRenderedLatex(element as HTMLElement, direction);
-              return;
-            }
-            element = element.parentElement;
-          }
-        }
-      }, 0);
-    }
-  });
+  // 注释掉有问题的键盘导航逻辑 - 这个监听器导致了远距离LaTeX编辑的问题
+  // 现在只依赖keydown事件监听器中的更精确的逻辑
 
   // 处理光标位置变化 - 检测是否离开LaTeX编辑区域
   editorElement.addEventListener('keyup', (_e) => {
@@ -903,28 +872,15 @@ export function setupLatexHandling(editorElement: HTMLElement): void {
       return;
     }
     
-    // 键盘导航：当光标移动到LaTeX内容时自动进入编辑状态
+    // 键盘导航：只有在紧邻LaTeX元素时才自动进入编辑状态
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       // 延迟检查，确保光标位置已经更新
       setTimeout(() => {
         const selection = window.getSelection();
         if (selection && selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
-          const container = range.commonAncestorContainer;
           
-          // 检查光标是否在LaTeX渲染元素内
-          let element = container.nodeType === Node.TEXT_NODE ? container.parentElement : container as Element;
-          while (element && element !== editorElement) {
-            if (element.classList.contains(LATEX_RENDERED_CLASS)) {
-              // 光标在LaTeX渲染元素内，根据移动方向处理
-              const direction = e.key === 'ArrowLeft' ? 'left' : 'right';
-              handleCursorInRenderedLatex(element as HTMLElement, direction);
-              return;
-            }
-            element = element.parentElement;
-          }
-          
-          // 检查光标是否紧邻LaTeX元素
+          // 只检查光标是否紧邻LaTeX元素，移除远距离检测逻辑
           const allLatexElements = editorElement.querySelectorAll(`.${LATEX_RENDERED_CLASS}`);
           allLatexElements.forEach(latexElement => {
             // 检查光标是否在LaTeX元素的前后

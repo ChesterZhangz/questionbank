@@ -18,7 +18,249 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import { paperAPI, paperBankAPI } from '../../services/api';
 import { setupLatexHandling, renderAllLatex, insertLatex, processEditorContent } from '../../components/editor/markdown/latexUtils';
+import AutoComplete from '../../components/editor/latex/AutoComplete';
+import { searchAllSymbols } from '../../lib/latex/symbols';
+import type { AutoCompleteSuggestion } from '../../lib/latex/symbols';
 import './LectureEditorPage.css';
+
+// 简单的语法高亮函数
+const highlightCode = (element: HTMLElement) => {
+  const text = element.textContent || '';
+  if (text.trim()) {
+    // 保存当前光标位置
+    const selection = window.getSelection();
+    let range = null;
+    let cursorOffset = 0;
+    
+    if (selection && selection.rangeCount > 0) {
+      range = selection.getRangeAt(0);
+      if (range.startContainer === element || element.contains(range.startContainer)) {
+        // 计算光标在文本中的偏移量
+        const tempRange = document.createRange();
+        tempRange.setStart(element, 0);
+        tempRange.setEnd(range.startContainer, range.startOffset);
+        cursorOffset = tempRange.toString().length;
+      }
+    }
+    
+    // 获取当前语言类
+    const currentClass = element.className;
+    const languageMatch = currentClass.match(/language-(\w+)/);
+    const language = languageMatch ? languageMatch[1] : 'text';
+    
+    // 应用语法高亮
+    element.innerHTML = applySyntaxHighlighting(text, language);
+    
+    // 恢复光标位置
+    if (range && cursorOffset >= 0) {
+      try {
+        const newRange = document.createRange();
+        const walker = document.createTreeWalker(
+          element,
+          NodeFilter.SHOW_TEXT
+        );
+        
+        let currentOffset = 0;
+        let textNode = walker.nextNode();
+        
+        while (textNode && currentOffset + textNode.textContent!.length < cursorOffset) {
+          currentOffset += textNode.textContent!.length;
+          textNode = walker.nextNode();
+        }
+        
+        if (textNode && selection) {
+          const offsetInNode = Math.min(cursorOffset - currentOffset, textNode.textContent!.length);
+          newRange.setStart(textNode, offsetInNode);
+          newRange.setEnd(textNode, offsetInNode);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+        }
+      } catch (e) {
+        // 如果恢复失败，将光标放在末尾
+        if (selection) {
+          const newRange = document.createRange();
+          newRange.selectNodeContents(element);
+          newRange.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+        }
+      }
+    }
+  }
+};
+
+// 应用语法高亮的函数
+const applySyntaxHighlighting = (code: string, language: string): string => {
+  // 转义HTML特殊字符
+  const escapeHtml = (text: string) => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  };
+
+  let highlightedCode = escapeHtml(code);
+
+  // 根据语言应用不同的高亮规则
+  switch (language) {
+    case 'javascript':
+    case 'typescript':
+      highlightedCode = highlightJavaScript(highlightedCode);
+      break;
+    case 'python':
+      highlightedCode = highlightPython(highlightedCode);
+      break;
+    case 'html':
+      highlightedCode = highlightHTML(highlightedCode);
+      break;
+    case 'css':
+      highlightedCode = highlightCSS(highlightedCode);
+      break;
+    case 'json':
+      highlightedCode = highlightJSON(highlightedCode);
+      break;
+    case 'sql':
+      highlightedCode = highlightSQL(highlightedCode);
+      break;
+    case 'bash':
+    case 'shell':
+      highlightedCode = highlightBash(highlightedCode);
+      break;
+    default:
+      // 默认情况下只转义HTML
+      break;
+  }
+
+  return highlightedCode;
+};
+
+// JavaScript/TypeScript 高亮
+const highlightJavaScript = (code: string): string => {
+  let result = code;
+  
+  // 先处理注释
+  result = result.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="comment">$1</span>');
+  result = result.replace(/(\/\/.*$)/gm, '<span class="comment">$1</span>');
+  
+  // 然后处理字符串
+  result = result.replace(/(["'`])((?:\\.|(?!\1)[^\\])*?)\1/g, '<span class="string">$1$2$1</span>');
+  
+  // 处理关键字，只匹配不在HTML标签内的内容
+  result = result.replace(/\b(const|let|var|function|if|else|for|while|return|class|import|export|from|async|await|try|catch|finally|throw|new|this|super|extends|implements|interface|type|enum|namespace|module|declare|public|private|protected|static|readonly|abstract|override|get|set)\b/g, (match, offset, string) => {
+    // 检查是否在HTML标签内
+    const beforeMatch = string.substring(0, offset);
+    const openTags = (beforeMatch.match(/<[^>]*>/g) || []).length;
+    const closeTags = (beforeMatch.match(/<\/[^>]*>/g) || []).length;
+    return openTags > closeTags ? match : `<span class="keyword">${match}</span>`;
+  });
+  
+  // 处理字面量
+  result = result.replace(/\b(true|false|null|undefined)\b/g, (match, offset, string) => {
+    const beforeMatch = string.substring(0, offset);
+    const openTags = (beforeMatch.match(/<[^>]*>/g) || []).length;
+    const closeTags = (beforeMatch.match(/<\/[^>]*>/g) || []).length;
+    return openTags > closeTags ? match : `<span class="literal">${match}</span>`;
+  });
+  
+  // 处理数字
+  result = result.replace(/\b(\d+\.?\d*)\b/g, (match, offset, string) => {
+    const beforeMatch = string.substring(0, offset);
+    const openTags = (beforeMatch.match(/<[^>]*>/g) || []).length;
+    const closeTags = (beforeMatch.match(/<\/[^>]*>/g) || []).length;
+    return openTags > closeTags ? match : `<span class="number">${match}</span>`;
+  });
+  
+  return result;
+};
+
+// Python 高亮
+const highlightPython = (code: string): string => {
+  let result = code;
+  
+  // 先处理注释
+  result = result.replace(/(#.*$)/gm, '<span class="comment">$1</span>');
+  
+  // 然后处理字符串
+  result = result.replace(/(["'`])((?:\\.|(?!\1)[^\\])*?)\1/g, '<span class="string">$1$2$1</span>');
+  
+  // 处理关键字
+  result = result.replace(/\b(def|class|if|elif|else|for|while|try|except|finally|with|import|from|as|return|yield|lambda|and|or|not|in|is|None|True|False)\b/g, (match, offset, string) => {
+    const beforeMatch = string.substring(0, offset);
+    const openTags = (beforeMatch.match(/<[^>]*>/g) || []).length;
+    const closeTags = (beforeMatch.match(/<\/[^>]*>/g) || []).length;
+    return openTags > closeTags ? match : `<span class="keyword">${match}</span>`;
+  });
+  
+  // 处理数字
+  result = result.replace(/\b(\d+\.?\d*)\b/g, (match, offset, string) => {
+    const beforeMatch = string.substring(0, offset);
+    const openTags = (beforeMatch.match(/<[^>]*>/g) || []).length;
+    const closeTags = (beforeMatch.match(/<\/[^>]*>/g) || []).length;
+    return openTags > closeTags ? match : `<span class="number">${match}</span>`;
+  });
+  
+  return result;
+};
+
+// HTML 高亮
+const highlightHTML = (code: string): string => {
+  return code
+    // 先处理注释
+    .replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="comment">$1</span>')
+    // 然后处理属性值（字符串）
+    .replace(/(\s[a-zA-Z-]+)(=)(["'][^"']*["'])/g, '$1<span class="attr">$2</span><span class="string">$3</span>')
+    // 最后处理标签
+    .replace(/(&lt;\/?)([a-zA-Z][a-zA-Z0-9]*)/g, '$1<span class="tag">$2</span>');
+};
+
+// CSS 高亮
+const highlightCSS = (code: string): string => {
+  return code
+    // 先处理注释
+    .replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="comment">$1</span>')
+    // 然后处理属性值
+    .replace(/([^:;{}]+)(;)/g, '<span class="value">$1</span><span class="punctuation">$2</span>')
+    // 处理属性名
+    .replace(/([a-zA-Z-]+)(\s*)(:)/g, '<span class="property">$1</span>$2<span class="punctuation">$3</span>')
+    // 最后处理选择器
+    .replace(/([.#]?[a-zA-Z-]+)(\s*)(\{)/g, '<span class="selector">$1</span>$2<span class="punctuation">$3</span>');
+};
+
+// JSON 高亮
+const highlightJSON = (code: string): string => {
+  return code
+    // 先处理字符串（键值对中的值）
+    .replace(/(["'][^"']*["'])/g, '<span class="string">$1</span>')
+    // 然后处理键值对
+    .replace(/(["'][^"']*["'])(\s*:)/g, '<span class="key">$1</span><span class="punctuation">$2</span>')
+    // 处理字面量
+    .replace(/\b(true|false|null)\b/g, '<span class="literal">$1</span>')
+    // 最后处理数字
+    .replace(/\b(\d+\.?\d*)\b/g, '<span class="number">$1</span>');
+};
+
+// SQL 高亮
+const highlightSQL = (code: string): string => {
+  return code
+    // 先处理字符串
+    .replace(/(["'`])((?:\\.|(?!\1)[^\\])*?)\1/g, '<span class="string">$1$2$1</span>')
+    // 然后处理关键字
+    .replace(/\b(SELECT|FROM|WHERE|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|TABLE|INDEX|VIEW|JOIN|LEFT|RIGHT|INNER|OUTER|ON|GROUP|BY|ORDER|HAVING|UNION|DISTINCT|LIMIT|OFFSET|AS|AND|OR|NOT|IN|EXISTS|BETWEEN|LIKE|IS|NULL)\b/gi, '<span class="keyword">$1</span>')
+    // 最后处理数字
+    .replace(/\b(\d+\.?\d*)\b/g, '<span class="number">$1</span>');
+};
+
+// Bash 高亮
+const highlightBash = (code: string): string => {
+  return code
+    // 先处理注释
+    .replace(/(#.*$)/gm, '<span class="comment">$1</span>')
+    // 然后处理字符串
+    .replace(/(["'`])((?:\\.|(?!\1)[^\\])*?)\1/g, '<span class="string">$1$2$1</span>')
+    // 处理变量
+    .replace(/\$[a-zA-Z_][a-zA-Z0-9_]*/g, '<span class="variable">$&</span>')
+    // 最后处理关键字
+    .replace(/\b(if|then|else|elif|fi|for|while|do|done|case|esac|function|return|export|local|readonly|declare|typeset|alias|unalias|cd|pwd|ls|cat|grep|sed|awk|find|grep|sort|uniq|head|tail|cut|paste|join|comm|diff|patch|tar|gzip|gunzip|zip|unzip|chmod|chown|chgrp|mkdir|rmdir|rm|cp|mv|ln|touch|stat|file|which|whereis|locate|updatedb|man|info|help|apropos|whatis|history|alias|unalias|set|unset|env|printenv|export|source|\.|exec|eval|trap|exit|break|continue|shift|getopts|read|echo|printf|test|\[|\[\[|\(|\(\(|\)|\)\)|&&|\|\|)\b/g, '<span class="keyword">$1</span>');
+};
 
 // 支持的语言列表
 const SUPPORTED_LANGUAGES = [
@@ -100,10 +342,26 @@ const LectureEditorPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [currentCodeBlock, setCurrentCodeBlock] = useState<HTMLElement | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showPaperBankSelector, setShowPaperBankSelector] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
+  const fullscreenEditorRef = useRef<HTMLDivElement>(null);
 
-  // 空内容，不预设文字
-  const sampleContent = '';
+  // 自动补全相关状态
+  const [showAutoComplete, setShowAutoComplete] = useState(false);
+  const [autoCompleteSuggestions, setAutoCompleteSuggestions] = useState<AutoCompleteSuggestion[]>([]);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+  const [autoCompletePosition, setAutoCompletePosition] = useState({ x: 0, y: 0 });
+  const [cursorPosition, setCursorPosition] = useState(0);
+  const autoCompleteRef = useRef<HTMLDivElement>(null);
+
+  // 移除分页状态，使用单页编辑
+
+  // 空内容，确保至少有一个p标签
+  const sampleContent = '<p><br></p>';
+
+  // 移除分页相关的高度检测逻辑
+
 
   useEffect(() => {
     loadPaperBanks();
@@ -141,6 +399,43 @@ const LectureEditorPage: React.FC = () => {
       setupLatexHandling(editorRef.current);
     }
   }, []);
+
+  // 为全屏编辑器初始化LaTeX处理
+  useEffect(() => {
+    if (isFullscreen && fullscreenEditorRef.current) {
+      // 延迟一点时间确保DOM完全渲染
+      setTimeout(() => {
+        if (fullscreenEditorRef.current) {
+          // 清理可能存在的旧监听器，然后设置新的
+          setupLatexHandling(fullscreenEditorRef.current);
+        }
+      }, 100);
+    }
+    // 清理函数：当退出全屏时清理事件监听器
+    return () => {
+      if (!isFullscreen && fullscreenEditorRef.current) {
+        // 这里可以添加清理逻辑，但由于setupLatexHandling现在是直接添加监听器
+        // 我们依赖浏览器的垃圾回收来清理
+      }
+    };
+  }, [isFullscreen]);
+
+  // 点击外部关闭自动补全
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (autoCompleteRef.current && !autoCompleteRef.current.contains(event.target as Node)) {
+        setShowAutoComplete(false);
+      }
+    };
+
+    if (showAutoComplete) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showAutoComplete]);
 
   // 加载试卷库列表
   const loadPaperBanks = async () => {
@@ -260,19 +555,358 @@ const LectureEditorPage: React.FC = () => {
   };
 
 
+  // 防抖定时器
+  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // 检查自动补全
+  const checkAutoComplete = (content: string, position: number) => {
+    const beforeCursor = content.substring(0, position);
+    
+    // 检查是否在LaTeX命令中
+    const latexCommandMatch = beforeCursor.match(/\\[a-zA-Z]*$/);
+    if (latexCommandMatch) {
+      const currentCommand = latexCommandMatch[0];
+      const suggestions = searchAllSymbols(currentCommand);
+      if (suggestions.length > 0) {
+        setAutoCompleteSuggestions(suggestions);
+        setShowAutoComplete(true);
+        setSelectedSuggestionIndex(0);
+        updateAutoCompletePosition(position);
+      } else {
+        setShowAutoComplete(false);
+      }
+    } else {
+      setShowAutoComplete(false);
+    }
+  };
+
+  // 更新自动补全位置
+  const updateAutoCompletePosition = (position: number) => {
+    const currentEditor = isFullscreen ? fullscreenEditorRef.current : editorRef.current;
+    if (currentEditor) {
+      const editorRect = currentEditor.getBoundingClientRect();
+      
+      // 获取编辑器样式
+      const computedStyle = getComputedStyle(currentEditor);
+      const lineHeight = parseFloat(computedStyle.lineHeight) || 20;
+      const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
+      const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
+      
+      // 计算光标位置
+      const textBeforeCursor = (lecture.content || '').substring(0, position);
+      const logicalLines = textBeforeCursor.split('\n');
+      const currentLogicalLine = logicalLines[logicalLines.length - 1];
+      const logicalLineIndex = logicalLines.length - 1;
+      
+      // 计算最终的视觉行索引
+      const visualLineIndex = logicalLineIndex;
+      
+      // 计算光标在编辑器中的位置
+      const cursorX = paddingLeft + (currentLogicalLine.length * (parseFloat(computedStyle.fontSize) * 0.6));
+      const cursorY = paddingTop + (visualLineIndex * lineHeight);
+      
+      // 考虑编辑器的滚动位置
+      const scrollTop = currentEditor.scrollTop;
+      const scrollLeft = currentEditor.scrollLeft;
+      
+      // 计算绝对位置（相对于视口）
+      const x = editorRect.left + cursorX - scrollLeft;
+      const y = editorRect.top + cursorY - scrollTop + 5; // 在光标下方5px显示
+      
+      setAutoCompletePosition({ x, y });
+    }
+  };
+
+  // 处理自动补全选择
+  const handleAutoComplete = (suggestion: AutoCompleteSuggestion) => {
+    const currentEditor = isFullscreen ? fullscreenEditorRef.current : editorRef.current;
+    if (currentEditor) {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const textContent = currentEditor.textContent || '';
+        const beforeCursor = textContent.substring(0, cursorPosition);
+        const commandMatch = beforeCursor.match(/\\[a-zA-Z]*$/);
+        
+        if (commandMatch) {
+          // 找到命令开始位置
+          const commandStart = beforeCursor.lastIndexOf(commandMatch[0]);
+          const beforeCommand = textContent.substring(0, commandStart);
+          
+          // 清理填充字符，将字母替换为空的大括号
+          let cleanedSuggestion = suggestion.text;
+          
+          // 首先检查是否包含LaTeX环境命令，如果是则完全跳过清理
+          if (suggestion.text.includes('\\begin') || suggestion.text.includes('\\end')) {
+            cleanedSuggestion = suggestion.text; // 保持原样，不进行任何清理
+          } else {
+            // 只对非环境命令进行清理
+            cleanedSuggestion = suggestion.text
+              .replace(/\{([a-zA-Z])\}/g, (match, _letter) => {
+                // 检查是否在字体样式命令中
+                const beforeMatch = suggestion.text.substring(0, suggestion.text.indexOf(match));
+                if (beforeMatch.includes('\\mathbb') || beforeMatch.includes('\\mathbf') || beforeMatch.includes('\\mathit') || beforeMatch.includes('\\mathrm') || beforeMatch.includes('\\mathcal') || beforeMatch.includes('\\mathscr') || beforeMatch.includes('\\mathfrak') || beforeMatch.includes('\\text') || beforeMatch.includes('\\texttt') || beforeMatch.includes('\\textsf')) {
+                  return match; // 保持原样
+                }
+                return '{}'; // 替换为空大括号
+              })
+              .replace(/\{([a-zA-Z]+)\}/g, (match, _letters) => {
+                // 检查是否在字体样式命令中
+                const beforeMatch = suggestion.text.substring(0, suggestion.text.indexOf(match));
+                if (beforeMatch.includes('\\mathbb') || beforeMatch.includes('\\mathbf') || beforeMatch.includes('\\mathit') || beforeMatch.includes('\\mathrm') || beforeMatch.includes('\\mathcal') || beforeMatch.includes('\\mathscr') || beforeMatch.includes('\\mathfrak') || beforeMatch.includes('\\text') || beforeMatch.includes('\\texttt') || beforeMatch.includes('\\textsf')) {
+                  return match; // 保持原样
+                }
+                return '{}'; // 替换为空大括号
+              });
+          }
+          
+          // 检查是否在数学模式内
+          const isInMathMode = isInsideMathMode(beforeCommand);
+          
+          let finalSuggestion = cleanedSuggestion;
+          // 只有LaTeX类型的符号才需要检查数学模式，题目符号直接插入
+          if (suggestion.type === 'latex') {
+            if (!isInMathMode) {
+              // 不在数学模式内，自动添加$
+              finalSuggestion = '$' + cleanedSuggestion + '$';
+            }
+          }
+          
+          // 在编辑器中，我们需要找到并替换选中的文本
+          const walker = document.createTreeWalker(
+            currentEditor,
+            NodeFilter.SHOW_TEXT,
+            null
+          );
+          
+          let currentPos = 0;
+          let targetNode = null;
+          let targetOffset = 0;
+          
+          let node;
+          while (node = walker.nextNode()) {
+            const nodeLength = node.textContent?.length || 0;
+            if (currentPos + nodeLength >= commandStart) {
+              targetNode = node;
+              targetOffset = commandStart - currentPos;
+              break;
+            }
+            currentPos += nodeLength;
+          }
+          
+          if (targetNode) {
+            // 计算需要替换的文本长度
+            const replaceLength = cursorPosition - commandStart;
+            
+            // 创建新的文本内容
+            const originalText = targetNode.textContent || '';
+            const beforeReplace = originalText.substring(0, targetOffset);
+            const afterReplace = originalText.substring(targetOffset + replaceLength);
+            const newText = beforeReplace + finalSuggestion + afterReplace;
+            
+            // 替换文本节点的内容
+            targetNode.textContent = newText;
+            
+            // 设置光标位置到插入文本的末尾
+            const newCursorOffset = targetOffset + finalSuggestion.length;
+            const newRange = document.createRange();
+            newRange.setStart(targetNode, Math.min(newCursorOffset, targetNode.textContent?.length || 0));
+            newRange.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+            
+            // 更新编辑器内容
+            handleContentChange(currentEditor.innerHTML);
+            setShowAutoComplete(false);
+          }
+        }
+      }
+    }
+  };
+
+  // 检查是否在数学模式内
+  const isInsideMathMode = (beforeCursor: string): boolean => {
+    // 从光标位置向前搜索，找到最近的数学模式开始标记
+    let position = beforeCursor.length - 1;
+    let inDisplayMathMode = false;
+    let inInlineMathMode = false;
+    
+    while (position >= 0) {
+      const char = beforeCursor[position];
+      
+      if (char === '$') {
+        // 检查是否是$$（显示数学模式）
+        if (position > 0 && beforeCursor[position - 1] === '$') {
+          // 找到$$，检查是否匹配
+          if (!inDisplayMathMode) {
+            // 开始显示数学模式
+            inDisplayMathMode = true;
+            position -= 2; // 跳过两个$
+            continue;
+          } else {
+            // 结束显示数学模式
+            inDisplayMathMode = false;
+            position -= 2;
+            continue;
+          }
+        } else {
+          // 单个$，检查是否匹配
+          if (!inInlineMathMode && !inDisplayMathMode) {
+            // 开始行内数学模式
+            inInlineMathMode = true;
+            position--;
+            continue;
+          } else if (inInlineMathMode && !inDisplayMathMode) {
+            // 结束行内数学模式
+            inInlineMathMode = false;
+            position--;
+            continue;
+          }
+        }
+      }
+      
+      position--;
+    }
+    
+    // 如果在显示数学模式或行内数学模式内，返回true
+    return inDisplayMathMode || inInlineMathMode;
+  };
+
+  // 全屏切换功能
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
+  // 同步编辑器内容
+  useEffect(() => {
+    if (isFullscreen && fullscreenEditorRef.current && editorRef.current) {
+      // 进入全屏时，同步内容到全屏编辑器
+      fullscreenEditorRef.current.innerHTML = editorRef.current.innerHTML;
+      // 渲染LaTeX内容
+      setTimeout(() => {
+        if (fullscreenEditorRef.current) {
+          renderAllLatex(fullscreenEditorRef.current);
+        }
+      }, 50);
+    } else if (!isFullscreen && editorRef.current && fullscreenEditorRef.current) {
+      // 退出全屏时，同步内容到普通编辑器
+      editorRef.current.innerHTML = fullscreenEditorRef.current.innerHTML;
+      // 渲染LaTeX内容
+      setTimeout(() => {
+        if (editorRef.current) {
+          renderAllLatex(editorRef.current);
+        }
+      }, 50);
+    }
+  }, [isFullscreen]);
+
+  // 移除分页相关函数
+
   const handleContentChange = (content: string) => {
+    // 确保内容始终至少有一个p标签
+    let safeContent = content;
+    const currentEditor = isFullscreen ? fullscreenEditorRef.current : editorRef.current;
+    const otherEditor = isFullscreen ? editorRef.current : fullscreenEditorRef.current;
+    
+    if (currentEditor) {
+      const pTags = currentEditor.querySelectorAll('p');
+      if (pTags.length === 0) {
+        // 如果没有p标签，添加一个
+        safeContent = '<p><br></p>';
+        currentEditor.innerHTML = safeContent;
+      }
+    }
+    
+    // 同步内容到另一个编辑器
+    if (otherEditor) {
+      otherEditor.innerHTML = safeContent;
+    }
+    
     setLecture(prev => ({
       ...prev,
-      content
+      content: safeContent
     }));
+
+    // 更新光标位置并检查自动补全
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0 && currentEditor) {
+      const range = selection.getRangeAt(0);
+      const textContent = currentEditor.textContent || '';
+      
+      // 计算光标在文本中的位置
+      let cursorPos = 0;
+      const walker = document.createTreeWalker(
+        currentEditor,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
+      
+      let node;
+      while (node = walker.nextNode()) {
+        if (node === range.startContainer) {
+          cursorPos += range.startOffset;
+          break;
+        } else {
+          cursorPos += node.textContent?.length || 0;
+        }
+      }
+      
+      setCursorPosition(cursorPos);
+      
+      // 检查自动补全
+      checkAutoComplete(textContent, cursorPos);
+    }
+    
+    // 清除之前的定时器
+    if (highlightTimeoutRef.current) {
+      clearTimeout(highlightTimeoutRef.current);
+    }
+    
+    // 延迟执行语法高亮，避免在用户输入时频繁触发
+    highlightTimeoutRef.current = setTimeout(() => {
+      if (currentEditor) {
+        const codeBlocks = currentEditor.querySelectorAll('code[class*="language-"]');
+        codeBlocks.forEach(block => {
+          // 检查光标是否在代码块内
+          const selection = window.getSelection();
+          if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const isInCodeBlock = block.contains(range.startContainer) || block === range.startContainer;
+            
+            // 如果光标在代码块内，不进行语法高亮，避免干扰用户输入
+            if (isInCodeBlock) {
+              return;
+            }
+          }
+          
+          highlightCode(block as HTMLElement);
+        });
+      }
+    }, 500); // 500ms延迟
   };
 
   // 处理代码块语言选择
   const handleLanguageSelect = (language: string) => {
     if (currentCodeBlock) {
       const codeElement = currentCodeBlock.querySelector('code');
+      const languageButton = currentCodeBlock.querySelector('.code-language-selector');
       if (codeElement) {
         codeElement.className = `language-${language}`;
+        // 更新语言按钮显示文本
+        if (languageButton) {
+          const languageInfo = SUPPORTED_LANGUAGES.find(lang => lang.value === language);
+          languageButton.innerHTML = languageInfo ? languageInfo.label.substring(0, 2).toUpperCase() : language.substring(0, 2).toUpperCase();
+        }
+        // 触发语法高亮
+        highlightCode(codeElement);
         handleContentChange(editorRef.current?.innerHTML || '');
       }
     }
@@ -497,10 +1131,15 @@ const LectureEditorPage: React.FC = () => {
             
             range.insertNode(pre);
             
-            // 在代码块下方添加新段落
+            // 在代码块下方添加新段落，让用户能退出代码块
             const newP = document.createElement('p');
             newP.innerHTML = '<br>';
             pre.parentNode?.insertBefore(newP, pre.nextSibling);
+            
+            // 触发语法高亮（创建时立即高亮）
+            setTimeout(() => {
+              highlightCode(code);
+            }, 100);
             
             // 将光标保持在代码块内
             const codeRange = document.createRange();
@@ -542,10 +1181,15 @@ const LectureEditorPage: React.FC = () => {
               element.parentNode?.insertBefore(pre, element);
               element.parentNode?.removeChild(element);
               
-              // 在代码块下方添加新段落
+              // 在代码块下方添加新段落，让用户能退出代码块
               const newP = document.createElement('p');
               newP.innerHTML = '<br>';
               pre.parentNode?.insertBefore(newP, pre.nextSibling);
+              
+              // 触发语法高亮（创建时立即高亮）
+              setTimeout(() => {
+                highlightCode(code);
+              }, 100);
               
               // 将光标保持在代码块内
               const codeRange = document.createRange();
@@ -626,7 +1270,7 @@ const LectureEditorPage: React.FC = () => {
       </div>
 
       {/* 主要内容区域 */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className={`max-w-7xl mx-auto px-6 py-8 ${isFullscreen ? 'hidden' : ''}`}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -728,57 +1372,174 @@ const LectureEditorPage: React.FC = () => {
           {/* A4纸模拟编辑器区域 */}
           <div className="flex gap-6 justify-center">
             {/* 左侧工具栏 */}
-            <div className="w-16 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-4">
+            <div className="w-16 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-4 relative z-50">
               <WYSIWYGToolbar 
                 onFormat={handleFormat}
                 disabled={false}
                 vertical={true}
               />
+              {/* 全屏按钮 */}
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={toggleFullscreen}
+                  className="p-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  title="全屏编辑"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  </svg>
+                </button>
+              </div>
             </div>
             
-            {/* A4纸容器 */}
-            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden p-6">
-              <div 
-                className="a4-paper dark:dark"
-                style={{
-                  width: '210mm', // A4宽度
-                  minHeight: '297mm', // A4高度
-                  maxWidth: '100%',
-                  position: 'relative'
-                }}
-              >
-                {/* 页面边距模拟 */}
-                <div className="a4-margins">
-                  {/* 编辑器内容区域 */}
-                  <div 
-                    className="lecture-editor-content dark:dark"
-                    style={{
-                      minHeight: 'calc(297mm - 40mm)', // A4高度减去上下边距
-                      width: 'calc(210mm - 40mm)', // A4宽度减去左右边距
-                      margin: '20mm auto', // 上下左右边距
-                    }}
-                  >
-                    <div
-                      ref={editorRef}
-                      contentEditable
-                      className="outline-none focus:outline-none w-full h-full"
+            {/* A4纸容器 - 单页编辑 */}
+            <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-6 relative z-10">
+              {/* 单页A4纸容器 */}
+              <div className="flex justify-center max-h-[80vh] overflow-y-auto">
+                <div 
+                  className="a4-paper dark:dark"
+                  style={{
+                    width: '210mm', // A4宽度
+                    minHeight: '297mm', // 保持最小高度
+                    maxWidth: '100%',
+                    position: 'relative'
+                  }}
+                >
+                  {/* 页面边距模拟 - 只保留左右边距 */}
+                  <div className="a4-margins">
+                    {/* 编辑器内容区域 */}
+                    <div 
+                      className="lecture-editor-content dark:dark"
                       style={{
-                        minHeight: 'calc(297mm - 40mm)', // 减去边距
-                        width: '100%',
-                        padding: '0',
-                        margin: '0'
+                        minHeight: '297mm', // 保持最小高度
+                        width: 'calc(210mm - 40mm)', // A4宽度减去左右边距
+                        margin: '0 auto', // 只保留左右边距
+                        padding: '20px 0', // 添加上下内边距
                       }}
-                      onInput={(e) => {
-                        const target = e.target as HTMLDivElement;
-                        handleContentChange(target.innerHTML);
-                      }}
-                      onBlur={() => {
-                        // 失去焦点时渲染所有LaTeX
-                        if (editorRef.current) {
-                          renderAllLatex(editorRef.current);
+                    >
+                      <div
+                        ref={editorRef}
+                        contentEditable
+                        className="outline-none focus:outline-none w-full h-full"
+                        style={{
+                          minHeight: '297mm', // 保持最小高度
+                          width: '100%',
+                          padding: '0',
+                          margin: '0'
+                        }}
+                        onInput={(e) => {
+                          const target = e.target as HTMLDivElement;
+                          handleContentChange(target.innerHTML);
+                        }}
+                              onBlur={() => {
+                                // 失去焦点时渲染所有LaTeX
+                                if (editorRef.current) {
+                                  renderAllLatex(editorRef.current);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                        // 处理自动补全键盘导航
+                        if (showAutoComplete && autoCompleteSuggestions.length > 0) {
+                          switch (e.key) {
+                            case 'ArrowDown':
+                              e.preventDefault();
+                              setSelectedSuggestionIndex(prev => 
+                                prev < autoCompleteSuggestions.length - 1 ? prev + 1 : 0
+                              );
+                              break;
+                            case 'ArrowUp':
+                              e.preventDefault();
+                              setSelectedSuggestionIndex(prev => 
+                                prev > 0 ? prev - 1 : autoCompleteSuggestions.length - 1
+                              );
+                              break;
+                            case 'Enter':
+                              e.preventDefault();
+                              if (autoCompleteSuggestions[selectedSuggestionIndex]) {
+                                handleAutoComplete(autoCompleteSuggestions[selectedSuggestionIndex]);
+                              }
+                              break;
+                            case 'Escape':
+                              e.preventDefault();
+                              setShowAutoComplete(false);
+                              break;
+                          }
+                          return;
                         }
-                      }}
-                      onKeyDown={(e) => {
+
+                        // 处理Delete键逻辑 - 防止删除最后一个p标签
+                        if (e.key === 'Delete' || e.key === 'Backspace') {
+                          // 检查是否只剩下一个空的p标签
+                          if (editorRef.current) {
+                            const pTags = editorRef.current.querySelectorAll('p');
+                            const nonEmptyPTags = Array.from(pTags).filter(p => {
+                              const text = p.textContent?.trim() || '';
+                              const html = p.innerHTML.trim();
+                              return text !== '' && html !== '<br>' && html !== '';
+                            });
+                            
+                            // 如果只有一个p标签且为空，阻止删除
+                            if (pTags.length === 1 && nonEmptyPTags.length === 0) {
+                              e.preventDefault();
+                              return;
+                            }
+                            
+                            // 如果全选删除后会导致没有p标签，也阻止删除
+                            const selection = window.getSelection();
+                            if (selection && selection.rangeCount > 0) {
+                              const range = selection.getRangeAt(0);
+                              const selectedContent = range.toString();
+                              const allContent = editorRef.current.textContent || '';
+                              
+                              // 如果选中的内容等于全部内容，阻止删除
+                              if (selectedContent === allContent && pTags.length <= 1) {
+                                e.preventDefault();
+                                return;
+                              }
+                            }
+                          }
+                        }
+
+                        // 处理Delete键逻辑 - 删除空代码块
+                        if (e.key === 'Delete' || e.key === 'Backspace') {
+                          const selection = window.getSelection();
+                          if (selection && selection.rangeCount > 0) {
+                            const range = selection.getRangeAt(0);
+                            let element: Node | null = range.commonAncestorContainer;
+                            
+                            // 检查是否在代码块中
+                            while (element && element !== editorRef.current) {
+                              if (element.nodeType === 1) {
+                                const htmlElement = element as HTMLElement;
+                                const tagName = htmlElement.tagName;
+                                if (tagName === 'PRE') {
+                                  // 检查代码块是否为空
+                                  const codeElement = htmlElement.querySelector('code');
+                                  if (codeElement && (!codeElement.textContent || codeElement.textContent.trim() === '')) {
+                                    e.preventDefault();
+                                    // 删除整个代码块
+                                    const p = document.createElement('p');
+                                    p.innerHTML = '<br>';
+                                    htmlElement.parentNode?.insertBefore(p, htmlElement);
+                                    htmlElement.remove();
+                                    // 将光标移到新段落
+                                    const newRange = document.createRange();
+                                    newRange.selectNodeContents(p);
+                                    newRange.collapse(true);
+                                    selection.removeAllRanges();
+                                    selection.addRange(newRange);
+                                    if (editorRef.current) {
+                                      handleContentChange(editorRef.current.innerHTML);
+                                    }
+                                    return;
+                                  }
+                                }
+                              }
+                              element = element.parentElement || (element.parentNode as HTMLElement);
+                            }
+                          }
+                        }
+
                         // 处理回车键逻辑
                         if (e.key === 'Enter') {
                           const selection = window.getSelection();
@@ -791,12 +1552,22 @@ const LectureEditorPage: React.FC = () => {
                               if (element.nodeType === 1) {
                                 const tagName = (element as HTMLElement).tagName;
                                 if (tagName === 'PRE' || tagName === 'CODE') {
-                                  // 在代码块中，允许正常的换行
-                                  return;
+                                  // 在代码块中，允许正常的换行，不阻止默认行为
+                                  // 确保光标在代码块内正确换行
+                                  if (tagName === 'CODE') {
+                                    // 在code标签内，直接允许换行
+                                    return;
+                                  } else if (tagName === 'PRE') {
+                                    // 在pre标签内，也允许换行
+                                    return;
+                                  }
                                 }
                               }
                               element = element.parentElement || (element.parentNode as HTMLElement);
                             }
+                            
+                            // 如果不在代码块中，检查是否需要创建新段落
+                            // 这里添加正常的段落创建逻辑
                             
                             // 检查是否在列表项中
                             element = range.commonAncestorContainer;
@@ -1010,10 +1781,15 @@ const LectureEditorPage: React.FC = () => {
                                   range.deleteContents();
                                   range.insertNode(pre);
                                   
-                                  // 在代码块下方添加新段落
+                                  // 在代码块下方添加新段落，让用户能退出代码块
                                   const newP = document.createElement('p');
                                   newP.innerHTML = '<br>';
                                   pre.parentNode?.insertBefore(newP, pre.nextSibling);
+                                  
+                                  // 触发语法高亮（创建时立即高亮）
+                                  setTimeout(() => {
+                                    highlightCode(code);
+                                  }, 100);
                                   
                                   // 将光标保持在代码块内
                                   const codeRange = document.createRange();
@@ -1080,10 +1856,15 @@ const LectureEditorPage: React.FC = () => {
                                     element.parentNode?.insertBefore(pre, element);
                                     element.parentNode?.removeChild(element);
                                     
-                                    // 在代码块下方添加新段落
+                                    // 在代码块下方添加新段落，让用户能退出代码块
                                     const newP = document.createElement('p');
                                     newP.innerHTML = '<br>';
                                     pre.parentNode?.insertBefore(newP, pre.nextSibling);
+                                    
+                                    // 触发语法高亮（创建时立即高亮）
+                                    setTimeout(() => {
+                                      highlightCode(code);
+                                    }, 100);
                                     
                                     // 将光标保持在代码块内
                                     const codeRange = document.createRange();
@@ -1114,6 +1895,7 @@ const LectureEditorPage: React.FC = () => {
                       suppressContentEditableWarning={true}
                       data-placeholder="开始编写讲义内容...支持 Markdown 和 LaTeX 语法"
                     />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1122,8 +1904,509 @@ const LectureEditorPage: React.FC = () => {
         </motion.div>
       </div>
 
+      {/* 全屏模式编辑器 */}
+      {isFullscreen && (
+        <motion.div 
+          className="fixed inset-0 z-[9999] bg-white dark:bg-gray-900 flex flex-col"
+          initial={{ 
+            opacity: 0, 
+            scale: 0.9
+          }}
+          animate={{ 
+            opacity: 1, 
+            scale: 1
+          }}
+          exit={{ 
+            opacity: 0, 
+            scale: 0.9
+          }}
+          transition={{ 
+            duration: 0.3, 
+            ease: [0.23, 1, 0.32, 1]
+          }}
+        >
+          {/* 全屏工具栏 */}
+          <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center space-x-4">
+              <WYSIWYGToolbar 
+                onFormat={handleFormat}
+                disabled={false}
+                vertical={false}
+              />
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              {/* 保存按钮 */}
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors flex items-center space-x-2"
+              >
+                {saving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>保存中...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    <span>保存</span>
+                  </>
+                )}
+              </button>
+              
+              {/* 切换题库按钮 */}
+              <button
+                onClick={() => setShowPaperBankSelector(true)}
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <span>切换题库</span>
+              </button>
+              
+              {/* 退出全屏按钮 */}
+              <button
+                onClick={toggleFullscreen}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <span>退出全屏</span>
+              </button>
+            </div>
+          </div>
+          
+          {/* 全屏编辑器内容 */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex justify-center">
+              <div 
+                className="a4-paper dark:dark"
+                style={{
+                  width: '210mm', // A4标准宽度
+                  minHeight: '297mm', // 保持最小高度
+                  maxWidth: '100%',
+                  position: 'relative'
+                }}
+              >
+                {/* 页面边距模拟 - 只保留左右边距 */}
+                <div className="a4-margins">
+                  {/* 编辑器内容区域 */}
+                  <div 
+                    className="lecture-editor-content dark:dark"
+                    style={{
+                      minHeight: '297mm', // 保持最小高度
+                      width: 'calc(210mm - 40mm)', // A4宽度减去左右边距
+                      margin: '0 auto', // 只保留左右边距
+                      padding: '20px 0', // 添加上下内边距
+                    }}
+                  >
+                    <div
+                      ref={fullscreenEditorRef}
+                      contentEditable
+                      className="outline-none focus:outline-none w-full h-full"
+                      style={{
+                        minHeight: '297mm', // 保持最小高度
+                        width: '100%',
+                        padding: '0',
+                        margin: '0'
+                      }}
+                      onInput={(e) => {
+                        const target = e.target as HTMLDivElement;
+                        handleContentChange(target.innerHTML);
+                      }}
+                      onBlur={() => {
+                        // 失去焦点时渲染所有LaTeX
+                        if (fullscreenEditorRef.current) {
+                          renderAllLatex(fullscreenEditorRef.current);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        // 处理自动补全键盘导航
+                        if (showAutoComplete && autoCompleteSuggestions.length > 0) {
+                          switch (e.key) {
+                            case 'ArrowDown':
+                              e.preventDefault();
+                              setSelectedSuggestionIndex(prev => 
+                                prev < autoCompleteSuggestions.length - 1 ? prev + 1 : 0
+                              );
+                              break;
+                            case 'ArrowUp':
+                              e.preventDefault();
+                              setSelectedSuggestionIndex(prev => 
+                                prev > 0 ? prev - 1 : autoCompleteSuggestions.length - 1
+                              );
+                              break;
+                            case 'Enter':
+                              e.preventDefault();
+                              if (autoCompleteSuggestions[selectedSuggestionIndex]) {
+                                handleAutoComplete(autoCompleteSuggestions[selectedSuggestionIndex]);
+                              }
+                              break;
+                            case 'Escape':
+                              e.preventDefault();
+                              setShowAutoComplete(false);
+                              break;
+                          }
+                          return;
+                        }
+
+                        // 处理Delete键逻辑 - 防止删除最后一个p标签
+                        if (e.key === 'Delete' || e.key === 'Backspace') {
+                          // 检查是否只剩下一个空的p标签
+                          if (editorRef.current) {
+                            const pTags = editorRef.current.querySelectorAll('p');
+                            const nonEmptyPTags = Array.from(pTags).filter(p => {
+                              const text = p.textContent?.trim() || '';
+                              const html = p.innerHTML.trim();
+                              return text !== '' && html !== '<br>' && html !== '';
+                            });
+                            
+                            // 如果只有一个p标签且为空，阻止删除
+                            if (pTags.length === 1 && nonEmptyPTags.length === 0) {
+                              e.preventDefault();
+                              return;
+                            }
+                            
+                            // 如果全选删除后会导致没有p标签，也阻止删除
+                            const selection = window.getSelection();
+                            if (selection && selection.rangeCount > 0) {
+                              const range = selection.getRangeAt(0);
+                              const selectedContent = range.toString();
+                              const allContent = editorRef.current.textContent || '';
+                              
+                              // 如果选中的内容等于全部内容，阻止删除
+                              if (selectedContent === allContent && pTags.length <= 1) {
+                                e.preventDefault();
+                                return;
+                              }
+                            }
+                          }
+                        }
+
+                        // 处理Delete键逻辑 - 删除空代码块
+                        if (e.key === 'Delete' || e.key === 'Backspace') {
+                          const selection = window.getSelection();
+                          if (selection && selection.rangeCount > 0) {
+                            const range = selection.getRangeAt(0);
+                            let element: Node | null = range.commonAncestorContainer;
+                            
+                            // 检查是否在代码块中
+                            while (element && element !== editorRef.current) {
+                              if (element.nodeType === 1) {
+                                const htmlElement = element as HTMLElement;
+                                const tagName = htmlElement.tagName;
+                                if (tagName === 'PRE') {
+                                  // 检查代码块是否为空
+                                  const codeElement = htmlElement.querySelector('code');
+                                  if (codeElement && (!codeElement.textContent || codeElement.textContent.trim() === '')) {
+                                    e.preventDefault();
+                                    // 删除整个代码块
+                                    const p = document.createElement('p');
+                                    p.innerHTML = '<br>';
+                                    htmlElement.parentNode?.insertBefore(p, htmlElement);
+                                    htmlElement.remove();
+                                    // 将光标移到新段落
+                                    const newRange = document.createRange();
+                                    newRange.selectNodeContents(p);
+                                    newRange.collapse(true);
+                                    selection.removeAllRanges();
+                                    selection.addRange(newRange);
+                                    if (editorRef.current) {
+                                      handleContentChange(editorRef.current.innerHTML);
+                                    }
+                                    return;
+                                  }
+                                }
+                              }
+                              element = element.parentElement || (element.parentNode as HTMLElement);
+                            }
+                          }
+                        }
+
+                        // 处理回车键逻辑
+                        if (e.key === 'Enter') {
+                          const selection = window.getSelection();
+                          if (selection && selection.rangeCount > 0) {
+                            const range = selection.getRangeAt(0);
+                            let element: Node | null = range.commonAncestorContainer;
+                            
+                            // 检查是否在代码块中
+                            while (element && element !== editorRef.current) {
+                              if (element.nodeType === 1) {
+                                const tagName = (element as HTMLElement).tagName;
+                                if (tagName === 'PRE' || tagName === 'CODE') {
+                                  // 在代码块中，允许正常的换行，不阻止默认行为
+                                  // 确保光标在代码块内正确换行
+                                  if (tagName === 'CODE') {
+                                    // 在code标签内，直接允许换行
+                                    return;
+                                  }
+                                  
+                                  // 在pre标签内，也允许换行
+                                  return;
+                                }
+                              }
+                              element = element.parentElement || (element.parentNode as HTMLElement);
+                            }
+                          }
+                        }
+
+                        // 处理快捷键
+                        if (e.ctrlKey || e.metaKey) {
+                          switch (e.key) {
+                            case '1':
+                              e.preventDefault();
+                              document.execCommand('formatBlock', false, 'h1');
+                              handleContentChange(editorRef.current?.innerHTML || '');
+                              break;
+                            case '2':
+                              e.preventDefault();
+                              document.execCommand('formatBlock', false, 'h2');
+                              handleContentChange(editorRef.current?.innerHTML || '');
+                              break;
+                            case '3':
+                              e.preventDefault();
+                              document.execCommand('formatBlock', false, 'h3');
+                              handleContentChange(editorRef.current?.innerHTML || '');
+                              break;
+                            case '4':
+                              e.preventDefault();
+                              document.execCommand('formatBlock', false, 'h4');
+                              handleContentChange(editorRef.current?.innerHTML || '');
+                              break;
+                            case '5':
+                              e.preventDefault();
+                              document.execCommand('formatBlock', false, 'h5');
+                              handleContentChange(editorRef.current?.innerHTML || '');
+                              break;
+                            case '6':
+                              e.preventDefault();
+                              document.execCommand('formatBlock', false, 'h6');
+                              handleContentChange(editorRef.current?.innerHTML || '');
+                              break;
+                            case '0':
+                              e.preventDefault();
+                              document.execCommand('formatBlock', false, 'p');
+                              handleContentChange(editorRef.current?.innerHTML || '');
+                              break;
+                            case 'k':
+                              e.preventDefault();
+                              // 检查是否有选中的文本
+                              const selection = window.getSelection();
+                              const text = selection?.toString().trim();
+                              
+                              if (!text) {
+                                showErrorRightSlide('提示', '请先选中要添加链接的文本');
+                                return;
+                              }
+                              
+                              // 这里可以添加链接创建逻辑
+                              break;
+                            case 's':
+                              e.preventDefault();
+                              document.execCommand('strikeThrough');
+                              handleContentChange(editorRef.current?.innerHTML || '');
+                              break;
+                            case 'l':
+                              e.preventDefault();
+                              // 确保有选中的内容或光标位置
+                              const ulSelection = window.getSelection();
+                              if (ulSelection && ulSelection.rangeCount > 0) {
+                                const range = ulSelection.getRangeAt(0);
+                                if (range.collapsed) {
+                                  // 如果光标在空位置，插入一个列表项
+                                  const li = document.createElement('li');
+                                  li.innerHTML = '<br>';
+                                  range.insertNode(li);
+                                } else {
+                                  // 如果有选中内容，使用标准命令
+                                  document.execCommand('insertUnorderedList');
+                                }
+                              }
+                              handleContentChange(editorRef.current?.innerHTML || '');
+                              break;
+                            case 'o':
+                              e.preventDefault();
+                              // 确保有选中的内容或光标位置
+                              const olSelection = window.getSelection();
+                              if (olSelection && olSelection.rangeCount > 0) {
+                                const range = olSelection.getRangeAt(0);
+                                if (range.collapsed) {
+                                  // 如果光标在空位置，插入一个列表项
+                                  const li = document.createElement('li');
+                                  li.innerHTML = '<br>';
+                                  range.insertNode(li);
+                                } else {
+                                  // 如果有选中内容，使用标准命令
+                                  document.execCommand('insertOrderedList');
+                                }
+                              }
+                              handleContentChange(editorRef.current?.innerHTML || '');
+                              break;
+                            case 'h':
+                              e.preventDefault();
+                              // 处理引用块
+                              const quoteSelection = window.getSelection();
+                              if (quoteSelection && quoteSelection.rangeCount > 0) {
+                                const range = quoteSelection.getRangeAt(0);
+                                const container = range.commonAncestorContainer;
+                                let element = container.nodeType === 3 ? container.parentElement : container as HTMLElement;
+                                
+                                // 找到包含的块级元素
+                                while (element && element !== editorRef.current) {
+                                  if (['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI'].includes(element.tagName)) {
+                                    break;
+                                  }
+                                  element = element.parentElement;
+                                }
+                                
+                                if (element && element.tagName !== 'BLOCKQUOTE') {
+                                  const blockquote = document.createElement('blockquote');
+                                  blockquote.innerHTML = element.innerHTML;
+                                  element.parentNode?.insertBefore(blockquote, element);
+                                  element.parentNode?.removeChild(element);
+                                  
+                                  // 在引用块下方添加新段落
+                                  const newP = document.createElement('p');
+                                  newP.innerHTML = '<br>';
+                                  blockquote.parentNode?.insertBefore(newP, blockquote.nextSibling);
+                                  
+                                  handleContentChange(editorRef.current?.innerHTML || '');
+                                }
+                              }
+                              break;
+                            case 'c':
+                              e.preventDefault();
+                              // 处理代码块
+                              const codeSelection = window.getSelection();
+                              if (codeSelection && codeSelection.rangeCount > 0) {
+                                const range = codeSelection.getRangeAt(0);
+                                const container = range.commonAncestorContainer;
+                                let element = container.nodeType === 3 ? container.parentElement : container as HTMLElement;
+                                
+                                // 找到包含的块级元素
+                                while (element && element !== editorRef.current) {
+                                  if (['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI'].includes(element.tagName)) {
+                                    break;
+                                  }
+                                  element = element.parentElement;
+                                }
+                                
+                                // 检查段落是否为空或只有空白字符
+                                const textContent = element?.textContent?.trim();
+                                if (!textContent || textContent === '') {
+                                  showErrorRightSlide('提示', '不能对空白地方创建代码块，请先输入内容或选中要转换为代码块的文本');
+                                  return;
+                                }
+                                
+                                if (element && element.tagName !== 'PRE') {
+                                  const pre = document.createElement('pre');
+                                  const code = document.createElement('code');
+                                  code.className = 'language-javascript';
+                                  code.innerHTML = element.innerHTML;
+                                  pre.appendChild(code);
+                                  
+                                  // 添加语言选择按钮
+                                  const languageButton = document.createElement('button');
+                                  languageButton.innerHTML = 'JS';
+                                  languageButton.className = 'code-language-selector';
+                                  languageButton.onclick = (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    showLanguageSelectorForCodeBlock(pre);
+                                  };
+                                  pre.appendChild(languageButton);
+                                  
+                                  element.parentNode?.insertBefore(pre, element);
+                                  element.parentNode?.removeChild(element);
+                                  
+                                  // 在代码块下方添加新段落，让用户能退出代码块
+                                  const newP = document.createElement('p');
+                                  newP.innerHTML = '<br>';
+                                  pre.parentNode?.insertBefore(newP, pre.nextSibling);
+                                  
+                                  // 触发语法高亮（创建时立即高亮）
+                                  setTimeout(() => {
+                                    highlightCode(code);
+                                  }, 100);
+                                  
+                                  // 将光标保持在代码块内
+                                  const codeRange = document.createRange();
+                                  codeRange.selectNodeContents(code);
+                                  codeRange.collapse(false);
+                                  const selection = window.getSelection();
+                                  if (selection) {
+                                    selection.removeAllRanges();
+                                    selection.addRange(codeRange);
+                                  }
+                                  
+                                  handleContentChange(editorRef.current?.innerHTML || '');
+                                }
+                              }
+                              break;
+                            case 'm':
+                              // 插入LaTeX块级公式
+                              e.preventDefault();
+                              if (editorRef.current) {
+                                insertLatex(editorRef.current, '\\LaTeX', true);
+                                handleContentChange(editorRef.current.innerHTML);
+                              }
+                              break;
+                          }
+                        }
+                      }}
+                      suppressContentEditableWarning={true}
+                      data-placeholder="开始编写讲义内容...支持 Markdown 和 LaTeX 语法"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* 弹窗组件 */}
       <ConfirmModal {...confirmModal} onCancel={closeConfirm} />
+      
+      {/* 题库选择器模态框 */}
+      {showPaperBankSelector && (
+        <div className="fixed inset-0 z-[10000] bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">选择试卷库</h3>
+            <select
+              value={selectedPaperBankId}
+              onChange={(e) => setSelectedPaperBankId(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {paperBanks.map((bank) => (
+                <option key={bank._id} value={bank._id}>
+                  {bank.name}
+                </option>
+              ))}
+            </select>
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowPaperBankSelector(false)}
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => setShowPaperBankSelector(false)}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                确定
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* 右侧弹窗 */}
       <RightSlideModal
@@ -1160,6 +2443,17 @@ const LectureEditorPage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 自动补全 */}
+      {showAutoComplete && autoCompleteSuggestions.length > 0 && (
+        <AutoComplete
+          ref={autoCompleteRef}
+          suggestions={autoCompleteSuggestions}
+          selectedIndex={selectedSuggestionIndex}
+          position={autoCompletePosition}
+          onSelect={handleAutoComplete}
+        />
       )}
     </div>
   );

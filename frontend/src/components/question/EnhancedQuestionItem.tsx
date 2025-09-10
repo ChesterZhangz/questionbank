@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Button from '../ui/Button';
 import { renderContent } from '../../lib/latex/utils/renderContent';
+import LaTeXPreview from '../editor/preview/LaTeXPreview';
 
 // 题目接口定义
 interface Question {
@@ -398,10 +399,20 @@ const EnhancedQuestionItem: React.FC<EnhancedQuestionItemProps> = ({
                     <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-xs font-medium">
                       {String.fromCharCode(65 + optionIndex)}
                     </span>
-                    <div 
-                      className="flex-1 text-sm text-gray-700"
-                      dangerouslySetInnerHTML={renderQuestionContent(option)}
-                    />
+                    <div className="flex-1 text-sm text-gray-700">
+                      <LaTeXPreview 
+                        content={option} 
+                        config={{ 
+                          mode: 'full',
+                          features: {
+                            markdown: true,
+                            questionSyntax: true,
+                            autoNumbering: true,
+                            errorHandling: 'lenient'
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>

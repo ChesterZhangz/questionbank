@@ -377,7 +377,6 @@ const QuestionBankSettingsPage: React.FC = () => {
                         variant="outline"
                         size="md"
                         showIcon={true}
-                        clearable={true}
                         disabled={!canEdit}
                       />
                     </div>

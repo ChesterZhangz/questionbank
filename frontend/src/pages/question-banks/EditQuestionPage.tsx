@@ -164,8 +164,18 @@ const EditQuestionPage: React.FC = () => {
       // 保存前确保content.answer字段被正确设置
       const updatedQuestion = {
         ...question,
-        images: images,
-        tikzCodes: tikzCodes
+        images: images?.map(img => ({
+          ...img,
+          bid: img.bid || question.bid,
+          uploadedBy: img.uploadedBy || question.creator._id,
+          uploadedAt: img.uploadedAt || new Date()
+        })),
+        tikzCodes: tikzCodes?.map(tikz => ({
+          ...tikz,
+          bid: (tikz as any).bid || question.bid,
+          createdBy: (tikz as any).createdBy || question.creator._id,
+          createdAt: (tikz as any).createdAt || new Date()
+        }))
       };
       
       // 根据题型确保answer字段有值

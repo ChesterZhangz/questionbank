@@ -322,8 +322,8 @@ export class LaTeXRenderer {
       let contentEnd = nextMatch ? nextMatch.index : processed.length;
       let content = processed.substring(currentMatch.index + currentMatch.fullMatch.length, contentEnd);
       
-      // 清理内容，移除可能的HTML标签
-      const cleanContent = content.trim().replace(/<[^>]*>/g, '');
+      // 清理内容，移除可能的HTML标签（但保留数学表达式中的< >符号）
+      const cleanContent = content.trim();
       
       if (currentMatch.type === '\\subp') {
         subpCount++;
@@ -392,8 +392,8 @@ export class LaTeXRenderer {
           remaining = '';
         }
         
-        // 清理文本，移除可能的HTML标签
-        const cleanText = text.trim().replace(/<[^>]*>/g, '');
+        // 清理文本，移除可能的HTML标签（但保留数学表达式中的< >符号）
+        const cleanText = text.trim();
         const replacement = `<span class="subproblem"><span class="subproblem-number">(小题)</span> ${cleanText}</span>`;
         
         newParts.push(replacement + remaining);
@@ -432,8 +432,8 @@ export class LaTeXRenderer {
           remaining = '';
         }
         
-        // 清理文本，移除可能的HTML标签
-        const cleanText = text.trim().replace(/<[^>]*>/g, '');
+        // 清理文本，移除可能的HTML标签（但保留数学表达式中的< >符号）
+        const cleanText = text.trim();
         const replacement = `<span class="subproblem subproblem-sub"><span class="subproblem-number">(子小题)</span> ${cleanText}</span>`;
         
         newParts.push(replacement + remaining);

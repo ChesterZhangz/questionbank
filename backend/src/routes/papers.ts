@@ -19,15 +19,18 @@ const router = express.Router();
 router.post('/', authMiddleware, async (req: Request, res: Response) => {
   try {
     const owner = (req as any).user._id;
-    const { libraryId, ...paperData } = req.body;
+    const { libraryId, paperBankId, ...paperData } = req.body;
+
+    // 确定使用哪个ID作为试卷集ID
+    const bankId = paperBankId || libraryId;
 
     // 如果指定了试卷集，检查权限
-    if (libraryId) {
+    if (bankId) {
       // 这里需要检查用户是否有权限在该试卷集中创建试卷
       // 暂时跳过，后续可以添加专门的权限检查
     }
 
-    const paper = await createDraft({ ...paperData, owner, libraryId });
+    const paper = await createDraft({ ...paperData, owner, libraryId: bankId, bank: bankId });
     return res.status(201).json({ success: true, data: paper });
   } catch (err) {
     console.error('create draft failed:', err);
@@ -116,7 +119,7 @@ router.put('/:id', authMiddleware, async (req: Request, res: Response) => {
 // 获取我的试卷列表（包含所有有权限的试卷）
 router.get('/my-papers', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { search, category, type, status, sortBy, sortOrder, page, limit } = req.query;
+    const { search, category, type, status, sortBy, sortOrder, page, limit, bank } = req.query;
     const userId = (req as any).user._id;
 
     // 构建查询条件
@@ -140,13 +143,20 @@ router.get('/my-papers', authMiddleware, async (req: Request, res: Response) => 
       query.status = status;
     }
 
+    // 试卷集筛选
+    if (bank && typeof bank === 'string') {
+      query.bank = bank;
+    }
+
     // 构建排序条件
     const sort: any = {};
     sort[sortBy as string] = sortOrder === 'asc' ? 1 : -1;
 
     // 执行查询
     const papers = await Paper.find(query)
-      .populate('owner', 'username avatar')
+      .populate('owner', 'name email')
+      .populate('bank', 'name')
+      .populate('sections.items.question', '_id')
       .sort(sort)
       .skip((Number(page) - 1) * Number(limit))
       .limit(Number(limit));
@@ -220,85 +230,6 @@ router.get('/:id', authMiddleware, async (req: Request, res: Response) => {
 });
 
 // 创建试卷
-router.post('/', authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const { name, type, paperBankId, description, tags, subtitle, date } = req.body;
-    const userId = (req as any).user._id;
-
-    // 验证必填字段
-    if (!name || !type || !paperBankId) {
-      return res.status(400).json({ 
-        success: false, 
-        error: '缺少必填字段：试卷名称、类型或试卷集ID' 
-      });
-    }
-
-    // 验证试卷类型
-    if (!['lecture', 'practice', 'test'].includes(type)) {
-      return res.status(400).json({ 
-        success: false, 
-        error: '无效的试卷类型' 
-      });
-    }
-
-    // 检查试卷集是否存在且用户有权限
-    const paperBank = await PaperBank.findOne({
-      _id: paperBankId,
-      $or: [
-        { ownerId: userId },
-        { 'members.userId': userId, 'members.role': { $in: ['owner', 'manager', 'collaborator'] } }
-      ]
-    });
-
-    if (!paperBank) {
-      return res.status(403).json({ 
-        success: false, 
-        error: '试卷集不存在或您没有权限在此试卷集中创建试卷' 
-      });
-    }
-
-    // 创建试卷数据
-    const paperData: any = {
-      name,
-      type,
-      libraryId: paperBankId,
-      owner: userId,
-      status: 'draft',
-      totalScore: 0,
-      version: 1,
-      sections: [],
-      bank: (paperBank as any).bankId || new mongoose.Types.ObjectId(), // 使用试卷集的题库ID
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    // 添加可选字段
-    if (description) paperData.description = description;
-    if (tags && Array.isArray(tags)) paperData.tags = tags;
-
-    // 讲义特有字段
-    if (type === 'lecture') {
-      if (subtitle) paperData.subtitle = subtitle;
-      if (date) paperData.date = new Date(date);
-    }
-
-    const paper = new Paper(paperData);
-    await paper.save();
-
-    // 更新试卷集的试卷数量
-    await PaperBank.findByIdAndUpdate(paperBankId, {
-      $inc: { paperCount: 1 }
-    });
-
-    return res.status(201).json({
-      success: true,
-      data: paper
-    });
-  } catch (error) {
-    console.error('创建试卷失败:', error);
-    return res.status(500).json({ success: false, error: '创建试卷失败' });
-  }
-});
 
 // 发布试卷
 router.post('/:id/publish', authMiddleware, async (req: Request, res: Response) => {

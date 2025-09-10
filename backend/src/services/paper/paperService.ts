@@ -38,7 +38,13 @@ export async function updateDraft(id: string, input: Partial<IPaper>): Promise<I
 }
 
 export async function getPaper(id: string): Promise<IPaper | null> {
-  return Paper.findById(id).populate('owner', 'name email').populate('bank', 'name');
+  return Paper.findById(id)
+    .populate('owner', 'name email')
+    .populate('bank', 'name')
+    .populate({
+      path: 'sections.items.question',
+      model: 'Question'
+    });
 }
 
 export async function listPapers(query: { 

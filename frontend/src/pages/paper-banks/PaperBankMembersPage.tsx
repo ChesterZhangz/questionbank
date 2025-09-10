@@ -20,6 +20,7 @@ import {
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
+import RoleSelector from '../../components/ui/RoleSelector';
 import { useModal } from '../../hooks/useModal';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
@@ -73,6 +74,7 @@ const PaperBankMembersPage: React.FC = () => {
   const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
   const [inviteRole, setInviteRole] = useState<'manager' | 'collaborator' | 'viewer'>('collaborator');
   const [inviting, setInviting] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -94,6 +96,12 @@ const PaperBankMembersPage: React.FC = () => {
           memberCount: paperBankData.memberCount || 0,
           ownerId: paperBankData.ownerId
         });
+        
+        // 检查当前用户是否是试卷集的所有者
+        const currentUser = await authAPI.getCurrentUser();
+        if (currentUser.data.success && currentUser.data.user) {
+          setIsOwner(currentUser.data.user._id === paperBankData.ownerId);
+        }
       } else {
         showErrorRightSlide('获取失败', '获取试卷集信息失败');
       }
@@ -234,14 +242,14 @@ const PaperBankMembersPage: React.FC = () => {
     setSearchResults([]);
   };
 
-  const handleChangeRole = async (memberId: string, newRole: 'manager' | 'collaborator' | 'viewer') => {
+  const handleChangeRole = async (memberId: string, newRole: string) => {
     try {
-      const response = await paperBankAPI.updatePaperBankMemberRole(id!, memberId, newRole);
+      const response = await paperBankAPI.updatePaperBankMemberRole(id!, memberId, newRole as 'manager' | 'collaborator' | 'viewer');
       if (response.data.success) {
         // 更新本地状态中的成员角色
         setMembers(prev => prev.map(member => 
           member._id === memberId 
-            ? { ...member, role: newRole }
+            ? { ...member, role: newRole as 'manager' | 'collaborator' | 'viewer' }
             : member
         ));
         showSuccessRightSlide('角色更新成功', '成员角色已成功更新');
@@ -503,7 +511,7 @@ const PaperBankMembersPage: React.FC = () => {
           transition={{ duration: 0.3, delay: 0.2 }}
         >
           <Card className="p-6">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overflow-y-visible">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-700">
@@ -562,48 +570,41 @@ const PaperBankMembersPage: React.FC = () => {
                         </td>
                         
                         <td className="py-4 px-4">
-                          <div className="flex items-center space-x-2">
-                            {member.role !== 'owner' && (
+                          <div className="flex items-center space-x-3">
+                            {member.role !== 'owner' && isOwner && (
                               <>
-                                <Button
-                                  onClick={() => handleChangeRole(member._id, 'manager')}
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                                  disabled={member.role === 'manager'}
-                                >
-                                  设为管理员
-                                </Button>
-                                
-                                <Button
-                                  onClick={() => handleChangeRole(member._id, 'collaborator')}
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
-                                  disabled={member.role === 'collaborator'}
-                                >
-                                  设为协作者
-                                </Button>
-                                
-                                <Button
-                                  onClick={() => handleChangeRole(member._id, 'viewer')}
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-900/20"
-                                  disabled={member.role === 'viewer'}
-                                >
-                                  设为查看者
-                                </Button>
+                                <RoleSelector
+                                  currentRole={member.role}
+                                  onRoleChange={(newRole) => handleChangeRole(member._id, newRole)}
+                                  disabled={false}
+                                  showLabel={false}
+                                  className="min-w-[140px]"
+                                />
                                 
                                 <Button
                                   onClick={() => handleRemoveMember(member._id)}
                                   variant="ghost"
                                   size="sm"
                                   className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                  title="移除成员"
                                 >
                                   <UserMinus className="w-4 h-4" />
                                 </Button>
                               </>
+                            )}
+                            
+                            {member.role === 'owner' && (
+                              <div className="flex items-center text-gray-500 dark:text-gray-400">
+                                <Crown className="w-4 h-4 mr-2" />
+                                <span className="text-sm">试卷集所有者</span>
+                              </div>
+                            )}
+                            
+                            {!isOwner && (
+                              <div className="flex items-center text-gray-500 dark:text-gray-400">
+                                <Eye className="w-4 h-4 mr-2" />
+                                <span className="text-sm">无权限修改</span>
+                              </div>
                             )}
                           </div>
                         </td>

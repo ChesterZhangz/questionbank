@@ -1,0 +1,155 @@
+/* PracticePaperViewPage 样式 - 仿照QuestionView */
+
+/* 导入QuestionView的样式 */
+@import '../../question/QuestionView.css';
+
+/* 题目卡片增强效果 */
+.question-card-enhanced {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.question-card-enhanced:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 4px 6px -1px rgba(0, 0, 0, 0.06);
+}
+
+.dark .question-card-enhanced:hover {
+  box-shadow: 
+    0 10px 25px -5px rgba(0, 0, 0, 0.3),
+    0 4px 6px -1px rgba(0, 0, 0, 0.2);
+}
+
+/* 难度星级优雅效果 */
+.difficulty-stars-enhanced {
+  color: #fbbf24;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.difficulty-stars-enhanced:hover {
+  transform: scale(1.05);
+}
+
+/* 分类标签特殊样式 */
+.category-tag {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #dbeafe;
+}
+
+.dark .category-tag {
+  background: #1e3a8a;
+  color: #dbeafe;
+  border: 1px solid #1e40af;
+}
+
+.category-tag:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.dark .category-tag:hover {
+  background: #1e40af;
+  border-color: #3b82f6;
+}
+
+/* 知识点标签特殊样式 */
+.knowledge-tag {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fef3c7;
+}
+
+.dark .knowledge-tag {
+  background: #78350f;
+  color: #fef3c7;
+  border: 1px solid #92400e;
+}
+
+.knowledge-tag:hover {
+  background: #fef3c7;
+  border-color: #fde68a;
+}
+
+.dark .knowledge-tag:hover {
+  background: #92400e;
+  border-color: #f59e0b;
+}
+
+/* LaTeX内容样式 - 继承QuestionView的样式 */
+.question-view-latex-content {
+  font-family: 'WenYuan', 'SimSun', 'STSong', 'Times New Roman', 'Times', serif !important;
+  font-size: 1.1em !important;
+  line-height: 1.7 !important;
+  color: inherit !important;
+  
+  /* 确保内容正确显示 */
+  max-width: 100% !important;
+  width: 100% !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+}
+
+/* 题目卡片内容区域优化 */
+.question-card-enhanced .flex-1 {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* 题目内容区域宽度优化 */
+.question-card-enhanced .question-view-latex-content {
+  width: 100% !important;
+  max-width: none !important;
+  padding-right: 0 !important;
+}
+
+/* 移除LaTeX预览的边框和背景 */
+.question-view-latex-content .latex-preview {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.question-view-latex-content .latex-preview-container {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 确保KaTeX公式正确显示 */
+.question-view-latex-content .katex {
+  font-size: 1em !important;
+  line-height: 1.2 !important;
+  color: inherit !important;
+  margin: 0.2em 0 !important;
+  padding: 0.1em 0 !important;
+}
+
+.question-view-latex-content .katex-display {
+  margin: 0.8em 0 !important;
+  text-align: center !important;
+  padding: 0.3em 0 !important;
+}
+
+.question-view-latex-content .katex-html {
+  color: inherit !important;
+}
+
+/* Dark Mode支持 */
+.dark .question-view-latex-content {
+  color: #f6f8fa !important;
+}
+
+.dark .question-view-latex-content .katex {
+  color: #f6f8fa !important;
+}
+
+.dark .question-view-latex-content .katex-display {
+  color: #f6f8fa !important;
+}
+
+.dark .question-view-latex-content .katex-html {
+  color: #f6f8fa !important;
+}
