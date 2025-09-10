@@ -188,18 +188,33 @@ const PaperBankDetailPage: React.FC = () => {
       `确定要删除练习卷"${practice.name}"吗？此操作不可撤销。`, 
       async () => {
         try {
+          // 设置加载状态
+          setConfirmLoading(true, '正在删除...');
+          
           const response = await paperAPI.deletePaper(practice._id);
           if (response.data.success) {
             // 从本地状态中移除已删除的练习卷
             setPractices(prev => prev.filter(p => p._id !== practice._id));
+            
+            // 关闭确认弹窗
+            closeConfirm();
+            
+            // 显示成功提示
             showSuccessRightSlide('删除成功', `练习卷"${practice.name}"已删除`);
           } else {
+            setConfirmLoading(false);
             showErrorRightSlide('删除失败', '删除练习卷失败');
           }
         } catch (error: any) {
           console.error('删除练习卷失败:', error);
+          setConfirmLoading(false);
           showErrorRightSlide('删除失败', error.response?.data?.message || '删除练习卷时发生错误');
         }
+      },
+      {
+        type: 'danger',
+        confirmText: '删除',
+        confirmDanger: true
       }
     );
   };

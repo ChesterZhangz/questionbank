@@ -977,8 +977,10 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
         }
         resultIndex++;
       } else {
-        // 如果没有从URL获取到试卷集ID，但用户可能已经选择了试卷集，保持当前选择
-        // 这里不需要额外处理，selectedPaperBank 会保持初始值
+        // 如果没有从URL获取到试卷集ID，自动选择第一个试卷集
+        if (paperBanks.length > 0) {
+          setSelectedPaperBank(paperBanks[0]._id);
+        }
       }
       
       // 处理编辑模式的数据
@@ -1528,11 +1530,19 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
       // 自动提取标签
       const autoTags = extractTopTags();
 
+      // 确定使用的试卷集ID
+      const bankId = paperBankId || selectedPaperBank;
+      
+      if (!bankId) {
+        showErrorRightSlide('保存失败', '请选择试卷集');
+        return false;
+      }
+
       const practiceData = {
         name: title,
         type: 'practice',
         tags: autoTags,
-        bank: paperBankId,
+        paperBankId: bankId,
         sections: paperSections
       };
 

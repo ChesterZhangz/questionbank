@@ -15,6 +15,14 @@ export class PaperService {
 }
 
 export async function createDraft(input: Partial<IPaper> & { owner: string }): Promise<IPaper> {
+  // 验证必要的字段
+  if (!input.bank) {
+    throw new Error('试卷集ID不能为空');
+  }
+  if (!input.owner) {
+    throw new Error('用户ID不能为空');
+  }
+
   const doc = new Paper({
     name: input.name,
     type: input.type,

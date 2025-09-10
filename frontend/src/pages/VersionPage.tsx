@@ -64,7 +64,8 @@ const versionUpdates: VersionUpdate[] = [
       '修复快速预览中题目不显示的问题',
       '解决试卷集详情页试卷数量计算错误的问题',
       '修复练习卷卡片中状态标签显示问题',
-      '优化练习卷编辑器的保存和返回逻辑'
+      '优化练习卷编辑器的保存和返回逻辑',
+      '修复LaTeX编辑当中小于符号与大于符号一起编辑时显示异常的问题'
     ],
     icon: FileText,
     color: 'from-green-500 to-emerald-600'

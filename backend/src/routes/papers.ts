@@ -50,14 +50,56 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
   try {
     const owner = (req as any).user._id;
     const { libraryId, paperBankId, ...paperData } = req.body;
+    
+    console.log('创建试卷请求数据:', { owner, libraryId, paperBankId, paperData });
 
     // 确定使用哪个ID作为试卷集ID
-    const bankId = paperBankId || libraryId;
+    let bankId = paperBankId || libraryId;
 
-    // 如果指定了试卷集，检查权限
-    if (bankId) {
-      // 这里需要检查用户是否有权限在该试卷集中创建试卷
-      // 暂时跳过，后续可以添加专门的权限检查
+    // 如果没有指定试卷集，自动选择用户拥有的第一个试卷集
+    if (!bankId) {
+      const PaperBank = require('../models/PaperBank').default;
+      const userPaperBanks = await PaperBank.find({ ownerId: owner }).limit(1);
+      if (userPaperBanks.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: '请先创建试卷集，或选择现有试卷集' 
+        });
+      }
+      bankId = userPaperBanks[0]._id;
+    }
+
+    // 验证试卷集ID格式
+    if (!mongoose.Types.ObjectId.isValid(bankId)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: '无效的试卷集ID' 
+      });
+    }
+
+    // 检查用户是否有权限在该试卷集中创建试卷
+    const PaperBank = require('../models/PaperBank').default;
+    const paperBank = await PaperBank.findById(bankId);
+    if (!paperBank) {
+      return res.status(404).json({ 
+        success: false, 
+        error: '试卷集不存在' 
+      });
+    }
+
+    // 检查权限（只有拥有者和管理员可以创建试卷）
+    const PaperBankMember = require('../models/PaperBankMember').default;
+    const membership = await PaperBankMember.findOne({ 
+      paperBankId: bankId, 
+      userId: owner 
+    });
+    
+    if (paperBank.ownerId.toString() !== owner.toString() && 
+        (!membership || !['manager', 'collaborator'].includes(membership.role))) {
+      return res.status(403).json({ 
+        success: false, 
+        error: '没有权限在此试卷集中创建试卷' 
+      });
     }
 
     const paper = await createDraft({ ...paperData, owner, libraryId: bankId, bank: bankId });

@@ -10,6 +10,7 @@ import LoadingPage from '../../components/ui/LoadingPage';
 import { useNavigate } from 'react-router-dom';
 import { useModal } from '../../hooks/useModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 import { PracticePaperCard } from '../../components/paper';
 
 const animationStyles = `
@@ -91,7 +92,16 @@ interface Paper {
 
 const MyPapersPage: React.FC = () => {
   const navigate = useNavigate();
-  const { rightSlideModal, closeRightSlide } = useModal();
+  const { 
+    rightSlideModal, 
+    closeRightSlide, 
+    confirmModal, 
+    showConfirm, 
+    closeConfirm, 
+    setConfirmLoading,
+    showSuccessRightSlide,
+    showErrorRightSlide
+  } = useModal();
   
   // 状态管理
   const [papers, setPapers] = useState<Paper[]>([]);
@@ -241,6 +251,44 @@ const MyPapersPage: React.FC = () => {
     }
   };
 
+  // 删除试卷
+  const handleDeletePaper = (paper: any) => {
+    showConfirm(
+      '删除试卷', 
+      `确定要删除试卷"${paper.name}"吗？此操作不可撤销。`, 
+      async () => {
+        try {
+          // 设置加载状态
+          setConfirmLoading(true, '正在删除...');
+          
+          const response = await paperAPI.deletePaper(paper._id);
+          if (response.data.success) {
+            // 从本地状态中移除已删除的试卷
+            setPapers(prev => prev.filter(p => p._id !== paper._id));
+            
+            // 关闭确认弹窗
+            closeConfirm();
+            
+            // 显示成功提示
+            showSuccessRightSlide('删除成功', `试卷"${paper.name}"已删除`);
+          } else {
+            setConfirmLoading(false);
+            showErrorRightSlide('删除失败', '删除试卷失败');
+          }
+        } catch (error: any) {
+          console.error('删除试卷失败:', error);
+          setConfirmLoading(false);
+          showErrorRightSlide('删除失败', error.response?.data?.message || '删除试卷时发生错误');
+        }
+      },
+      {
+        type: 'danger',
+        confirmText: '删除',
+        confirmDanger: true
+      }
+    );
+  };
+
 
   // 获取角色标签样式
   const getRoleBadgeStyle = (role: string) => {
@@ -376,15 +424,19 @@ const MyPapersPage: React.FC = () => {
                   <div className="text-sm text-gray-500 dark:text-gray-400">
                     创建者: {paper.owner.name}
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditPaper(paper)}
-                    className="flex items-center space-x-1"
-                  >
-                    <Edit className="w-4 h-4" />
-                    <span>更新</span>
-                  </Button>
+                  
+                  {/* 删除按钮 - 只有创建者和管理员可以删除 */}
+                  {['creator', 'manager'].includes(paper.userRole) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeletePaper(paper)}
+                      className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:border-red-300 dark:text-red-400 dark:hover:text-red-300"
+                    >
+                      <X className="w-4 h-4" />
+                      <span>删除</span>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -816,6 +868,22 @@ const MyPapersPage: React.FC = () => {
         width={rightSlideModal.width}
         autoClose={rightSlideModal.autoClose}
         showProgress={rightSlideModal.showProgress}
+      />
+
+      {/* 确认删除弹窗 */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onCancel={closeConfirm}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+        confirmText={confirmModal.confirmText}
+        cancelText={confirmModal.cancelText}
+        confirmDanger={confirmModal.confirmDanger}
+        confirmLoading={confirmModal.confirmLoading}
+        loadingText={confirmModal.loadingText}
+        preventClose={confirmModal.preventClose}
       />
 
     </div>
