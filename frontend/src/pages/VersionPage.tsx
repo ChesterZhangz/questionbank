@@ -39,20 +39,31 @@ interface VersionUpdate {
 const versionUpdates: VersionUpdate[] = [
   {
     version: 'v0.82',
-    date: '2025-09-11',
-    title: '双语支持 & 介绍页面完善',
-    description: '新增双语支持，完善介绍页面，优化用户体验和系统稳定性。',
+    date: '2025-01-12',
+    title: 'VCount充值系统 & 双语支持完善',
+    description: '新增VCount充值系统，完善双语支持，修复多个界面显示问题，优化用户体验和系统稳定性。',
     features: [
-      '双语支持：新增英文支持，优化用户体验',
-      '介绍页面完善：新增介绍页面，优化用户体验',
-      '优化用户体验：简化操作流程，减少不必要的确认步骤',
-      '优化系统稳定性：优化系统稳定性，提升用户体验',
+      'VCount充值系统：用户充值页面、管理员管理页面、支付方式绑定接口预留',
+      'VCount管理功能：用户列表显示、数据导出、统计信息、搜索排序',
+      '双语支持完善：新增VCount相关翻译，修复国际化键值显示问题',
+      'Profile页面优化：修复VCount充值按钮点击问题，完善用户界面',
+      '支付系统接口预留：完整的支付方式管理API接口设计',
+      '数据导出功能：CSV格式导出，支持中文字符，BOM编码支持'
     ],
     improvements: [
-      '在首页设置了语言切换',
+      'VCount系统集成：统一的虚拟货币管理体验',
+      '管理员功能增强：完整的用户数据管理和导出功能',
+      '国际化系统完善：修复缺失的翻译键值，确保双语显示正常',
+      '用户体验提升：修复按钮点击问题，优化界面交互',
+      '数据管理优化：支持大数据量用户列表显示和导出'
     ],
     fixes: [
-      '修复了语言翻译时延时的问题',
+      '修复Profile页面VCount充值按钮无法点击的问题',
+      '修复VCount充值页面中"common.characters"国际化键值显示问题',
+      '修复VCount充值页面showErrorRightSlide弹窗不显示的问题',
+      '修复VCount管理页面用户列表只显示5个用户的问题',
+      '修复国际化翻译文件中缺失的"characters"翻译',
+      '修复RightSlideModal组件未正确渲染导致的弹窗显示问题'
     ],
     icon: FileText,
     color: 'from-green-500 to-emerald-600'
@@ -1142,10 +1153,10 @@ const VersionPage: React.FC = () => {
               <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Star className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">当前版本 v0.81</h2>
-              <p className="text-pink-100 text-lg mb-4">练习卷系统完善 & 试卷集显示修复</p>
+              <h2 className="text-2xl font-bold mb-2">当前版本 v0.82</h2>
+              <p className="text-pink-100 text-lg mb-4">VCount充值系统 & 双语支持完善</p>
               <p className="text-pink-200">
-                完善练习卷编辑功能，修复试卷集显示异常问题，优化用户体验和系统稳定性。动态试卷数量计算、快速预览功能、数据一致性修复等多项改进！
+                新增VCount充值系统，完善双语支持，修复多个界面显示问题。VCount管理功能、数据导出、支付系统接口预留等多项新功能和修复！
               </p>
             </div>
           </Card>

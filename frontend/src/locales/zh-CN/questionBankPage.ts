@@ -130,6 +130,7 @@ export const questionBankPage = {
     
     // 选项设置
     options: {
+      option: '选项 {number}',
       title: '选项设置',
       questionType: '题目类型',
       singleChoice: '单选题',
@@ -1272,6 +1273,10 @@ export const questionBankPage = {
     foundMatches: '，找到 {count} 个匹配项',
     usageExample: '使用示例：',
     year: '年',
+    school_ex: '上海中学',
+    grade_ex: '高一',
+    property_ex: "期中",
+    number_ex: '·T5',
     grade: '年级',
     examType: '考试类型',
     questionNumber: '题号'

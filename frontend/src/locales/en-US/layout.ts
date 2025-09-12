@@ -13,6 +13,7 @@ export const layout = {
     admin: 'Admin Panel',
     enterpriseManagement: 'Enterprise Management',
     userManagement: 'User Management',
+    vcountManagement: 'VCount Management',
     createQuestion: 'Create Question',
     questionTypes: 'Question Types',
     difficulty: 'Difficulty Settings',
@@ -48,6 +49,7 @@ export const layout = {
   header: {
     search: 'Search',
     searchPlaceholder: 'Search questions, tags or content...',
+    vcountRecharge: 'VCount Recharge',
     notifications: 'Notifications',
     profile: 'Profile',
     settings: 'Settings',

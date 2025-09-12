@@ -122,6 +122,7 @@ export const questionBankPage = {
     
     // Placeholders
     placeholders: {
+      option: 'option {number}',
       questionContent: 'Enter question content',
       solution: 'Enter question solution',
       answer: 'Answer {number}',
@@ -130,6 +131,7 @@ export const questionBankPage = {
     
     // Options settings
     options: {
+      option: 'Option {number}',
       title: 'Options Settings',
       questionType: 'Question Type',
       singleChoice: 'Single Choice',
@@ -139,7 +141,8 @@ export const questionBankPage = {
       addOption: 'Add Option',
       removeOption: 'Remove Option',
       select: 'Select Answer',
-      unselect: 'Unselect'
+      unselect: 'Unselect',
+      delete: 'Delete'
     },
     
     // Answer settings
@@ -219,6 +222,12 @@ export const questionBankPage = {
     preview: {
       title: 'Question Preview'
     },
+    
+    // Confirmation dialogs
+    confirm: {
+      exitMultiMode: 'Exit Multi-Question Mode',
+      exitMultiModeMessage: 'Are you sure you want to exit multi-question mode? Unsaved questions will be lost.'
+    }
   },
 
   // EditQuestionBankPage - Edit Question Bank Page
@@ -311,11 +320,20 @@ export const questionBankPage = {
       difficulty: 'Difficulty',
       category: 'Question Type',
       tags: 'Knowledge Tags',
-      source: 'Source'
+      source: 'Source',
+      solution: 'Solution'
+    },
+    
+    // Placeholders
+    placeholders: {
+      questionContent: 'Enter question content',
+      solution: 'Enter question solution',
+      answer: 'Answer {number}'
     },
     
     // Options settings
     options: {
+      option: 'Option {number}',
       title: 'Options Settings',
       questionType: 'Question Type',
       singleChoice: 'Single Choice',
@@ -325,7 +343,8 @@ export const questionBankPage = {
       addOption: 'Add Option',
       removeOption: 'Remove Option',
       select: 'Select Answer',
-      unselect: 'Unselect'
+      unselect: 'Unselect',
+      delete: 'Delete'
     },
     
     // Answer settings
@@ -1256,6 +1275,10 @@ export const questionBankPage = {
     foundMatches: ', found {count} matches',
     usageExample: 'Usage Example:',
     year: 'Year',
+    school_ex: 'Shanghai High School',
+    grade_ex: 'Grade 1',
+    property_ex: 'Midterm',
+    number_ex: '·T5',
     grade: 'Grade',
     examType: 'Exam Type',
     questionNumber: 'Question Number'

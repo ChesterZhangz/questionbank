@@ -628,6 +628,36 @@ export const paperBanks = {
     }
   },
 
+  // 试卷集邀请接受页面
+  invitation: {
+    title: 'Paper Bank Invitation',
+    subtitle: 'Accepting invitation to join "{name}"',
+    messages: {
+      loading: 'Loading invitation...',
+      processing: 'Processing invitation...',
+      pleaseWait: 'Please wait while we process your invitation',
+      invalidLink: 'Invalid invitation link. Please check the link and try again.',
+      acceptSuccess: 'Successfully joined "{name}"!',
+      acceptFailed: 'Failed to accept invitation. Please try again.'
+    },
+    actions: {
+      viewPaperBank: 'View Paper Bank',
+      viewAllPaperBanks: 'View All Paper Banks',
+      backToPaperBanks: 'Back to Paper Banks'
+    }
+  },
+
+  // 角色更改弹窗
+  changeRole: {
+    title: 'Change Member Role',
+    currentRole: 'Current Role',
+    selectNewRole: 'Select New Role',
+    current: 'Current',
+    cancel: 'Cancel',
+    confirm: 'Confirm Change',
+    updating: 'Updating...'
+  },
+
   // Form validation
   validation: {
     required: 'This field is required',

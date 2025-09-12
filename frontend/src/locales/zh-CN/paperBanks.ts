@@ -628,6 +628,36 @@ export const paperBanks = {
     }
   },
 
+  // 试卷集邀请接受页面
+  invitation: {
+    title: '试卷集邀请',
+    subtitle: '正在接受加入"{name}"的邀请',
+    messages: {
+      loading: '正在加载邀请...',
+      processing: '正在处理邀请...',
+      pleaseWait: '请稍候，我们正在处理您的邀请',
+      invalidLink: '无效的邀请链接。请检查链接后重试。',
+      acceptSuccess: '成功加入"{name}"！',
+      acceptFailed: '接受邀请失败，请重试。'
+    },
+    actions: {
+      viewPaperBank: '查看试卷集',
+      viewAllPaperBanks: '查看所有试卷集',
+      backToPaperBanks: '返回试卷集列表'
+    }
+  },
+
+  // 角色更改弹窗
+  changeRole: {
+    title: '更改成员角色',
+    currentRole: '当前角色',
+    selectNewRole: '选择新角色',
+    current: '当前',
+    cancel: '取消',
+    confirm: '确认更改',
+    updating: '更新中...'
+  },
+
   // 表单验证
   validation: {
     required: '此字段为必填项',

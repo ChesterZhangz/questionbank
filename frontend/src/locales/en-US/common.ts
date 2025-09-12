@@ -160,4 +160,7 @@ export const common = {
   many: 'Many',
   all: 'All',
   some: 'Some',
+  
+  // Text related
+  characters: 'characters',
 };

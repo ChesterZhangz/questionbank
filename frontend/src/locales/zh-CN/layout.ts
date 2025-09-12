@@ -13,6 +13,7 @@ export const layout = {
     admin: '管理者页面',
     enterpriseManagement: '企业管理',
     userManagement: '用户管理',
+    vcountManagement: 'VCount管理',
     createQuestion: '创建题目',
     questionTypes: '题目类型',
     difficulty: '难度设置',
@@ -48,6 +49,7 @@ export const layout = {
   header: {
     search: '搜索',
     searchPlaceholder: '搜索题目、标签或内容...',
+    vcountRecharge: 'VCount充值',
     notifications: '通知',
     profile: '个人资料',
     settings: '设置',

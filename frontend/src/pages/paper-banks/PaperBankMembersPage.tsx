@@ -20,7 +20,7 @@ import {
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
-import RoleSelector from '../../components/ui/RoleSelector';
+import RoleChangeModal from '../../components/ui/RoleChangeModal';
 import { useModal } from '../../hooks/useModal';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
@@ -77,6 +77,8 @@ const PaperBankMembersPage: React.FC = () => {
   const [inviteRole, setInviteRole] = useState<'manager' | 'collaborator' | 'viewer'>('collaborator');
   const [inviting, setInviting] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [showRoleChangeModal, setShowRoleChangeModal] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<PaperBankMember | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -244,6 +246,16 @@ const PaperBankMembersPage: React.FC = () => {
     setSearchResults([]);
   };
 
+  const handleOpenRoleChangeModal = (member: PaperBankMember) => {
+    setSelectedMember(member);
+    setShowRoleChangeModal(true);
+  };
+
+  const handleCloseRoleChangeModal = () => {
+    setShowRoleChangeModal(false);
+    setSelectedMember(null);
+  };
+
   const handleChangeRole = async (memberId: string, newRole: string) => {
     try {
       const response = await paperBankAPI.updatePaperBankMemberRole(id!, memberId, newRole as 'manager' | 'collaborator' | 'viewer');
@@ -261,6 +273,11 @@ const PaperBankMembersPage: React.FC = () => {
     } catch (error: any) {
       showErrorRightSlide(t('paperBanks.members.messages.roleUpdateFailed'), t('paperBanks.members.messages.roleUpdateFailedMessage'));
     }
+  };
+
+  const handleRoleChangeFromModal = async (newRole: string) => {
+    if (!selectedMember) return;
+    await handleChangeRole(selectedMember._id, newRole);
   };
 
   const handleRemoveMember = (memberId: string) => {
@@ -575,13 +592,17 @@ const PaperBankMembersPage: React.FC = () => {
                           <div className="flex items-center space-x-3">
                             {member.role !== 'owner' && isOwner && (
                               <>
-                                <RoleSelector
-                                  currentRole={member.role}
-                                  onRoleChange={(newRole) => handleChangeRole(member._id, newRole)}
-                                  disabled={false}
-                                  showLabel={false}
-                                  className="min-w-[140px]"
-                                />
+                                <Button
+                                  onClick={() => handleOpenRoleChangeModal(member)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="min-w-[140px] justify-start"
+                                >
+                                  <RoleIcon className={`w-4 h-4 mr-2 ${getRoleColor(member.role)}`} />
+                                  <span className={`text-sm font-medium ${getRoleColor(member.role)}`}>
+                                    {getRoleLabel(member.role)}
+                                  </span>
+                                </Button>
                                 
                                 <Button
                                   onClick={() => handleRemoveMember(member._id)}
@@ -630,6 +651,18 @@ const PaperBankMembersPage: React.FC = () => {
       {/* 弹窗组件 */}
       <ConfirmModal {...confirmModal} onCancel={closeConfirm} />
       <RightSlideModal {...rightSlideModal} onClose={closeRightSlide} />
+      
+      {/* 角色更改弹窗 */}
+      {selectedMember && (
+        <RoleChangeModal
+          isOpen={showRoleChangeModal}
+          onClose={handleCloseRoleChangeModal}
+          currentRole={selectedMember.role}
+          memberName={selectedMember.username}
+          memberEmail={selectedMember.email}
+          onRoleChange={handleRoleChangeFromModal}
+        />
+      )}
 
       {/* 邀请成员表单弹窗 */}
       {showInviteForm && (

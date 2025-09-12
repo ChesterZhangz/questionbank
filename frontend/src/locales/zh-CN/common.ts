@@ -160,4 +160,7 @@ export const common = {
   many: '多',
   all: '全部',
   some: '部分',
+  
+  // 文本相关
+  characters: '字符',
 };

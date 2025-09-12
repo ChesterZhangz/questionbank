@@ -7,7 +7,8 @@ import {
   LogOut,
   User,
   Building2,
-  Menu
+  Menu,
+  Coins
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import Avatar from '../ui/Avatar';
@@ -175,6 +176,16 @@ const Header: React.FC<HeaderProps> = ({
                     >
                       <Building2 className="w-4 h-4" />
                       {t('layout.sidebar.myEnterprise')}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        navigate('/vcount/recharge');
+                      }}
+                      className="w-full flex items-center gap-4 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-700/80 transition-all duration-200"
+                    >
+                      <Coins className="w-4 h-4" />
+                      {t('layout.header.vcountRecharge')}
                     </button>
                     <button
                       onClick={() => {

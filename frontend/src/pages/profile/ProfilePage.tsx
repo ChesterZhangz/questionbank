@@ -658,6 +658,7 @@ const ProfilePage: React.FC = () => {
                         className="mt-4"
                       >
             <motion.button
+              onClick={() => navigate('/vcount/recharge')}
               whileHover={{ 
                             scale: 1.02,
                             boxShadow: "0 10px 25px rgba(99, 102, 241, 0.3)"

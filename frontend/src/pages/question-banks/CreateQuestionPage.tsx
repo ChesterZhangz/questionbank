@@ -346,8 +346,10 @@ const CreateQuestionPage: React.FC = () => {
       setLoadingBanks(true);
       try {
         const response = await questionBankAPI.getQuestionBanks();
-        setQuestionBanks(response.data.questionBanks || []);
+        const banks = response.data.questionBanks || [];
+        setQuestionBanks(banks);
       } catch (error) {
+        console.error('获取题库列表失败:', error);
         // 获取题库列表失败
         showErrorRightSlide(t('questionBankPage.CreateQuestionPage.errors.loadFailed'), t('questionBankPage.CreateQuestionPage.errors.loadFailed'));
       } finally {
@@ -366,9 +368,10 @@ const CreateQuestionPage: React.FC = () => {
   // 当前选择题库 - 只从有权限的题库中选择
   const selectedBank = availableBanks.find(bank => bank.bid === selectedBankId);
 
-  // 处理URL中的bid参数和题库选择
+  // 处理URL中的bid参数和题库选择 - 只在初始化时设置，避免覆盖用户手动选择
   useEffect(() => {
-    if (!loadingBanks && availableBanks.length > 0) {
+    if (!loadingBanks && availableBanks.length > 0 && !selectedBankId) {
+      // 只在没有已选择题库时才设置默认题库
       // 如果有URL中的bid参数，检查是否有权限
       if (bid) {
         const hasPermission = availableBanks.find(bank => bank.bid === bid);
@@ -383,7 +386,7 @@ const CreateQuestionPage: React.FC = () => {
         setSelectedBankId(availableBanks[0].bid);
       }
     }
-  }, [availableBanks, loadingBanks, bid]);
+  }, [availableBanks, loadingBanks, bid, selectedBankId]);
 
   // 如果当前选择的题库不在可用题库列表中，重置选择
   useEffect(() => {
@@ -401,6 +404,8 @@ const CreateQuestionPage: React.FC = () => {
     if (bank) {
       setSelectedBankId(bankId);
       setShowBankDropdown(false);
+    } else {
+      console.error('无法选择题库，权限不足:', bankId);
     }
   };
 
@@ -673,7 +678,7 @@ const CreateQuestionPage: React.FC = () => {
     }
 
     // 权限检查：确保用户对当前选择题库有创建题目的权限
-    const selectedBank = questionBanks.find(bank => bank.bid === selectedBankId);
+    const selectedBank = availableBanks.find(bank => bank.bid === selectedBankId);
     if (!selectedBank || (selectedBank.userRole !== 'creator' && selectedBank.userRole !== 'manager' && selectedBank.userRole !== 'collaborator')) {
       const errorMessage = t('questionBankPage.CreateQuestionPage.permissions.noPermissionForBank');
       setPermissionError(errorMessage);
@@ -1386,7 +1391,7 @@ const CreateQuestionPage: React.FC = () => {
                             <Input
                               value={option}
                               onChange={(e) => handleOptionChange(index, e.target.value)}
-                              placeholder={`选项 ${String.fromCharCode(65 + index)}`}
+                              placeholder={t('questionBankPage.CreateQuestionPage.placeholders.option', { number: String.fromCharCode(65 + index) })}
                               className="flex-1"
                               enableLatexAutoComplete={true}
                             />

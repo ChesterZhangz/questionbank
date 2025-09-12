@@ -15,7 +15,8 @@ import {
   Shield,
   Info,
   Building2,
-  ClipboardList
+  ClipboardList,
+  Coins
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import Avatar from '../ui/Avatar';
@@ -70,7 +71,8 @@ const getNavSections = (t: any): NavSection[] => [
     title: t('layout.sidebar.admin'),
     items: [
       { id: 'enterprise-management', label: t('layout.sidebar.enterpriseManagement'), icon: Shield, path: '/enterprise-management', requiresSuperAdmin: true },
-      { id: 'users', label: t('layout.sidebar.userManagement'), icon: Users, path: '/users', requiresAdmin: true }
+      { id: 'users', label: t('layout.sidebar.userManagement'), icon: Users, path: '/users', requiresAdmin: true },
+      { id: 'vcount-management', label: t('layout.sidebar.vcountManagement'), icon: Coins, path: '/vcount/management', requiresAdmin: true }
     ]
   }
 ];
@@ -127,6 +129,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       setActiveSection('enterprise-management');
     } else if (currentPath.startsWith('/users')) {
       setActiveSection('users');
+    } else if (currentPath.startsWith('/vcount/management')) {
+      setActiveSection('vcount-management');
     } else if (currentPath.startsWith('/analytics')) {
       setActiveSection('analytics');
     } else if (currentPath === '/settings') {
@@ -443,7 +447,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                   exit={{ opacity: 0 }}
                   className="flex items-center gap-2"
                 >
-                  <span className="text-xs">v0.81</span>
+                  <span className="text-xs">v0.82</span>
                   <span className="text-xs opacity-75">{t('layout.sidebar.version')}</span>
                 </motion.div>
               )}

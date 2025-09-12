@@ -33,6 +33,7 @@ import practiceEditor from './practiceEditor';
 import profile from './profile';
 import { questionBankPage } from './questionBankPage';
 import { introduction } from './introduction';
+import vcount from './vcount';
 
 export const zhCN = {
   common,
@@ -69,6 +70,7 @@ export const zhCN = {
   profile,
   questionBankPage,
   introduction,
+  vcount,
   
   // 语言信息
   language: {

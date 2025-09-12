@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -207,42 +208,60 @@ const Tooltip: React.FC<{ children: React.ReactNode; content: string; position?:
   position = 'top' 
 }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const triggerRef = useRef<HTMLDivElement>(null);
+
+  const updatePosition = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      
+      let x = rect.left + rect.width / 2;
+      let y = rect.top + rect.height / 2;
+
+      if (position === 'top') {
+        y = rect.top - 8;
+      } else if (position === 'bottom') {
+        y = rect.bottom + 8;
+      } else if (position === 'left') {
+        x = rect.left - 8;
+      } else if (position === 'right') {
+        x = rect.right + 8;
+      }
+
+      setTooltipPosition({ x, y });
+    }
+  };
+
+  const handleMouseEnter = () => {
+    updatePosition();
+    setIsVisible(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsVisible(false);
+  };
 
   return (
-    <div 
-      className="relative inline-block"
-      onMouseEnter={() => setIsVisible(true)}
-      onMouseLeave={() => setIsVisible(false)}
-    >
-      {children}
-      {isVisible && (
+    <>
+      <div 
+        ref={triggerRef}
+        className="relative inline-block"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        {children}
+      </div>
+      {isVisible && createPortal(
         <div
-          className="absolute z-50 px-3 py-2 text-xs text-white bg-gray-900 dark:bg-gray-700 rounded-md shadow-lg whitespace-nowrap"
+          className="fixed z-[999999] px-3 py-2 text-xs text-white bg-gray-900 dark:bg-gray-700 rounded-md shadow-lg whitespace-nowrap pointer-events-none"
           style={{
-            ...(position === 'top' && {
-              bottom: '100%',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              marginBottom: '8px'
-            }),
-            ...(position === 'bottom' && {
-              top: '100%',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              marginTop: '8px'
-            }),
-            ...(position === 'left' && {
-              right: '100%',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              marginRight: '8px'
-            }),
-            ...(position === 'right' && {
-              left: '100%',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              marginLeft: '8px'
-            })
+            left: `${tooltipPosition.x}px`,
+            top: `${tooltipPosition.y}px`,
+            transform: position === 'top' || position === 'bottom' ? 'translateX(-50%)' : 'translateY(-50%)',
+            ...(position === 'top' && { transform: 'translateX(-50%) translateY(-100%)' }),
+            ...(position === 'bottom' && { transform: 'translateX(-50%)' }),
+            ...(position === 'left' && { transform: 'translateX(-100%) translateY(-50%)' }),
+            ...(position === 'right' && { transform: 'translateY(-50%)' })
           }}
         >
           {content}
@@ -275,9 +294,10 @@ const Tooltip: React.FC<{ children: React.ReactNode; content: string; position?:
               })
             }}
           ></div>
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 };
 

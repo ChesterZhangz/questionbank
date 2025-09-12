@@ -741,6 +741,73 @@ router.post('/:id/members', authMiddleware, [
   }
 });
 
+// 接受试卷集邀请
+router.post('/:id/accept-invitation', authMiddleware, [
+  body('email').isEmail().withMessage('邮箱格式不正确'),
+  body('role').isIn(['manager', 'collaborator', 'viewer']).withMessage('角色必须是manager、collaborator或viewer')
+], async (req: AuthRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, error: errors.array()[0].msg });
+    }
+
+    const { id } = req.params;
+    const { email, role } = req.body;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, error: '未授权访问' });
+    }
+
+    // 验证当前用户的邮箱是否匹配邀请
+    const user = await User.findById(userId);
+    if (!user || user.email !== email) {
+      return res.status(403).json({ success: false, error: '邮箱不匹配，无法接受邀请' });
+    }
+
+    // 检查试卷集是否存在
+    const paperBank = await PaperBank.findById(id);
+    if (!paperBank) {
+      return res.status(404).json({ success: false, error: '试卷集不存在' });
+    }
+
+    // 检查用户是否已经是成员
+    const existingMember = await PaperBankMember.findOne({ 
+      paperBankId: id, 
+      userId: userId 
+    });
+    if (existingMember) {
+      return res.status(400).json({ success: false, error: '您已经是该试卷集的成员' });
+    }
+
+    // 创建新成员
+    const member = new PaperBankMember({
+      paperBankId: id,
+      userId: userId,
+      username: user.name,
+      email: user.email,
+      role,
+      joinedAt: new Date(),
+      lastActiveAt: new Date()
+    });
+
+    await member.save();
+
+    // 更新试卷集的成员数量
+    await PaperBank.findByIdAndUpdate(id, { $inc: { memberCount: 1 } });
+
+    return res.json({
+      success: true,
+      data: member,
+      message: '成功接受邀请，您已成为试卷集成员'
+    });
+  } catch (error: any) {
+    console.error('接受试卷集邀请失败:', error);
+    return res.status(500).json({ success: false, error: '接受邀请失败' });
+  }
+});
+
 // 购买试卷集
 router.post('/:id/purchase', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {

@@ -40,6 +40,7 @@ const PaperBankDetailPage = lazy(() => import('./pages/paper-banks/PaperBankDeta
 const CreatePaperBankPage = lazy(() => import('./pages/paper-banks/CreatePaperBankPage'));
 const EditPaperBankPage = lazy(() => import('./pages/paper-banks/EditPaperBankPage'));
 const PaperBankMembersPage = lazy(() => import('./pages/paper-banks/PaperBankMembersPage'));
+const PaperBankAcceptInvitationPage = lazy(() => import('./pages/paper-banks/PaperBankAcceptInvitationPage'));
 const MyPapersPage = lazy(() => import('./pages/paper-banks/MyPapersPage'));
 const CreatePaperPage = lazy(() => import('./pages/papers/CreatePaperPage'));
 // 暂时禁用讲义功能
@@ -47,6 +48,8 @@ const CreatePaperPage = lazy(() => import('./pages/papers/CreatePaperPage'));
 const PracticePage = lazy(() => import('./pages/practice/PracticePage'));
 const PracticeEditorPage = lazy(() => import('./pages/practice-editor/PracticeEditorPage'));
 const PracticePaperViewPage = lazy(() => import('./components/paper/preview/PracticePaperViewPage'));
+const VCountRechargePage = lazy(() => import('./pages/vcount/VCountRechargePage'));
+const VCountManagementPage = lazy(() => import('./pages/vcount/VCountManagementPage'));
 // const LaTeXTestDemo = lazy(() => import('./pages/LaTeXTestDemo'));
 
 
@@ -348,6 +351,14 @@ const App: React.FC = () => {
                     </ProtectedRoute>
                   }
                 />
+                <Route
+                  path="/paper-banks/:id/accept-invitation"
+                  element={
+                    <ProtectedRoute>
+                      <PaperBankAcceptInvitationPage />
+                    </ProtectedRoute>
+                  }
+                />
 
             {/* 讲义编辑器路由 - 暂时禁用 */}
             {/* <Route
@@ -625,6 +636,27 @@ const App: React.FC = () => {
             <Route path="/" element={<IntroductionPage />} />
             <Route path="/introduction" element={<IntroductionPage />} />
 
+            {/* VCount页面路由 */}
+            <Route 
+              path="/vcount/recharge" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <VCountRechargePage />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/vcount/management" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <VCountManagementPage />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
             
             {/* 错误页面路由 */}
             <Route path="/error/400" element={<Page400 />} />

@@ -620,6 +620,31 @@ export const vcountAPI = {
   // 退款VCount
   refund: (data: { amount: number; description: string; relatedId: string; relatedModel: string }) => 
     api.post<{ success: boolean; message: string; data: any }>('/vcount/refund', data),
+  
+  // 管理员：获取所有用户的VCount信息
+  getAdminAllUsers: (params?: { page?: number; limit?: number }) =>
+    api.get<{ success: boolean; data: any }>('/vcount/admin/all', { params }),
+
+  // 支付方式相关接口预留
+  // 检查用户是否已绑定支付方式
+  checkPaymentMethod: () => 
+    api.get<{ success: boolean; data: { hasPaymentMethod: boolean } }>('/vcount/payment-method/check'),
+  
+  // 获取用户绑定的支付方式列表
+  getPaymentMethods: () => 
+    api.get<{ success: boolean; data: { paymentMethods: any[] } }>('/vcount/payment-method/list'),
+  
+  // 绑定支付方式
+  bindPaymentMethod: (data: { type: string; account: string; name?: string }) => 
+    api.post<{ success: boolean; message: string }>('/vcount/payment-method/bind', data),
+  
+  // 解绑支付方式
+  unbindPaymentMethod: (paymentMethodId: string) => 
+    api.delete<{ success: boolean; message: string }>(`/vcount/payment-method/${paymentMethodId}`),
+  
+  // 设置默认支付方式
+  setDefaultPaymentMethod: (paymentMethodId: string) => 
+    api.put<{ success: boolean; message: string }>(`/vcount/payment-method/${paymentMethodId}/default`),
 };
 
 // 试卷集API
@@ -687,6 +712,10 @@ export const paperBankAPI = {
   // 获取我的试卷列表
   getMyPapers: (params?: any) => 
     api.get<{ success: boolean; data: { papers: any[]; pagination: any } }>('/paper-banks/my-papers', { params }),
+  
+  // 接受试卷集邀请
+  acceptPaperBankInvitation: (id: string, data: { email: string; role: string }) => 
+    api.post<{ success: boolean; data: any; message: string }>(`/paper-banks/${id}/accept-invitation`, data),
 };
 
 // 试卷API

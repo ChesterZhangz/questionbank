@@ -324,10 +324,10 @@ const QuestionSourceSelector: React.FC<QuestionSourceSelectorProps> = ({
             <p>{t('questionBankPage.questionSourceSelector.usageExample')}</p>
             <div className="flex flex-wrap gap-2 text-xs">
               <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">2024{t('questionBankPage.questionSourceSelector.year')}</span>
-              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">上海中学</span>
-              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">高一</span>
-              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">期中</span>
-              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">·T5</span>
+              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">{t('questionBankPage.questionSourceSelector.school_ex')}</span>
+              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">{t('questionBankPage.questionSourceSelector.grade_ex')}</span>
+              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">{t('questionBankPage.questionSourceSelector.property_ex')}</span>
+              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">{t('questionBankPage.questionSourceSelector.number_ex')}</span>
             </div>
           </div>
         )}

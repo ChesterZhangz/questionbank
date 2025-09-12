@@ -33,6 +33,7 @@ import practiceEditor from './practiceEditor';
 import profile from './profile';
 import { questionBankPage } from './questionBankPage';
 import { introduction } from './introduction';
+import vcount from './vcount';
 
 export const enUS = {
   common,
@@ -69,6 +70,7 @@ export const enUS = {
   profile,
   questionBankPage,
   introduction,
+  vcount,
   
   // Language information
   language: {
