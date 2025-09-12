@@ -50,7 +50,8 @@ const vcount = {
     accessDeniedMessage: '只有管理员才能访问此页面',
     userDetail: '用户详情',
     userInfo: '用户信息',
-    vcountInfo: 'VCount信息'
+    vcountInfo: 'VCount信息',
+    action: '操作'
   },
 
   // 通用VCount相关
