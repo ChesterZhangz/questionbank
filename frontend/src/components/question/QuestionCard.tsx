@@ -26,6 +26,7 @@ import TikZPreview from '../tikz/core/TikZPreview';
 
 import { useModal } from '../../hooks/useModal';
 import ConfirmModal from '../ui/ConfirmModal';
+import { useTranslation } from '../../hooks/useTranslation';
 // 导入QuestionCard专用的LaTeX样式
 import './QuestionCard.css';
 
@@ -65,6 +66,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
   viewMode = 'grid',
   onDelete
 }) => {
+  const { t } = useTranslation();
   // 弹窗状态管理
   const { confirmModal, closeConfirm } = useModal();
   
@@ -183,11 +185,11 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
   // 题目类型文本
   const getQuestionTypeText = (type: string) => {
     switch (type) {
-      case 'choice': return '选择题';
-      case 'multiple-choice': return '多选题';
-      case 'fill': return '填空题';
-      case 'solution': return '解答题';
-      default: return '未知类型';
+      case 'choice': return t('question.questionCard.questionType.choice');
+      case 'multiple-choice': return t('question.questionCard.questionType.multipleChoice');
+      case 'fill': return t('question.questionCard.questionType.fill');
+      case 'solution': return t('question.questionCard.questionType.solution');
+      default: return t('question.questionCard.questionType.unknown');
     }
   };
 
@@ -217,12 +219,12 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
   // 难度文本
   const getDifficultyText = (difficulty: number) => {
     switch (difficulty) {
-      case 1: return '非常简单';
-      case 2: return '简单';
-      case 3: return '中等';
-      case 4: return '困难';
-      case 5: return '非常困难';
-      default: return '未知';
+      case 1: return t('question.questionCard.difficult_level.easy');
+      case 2: return t('question.questionCard.difficult_level.mediumEasy');
+      case 3: return t('question.questionCard.difficult_level.medium');
+      case 4: return t('question.questionCard.difficult_level.mediumHard');
+      case 5: return t('question.questionCard.difficult_level.hard');
+      default: return t('question.questionCard.difficult_level.unknown');
     }
   };
 
@@ -443,7 +445,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                           className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
                           <Eye className="w-4 h-4 mr-2" />
-                          查看详情
+                          {t('question.questionCard.actions.view')}
                         </button>
                         
                         {(userRole === 'creator' || userRole === 'manager' || userRole === 'collaborator') && (
@@ -456,7 +458,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                           >
                             <Edit className="w-4 h-4 mr-2" />
-                            编辑题目
+                            {t('question.questionCard.actions.edit')}
                           </button>
                         )}
 
@@ -472,7 +474,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                             className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
-                            删除题目
+                            {t('question.questionCard.actions.delete')}
                           </button>
                         )}
                       </div>
@@ -567,7 +569,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                             )}
                             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
                               <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-white text-xs font-medium">
-                                查看
+                                {t('question.questionCard.actions.view')}
                               </div>
                             </div>
                           </div>
@@ -711,7 +713,7 @@ const QuestionCard: React.FC<QuestionCardProps> = React.memo(({
                               )}
                               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-md flex items-center justify-center">
                                 <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-white text-xs font-medium">
-                                  查看
+                                  {t('question.questionCard.actions.view')}
                                 </div>
                               </div>
                             </div>

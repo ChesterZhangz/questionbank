@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import type { FilterState, SortOption } from '../../stores/questionPreviewStore';
 import { AnimatePresence } from 'framer-motion';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface QuestionPreviewToolbarProps {
   viewMode: 'grid' | 'list';
@@ -62,6 +63,7 @@ const QuestionPreviewToolbar: React.FC<QuestionPreviewToolbarProps> = ({
   onBatchDelete,
   onSave,
 }) => {
+  const { t } = useTranslation();
   const [showFilters, setShowFilters] = useState(false);
 
   const questionTypes = [
@@ -138,7 +140,7 @@ const QuestionPreviewToolbar: React.FC<QuestionPreviewToolbarProps> = ({
                   className="flex items-center space-x-1"
                 >
                   <Grid3X3 className="h-4 w-4" />
-                  <span>网格</span>
+                  <span>{t('preview.questionPreviewToolbar.grid')}</span>
                 </Button>
                 <Button
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
@@ -147,7 +149,7 @@ const QuestionPreviewToolbar: React.FC<QuestionPreviewToolbarProps> = ({
                   className="flex items-center space-x-1"
                 >
                   <List className="h-4 w-4" />
-                  <span>列表</span>
+                  <span>{t('preview.questionPreviewToolbar.list')}</span>
                 </Button>
               </div>
 
@@ -160,7 +162,7 @@ const QuestionPreviewToolbar: React.FC<QuestionPreviewToolbarProps> = ({
                   className="flex items-center space-x-1"
                 >
                   <CheckSquare className="h-4 w-4" />
-                  <span>全选</span>
+                  <span>{t('preview.questionPreviewToolbar.selectAll')}</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -169,7 +171,7 @@ const QuestionPreviewToolbar: React.FC<QuestionPreviewToolbarProps> = ({
                   className="flex items-center space-x-1"
                 >
                   <Square className="h-4 w-4" />
-                  <span>取消全选</span>
+                  <span>{t('preview.questionPreviewToolbar.deselectAll')}</span>
                 </Button>
               </div>
             </div>
@@ -185,7 +187,7 @@ const QuestionPreviewToolbar: React.FC<QuestionPreviewToolbarProps> = ({
                     className="flex items-center space-x-1"
                   >
                     <Target className="h-4 w-4" />
-                    <span>设置来源</span>
+                    <span>{t('preview.questionPreviewToolbar.setSource')}</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -199,7 +201,7 @@ const QuestionPreviewToolbar: React.FC<QuestionPreviewToolbarProps> = ({
                     ) : (
                       <Brain className="h-4 w-4" />
                     )}
-                    <span>{analyzingQuestions.length > 0 ? '分析中...' : 'AI分析'}</span>
+                    <span>{analyzingQuestions.length > 0 ? t('preview.questionPreviewToolbar.analyzing') : t('preview.questionPreviewToolbar.aiAnalysis')}</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -208,7 +210,7 @@ const QuestionPreviewToolbar: React.FC<QuestionPreviewToolbarProps> = ({
                     className="flex items-center space-x-1"
                   >
                     <Move className="h-4 w-4" />
-                    <span>批量移动</span>
+                    <span>{t('preview.questionPreviewToolbar.batchMove')}</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -217,7 +219,7 @@ const QuestionPreviewToolbar: React.FC<QuestionPreviewToolbarProps> = ({
                     className="flex items-center space-x-1"
                   >
                     <Save className="h-4 w-4" />
-                    <span>保存</span>
+                    <span>{t('preview.questionPreviewToolbar.save')}</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -226,7 +228,7 @@ const QuestionPreviewToolbar: React.FC<QuestionPreviewToolbarProps> = ({
                     className="flex items-center space-x-1 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                   >
                     <Trash2 className="h-4 w-4" />
-                    <span>删除</span>
+                    <span>{t('preview.questionPreviewToolbar.delete')}</span>
                   </Button>
                 </>
               )}
@@ -241,7 +243,7 @@ const QuestionPreviewToolbar: React.FC<QuestionPreviewToolbarProps> = ({
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
                 <Input
                   type="text"
-                  placeholder="搜索题目内容..."
+                  placeholder={t('preview.questionPreviewToolbar.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => onSearchChange(e.target.value)}
                   className="pl-10"
@@ -257,7 +259,7 @@ const QuestionPreviewToolbar: React.FC<QuestionPreviewToolbarProps> = ({
               className="flex items-center space-x-1"
             >
               <Filter className="h-4 w-4" />
-              <span>筛选</span>
+              <span>{t('preview.questionPreviewToolbar.filter')}</span>
             </Button>
 
             {/* 重置按钮 */}
@@ -268,7 +270,7 @@ const QuestionPreviewToolbar: React.FC<QuestionPreviewToolbarProps> = ({
               className="flex items-center space-x-1"
             >
               <RotateCcw className="h-4 w-4" />
-              <span>重置</span>
+              <span>{t('preview.questionPreviewToolbar.reset')}</span>
             </Button>
 
             {/* 排序选择 */}
@@ -277,7 +279,7 @@ const QuestionPreviewToolbar: React.FC<QuestionPreviewToolbarProps> = ({
                 options={sortOptions}
                 value={sortBy.field === 'createdAt' && sortBy.order === 'desc' ? 'original' : `${sortBy.field}-${sortBy.order}`}
                 onChange={(value) => handleSortChange(value.toString())}
-                placeholder="选择排序方式"
+                placeholder={t('preview.questionPreviewToolbar.sortPlaceholder')}
                 className="w-full"
               />
             </div>

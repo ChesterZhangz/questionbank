@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Sun, Moon, Monitor } from 'lucide-react';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface ThemeToggleProps {
   className?: string;
@@ -13,6 +14,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
   size = 'md',
   variant = 'button'
 }) => {
+  const { t } = useTranslation();
   const { theme, setTheme, toggleTheme } = useTheme();
 
   const sizeClasses = {
@@ -33,7 +35,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
       <button
         onClick={toggleTheme}
         className={`rounded-full p-2 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 ${sizeClasses[size]} ${className}`}
-        title={`当前主题: ${theme === 'light' ? '亮色' : theme === 'dark' ? '暗色' : '跟随系统'}`}
+        title={`${t('ui.themeToggle.currentTheme')}: ${theme === 'light' ? t('ui.themeToggle.light') : theme === 'dark' ? t('ui.themeToggle.dark') : t('ui.themeToggle.system')}`}
       >
         {theme === 'light' ? (
           <Sun className={iconSize[size]} />
@@ -57,17 +59,17 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
           {theme === 'light' ? (
             <>
               <Sun className={`mr-2 ${iconSize[size]}`} />
-              亮色
+              {t('ui.themeToggle.light')}
             </>
           ) : theme === 'dark' ? (
             <>
               <Moon className={`mr-2 ${iconSize[size]}`} />
-              暗色
+              {t('ui.themeToggle.dark')}
             </>
           ) : (
             <>
               <Monitor className={`mr-2 ${iconSize[size]}`} />
-              系统
+              {t('ui.themeToggle.system')}
             </>
           )}
         </button>
@@ -85,10 +87,10 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
             ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
             : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
         } ${sizeClasses[size]}`}
-        title="亮色主题"
+        title={t('ui.themeToggle.lightTheme')}
       >
         <Sun className={`mr-2 ${iconSize[size]}`} />
-        亮色
+        {t('ui.themeToggle.light')}
       </button>
 
       <button
@@ -98,10 +100,10 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
             ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
             : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
         } ${sizeClasses[size]}`}
-        title="暗色主题"
+        title={t('ui.themeToggle.darkTheme')}
       >
         <Moon className={`mr-2 ${iconSize[size]}`} />
-        暗色
+        {t('ui.themeToggle.dark')}
       </button>
 
       <button
@@ -111,10 +113,10 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
             ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
             : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
         } ${sizeClasses[size]}`}
-        title="跟随系统"
+        title={t('ui.themeToggle.followSystem')}
       >
         <Monitor className={`mr-2 ${iconSize[size]}`} />
-        系统
+        {t('ui.themeToggle.system')}
       </button>
     </div>
   );

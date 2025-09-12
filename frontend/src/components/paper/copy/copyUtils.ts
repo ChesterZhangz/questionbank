@@ -1,5 +1,33 @@
 import type { Paper, Question, CopyConfig } from './types';
 
+// 翻译函数类型
+type TranslationFunction = (key: string) => string;
+
+// 默认翻译函数（用于服务端或测试环境）
+const defaultTranslation: TranslationFunction = (key: string) => {
+  const translations: Record<string, string> = {
+    'copyUtils.difficulty.veryEasy': '非常简单',
+    'copyUtils.difficulty.easy': '简单',
+    'copyUtils.difficulty.medium': '中等',
+    'copyUtils.difficulty.hard': '困难',
+    'copyUtils.difficulty.veryHard': '非常困难',
+    'copyUtils.difficulty.unknown': '未知',
+    'copyUtils.answer.answer': '答案：',
+    'copyUtils.answer.separator': '、',
+    'copyUtils.answer.fillSeparator': '；',
+    'copyUtils.errors.copyFailed': '复制失败'
+  };
+  return translations[key] || key;
+};
+
+// 全局翻译函数（将在运行时设置）
+let t: TranslationFunction = defaultTranslation;
+
+// 设置翻译函数
+export const setTranslationFunction = (translationFn: TranslationFunction) => {
+  t = translationFn;
+};
+
 // 默认复制配置
 export const defaultCopyConfig: CopyConfig = {
   mode: 'mareate',
@@ -27,12 +55,12 @@ export const defaultCopyConfig: CopyConfig = {
 // 获取难度文本
 export const getDifficultyText = (difficulty: number): string => {
   switch (difficulty) {
-    case 1: return '非常简单';
-    case 2: return '简单';
-    case 3: return '中等';
-    case 4: return '困难';
-    case 5: return '非常困难';
-    default: return '未知';
+    case 1: return t('copyUtils.difficulty.veryEasy');
+    case 2: return t('copyUtils.difficulty.easy');
+    case 3: return t('copyUtils.difficulty.medium');
+    case 4: return t('copyUtils.difficulty.hard');
+    case 5: return t('copyUtils.difficulty.veryHard');
+    default: return t('copyUtils.difficulty.unknown');
   }
 };
 
@@ -88,9 +116,9 @@ const convertAnswerToLaTeX = (question: Question): string => {
         const correctOptions = question.content.options
           .map((option, index) => option.isCorrect ? String.fromCharCode(65 + index) : null)
           .filter(Boolean);
-        answerLatex = `答案：${correctOptions.join('、')}`;
+        answerLatex = `${t('copyUtils.answer.answer')}${correctOptions.join(t('copyUtils.answer.separator'))}`;
       } else if (question.content.answer) {
-        answerLatex = `答案：${question.content.answer}`;
+        answerLatex = `${t('copyUtils.answer.answer')}${question.content.answer}`;
       }
     }
   } else if (question.type === 'fill') {
@@ -101,9 +129,9 @@ const convertAnswerToLaTeX = (question: Question): string => {
     } else {
       // 没有详细解答，显示填空答案
       if (question.content.fillAnswers && question.content.fillAnswers.length > 0) {
-        answerLatex = `答案：${question.content.fillAnswers.join('；')}`;
+        answerLatex = `${t('copyUtils.answer.answer')}${question.content.fillAnswers.join(t('copyUtils.answer.fillSeparator'))}`;
       } else if (question.content.answer) {
-        answerLatex = `答案：${question.content.answer}`;
+        answerLatex = `${t('copyUtils.answer.answer')}${question.content.answer}`;
       }
     }
   } else if (question.type === 'solution') {
@@ -133,7 +161,7 @@ const convertAnswerToLaTeX = (question: Question): string => {
         .join('\n\n');
     } else if (question.content.answer) {
       // 最后显示基础答案
-      answerLatex = `答案：${question.content.answer}`;
+      answerLatex = `${t('copyUtils.answer.answer')}${question.content.answer}`;
     }
   }
   
@@ -528,7 +556,7 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
     await navigator.clipboard.writeText(text);
     return true;
   } catch (err) {
-    console.error('复制失败:', err);
+    console.error(t('copyUtils.errors.copyFailed'), err);
     return false;
   }
 };

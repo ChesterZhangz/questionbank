@@ -9,6 +9,7 @@ import {
   Code,
   Zap
 } from 'lucide-react';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface GuideNavigationProps {
   title: string;
@@ -17,46 +18,47 @@ interface GuideNavigationProps {
 }
 
 const GuideNavigation: React.FC<GuideNavigationProps> = ({ title, description, type = 'latex' }) => {
+  const { t } = useTranslation();
   const location = useLocation();
 
   const latexGuideLinks = [
     {
       path: '/guide/latex/math',
-      name: '数学公式',
+      name: t('guide.navigation.sections.latex'),
       icon: Calculator,
       color: 'from-blue-500 to-cyan-500',
-      description: '数学符号、语法和高级功能'
+      description: t('guide.navigation.sections.latex')
     },
     {
       path: '/guide/latex/questions',
-      name: '题目语法',
+      name: t('guide.navigation.sections.questionTypes'),
       icon: Target,
       color: 'from-green-500 to-emerald-500',
-      description: '选择题、填空题、小题结构'
+      description: t('guide.navigation.sections.questionTypes')
     }
   ];
 
   const tikzGuideLinks = [
     {
       path: '/guide/tikz/basics',
-      name: '基础教程',
+      name: t('guide.tikzExample.examples.basic'),
       icon: Palette,
       color: 'from-purple-500 to-pink-500',
-      description: 'TikZ基础语法和图形绘制'
+      description: t('guide.tikzExample.examples.basic')
     },
     {
       path: '/guide/tikz/functions',
-      name: '函数绘图',
+      name: t('guide.tikzExample.examples.math'),
       icon: Code,
       color: 'from-blue-500 to-indigo-500',
-      description: '函数图像和坐标轴绘制'
+      description: t('guide.tikzExample.examples.math')
     },
     {
       path: '/guide/tikz/effects',
-      name: '特效样式',
+      name: t('guide.tikzExample.examples.advanced'),
       icon: Zap,
       color: 'from-orange-500 to-red-500',
-      description: '线条样式、颜色和透明度'
+      description: t('guide.tikzExample.examples.advanced')
     }
   ];
 
@@ -73,7 +75,7 @@ const GuideNavigation: React.FC<GuideNavigationProps> = ({ title, description, t
               className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="text-sm font-medium">返回指导</span>
+              <span className="text-sm font-medium">{t('guide.common.back')}</span>
             </Link>
             <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
             <div>

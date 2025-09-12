@@ -18,6 +18,7 @@ import { getCategoryOptions, getSubcategoryOptions, paperBankCategories } from '
 import { useModal } from '../../hooks/useModal';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface EditPaperBankFormData {
   name: string;
@@ -29,6 +30,7 @@ interface EditPaperBankFormData {
 }
 
 const EditPaperBankPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { showConfirm, confirmModal, closeConfirm, showErrorRightSlide, showSuccessRightSlide, rightSlideModal, closeRightSlide } = useModal();
@@ -71,11 +73,11 @@ const EditPaperBankPage: React.FC = () => {
           price: paperBank.price || 0
         });
       } else {
-        showErrorRightSlide('获取失败', '获取试卷集信息失败');
+        showErrorRightSlide(t('paperBanks.errors.fetchFailed'), t('paperBanks.errors.fetchPaperBankDetailFailed'));
         navigate('/paper-banks');
       }
     } catch (error: any) {
-      showErrorRightSlide('获取失败', error.response?.data?.error || '获取试卷集信息失败');
+      showErrorRightSlide(t('paperBanks.errors.fetchFailed'), error.response?.data?.error || t('paperBanks.errors.fetchPaperBankDetailFailed'));
       navigate('/paper-banks');
     } finally {
       setLoading(false);
@@ -86,19 +88,19 @@ const EditPaperBankPage: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = '名称不能为空';
+      newErrors.name = t('paperBanks.validation.nameRequired');
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = '描述不能为空';
+      newErrors.description = t('paperBanks.validation.descriptionRequired');
     }
 
     if (!formData.category) {
-      newErrors.category = '请选择分类';
+      newErrors.category = t('paperBanks.validation.categoryRequired');
     }
 
     if (formData.price < 0) {
-      newErrors.price = '价格不能为负数';
+      newErrors.price = t('paperBanks.validation.priceInvalid');
     }
 
     setErrors(newErrors);
@@ -112,13 +114,13 @@ const EditPaperBankPage: React.FC = () => {
     try {
       const response = await paperBankAPI.updatePaperBank(id!, formData);
       if (response.data.success) {
-        showSuccessRightSlide('保存成功', '试卷集信息已更新');
+        showSuccessRightSlide(t('paperBanks.editPage.saveSuccess'), t('paperBanks.editPage.saveSuccessMessage'));
         setOriginalData({ ...originalData, ...formData });
       } else {
-        showErrorRightSlide('保存失败', '更新试卷集失败');
+        showErrorRightSlide(t('paperBanks.editPage.saveFailed'), t('paperBanks.editPage.saveFailedMessage'));
       }
     } catch (error: any) {
-      showErrorRightSlide('保存失败', error.response?.data?.error || '更新试卷集失败');
+      showErrorRightSlide(t('paperBanks.editPage.saveFailed'), error.response?.data?.error || t('paperBanks.editPage.saveFailedMessage'));
     } finally {
       setSaving(false);
     }
@@ -126,21 +128,21 @@ const EditPaperBankPage: React.FC = () => {
 
   const handlePublish = async () => {
     showConfirm(
-      '确认发布',
-      '确定要发布这个试卷集吗？发布后其他用户将可以看到并购买。',
+      t('paperBanks.editPage.confirmPublish'),
+      t('paperBanks.editPage.confirmPublishMessage'),
       async () => {
         setPublishing(true);
         try {
           const response = await paperBankAPI.publishPaperBank(id!);
           if (response.data.success) {
             closeConfirm(); // 先关闭确认窗口
-            showSuccessRightSlide('发布成功', '试卷集已成功发布');
+            showSuccessRightSlide(t('paperBanks.editPage.publishSuccess'), t('paperBanks.editPage.publishSuccessMessage'));
             setOriginalData({ ...originalData, status: 'published', publishedAt: new Date().toISOString() });
           } else {
-            showErrorRightSlide('发布失败', '发布试卷集失败');
+            showErrorRightSlide(t('paperBanks.editPage.publishFailed'), t('paperBanks.editPage.publishFailedMessage'));
           }
         } catch (error: any) {
-          showErrorRightSlide('发布失败', error.response?.data?.error || '发布试卷集失败');
+          showErrorRightSlide(t('paperBanks.editPage.publishFailed'), error.response?.data?.error || t('paperBanks.editPage.publishFailedMessage'));
         } finally {
           setPublishing(false);
         }
@@ -152,13 +154,13 @@ const EditPaperBankPage: React.FC = () => {
     try {
       const response = await paperBankAPI.unpublishPaperBank(id!);
       if (response.data.success) {
-        showSuccessRightSlide('取消发布成功', '试卷集已取消发布');
+        showSuccessRightSlide(t('paperBanks.editPage.unpublishSuccess'), t('paperBanks.editPage.unpublishSuccessMessage'));
         setOriginalData({ ...originalData, status: 'draft', publishedAt: undefined });
       } else {
-        showErrorRightSlide('取消发布失败', '取消发布试卷集失败');
+        showErrorRightSlide(t('paperBanks.editPage.unpublishFailed'), t('paperBanks.editPage.unpublishFailedMessage'));
       }
     } catch (error: any) {
-      showErrorRightSlide('取消发布失败', error.response?.data?.error || '取消发布试卷集失败');
+      showErrorRightSlide(t('paperBanks.editPage.unpublishFailed'), error.response?.data?.error || t('paperBanks.editPage.unpublishFailedMessage'));
     }
   };
 
@@ -189,7 +191,7 @@ const EditPaperBankPage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">加载中...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">{t('paperBanks.editPage.loading')}</p>
         </div>
       </div>
     );
@@ -211,21 +213,21 @@ const EditPaperBankPage: React.FC = () => {
               </Button>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 dark:from-gray-100 to-blue-600 dark:to-blue-400 bg-clip-text text-transparent">
-                  编辑试卷集
+                  {t('paperBanks.editPage.title')}
                 </h1>
-                <p className="text-gray-600 dark:text-gray-300 mt-1">修改试卷集的基本信息和设置</p>
+                <p className="text-gray-600 dark:text-gray-300 mt-1">{t('paperBanks.editPage.description')}</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
               {/* 发布状态显示 */}
               <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800">
-                <span className="text-sm text-gray-600 dark:text-gray-400">状态:</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">{t('paperBanks.editPage.status')}</span>
                 <span className={`px-2 py-1 text-xs rounded-full ${
                   originalData?.status === 'published' 
                     ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                     : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
                 }`}>
-                  {originalData?.status === 'published' ? '已发布' : '草稿'}
+                  {originalData?.status === 'published' ? t('paperBanks.editPage.published') : t('paperBanks.editPage.draft')}
                 </span>
               </div>
               
@@ -237,7 +239,7 @@ const EditPaperBankPage: React.FC = () => {
                   className="text-yellow-600 border-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
                 >
                   <Clock className="w-4 h-4 mr-2" />
-                  取消发布
+                  {t('paperBanks.editPage.unpublish')}
                 </Button>
               ) : (
                 <Button
@@ -246,7 +248,7 @@ const EditPaperBankPage: React.FC = () => {
                   className="bg-green-600 hover:bg-green-700"
                 >
                   <TrendingUp className="w-4 h-4 mr-2" />
-                  {publishing ? '发布中...' : '发布'}
+                  {publishing ? t('paperBanks.editPage.publishing') : t('paperBanks.editPage.publish')}
                 </Button>
               )}
               
@@ -256,7 +258,7 @@ const EditPaperBankPage: React.FC = () => {
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <Save className="w-4 h-4 mr-2" />
-                {saving ? '保存中...' : '保存'}
+                {saving ? t('paperBanks.editPage.saving') : t('paperBanks.editPage.save')}
               </Button>
             </div>
           </div>
@@ -285,7 +287,7 @@ const EditPaperBankPage: React.FC = () => {
                     <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-3">
                       <Edit className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">基本信息</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('paperBanks.editPage.basicInfo')}</h3>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -295,12 +297,12 @@ const EditPaperBankPage: React.FC = () => {
                       transition={{ duration: 0.3, delay: 0.2 }}
                     >
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        试卷集名称 *
+                        {t('paperBanks.editPage.name')} {t('paperBanks.editPage.nameRequired')}
                       </label>
                       <Input
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="请输入试卷集名称"
+                        placeholder={t('paperBanks.editPage.namePlaceholder')}
                         error={errors.name}
                         className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
@@ -313,7 +315,7 @@ const EditPaperBankPage: React.FC = () => {
                         transition={{ duration: 0.3, delay: 0.3 }}
                       >
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          价格 (V)
+                          {t('paperBanks.editPage.price')}
                         </label>
                         <Input
                           type="number"
@@ -336,12 +338,12 @@ const EditPaperBankPage: React.FC = () => {
                     className="mt-6"
                   >
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      描述 *
+                      {t('paperBanks.editPage.descriptionLabel')} {t('paperBanks.editPage.descriptionRequired')}
                     </label>
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="请输入试卷集描述"
+                      placeholder={t('paperBanks.editPage.descriptionPlaceholder')}
                       rows={4}
                       className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 transition-all duration-200 ${
                         errors.description ? 'border-red-500' : 'border-gray-300'
@@ -374,7 +376,7 @@ const EditPaperBankPage: React.FC = () => {
                   <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-3">
                     <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">分类设置</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('paperBanks.editPage.categorySettings')}</h3>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -384,15 +386,15 @@ const EditPaperBankPage: React.FC = () => {
                     transition={{ duration: 0.3, delay: 0.3 }}
                   >
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      主分类 *
+                      {t('paperBanks.editPage.mainCategory')} {t('paperBanks.editPage.mainCategoryRequired')}
                     </label>
                     <FuzzySelect
-                      options={getCategoryOptions()}
+                      options={getCategoryOptions(t)}
                       value={formData.category}
                       onChange={(value) => {
                         setFormData({ ...formData, category: String(value), subcategory: '' });
                       }}
-                      placeholder="选择主分类"
+                      placeholder={t('paperBanks.editPage.selectCategory')}
                     />
                   </motion.div>
                   
@@ -402,13 +404,13 @@ const EditPaperBankPage: React.FC = () => {
                     transition={{ duration: 0.3, delay: 0.4 }}
                   >
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      子分类
+                      {t('paperBanks.editPage.subcategory')}
                     </label>
                     <FuzzySelect
-                      options={getSubcategoryOptions(formData.category)}
+                      options={getSubcategoryOptions(formData.category, t)}
                       value={formData.subcategory || ''}
                       onChange={(value) => setFormData({ ...formData, subcategory: String(value) })}
-                      placeholder="选择子分类"
+                      placeholder={t('paperBanks.editPage.selectSubcategory')}
                       disabled={!formData.category}
                     />
                   </motion.div>
@@ -429,13 +431,13 @@ const EditPaperBankPage: React.FC = () => {
                   <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mr-3">
                     <Clock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">标签设置</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('paperBanks.editPage.tagSettings')}</h3>
                 </div>
                 
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
                     <Input
-                      placeholder="输入标签名称"
+                      placeholder={t('paperBanks.editPage.tagPlaceholder')}
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
                       onKeyPress={(e) => {
@@ -451,7 +453,7 @@ const EditPaperBankPage: React.FC = () => {
                       size="sm"
                       className="px-4"
                     >
-                      添加
+                      {t('paperBanks.editPage.addTag')}
                     </Button>
                   </div>
                   
@@ -493,44 +495,44 @@ const EditPaperBankPage: React.FC = () => {
                   <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center mr-3">
                     <Edit className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">预览信息</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('paperBanks.editPage.previewInfo')}</h3>
                 </div>
                 
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
                     <div>
-                      <span className="text-gray-500 dark:text-gray-400">分类:</span>
+                      <span className="text-gray-500 dark:text-gray-400">{t('paperBanks.editPage.category')}</span>
                       <div className="flex items-center mt-2">
                         {getCategoryIcon(formData.category) && React.createElement(getCategoryIcon(formData.category)!, { className: "w-4 h-4 mr-2 text-blue-600" })}
                         <span className="text-gray-900 dark:text-gray-100 font-medium">
-                          {paperBankCategories.find(c => c.value === formData.category)?.label || '未选择'}
+                          {paperBankCategories.find(c => c.value === formData.category)?.label || t('paperBanks.editPage.notSelected')}
                         </span>
                       </div>
                     </div>
                     
                     <div>
-                      <span className="text-gray-500 dark:text-gray-400">子分类:</span>
+                      <span className="text-gray-500 dark:text-gray-400">{t('paperBanks.editPage.subcategoryLabel')}</span>
                       <div className="mt-2 text-gray-900 dark:text-gray-100 font-medium">
                         {formData.subcategory ? 
                           paperBankCategories
                             .find(c => c.value === formData.category)
                             ?.subcategories?.find(s => s.value === formData.subcategory)?.label || formData.subcategory
-                          : '未选择'
+                          : t('paperBanks.editPage.notSelected')
                         }
                       </div>
                     </div>
                     
                     <div>
-                      <span className="text-gray-500 dark:text-gray-400">价格:</span>
+                      <span className="text-gray-500 dark:text-gray-400">{t('paperBanks.editPage.priceLabel')}</span>
                       <div className="mt-2 text-gray-900 dark:text-gray-100 font-medium">
-                        {originalData?.status === 'published' ? `${formData.price}V` : '草稿状态不显示'}
+                        {originalData?.status === 'published' ? `${formData.price}V` : t('paperBanks.editPage.draftStatusNotShown')}
                       </div>
                     </div>
                     
                     <div>
-                      <span className="text-gray-500 dark:text-gray-400">标签数量:</span>
+                      <span className="text-gray-500 dark:text-gray-400">{t('paperBanks.editPage.tagCount')}</span>
                       <div className="mt-2 text-gray-900 dark:text-gray-100 font-medium">
-                        {formData.customTags.length} 个
+                        {formData.customTags.length} {t('paperBanks.editPage.tags')}
                       </div>
                     </div>
                   </div>

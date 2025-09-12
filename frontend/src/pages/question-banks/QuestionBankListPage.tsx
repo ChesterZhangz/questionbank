@@ -21,12 +21,14 @@ import LoadingPage from '../../components/ui/LoadingPage';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import { useModal } from '../../hooks/useModal';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getUserRoleStats } from '../../utils/statsUtils';
 import { getCategoryLabel } from '../../constants/questionCategories';
 
 const QuestionBankListPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { t } = useTranslation();
 
   // 弹窗状态管理
   const { 
@@ -69,10 +71,10 @@ const QuestionBankListPage: React.FC = () => {
       if (response.data.success) {
         setQuestionBanks(response.data.questionBanks || []);
       } else {
-        setError(response.data.error || '获取题库列表失败');
+        setError(response.data.error || t('questionBankPage.QuestionBankListPage.errors.loadFailed'));
       }
     } catch (error: any) {
-      setError(error.response?.data?.error || '获取题库列表失败');
+      setError(error.response?.data?.error || t('questionBankPage.QuestionBankListPage.errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -96,24 +98,24 @@ const QuestionBankListPage: React.FC = () => {
 
   const handleDeleteBank = async (bid: string) => {
     showConfirm(
-      '确认删除',
-      '确定要删除这个题库吗？删除后无法恢复.',
+      t('questionBankPage.QuestionBankListPage.confirm.deleteBank'),
+      t('questionBankPage.QuestionBankListPage.confirm.deleteBankMessage'),
       async () => {
         try {
-          setConfirmLoading(true, '正在删除...');
+          setConfirmLoading(true, t('questionBankPage.QuestionBankListPage.status.deleting'));
           
           const response = await questionBankAPI.deleteQuestionBank(bid);
           if (response.data.success) {
             setQuestionBanks(prev => prev.filter(bank => bank.bid !== bid));
             closeConfirm(); // 删除成功后关闭弹窗
             // 显示成功提示
-            showSuccessRightSlide('删除成功', '题库已成功删除');
+            showSuccessRightSlide(t('questionBankPage.QuestionBankListPage.success.deleted'), t('questionBankPage.QuestionBankListPage.success.bankDeleted'));
           } else {
-            showErrorRightSlide('删除失败', response.data.error || '删除失败');
+            showErrorRightSlide(t('questionBankPage.QuestionBankListPage.errors.deleteFailed'), response.data.error || t('questionBankPage.QuestionBankListPage.errors.deleteFailed'));
             closeConfirm(); // 删除失败后也关闭弹窗
           }
         } catch (error: any) {
-          showErrorRightSlide('删除失败', error.response?.data?.error || '删除失败');
+          showErrorRightSlide(t('questionBankPage.QuestionBankListPage.errors.deleteFailed'), error.response?.data?.error || t('questionBankPage.QuestionBankListPage.errors.deleteFailed'));
           closeConfirm(); // 发生错误后也关闭弹窗
         }
       }
@@ -125,10 +127,10 @@ const QuestionBankListPage: React.FC = () => {
     const userId = user?._id?.toString();
     const creatorId = bank.creator._id?.toString();
     
-    if (creatorId === userId) return '创建者';
-    if (bank.managers.some(m => m._id?.toString() === userId)) return '管理者';
-    if (bank.collaborators.some(c => c._id?.toString() === userId)) return '协作者';
-    return '查看者';
+    if (creatorId === userId) return t('questionBankPage.QuestionBankListPage.roles.creator');
+    if (bank.managers.some(m => m._id?.toString() === userId)) return t('questionBankPage.QuestionBankListPage.roles.manager');
+    if (bank.collaborators.some(c => c._id?.toString() === userId)) return t('questionBankPage.QuestionBankListPage.roles.collaborator');
+    return t('questionBankPage.QuestionBankListPage.roles.viewer');
   };
 
   // 计算用户角色统计
@@ -146,9 +148,9 @@ const QuestionBankListPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
                           <h1 className="text-3xl font-bold bg-gradient-to-r from-text-primary to-blue-600 bg-clip-text text-transparent">
-              我的题库
+              {t('questionBankPage.QuestionBankListPage.title')}
             </h1>
-              <p className="text-text-secondary mt-1">管理您的数学题库</p>
+              <p className="text-text-secondary mt-1">{t('questionBankPage.QuestionBankListPage.description')}</p>
             </div>
             <motion.div 
               className="flex items-center space-x-4"
@@ -197,7 +199,7 @@ const QuestionBankListPage: React.FC = () => {
                         ease: "easeOut"
                       }}
                     >
-                      总题库: {questionBanks.length} 个
+                      {t('questionBankPage.QuestionBankListPage.stats.totalBanks', { count: questionBanks.length })}
                     </motion.span>
                   </motion.div>
                 </motion.div>
@@ -217,7 +219,7 @@ const QuestionBankListPage: React.FC = () => {
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  创建题库
+                  {t('questionBankPage.QuestionBankListPage.buttons.createBank')}
                 </Button>
               </motion.div>
             </motion.div>
@@ -244,14 +246,14 @@ const QuestionBankListPage: React.FC = () => {
             className="text-center py-12"
           >
             <BookOpen className="w-16 h-16 text-text-tertiary mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-text-primary mb-2">还没有题库</h3>
-            <p className="text-text-secondary mb-6">创建您的第一个题库，开始管理数学题目</p>
+            <h3 className="text-lg font-medium text-text-primary mb-2">{t('questionBankPage.QuestionBankListPage.empty.noBanks')}</h3>
+            <p className="text-text-secondary mb-6">{t('questionBankPage.QuestionBankListPage.empty.startCreating')}</p>
             <Button
               onClick={handleCreateBank}
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              创建题库
+              {t('questionBankPage.QuestionBankListPage.buttons.createBank')}
             </Button>
           </motion.div>
         ) : (
@@ -276,7 +278,7 @@ const QuestionBankListPage: React.FC = () => {
                             {bank.name}
                           </h3>
                           <p className="text-sm text-text-tertiary">
-                            {getUserRole(bank)} • {bank.category ? getCategoryLabel(bank.category) : '未分类'}
+                            {getUserRole(bank)} • {bank.category ? getCategoryLabel(bank.category) : t('questionBankPage.QuestionBankListPage.info.uncategorized')}
                           </p>
                         </div>
                         <div className="relative group">
@@ -299,7 +301,7 @@ const QuestionBankListPage: React.FC = () => {
                                 className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-bg-secondary"
                               >
                                 <Eye className="w-4 h-4 mr-2" />
-                                查看题库
+                                {t('questionBankPage.QuestionBankListPage.buttons.viewBank')}
                               </button>
                               {(bank.creator._id === user?._id || bank.managers.some(m => m._id === user?._id)) && (
                                 <>
@@ -308,14 +310,14 @@ const QuestionBankListPage: React.FC = () => {
                                     className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-bg-secondary"
                                   >
                                     <Edit className="w-4 h-4 mr-2" />
-                                    编辑题库
+                                    {t('questionBankPage.QuestionBankListPage.buttons.editBank')}
                                   </button>
                                   <button
                                     onClick={() => handleManageMembers(bank.bid)}
                                     className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-bg-secondary"
                                   >
                                     <Users className="w-4 h-4 mr-2" />
-                                    成员管理
+                                    {t('questionBankPage.QuestionBankListPage.buttons.manageMembers')}
                                   </button>
                                 </>
                               )}
@@ -325,7 +327,7 @@ const QuestionBankListPage: React.FC = () => {
                                   className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   <Trash2 className="w-4 h-4 mr-2" />
-                                  删除题库
+                                  {t('questionBankPage.QuestionBankListPage.buttons.deleteBank')}
                                 </button>
                               )}
                             </div>
@@ -378,14 +380,14 @@ const QuestionBankListPage: React.FC = () => {
                             className="w-4 h-4 mr-1" 
                             style={{ color: (bank as any).cardColor || '#4f46e5' }}
                           />
-                          {bank.questionCount} 道题
+                          {t('questionBankPage.QuestionBankListPage.stats.questionCount', { count: bank.questionCount })}
                         </div>
                         <div className="flex items-center">
                           <Users 
                             className="w-4 h-4 mr-1" 
                             style={{ color: (bank as any).cardColor || '#4f46e5' }}
                           />
-                          {bank.managers.length + bank.collaborators.length + 1} 人
+                          {t('questionBankPage.QuestionBankListPage.stats.memberCount', { count: bank.managers.length + bank.collaborators.length + 1 })}
                         </div>
                       </div>
 
@@ -395,7 +397,7 @@ const QuestionBankListPage: React.FC = () => {
                           className="w-3 h-4 inline mr-1" 
                           style={{ color: (bank as any).cardColor || '#4f46e5' }}
                         />
-                        最后更新: {new Date(bank.lastUpdated).toLocaleDateString()}
+                        {t('questionBankPage.QuestionBankListPage.info.lastUpdated')}: {new Date(bank.lastUpdated).toLocaleDateString()}
                       </div>
                     </div>
                   </Card>

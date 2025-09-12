@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Loader2, RefreshCw, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import  Button  from './Button';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export interface LoadingPageProps {
   /** 加载状态类型 */
@@ -47,14 +48,16 @@ const LoadingPage: React.FC<LoadingPageProps> = ({
   className = '',
   children
 }) => {
+  const { t } = useTranslation();
+  
   // 默认配置
   const getDefaultConfig = () => {
     switch (type) {
       case 'loading':
         return {
           icon: icon || <Loader2 className="w-12 h-12 text-blue-600 dark:text-blue-400" />,
-          title: title || '加载中...',
-          description: description || '请稍候，正在处理您的请求',
+          title: title || t('ui.loadingPage.loading.title'),
+          description: description || t('ui.loadingPage.loading.description'),
           bgColor: 'bg-blue-50 dark:bg-blue-900/20',
           borderColor: 'border-blue-200 dark:border-blue-700',
           textColor: 'text-blue-800 dark:text-blue-200'
@@ -62,8 +65,8 @@ const LoadingPage: React.FC<LoadingPageProps> = ({
       case 'error':
         return {
           icon: icon || <XCircle className="w-12 h-12 text-red-500 dark:text-red-400" />,
-          title: title || '加载失败',
-          description: description || error || '发生了一个错误，请重试',
+          title: title || t('ui.loadingPage.error.title'),
+          description: description || error || t('ui.loadingPage.error.description'),
           bgColor: 'bg-red-50 dark:bg-red-900/20',
           borderColor: 'border-red-200 dark:border-red-700',
           textColor: 'text-red-800 dark:text-red-200'
@@ -71,8 +74,8 @@ const LoadingPage: React.FC<LoadingPageProps> = ({
       case 'success':
         return {
           icon: icon || <CheckCircle className="w-12 h-12 text-green-500 dark:text-green-400" />,
-          title: title || '加载完成',
-          description: description || '数据加载成功',
+          title: title || t('ui.loadingPage.success.title'),
+          description: description || t('ui.loadingPage.success.description'),
           bgColor: 'bg-green-50 dark:bg-green-900/20',
           borderColor: 'border-green-200 dark:border-green-700',
           textColor: 'text-green-800 dark:text-green-200'
@@ -80,8 +83,8 @@ const LoadingPage: React.FC<LoadingPageProps> = ({
       case 'empty':
         return {
           icon: icon || <AlertTriangle className="w-12 h-12 text-yellow-500 dark:text-yellow-400" />,
-          title: title || '暂无数据',
-          description: description || '当前没有可显示的内容',
+          title: title || t('ui.loadingPage.empty.title'),
+          description: description || t('ui.loadingPage.empty.description'),
           bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
           borderColor: 'border-yellow-200 dark:border-yellow-700',
           textColor: 'text-yellow-800 dark:text-yellow-200'
@@ -89,8 +92,8 @@ const LoadingPage: React.FC<LoadingPageProps> = ({
       default:
         return {
           icon: icon || <Loader2 className="w-12 h-12 text-blue-600 dark:text-blue-400" />,
-          title: title || '加载中...',
-          description: description || '请稍候...',
+          title: title || t('ui.loadingPage.loading.title'),
+          description: description || t('ui.loadingPage.loading.description'),
           bgColor: 'bg-gray-50 dark:bg-gray-800/50',
           borderColor: 'border-gray-200 dark:border-gray-700',
           textColor: 'text-gray-800 dark:text-gray-200'
@@ -284,7 +287,7 @@ const LoadingPage: React.FC<LoadingPageProps> = ({
                   className="flex items-center space-x-2 px-6 py-2"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  <span>重试</span>
+                  <span>{t('ui.loadingPage.retry')}</span>
                 </Button>
               )}
               

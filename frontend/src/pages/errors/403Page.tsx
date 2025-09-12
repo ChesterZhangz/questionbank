@@ -1,13 +1,16 @@
 import React from 'react';
 import ErrorPage from './ErrorPage';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const ForbiddenPage: React.FC = () => {
+  const { t } = useTranslation();
+  
   return (
     <ErrorPage
       errorCode="403"
-      title="访问被拒绝"
-      message="抱歉，您没有权限访问此页面."
-      description="请确认您已登录并具有相应的访问权限，或联系管理员获取帮助."
+      title={t('errors.forbidden.title')}
+      message={t('errors.forbidden.message')}
+      description={t('errors.forbidden.description')}
       showGames={true}
       showNavigation={true}
     />

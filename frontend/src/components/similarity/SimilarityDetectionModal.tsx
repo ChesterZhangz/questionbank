@@ -4,6 +4,7 @@ import type { SimilarityResult } from '../../types';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import { renderContent } from '../../lib/latex/utils/renderContent';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface SimilarityDetectionModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
   currentQuestionIndex = 0,
   totalQuestions = 0
 }) => {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -72,18 +74,18 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
   if (!isOpen) return null;
 
   const getSimilarityLevel = (score: number) => {
-    if (score >= 0.9) return { level: '极高', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200' };
-    if (score >= 0.8) return { level: '高', color: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-200' };
-    if (score >= 0.6) return { level: '中等', color: 'text-yellow-600', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-200' };
-    return { level: '低', color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200' };
+    if (score >= 0.9) return { level: t('similarity.similarityLevels.veryHigh'), color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200' };
+    if (score >= 0.8) return { level: t('similarity.similarityLevels.high'), color: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-200' };
+    if (score >= 0.6) return { level: t('similarity.similarityLevels.medium'), color: 'text-yellow-600', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-200' };
+    return { level: t('similarity.similarityLevels.low'), color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200' };
   };
 
   const getQuestionTypeText = (type: string) => {
     const typeMap: Record<string, string> = {
-      'choice': '单选题',
-      'multiple-choice': '多选题',
-      'fill': '填空题',
-      'solution': '解答题'
+      'choice': t('similarity.questionTypes.choice'),
+      'multiple-choice': t('similarity.questionTypes.multipleChoice'),
+      'fill': t('similarity.questionTypes.fill'),
+      'solution': t('similarity.questionTypes.solution')
     };
     return typeMap[type] || type;
   };
@@ -125,7 +127,7 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 dark:border-blue-400"></div>
-            <span className="ml-3 text-gray-600 dark:text-gray-300">加载相似题目...</span>
+            <span className="ml-3 text-gray-600 dark:text-gray-300">{t('similarity.loadingSimilarQuestions')}</span>
           </div>
         ) : (
           <>
@@ -134,13 +136,13 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
               <div className="flex items-center space-x-3">
                 <AlertTriangle className="w-6 h-6 text-orange-500 dark:text-orange-400" />
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">发现相似题目</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('similarity.title')}</h2>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    检测到 {similarQuestions.length} 个相似题目，建议检查是否重复
+                    {t('similarity.detectedSimilarQuestions', { count: similarQuestions.length })}
                   </p>
                   {totalQuestions > 1 && (
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      第 {currentQuestionIndex + 1} 题，共 {totalQuestions} 题有相似题目
+                      {t('similarity.questionWithSimilarity', { current: currentQuestionIndex + 1, total: totalQuestions })}
                     </p>
                   )}
                 </div>
@@ -153,7 +155,7 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
                   onClick={onPrevQuestion}
                   disabled={currentQuestionIndex === 0}
                   className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="上一题"
+                  title={t('similarity.previousQuestion')}
                 >
                   <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-300" />
                 </button>
@@ -164,7 +166,7 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
                   onClick={onNextQuestion}
                   disabled={currentQuestionIndex === totalQuestions - 1}
                   className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="下一题"
+                  title={t('similarity.nextQuestion')}
                 >
                   <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-300" />
                 </button>
@@ -186,7 +188,7 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
             >
               {/* 当前题目预览 */}
               <div className="mb-6">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">当前题目</h3>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">{t('similarity.currentQuestion')}</h3>
                 <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700">
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
@@ -209,7 +211,7 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
 
               {/* 相似题目列表 */}
               <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">相似题目列表</h3>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">{t('similarity.similarQuestionsList')}</h3>
                 <div className="space-y-4">
                   {similarQuestions.map((result, index) => {
                     const similarityLevel = getSimilarityLevel(result.similarityScore);
@@ -255,7 +257,7 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
                           {/* 相似原因 */}
                           {result.reasons.length > 0 && (
                             <div className="text-xs text-gray-600 dark:text-gray-400">
-                              <div className="font-medium mb-1">相似原因：</div>
+                              <div className="font-medium mb-1">{t('similarity.similarityReasons')}：</div>
                               <div className="flex flex-wrap gap-1">
                                 {result.reasons.map((reason, idx) => (
                                   <span key={idx} className="px-2 py-1 bg-gray-100 dark:bg-gray-600 rounded text-xs text-gray-700 dark:text-gray-200">
@@ -279,7 +281,7 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
             <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex-shrink-0">
               <div className="text-sm text-gray-600 dark:text-gray-300">
                 <AlertTriangle className="w-4 h-4 inline mr-1" />
-                建议仔细检查相似题目，避免创建重复内容
+                {t('similarity.suggestion')}
               </div>
               <div className="flex items-center space-x-3">
                 <Button
@@ -291,7 +293,7 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
                   }}
                   className="px-4 py-2"
                 >
-                  取消创建
+                  {t('similarity.cancelCreation')}
                 </Button>
                 <Button
                   onClick={() => {
@@ -302,7 +304,7 @@ const SimilarityDetectionModal: React.FC<SimilarityDetectionModalProps> = ({
                   className="px-4 py-2 bg-orange-600 hover:bg-orange-700"
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  继续创建
+                  {t('similarity.continueCreation')}
                 </Button>
               </div>
             </div>

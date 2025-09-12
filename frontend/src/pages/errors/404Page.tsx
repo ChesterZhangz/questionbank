@@ -1,13 +1,16 @@
 import React from 'react';
 import ErrorPage from './ErrorPage';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const NotFoundPage: React.FC = () => {
+  const { t } = useTranslation();
+  
   return (
     <ErrorPage
       errorCode="404"
-      title="页面未找到"
-      message="抱歉，您访问的页面不存在或已被移除."
-      description="请检查URL是否正确，或者返回首页继续浏览."
+      title={t('errors.notFound.title')}
+      message={t('errors.notFound.message')}
+      description={t('errors.notFound.description')}
       showGames={true}
       showNavigation={true}
     />

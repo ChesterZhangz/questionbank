@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from './useTranslation';
 
 export interface ModalState {
   isOpen: boolean;
@@ -30,13 +31,15 @@ export interface RightSlideModalState {
 }
 
 export const useModal = () => {
+  const { t } = useTranslation();
+  
   const [confirmModal, setConfirmModal] = useState<ModalState>({
     isOpen: false,
     title: '',
     message: '',
     type: 'confirm',
-    confirmText: '确认',
-    cancelText: '取消'
+    confirmText: t('hooks.modal.defaultTexts.confirm'),
+    cancelText: t('hooks.modal.defaultTexts.cancel')
   });
 
   const [rightSlideModal, setRightSlideModal] = useState<RightSlideModalState>({
@@ -59,11 +62,11 @@ export const useModal = () => {
       message,
       onConfirm,
       type: 'confirm',
-      confirmText: '确认',
-      cancelText: '取消',
+      confirmText: t('hooks.modal.defaultTexts.confirm'),
+      cancelText: t('hooks.modal.defaultTexts.cancel'),
       ...options
     });
-  }, []);
+  }, [t]);
 
   // 显示警告弹窗
   const showWarning = useCallback((
@@ -78,11 +81,11 @@ export const useModal = () => {
       message,
       onConfirm,
       type: 'warning',
-      confirmText: '确认',
-      cancelText: '取消',
+      confirmText: t('hooks.modal.defaultTexts.confirm'),
+      cancelText: t('hooks.modal.defaultTexts.cancel'),
       ...options
     });
-  }, []);
+  }, [t]);
 
   // 显示危险操作弹窗
   const showDanger = useCallback((
@@ -97,11 +100,16 @@ export const useModal = () => {
       message,
       onConfirm,
       type: 'danger',
-      confirmText: '确认',
-      cancelText: '取消',
+      confirmText: t('hooks.modal.defaultTexts.confirm'),
+      cancelText: t('hooks.modal.defaultTexts.cancel'),
       confirmDanger: true,
       ...options
     });
+  }, [t]);
+
+  // 关闭确认弹窗
+  const closeConfirm = useCallback(() => {
+    setConfirmModal(prev => ({ ...prev, isOpen: false }));
   }, []);
 
   // 显示信息弹窗
@@ -115,12 +123,12 @@ export const useModal = () => {
       title,
       message,
       type: 'info',
-      confirmText: '确定',
+      confirmText: t('hooks.modal.defaultTexts.ok'),
       showCancel: false,
       onConfirm: () => closeConfirm(),
       ...options
     });
-  }, []);
+  }, [t, closeConfirm]);
 
   // 显示成功弹窗
   const showSuccess = useCallback((
@@ -133,27 +141,22 @@ export const useModal = () => {
       title,
       message,
       type: 'success',
-      confirmText: '确定',
+      confirmText: t('hooks.modal.defaultTexts.ok'),
       showCancel: false,
       onConfirm: () => closeConfirm(),
       ...options
     });
-  }, []);
-
-  // 关闭确认弹窗
-  const closeConfirm = useCallback(() => {
-    setConfirmModal(prev => ({ ...prev, isOpen: false }));
-  }, []);
+  }, [t, closeConfirm]);
 
   // 设置确认按钮loading状态
   const setConfirmLoading = useCallback((loading: boolean, loadingText?: string) => {
     setConfirmModal(prev => ({ 
       ...prev, 
       confirmLoading: loading,
-      loadingText: loadingText || '处理中...',
+      loadingText: loadingText || t('hooks.modal.defaultTexts.processing'),
       preventClose: loading // 加载时防止关闭
     }));
-  }, []);
+  }, [t]);
 
   // 显示右侧弹窗
   const showRightSlide = useCallback((

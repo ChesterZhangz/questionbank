@@ -4,6 +4,7 @@ import { X, Scissors, Plus, Trash2 } from 'lucide-react';
 import Button from '../ui/Button';
 import LaTeXPreview from '../editor/preview/LaTeXPreview';
 import type { Question } from '../../types';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface QuestionSplitModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ const QuestionSplitModal: React.FC<QuestionSplitModalProps> = ({
   onClose,
   onSplit
 }) => {
+  const { t } = useTranslation();
   const [splitPoints, setSplitPoints] = useState<number[]>([]);
   const [selectedText, setSelectedText] = useState<string>('');
 
@@ -123,7 +125,7 @@ const QuestionSplitModal: React.FC<QuestionSplitModalProps> = ({
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center space-x-2">
                 <Scissors className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">分割题目</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('preview.questionSplitModal.title')}</h2>
               </div>
               <Button
                 variant="ghost"
@@ -139,7 +141,7 @@ const QuestionSplitModal: React.FC<QuestionSplitModalProps> = ({
             <div className="p-6 space-y-6">
               {/* 原题目内容 */}
               <div>
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">原题目内容：</h3>
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('preview.questionSplitModal.originalContent')}</h3>
                 <div 
                   className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 max-h-64 overflow-y-auto w-full"
                   onMouseUp={handleTextSelection}
@@ -153,18 +155,18 @@ const QuestionSplitModal: React.FC<QuestionSplitModalProps> = ({
                   />
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  选中要分割的文本，然后点击"添加分割点"
+                  {t('preview.questionSplitModal.selectTextHint')}
                 </p>
               </div>
 
               {/* 分割点管理 */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">分割点：</h3>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('preview.questionSplitModal.splitPoints')}</h3>
                   <div className="flex items-center space-x-2">
                     {selectedText && (
                       <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">
-                        已选中: "{selectedText}"
+                        {t('preview.questionSplitModal.selectedText', { text: selectedText })}
                       </span>
                     )}
                     <Button
@@ -175,7 +177,7 @@ const QuestionSplitModal: React.FC<QuestionSplitModalProps> = ({
                       className="flex items-center space-x-1 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                       <Plus className="h-3 w-3" />
-                      <span>添加分割点</span>
+                      <span>{t('preview.questionSplitModal.addSplitPoint')}</span>
                     </Button>
                   </div>
                 </div>
@@ -185,7 +187,7 @@ const QuestionSplitModal: React.FC<QuestionSplitModalProps> = ({
                     {splitPoints.map((point, index) => (
                       <div key={index} className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/30 rounded border border-blue-200 dark:border-blue-700">
                         <span className="text-sm text-blue-700 dark:text-blue-300">
-                          分割点 {index + 1}: 位置 {point}
+                          {t('preview.questionSplitModal.splitPoint', { index: index + 1, position: point })}
                         </span>
                         <Button
                           variant="ghost"
@@ -200,7 +202,7 @@ const QuestionSplitModal: React.FC<QuestionSplitModalProps> = ({
                   </div>
                 ) : (
                   <div className="text-center py-4 text-gray-500 dark:text-gray-400">
-                    暂无分割点，请选中文本并添加分割点
+                    {t('preview.questionSplitModal.noSplitPoints')}
                   </div>
                 )}
               </div>
@@ -208,18 +210,18 @@ const QuestionSplitModal: React.FC<QuestionSplitModalProps> = ({
               {/* 分割预览 */}
               {splitPoints.length > 0 && (
                 <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">分割预览：</h4>
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('preview.questionSplitModal.splitPreview')}</h4>
                   <div className="max-h-64 overflow-y-auto space-y-3">
                     {splitQuestions.map((splitQuestion, index) => (
                       <div key={index} className="p-3 bg-white dark:bg-gray-700 rounded-lg border border-blue-200 dark:border-blue-600 w-full">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">
-                            新题目 {index + 1}
+                            {t('preview.questionSplitModal.newQuestion', { index: index + 1 })}
                           </span>
                           <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {splitQuestion.type === 'choice' ? '选择题' : 
-                             splitQuestion.type === 'fill' ? '填空题' : 
-                             splitQuestion.type === 'solution' ? '解答题' : '题目'}
+                            {splitQuestion.type === 'choice' ? t('preview.questionSplitModal.questionTypeOptions.choice') : 
+                             splitQuestion.type === 'fill' ? t('preview.questionSplitModal.questionTypeOptions.fill') : 
+                             splitQuestion.type === 'solution' ? t('preview.questionSplitModal.questionTypeOptions.solution') : t('preview.questionSplitModal.questionTypeOptions.question')}
                           </span>
                         </div>
                         <div className="text-sm w-full">
@@ -234,7 +236,7 @@ const QuestionSplitModal: React.FC<QuestionSplitModalProps> = ({
                     ))}
                   </div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    将生成 {splitQuestions.length} 道新题目
+                    {t('preview.questionSplitModal.willGenerate', { count: splitQuestions.length })}
                   </div>
                 </div>
               )}
@@ -247,7 +249,7 @@ const QuestionSplitModal: React.FC<QuestionSplitModalProps> = ({
                 onClick={onClose}
                 className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
-                取消
+                {t('preview.questionSplitModal.cancel')}
               </Button>
               <Button
                 variant="primary"
@@ -256,7 +258,7 @@ const QuestionSplitModal: React.FC<QuestionSplitModalProps> = ({
                 className="flex items-center space-x-1"
               >
                 <Scissors className="h-4 w-4" />
-                <span>确认分割 ({splitQuestions.length} 道题目)</span>
+                <span>{t('preview.questionSplitModal.confirmSplit', { count: splitQuestions.length })}</span>
               </Button>
             </div>
           </motion.div>

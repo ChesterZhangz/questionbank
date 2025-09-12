@@ -34,6 +34,7 @@ import { FuzzySelect } from '../../components/ui/menu';
 import { paperBankAPI } from '../../services/api';
 import { getCategoryOptions, getSubcategoryOptions, paperBankCategories } from '../../config/paperBankCategories';
 import TagSelector from '../../components/ui/TagSelector';
+import { useTranslation } from '../../hooks/useTranslation';
 
 // 试卷集接口定义
 interface PaperBank {
@@ -57,6 +58,7 @@ interface PaperBank {
 }
 
 const PaperBankListPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
 
@@ -108,10 +110,10 @@ const PaperBankListPage: React.FC = () => {
         // getMyPapers返回的是papers字段，不是paperBanks字段
         setPaperBanks(response.data.data.papers || []);
       } else {
-        setError('获取试卷集列表失败');
+        setError(t('paperBanks.errors.fetchPaperBanksFailed'));
       }
     } catch (error: any) {
-      setError(error.response?.data?.error || '获取试卷集列表失败');
+      setError(error.response?.data?.error || t('paperBanks.errors.fetchPaperBanksFailed'));
     } finally {
       setLoading(false);
     }
@@ -120,7 +122,7 @@ const PaperBankListPage: React.FC = () => {
   // 统计数据
   const stats = [
     { 
-      label: '已发布', 
+      label: t('paperBanks.statuses.published'), 
       count: paperBanks.filter(bank => bank.status === 'published').length, 
       color: {
         bg: 'from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30',
@@ -130,7 +132,7 @@ const PaperBankListPage: React.FC = () => {
       }
     },
     { 
-      label: '草稿状态', 
+      label: t('paperBanks.statuses.draft'), 
       count: paperBanks.filter(bank => bank.status === 'draft').length, 
       color: {
         bg: 'from-yellow-50 to-amber-50 dark:from-yellow-900/30 dark:to-amber-900/30',
@@ -140,7 +142,7 @@ const PaperBankListPage: React.FC = () => {
       }
     },
     { 
-      label: '总收入', 
+      label: t('paperBanks.listPage.totalRevenue'), 
       count: paperBanks.reduce((sum, bank) => sum + bank.purchaseCount * bank.price, 0), 
       color: {
         bg: 'from-purple-50 to-violet-50 dark:from-purple-900/30 dark:to-violet-900/30',
@@ -218,22 +220,22 @@ const PaperBankListPage: React.FC = () => {
 
   const handleDeletePaperBank = async (id: string) => {
     showConfirm(
-      '确认删除',
-      '确定要删除这个试卷集吗？删除后无法恢复，所有相关的试卷和成员信息都将丢失。',
+      t('paperBanks.actions.confirmDelete'),
+      t('paperBanks.listPage.deleteConfirmMessage'),
       async () => {
         setConfirmLoading(true);
         try {
           const response = await paperBankAPI.deletePaperBank(id);
           if (response.data.success) {
             setPaperBanks(prev => prev.filter(bank => bank._id !== id));
-            showSuccessRightSlide('删除成功', '试卷集已成功删除');
+            showSuccessRightSlide(t('paperBanks.actions.deleteSuccess'), t('paperBanks.actions.deleteSuccessMessage'));
             // 关闭确认弹窗
             closeConfirm();
           } else {
-            showErrorRightSlide('删除失败', response.data.message || '删除试卷集时发生错误');
+            showErrorRightSlide(t('paperBanks.actions.deleteFailed'), response.data.message || t('paperBanks.actions.deleteFailed'));
           }
         } catch (error: any) {
-          showErrorRightSlide('删除失败', error.response?.data?.message || '删除试卷集时发生错误');
+          showErrorRightSlide(t('paperBanks.actions.deleteFailed'), error.response?.data?.message || t('paperBanks.actions.deleteFailed'));
         } finally {
           setConfirmLoading(false);
         }
@@ -253,9 +255,9 @@ const PaperBankListPage: React.FC = () => {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'published': return '已发布';
-      case 'draft': return '草稿';
-      default: return '未知';
+      case 'published': return t('paperBanks.statuses.published');
+      case 'draft': return t('paperBanks.statuses.draft');
+      default: return t('common.unknown');
     }
   };
 
@@ -291,9 +293,9 @@ const PaperBankListPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 dark:from-gray-100 to-blue-600 dark:to-blue-400 bg-clip-text text-transparent">
-                试卷集管理
+                {t('paperBanks.listPage.pageTitle')}
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-1">管理和组织您的试卷集，支持协作编辑和智能组卷</p>
+              <p className="text-gray-600 dark:text-gray-300 mt-1">{t('paperBanks.listPage.pageDescription')}</p>
             </div>
             <div className="flex items-center space-x-4">
               {/* 快速统计面板 */}
@@ -339,7 +341,7 @@ const PaperBankListPage: React.FC = () => {
                         ease: "easeOut"
                       }}
                     >
-                      总试卷集: {paperBanks.length} 个
+                      {t('paperBanks.listPage.totalPaperBanks')}: {paperBanks.length}
                     </motion.span>
                   </motion.div>
                 </motion.div>
@@ -360,11 +362,11 @@ const PaperBankListPage: React.FC = () => {
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  创建试卷集
+                  {t('paperBanks.listPage.createPaperBank')}
                 </Button>
                 {/* 悬停提示 */}
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                  创建新的试卷集
+                  {t('paperBanks.listPage.createNewPaperBank')}
                 </div>
               </motion.div>
             </div>
@@ -388,8 +390,8 @@ const PaperBankListPage: React.FC = () => {
                   <Filter className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-gray-800 dark:text-gray-100">智能筛选</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">快速定位目标试卷集</p>
+                  <h3 className="text-base font-semibold text-gray-800 dark:text-gray-100">{t('paperBanks.listPage.smartFilter')}</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('paperBanks.listPage.quickLocate')}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
@@ -412,7 +414,7 @@ const PaperBankListPage: React.FC = () => {
                     className="px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 bg-white/60 dark:bg-gray-700/60 backdrop-blur-sm"
                   >
                     <RefreshCw className="h-3 w-3 mr-1" />
-                    重置筛选
+                    {t('paperBanks.listPage.resetFilter')}
                   </Button>
                 </motion.div>
               </div>
@@ -429,11 +431,11 @@ const PaperBankListPage: React.FC = () => {
                 transition={{ duration: 0.3, delay: 0.1 }}
                 className="lg:col-span-2 relative"
               >
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">搜索试卷集</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">{t('paperBanks.listPage.searchPaperBanks')}</label>
                 <div className="relative group">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-4 w-4 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors duration-200" />
                   <Input
-                    placeholder="搜索试卷集名称、描述或标签..."
+                    placeholder={t('paperBanks.listPage.searchPlaceholder')}
                     value={searchTerm}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                     className="pl-10 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-500 group-hover:shadow-md text-gray-900 dark:text-gray-100"
@@ -450,15 +452,15 @@ const PaperBankListPage: React.FC = () => {
                 transition={{ duration: 0.3, delay: 0.2 }}
                 className="relative z-[100]"
               >
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">试卷集分类</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">{t('paperBanks.listPage.paperBankCategory')}</label>
                                   <FuzzySelect
-                    options={getCategoryOptions()}
+                    options={getCategoryOptions(t)}
                     value={selectedCategory}
                     onChange={(value: string | number) => {
                       setSelectedCategory(value.toString());
                       setSelectedSubcategory('all'); // 重置子分类
                     }}
-                    placeholder="选择分类"
+                    placeholder={t('paperBanks.listPage.filterByCategory')}
                     label=""
                   />
               </motion.div>
@@ -470,12 +472,12 @@ const PaperBankListPage: React.FC = () => {
                 transition={{ duration: 0.3, delay: 0.3 }}
                 className="relative z-[110]"
               >
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">子分类</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">{t('paperBanks.listPage.subcategory')}</label>
                 <FuzzySelect
-                  options={getSubcategoryOptions(selectedCategory)}
+                  options={getSubcategoryOptions(selectedCategory, t)}
                   value={selectedSubcategory}
                   onChange={(value: string | number) => setSelectedSubcategory(value.toString())}
-                  placeholder="选择子分类"
+                  placeholder={t('paperBanks.listPage.filterBySubcategory')}
                   label=""
                 />
               </motion.div>
@@ -488,11 +490,11 @@ const PaperBankListPage: React.FC = () => {
                 className="relative z-[120]"
               >
                 <TagSelector
-                  label="标签筛选"
+                  label={t('paperBanks.listPage.filterByTags')}
                   availableTags={getAvailableTags()}
                   selectedTags={selectedTags}
                   onTagsChange={setSelectedTags}
-                  placeholder="选择标签进行筛选"
+                  placeholder={t('paperBanks.listPage.selectTagsToFilter')}
                   className="w-full"
                 />
               </motion.div>
@@ -504,16 +506,16 @@ const PaperBankListPage: React.FC = () => {
                 transition={{ duration: 0.3, delay: 0.4 }}
                 className="relative z-[120]"
               >
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">发布状态</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">{t('paperBanks.listPage.publishStatus')}</label>
                 <FuzzySelect
                   options={[
-                    { value: 'all', label: '全部状态' },
-                    { value: 'published', label: '已发布' },
-                    { value: 'draft', label: '草稿' }
+                    { value: 'all', label: t('paperBanks.listPage.allStatuses') },
+                    { value: 'published', label: t('paperBanks.statuses.published') },
+                    { value: 'draft', label: t('paperBanks.statuses.draft') }
                   ]}
                   value={selectedStatus}
                   onChange={(value: string | number) => setSelectedStatus(value.toString())}
-                  placeholder="选择状态"
+                  placeholder={t('paperBanks.listPage.selectStatus')}
                   label=""
                 />
               </motion.div>
@@ -525,18 +527,18 @@ const PaperBankListPage: React.FC = () => {
                 transition={{ duration: 0.3, delay: 0.5 }}
                 className="relative z-[130]"
               >
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">排序方式</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">{t('paperBanks.listPage.sortBy')}</label>
                 <FuzzySelect
                   options={[
-                    { value: 'createdAt', label: '创建时间', icon: Clock },
-                    { value: 'name', label: '名称', icon: FileText },
-                    { value: 'price', label: '价格', icon: DollarSign },
-                    { value: 'rating', label: '评分', icon: Star },
-                    { value: 'purchaseCount', label: '购买次数', icon: BarChart3 }
+                    { value: 'createdAt', label: t('paperBanks.listPage.sortByCreatedAt'), icon: Clock },
+                    { value: 'name', label: t('paperBanks.listPage.sortByName'), icon: FileText },
+                    { value: 'price', label: t('paperBanks.listPage.sortByPrice'), icon: DollarSign },
+                    { value: 'rating', label: t('paperBanks.listPage.sortByRating'), icon: Star },
+                    { value: 'purchaseCount', label: t('paperBanks.listPage.sortByPurchaseCount'), icon: BarChart3 }
                   ]}
                   value={sortBy}
                   onChange={(value: string | number) => setSortBy(value.toString())}
-                  placeholder="选择排序方式"
+                  placeholder={t('paperBanks.listPage.selectSortBy')}
                   label=""
                 />
               </motion.div>
@@ -551,7 +553,7 @@ const PaperBankListPage: React.FC = () => {
                 transition={{ duration: 0.3, delay: 0.6 }}
                 className="flex items-center space-x-4"
               >
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300">排序方向</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300">{t('paperBanks.listPage.sortDirection')}</label>
                 <div className="relative group">
                   <Button
                     variant="outline"
@@ -561,7 +563,7 @@ const PaperBankListPage: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <TrendingUp className="h-3 w-3 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-100 transition-colors" />
                       <span className="text-xs font-medium text-gray-700 dark:text-gray-100 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
-                        {sortOrder === 'asc' ? '升序 ↑' : '降序 ↓'}
+                        {sortOrder === 'asc' ? t('paperBanks.listPage.ascending') : t('paperBanks.listPage.descending')}
                       </span>
                     </div>
                   </Button>
@@ -577,7 +579,7 @@ const PaperBankListPage: React.FC = () => {
                 transition={{ duration: 0.3, delay: 0.7 }}
                 className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-lg"
               >
-                共找到 <span className="font-medium text-blue-600 dark:text-blue-400">{filteredPaperBanks.length}</span> 个试卷集
+                {t('paperBanks.listPage.foundCount', { count: filteredPaperBanks.length })}
               </motion.div>
             </div>
           </div>
@@ -597,8 +599,8 @@ const PaperBankListPage: React.FC = () => {
         {/* 试卷集列表 */}
         {loading ? (
           <LoadingPage 
-            title="正在加载试卷集..." 
-            description="请稍候，正在获取试卷集列表"
+            title={t('paperBanks.loading.loadingPaperBanks')} 
+            description={t('paperBanks.loading.loadingPaperBanks')}
             fullScreen={false}
           />
         ) : sortedPaperBanks.length === 0 ? (
@@ -608,14 +610,14 @@ const PaperBankListPage: React.FC = () => {
             className="text-center py-12"
           >
             <ClipboardList className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">还没有试卷集</h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">创建您的第一个试卷集，开始管理试卷和协作编辑</p>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">{t('paperBanks.listPage.noPaperBanks')}</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">{t('paperBanks.listPage.createFirstPaperBank')}</p>
             <Button
               onClick={handleCreatePaperBank}
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              创建试卷集
+              {t('paperBanks.listPage.createPaperBank')}
             </Button>
           </motion.div>
         ) : (
@@ -658,7 +660,7 @@ const PaperBankListPage: React.FC = () => {
                               className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                             >
                               <Eye className="w-4 h-4 mr-2" />
-                              查看详情
+                              {t('paperBanks.listPage.viewDetails')}
                             </button>
                             <button
                               onClick={(e) => {
@@ -668,7 +670,7 @@ const PaperBankListPage: React.FC = () => {
                               className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                             >
                               <Edit className="w-4 h-4 mr-2" />
-                              编辑
+                              {t('paperBanks.listPage.edit')}
                             </button>
                             <button
                               onClick={(e) => {
@@ -678,7 +680,7 @@ const PaperBankListPage: React.FC = () => {
                               className="flex items-center w-full px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                             >
                               <Users className="w-4 h-4 mr-2" />
-                              成员管理
+                              {t('paperBanks.listPage.memberManagement')}
                             </button>
 
                             <button
@@ -689,7 +691,7 @@ const PaperBankListPage: React.FC = () => {
                               className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
-                              删除
+                              {t('paperBanks.listPage.delete')}
                             </button>
                           </div>
                         </div>
@@ -719,23 +721,23 @@ const PaperBankListPage: React.FC = () => {
                     <div className="grid grid-cols-3 gap-3 mb-4 text-sm">
                       <div className="flex items-center gap-2">
                         <Users className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-600 dark:text-gray-400">{bank.memberCount} 成员</span>
+                        <span className="text-gray-600 dark:text-gray-400">{bank.memberCount} {t('paperBanks.listPage.members')}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <FileText className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-600 dark:text-gray-400">{bank.paperCount} 试卷</span>
+                        <span className="text-gray-600 dark:text-gray-400">{bank.paperCount} {t('paperBanks.listPage.papers')}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Star className="w-4 h-4 text-yellow-500" />
-                        <span className="text-gray-600 dark:text-gray-400">{bank.rating} 分</span>
+                        <span className="text-gray-600 dark:text-gray-400">{bank.rating} {t('paperBanks.listPage.rating')}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Download className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-600 dark:text-gray-400">{bank.purchaseCount} 购买</span>
+                        <span className="text-gray-600 dark:text-gray-400">{bank.purchaseCount} {t('paperBanks.listPage.purchases')}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Tag className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-600 dark:text-gray-400">{bank.customTags ? bank.customTags.length : 0} 标签</span>
+                        <span className="text-gray-600 dark:text-gray-400">{bank.customTags ? bank.customTags.length : 0} {t('paperBanks.listPage.tagCount')}</span>
                       </div>
                     </div>
 
@@ -743,7 +745,7 @@ const PaperBankListPage: React.FC = () => {
                     <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
                       <div className="flex items-center gap-3">
                         <span className="px-2 py-1 text-xs rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 bg-opacity-10">
-                          {bank.subcategory ? getSubcategoryLabel(bank.category, bank.subcategory) : '未分类'}
+                          {bank.subcategory ? getSubcategoryLabel(bank.category, bank.subcategory) : t('paperBanks.listPage.uncategorized')}
                         </span>
                         <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(bank.status)} bg-opacity-10`}>
                           {getStatusLabel(bank.status)}

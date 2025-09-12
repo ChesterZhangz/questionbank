@@ -14,6 +14,7 @@ import Avatar from '../ui/Avatar';
 import { useTheme } from '../../hooks/useTheme';
 import { useUserAvatar } from '../../hooks/useUserAvatar';
 import { getLogoPath, getSiteName, getSiteTagline } from '../../config/siteConfig';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface HeaderProps {
   sidebarCollapsed: boolean;
@@ -28,6 +29,7 @@ const Header: React.FC<HeaderProps> = ({
   layoutMode,
   isMobile = false
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -67,7 +69,7 @@ const Header: React.FC<HeaderProps> = ({
             <button 
               className="p-3 rounded-xl hover:bg-gray-100/80 dark:hover:bg-gray-700/80 transition-all duration-200 hover:shadow-md backdrop-blur-sm"
               onClick={onToggleSidebar}
-              aria-label={sidebarCollapsed ? '展开侧边栏' : '收起侧边栏'}
+              aria-label={sidebarCollapsed ? t('layout.sidebar.expand') : t('layout.sidebar.collapse')}
             >
               <Menu className="w-6 h-6 text-gray-600 dark:text-gray-300" />
             </button>
@@ -77,7 +79,7 @@ const Header: React.FC<HeaderProps> = ({
             <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
               <img 
                 src={getLogoPath(isDark)} 
-                alt="网站Logo" 
+                    alt={t('layout.sidebar.siteLogo')}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   // 如果头像加载失败，使用彩色logo作为fallback
@@ -94,13 +96,13 @@ const Header: React.FC<HeaderProps> = ({
 
           {layoutMode === 'header' && !isMobile && (
             <nav className="flex gap-2">
-              <NavLink to="/dashboard" label="仪表盘" />
-              <NavLink to="/question-banks" label="题库管理" />
-              <NavLink to="/questions" label="题目管理" />
-              <NavLink to="/paper-banks" label="试卷集" />
-              <NavLink to="/paper-generation" label="组卷" />
+              <NavLink to="/dashboard" label={t('layout.sidebar.dashboard')} />
+              <NavLink to="/question-banks" label={t('layout.sidebar.bankManagement')} />
+              <NavLink to="/questions" label={t('layout.sidebar.questionList')} />
+              <NavLink to="/paper-banks" label={t('layout.sidebar.paperBanks')} />
+              <NavLink to="/paper-generation" label={t('layout.sidebar.paperGeneration')} />
               {(isAdmin || isAdminEmail) && (
-                <NavLink to="/users" label="用户管理" />
+                <NavLink to="/users" label={t('layout.sidebar.userManagement')} />
               )}
             </nav>
           )}
@@ -114,7 +116,7 @@ const Header: React.FC<HeaderProps> = ({
               className={`flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-gray-100/80 dark:hover:bg-gray-700/80 transition-all duration-200 hover:shadow-md backdrop-blur-sm ${
                 isMobile ? 'gap-2' : 'gap-4'
               }`}
-              aria-label="用户菜单"
+              aria-label={t('layout.header.userMenu')}
             >
               <Avatar
                 src={userAvatarSrc}
@@ -126,11 +128,11 @@ const Header: React.FC<HeaderProps> = ({
               />
               {!isMobile && (
                 <div className="text-left">
-                  <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user?.name || '用户'}</div>
+                  <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user?.name || t('layout.sidebar.user')}</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">{user?.email || 'user@example.com'}</div>
                   <div className="flex items-center gap-1 mt-1">
                     <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium">
-                      {isSuperAdmin || isAdminEmail ? '超级管理员' : isAdmin ? '管理员' : '普通用户'}
+                      {isSuperAdmin || isAdminEmail ? t('layout.sidebar.superAdmin') : isAdmin ? t('layout.sidebar.admin') : t('layout.sidebar.normalUser')}
                     </span>
                   </div>
                 </div>
@@ -154,11 +156,11 @@ const Header: React.FC<HeaderProps> = ({
                 >
                   {!isMobile && (
                     <div className="px-4 py-3 border-b border-gray-200/50 dark:border-gray-700/50">
-                      <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user?.name || '用户'}</div>
+                      <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user?.name || t('layout.sidebar.user')}</div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">{user?.email || 'user@example.com'}</div>
                       <div className="flex items-center gap-1 mt-2">
                         <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium">
-                          {isSuperAdmin || isAdminEmail ? '超级管理员' : isAdmin ? '管理员' : '普通用户'}
+                          {isSuperAdmin || isAdminEmail ? t('layout.sidebar.superAdmin') : isAdmin ? t('layout.sidebar.admin') : t('layout.sidebar.normalUser')}
                         </span>
                       </div>
                     </div>
@@ -172,7 +174,7 @@ const Header: React.FC<HeaderProps> = ({
                       className="w-full flex items-center gap-4 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-700/80 transition-all duration-200"
                     >
                       <Building2 className="w-4 h-4" />
-                      我的企业
+                      {t('layout.sidebar.myEnterprise')}
                     </button>
                     <button
                       onClick={() => {
@@ -182,7 +184,7 @@ const Header: React.FC<HeaderProps> = ({
                       className="w-full flex items-center gap-4 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-700/80 transition-all duration-200"
                     >
                       <User className="w-4 h-4" />
-                      个人信息
+                      {t('layout.sidebar.profile')}
                     </button>
                     <button
                       onClick={() => {
@@ -192,7 +194,7 @@ const Header: React.FC<HeaderProps> = ({
                       className="w-full flex items-center gap-4 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-700/80 transition-all duration-200"
                     >
                       <Settings className="w-4 h-4" />
-                      设置
+                      {t('layout.sidebar.settings')}
                     </button>
                     <button
                       onClick={() => {
@@ -202,7 +204,7 @@ const Header: React.FC<HeaderProps> = ({
                       className="w-full flex items-center gap-4 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-700/80 transition-all duration-200"
                     >
                       <LogOut className="w-4 h-4" />
-                      退出登录
+                      {t('layout.sidebar.logout')}
                     </button>
                   </div>
                 </motion.div>

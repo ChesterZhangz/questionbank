@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain } from 'lucide-react';
 import GameAPIService from '../../services/gameAPI';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface MemoryGameProps {
   onScoreUpdate: (score: number) => void;
@@ -26,6 +27,7 @@ const MemoryGame: React.FC<MemoryGameProps> = ({
   gridSize, 
   timeLimit 
 }) => {
+  const { t } = useTranslation();
   const [cards, setCards] = useState<MemoryCard[]>([]);
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
   const [score, setScore] = useState(0);
@@ -223,42 +225,42 @@ const MemoryGame: React.FC<MemoryGameProps> = ({
           whileHover={{ scale: 1.05 }}
         >
           <div className="text-xl font-bold text-blue-600 dark:text-blue-400">{score}</div>
-          <div className="text-xs text-blue-500 dark:text-blue-300 font-medium">得分</div>
+          <div className="text-xs text-blue-500 dark:text-blue-300 font-medium">{t('games.memoryGame.score')}</div>
         </motion.div>
         <motion.div 
           className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-xl border border-green-200 dark:border-green-700"
           whileHover={{ scale: 1.05 }}
         >
           <div className="text-xl font-bold text-green-600 dark:text-green-400">{moves}</div>
-          <div className="text-xs text-green-500 dark:text-green-300 font-medium">步数</div>
+          <div className="text-xs text-green-500 dark:text-green-300 font-medium">{t('games.memoryGame.moves')}</div>
         </motion.div>
         <motion.div 
           className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl border border-purple-200 dark:border-purple-700"
           whileHover={{ scale: 1.05 }}
         >
           <div className="text-xl font-bold text-purple-600 dark:text-purple-400">{matchedPairs}/{totalPairs}</div>
-          <div className="text-xs text-purple-500 dark:text-purple-300 font-medium">配对</div>
+          <div className="text-xs text-purple-500 dark:text-purple-300 font-medium">{t('games.memoryGame.pairs')}</div>
         </motion.div>
         <motion.div 
           className="text-center p-3 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-xl border border-orange-200 dark:border-orange-700"
           whileHover={{ scale: 1.05 }}
         >
           <div className="text-xl font-bold text-orange-600 dark:text-orange-400">{timeLeft}</div>
-          <div className="text-xs text-orange-500 dark:text-orange-300 font-medium">时间</div>
+          <div className="text-xs text-orange-500 dark:text-orange-300 font-medium">{t('games.memoryGame.time')}</div>
         </motion.div>
         <motion.div 
           className="text-center p-3 bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/30 dark:to-pink-800/30 rounded-xl border border-pink-200 dark:border-pink-700"
           whileHover={{ scale: 1.05 }}
         >
           <div className="text-xl font-bold text-pink-600 dark:text-pink-400">{Math.round(progress)}%</div>
-          <div className="text-xs text-pink-500 dark:text-pink-300 font-medium">进度</div>
+          <div className="text-xs text-pink-500 dark:text-pink-300 font-medium">{t('games.memoryGame.progress')}</div>
         </motion.div>
       </div>
 
       {/* 进度条 */}
       <div className="mb-6">
         <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300 mb-2">
-          <span>完成进度</span>
+          <span>{t('games.memoryGame.completionProgress')}</span>
           <span>{Math.round(progress)}%</span>
         </div>
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -275,9 +277,9 @@ const MemoryGame: React.FC<MemoryGameProps> = ({
       <div className="text-center mb-6">
         <div className="flex items-center justify-center mb-2">
           <Brain className="w-8 h-8 text-green-600 dark:text-green-400 mr-3" />
-          <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100">记忆游戏</h3>
+          <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{t('games.memoryGame.title')}</h3>
         </div>
-        <p className="text-gray-600 dark:text-gray-300">找到所有相同的数字配对</p>
+        <p className="text-gray-600 dark:text-gray-300">{t('games.memoryGame.description')}</p>
       </div>
 
       {/* 卡片网格 */}

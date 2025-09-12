@@ -38,11 +38,13 @@ import searchAPI, { type SearchSuggestion } from '../../services/searchAPI';
 import { renderSearchContent } from '../../lib/latex/utils/renderContent';
 import 'katex/dist/katex.min.css';
 import LoadingPage from '../../components/ui/LoadingPage';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { theme, setTheme } = useTheme();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'overview' | 'question-banks' | 'settings'>('overview');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
@@ -103,7 +105,7 @@ const DashboardPage: React.FC = () => {
         setSystemStatus(status);
       } catch (err: any) {
         // 错误日志已清理
-        setError(err.message || '加载数据失败');
+        setError(err.message || t('dashboard.loadDataFailed'));
       } finally {
         setLoading(false);
       }
@@ -132,9 +134,9 @@ const DashboardPage: React.FC = () => {
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(hours / 24);
     
-    if (days > 0) return `${days}天前`;
-    if (hours > 0) return `${hours}小时前`;
-    return '刚刚';
+    if (days > 0) return t('dashboard.timeAgo.days', { days });
+    if (hours > 0) return t('dashboard.timeAgo.hours', { hours });
+    return t('dashboard.timeAgo.justNow');
   };
 
   // 获取状态图标
@@ -149,9 +151,9 @@ const DashboardPage: React.FC = () => {
   // 获取状态文本
   const getStatusText = (status: 'normal' | 'warning' | 'error') => {
     switch (status) {
-      case 'normal': return '正常';
-      case 'warning': return '警告';
-      case 'error': return '错误';
+      case 'normal': return t('dashboard.status.normal');
+      case 'warning': return t('dashboard.status.warning');
+      case 'error': return t('dashboard.status.error');
     }
   };
 
@@ -173,22 +175,22 @@ const DashboardPage: React.FC = () => {
     const baseActions = [
       {
         icon: <BookOpen className="w-6 h-6" />,
-        title: '管理题库',
-        description: '创建和管理您的题库',
+        title: t('dashboard.actions.manageQuestionBanks'),
+        description: t('dashboard.actions.manageQuestionBanksDesc'),
         onClick: () => navigate('/question-banks'),
         color: 'from-blue-500 to-blue-600'
       },
       {
         icon: <Plus className="w-6 h-6" />,
-        title: '创建题目',
-        description: '添加新的题目到题库',
+        title: t('dashboard.actions.createQuestion'),
+        description: t('dashboard.actions.createQuestionDesc'),
         onClick: () => navigate('/question-banks'),
         color: 'from-green-500 to-green-600'
       },
       {
         icon: <Code className="w-6 h-6" />,
-        title: 'LaTeX指导',
-        description: '学习LaTeX和TikZ语法',
+        title: t('dashboard.actions.latexGuide'),
+        description: t('dashboard.actions.latexGuideDesc'),
         onClick: () => navigate('/LaTeXGuide'),
         color: 'from-purple-500 to-purple-600'
       }
@@ -197,8 +199,8 @@ const DashboardPage: React.FC = () => {
     const adminActions = [
       {
         icon: <Users className="w-6 h-6" />,
-        title: '用户管理',
-        description: '管理系统用户和权限',
+        title: t('dashboard.actions.userManagement'),
+        description: t('dashboard.actions.userManagementDesc'),
         onClick: () => navigate('/user-management'),
         color: 'from-red-500 to-red-600'
       },
@@ -207,8 +209,8 @@ const DashboardPage: React.FC = () => {
     const teacherActions = [
       {
         icon: <FileText className="w-6 h-6" />,
-        title: '试卷生成',
-        description: '智能生成试卷',
+        title: t('dashboard.actions.paperGeneration'),
+        description: t('dashboard.actions.paperGenerationDesc'),
         onClick: () => navigate('/paper-generation'),
         color: 'from-indigo-500 to-indigo-600'
       }
@@ -217,8 +219,8 @@ const DashboardPage: React.FC = () => {
     const studentActions = [
       {
         icon: <Target className="w-6 h-6" />,
-        title: '练习模式',
-        description: '在线练习题目',
+        title: t('dashboard.actions.practiceMode'),
+        description: t('dashboard.actions.practiceModeDesc'),
         onClick: () => navigate('/practice'),
         color: 'from-pink-500 to-pink-600'
       }
@@ -289,8 +291,8 @@ const DashboardPage: React.FC = () => {
     return (
       <LoadingPage
         type="loading"
-        title="加载仪表板数据中..."
-        description="正在获取您的学习统计和进度信息"
+        title={t('dashboard.loadingTitle')}
+        description={t('dashboard.loadingDescription')}
         animation="spinner"
       />
     );
@@ -301,7 +303,7 @@ const DashboardPage: React.FC = () => {
     return (
       <LoadingPage
         type="error"
-        title="加载数据失败"
+        title={t('dashboard.errorTitle')}
         description={error}
         showRetry={true}
         onRetry={() => window.location.reload()}
@@ -322,10 +324,10 @@ const DashboardPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-text-primary mb-2">
-                欢迎回来，{user?.name || '用户'}！
+                {t('dashboard.welcome', { name: user?.name || t('dashboard.user') })}
               </h1>
               <p className="text-text-secondary">
-                今天是 {new Date().toLocaleDateString('zh-CN', { 
+                {t('dashboard.today')} {new Date().toLocaleDateString(t('dashboard.locale'), { 
                   year: 'numeric', 
                   month: 'long', 
                   day: 'numeric',
@@ -341,7 +343,7 @@ const DashboardPage: React.FC = () => {
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="搜索题库、题目... "
+                    placeholder={t('dashboard.searchPlaceholder')}
                     value={searchQuery}
                     onChange={handleSearchInput}
                     className="w-full pl-10 pr-4 py-2 border border-border-primary rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-bg-elevated text-text-primary"
@@ -350,7 +352,7 @@ const DashboardPage: React.FC = () => {
                   {searchQuery.includes('\\') && (
                     <div className="absolute top-full left-0 right-0 mt-1 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg text-xs text-blue-700 dark:text-blue-300 z-40">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">LaTeX预览:</span>
+                        <span className="font-medium">{t('dashboard.latexPreview')}:</span>
                         <div 
                           className="flex-1"
                           dangerouslySetInnerHTML={{ 
@@ -371,7 +373,7 @@ const DashboardPage: React.FC = () => {
                     {searchLoading ? (
                                               <div className="p-4 text-center">
                           <Loader2 className="w-4 h-4 text-text-tertiary animate-spin mx-auto" />
-                          <p className="text-sm text-text-tertiary mt-1">搜索中...</p>
+                          <p className="text-sm text-text-tertiary mt-1">{t('dashboard.searching')}</p>
                         </div>
                     ) : searchResults.length > 0 ? (
                       searchResults.map((result) => (
@@ -408,7 +410,7 @@ const DashboardPage: React.FC = () => {
                               <div 
                                 className="text-xs text-text-tertiary mt-1"
                                 dangerouslySetInnerHTML={{ 
-                                  __html: `${result.type === 'questionBank' ? '题库' : '题目'} • ${renderSearchContent(result.description, 60)}` 
+                                  __html: `${result.type === 'questionBank' ? t('dashboard.questionBank') : t('dashboard.question')} • ${renderSearchContent(result.description, 60)}` 
                                 }}
                               />
                             </div>
@@ -418,7 +420,7 @@ const DashboardPage: React.FC = () => {
                       ))
                     ) : (
                                               <div className="p-4 text-center">
-                          <p className="text-sm text-text-tertiary">未找到相关结果</p>
+                          <p className="text-sm text-text-tertiary">{t('dashboard.noResults')}</p>
                         </div>
                     )}
                   </div>
@@ -455,7 +457,7 @@ const DashboardPage: React.FC = () => {
                 <FolderOpen className="w-6 h-6 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-text-secondary">题库总数</p>
+                <p className="text-sm font-medium text-text-secondary">{t('dashboard.totalQuestionBanks')}</p>
                 <p className="text-2xl font-bold text-text-primary">
                   {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : quickStats.totalQuestionBanks}
                 </p>
@@ -469,7 +471,7 @@ const DashboardPage: React.FC = () => {
                 <FileText className="w-6 h-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-text-secondary">题目总数</p>
+                <p className="text-sm font-medium text-text-secondary">{t('dashboard.totalQuestions')}</p>
                 <p className="text-2xl font-bold text-text-primary">
                   {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : quickStats.totalQuestions}
                 </p>
@@ -483,7 +485,7 @@ const DashboardPage: React.FC = () => {
                 <Activity className="w-6 h-6 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-text-secondary">今日活动</p>
+                <p className="text-sm font-medium text-text-secondary">{t('dashboard.todayActivity')}</p>
                 <p className="text-2xl font-bold text-text-primary">
                   {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : quickStats.recentActivity}
                 </p>
@@ -497,7 +499,7 @@ const DashboardPage: React.FC = () => {
                 <Target className="w-6 h-6 text-orange-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-text-secondary">完成率</p>
+                <p className="text-sm font-medium text-text-secondary">{t('dashboard.completionRate')}</p>
                 <p className="text-2xl font-bold text-text-primary">
                   {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : `${quickStats.completionRate}%`}
                 </p>
@@ -514,9 +516,9 @@ const DashboardPage: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <div className="flex space-x-1 bg-bg-secondary p-1 rounded-lg">
                 {[
-                  { id: 'overview', label: '概览', icon: BarChart3 },
-                  { id: 'question-banks', label: '题库', icon: FolderOpen },
-                  { id: 'settings', label: '设置', icon: Settings }
+                  { id: 'overview', label: t('dashboard.tabs.overview'), icon: BarChart3 },
+                  { id: 'question-banks', label: t('dashboard.tabs.questionBanks'), icon: FolderOpen },
+                  { id: 'settings', label: t('dashboard.tabs.settings'), icon: Settings }
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -563,7 +565,7 @@ const DashboardPage: React.FC = () => {
                 >
                   {/* 快速操作 */}
                   <Card className="p-6">
-                    <h3 className="text-lg font-semibold text-text-primary mb-4">快捷功能</h3>
+                    <h3 className="text-lg font-semibold text-text-primary mb-4">{t('dashboard.quickActions')}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {getQuickActions().map((action, index) => (
                         <motion.button
@@ -595,9 +597,9 @@ const DashboardPage: React.FC = () => {
                   {/* 网站介绍 */}
                   <Card className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-text-primary">网站介绍</h3>
+                      <h3 className="text-lg font-semibold text-text-primary">{t('dashboard.websiteIntroduction')}</h3>
                       <Button variant="outline" size="sm" onClick={() => navigate('/introduction')}>
-                        了解更多
+                        {t('dashboard.learnMore')}
                       </Button>
                     </div>
                     <div className="space-y-4">
@@ -606,8 +608,8 @@ const DashboardPage: React.FC = () => {
                           <BookOpen className="w-5 h-5" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-text-primary">专业题库管理平台</p>
-                          <p className="text-sm text-text-secondary">支持LaTeX数学公式和TikZ图形绘制</p>
+                          <p className="text-sm font-medium text-text-primary">{t('dashboard.features.professionalPlatform')}</p>
+                          <p className="text-sm text-text-secondary">{t('dashboard.features.latexSupport')}</p>
                         </div>
                       </div>
                       
@@ -616,8 +618,8 @@ const DashboardPage: React.FC = () => {
                           <Target className="w-5 h-5" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-text-primary">智能组卷系统</p>
-                          <p className="text-sm text-text-secondary">基于AI的智能组卷，自动生成高质量试卷</p>
+                          <p className="text-sm font-medium text-text-primary">{t('dashboard.features.smartPaperGeneration')}</p>
+                          <p className="text-sm text-text-secondary">{t('dashboard.features.aiPaperGeneration')}</p>
                         </div>
                       </div>
                       
@@ -626,8 +628,8 @@ const DashboardPage: React.FC = () => {
                           <Users className="w-5 h-5" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-text-primary">团队协作支持</p>
-                          <p className="text-sm text-text-secondary">支持团队协作，共享题库和试卷资源</p>
+                          <p className="text-sm font-medium text-text-primary">{t('dashboard.features.teamCollaboration')}</p>
+                          <p className="text-sm text-text-secondary">{t('dashboard.features.teamCollaborationDesc')}</p>
                         </div>
                       </div>
                     </div>
@@ -636,9 +638,9 @@ const DashboardPage: React.FC = () => {
                   {/* 最近活动 */}
                   <Card className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-text-primary">最近活动</h3>
+                      <h3 className="text-lg font-semibold text-text-primary">{t('dashboard.recentActivity')}</h3>
                       <Button variant="outline" size="sm">
-                        查看全部
+                        {t('dashboard.viewAll')}
                       </Button>
                     </div>
                     <div className="space-y-4">
@@ -662,7 +664,7 @@ const DashboardPage: React.FC = () => {
                       ) : (
                         <div className="text-center py-8 text-text-tertiary">
                           <Activity className="w-8 h-8 mx-auto mb-2 text-text-tertiary" />
-                          <p>暂无活动记录</p>
+                          <p>{t('dashboard.noActivityRecords')}</p>
                         </div>
                       )}
                     </div>
@@ -679,10 +681,10 @@ const DashboardPage: React.FC = () => {
                 >
                   <Card className="p-6">
                     <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">我的题库</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('dashboard.myQuestionBanks')}</h3>
                       <Button onClick={() => navigate('/question-banks')}>
                         <Plus className="w-4 h-4 mr-2" />
-                        新建题库
+                        {t('dashboard.createQuestionBank')}
                       </Button>
                     </div>
 
@@ -712,7 +714,7 @@ const DashboardPage: React.FC = () => {
                               <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{bank.description}</p>
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                                  <span>{bank.questionCount} 题</span>
+                                  <span>{bank.questionCount} {t('dashboard.questions')}</span>
                                   <span>{formatTime(bank.lastModified)}</span>
                                 </div>
                                 <div className="flex space-x-1">
@@ -750,7 +752,7 @@ const DashboardPage: React.FC = () => {
                                 </div>
                               </div>
                               <div className="flex items-center space-x-4">
-                                <span className="text-sm text-text-tertiary">{bank.questionCount} 题</span>
+                                <span className="text-sm text-text-tertiary">{bank.questionCount} {t('dashboard.questions')}</span>
                                 <span className="text-sm text-text-tertiary">{formatTime(bank.lastModified)}</span>
                                 <ArrowRight className="w-4 h-4 text-text-tertiary" />
                               </div>
@@ -761,11 +763,11 @@ const DashboardPage: React.FC = () => {
                     ) : (
                       <div className="text-center py-12 text-text-tertiary">
                         <FolderOpen className="w-12 h-12 mx-auto mb-4 text-text-tertiary" />
-                        <h3 className="text-lg font-medium mb-2">暂无题库</h3>
-                        <p className="mb-4">创建您的第一个题库开始使用</p>
+                        <h3 className="text-lg font-medium mb-2">{t('dashboard.noQuestionBanks')}</h3>
+                        <p className="mb-4">{t('dashboard.createFirstQuestionBank')}</p>
                         <Button onClick={() => navigate('/question-banks')}>
                           <Plus className="w-4 h-4 mr-2" />
-                          创建题库
+                          {t('dashboard.createQuestionBank')}
                         </Button>
                       </div>
                     )}
@@ -784,28 +786,28 @@ const DashboardPage: React.FC = () => {
                   className="space-y-6"
                 >
                   <Card className="p-6">
-                    <h3 className="text-lg font-semibold text-text-primary mb-4">个人设置</h3>
+                    <h3 className="text-lg font-semibold text-text-primary mb-4">{t('dashboard.personalSettings')}</h3>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-text-secondary">主题模式</span>
+                        <span className="text-text-secondary">{t('dashboard.themeMode')}</span>
                         <button
                           onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
                           className="flex items-center space-x-2 px-3 py-2 border border-border-primary rounded-md hover:bg-bg-secondary"
                         >
                           {theme === 'light' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                          <span>{theme === 'light' ? '浅色' : '深色'}</span>
+                          <span>{theme === 'light' ? t('dashboard.lightMode') : t('dashboard.darkMode')}</span>
                         </button>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-text-secondary">通知设置</span>
+                        <span className="text-text-secondary">{t('dashboard.notificationSettings')}</span>
                         <button className="px-3 py-2 border border-border-primary rounded-md hover:bg-bg-secondary">
-                          管理通知
+                          {t('dashboard.manageNotifications')}
                         </button>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-text-secondary">账户安全</span>
+                        <span className="text-text-secondary">{t('dashboard.accountSecurity')}</span>
                         <button className="px-2 border border-border-primary rounded-md hover:bg-bg-secondary">
-                          安全设置
+                          {t('dashboard.securitySettings')}
                         </button>
                       </div>
                     </div>
@@ -841,7 +843,7 @@ const DashboardPage: React.FC = () => {
               transition={{ delay: 0.3 }}
             >
               <Card className="p-6">
-                <h3 className="font-semibold text-text-primary mb-4">快捷功能</h3>
+                <h3 className="font-semibold text-text-primary mb-4">{t('dashboard.quickActions')}</h3>
                 <div className="space-y-3">
                   <button
                     onClick={() => navigate('/introduction')}
@@ -851,7 +853,7 @@ const DashboardPage: React.FC = () => {
                       <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                         <Info className="w-4 h-4 text-blue-600" />
                       </div>
-                      <span className="text-sm font-medium text-text-secondary">网站介绍</span>
+                      <span className="text-sm font-medium text-text-secondary">{t('dashboard.websiteIntroduction')}</span>
                     </div>
                     <ArrowRight className="w-4 h-4 text-text-tertiary" />
                   </button>
@@ -864,7 +866,7 @@ const DashboardPage: React.FC = () => {
                       <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                         <FileText className="w-4 h-4 text-green-600" />
                       </div>
-                      <span className="text-sm font-medium text-text-secondary">试卷生成</span>
+                      <span className="text-sm font-medium text-text-secondary">{t('dashboard.paperGeneration')}</span>
                     </div>
                     <ArrowRight className="w-4 h-4 text-text-tertiary" />
                   </button>
@@ -878,7 +880,7 @@ const DashboardPage: React.FC = () => {
                         <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                           <Users className="w-4 h-4 text-purple-600" />
                         </div>
-                        <span className="text-sm font-medium text-text-secondary">用户管理</span>
+                        <span className="text-sm font-medium text-text-secondary">{t('dashboard.userManagement')}</span>
                       </div>
                       <ArrowRight className="w-4 h-4 text-text-tertiary" />
                     </button>
@@ -894,10 +896,10 @@ const DashboardPage: React.FC = () => {
               transition={{ delay: 0.4 }}
             >
               <Card className="p-6">
-                <h3 className="font-semibold text-text-primary mb-4">系统状态</h3>
+                <h3 className="font-semibold text-text-primary mb-4">{t('dashboard.systemStatus')}</h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-text-secondary">系统状态</span>
+                    <span className="text-sm text-text-secondary">{t('dashboard.systemStatus')}</span>
                     <div className="flex items-center space-x-2">
                       {getStatusIcon(systemStatus.systemStatus)}
                       <span className={`px-2 py-1 text-xs rounded-full ${getStatusStyle(systemStatus.systemStatus)}`}>
@@ -906,7 +908,7 @@ const DashboardPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-text-secondary">API 状态</span>
+                    <span className="text-sm text-text-secondary">{t('dashboard.apiStatus')}</span>
                     <div className="flex items-center space-x-2">
                       {getStatusIcon(systemStatus.apiStatus)}
                       <span className={`px-2 py-1 text-xs rounded-full ${getStatusStyle(systemStatus.apiStatus)}`}>
@@ -915,7 +917,7 @@ const DashboardPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-text-secondary">数据库</span>
+                    <span className="text-sm text-text-secondary">{t('dashboard.database')}</span>
                     <div className="flex items-center space-x-2">
                       {getStatusIcon(systemStatus.databaseStatus)}
                       <span className={`px-2 py-1 text-xs rounded-full ${getStatusStyle(systemStatus.databaseStatus)}`}>

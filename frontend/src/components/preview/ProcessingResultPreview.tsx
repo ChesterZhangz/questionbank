@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface ProcessingResultPreviewProps {
   document: {
@@ -29,6 +30,7 @@ const ProcessingResultPreview: React.FC<ProcessingResultPreviewProps> = ({
   onDownload,
   onShare
 }) => {
+  const { t } = useTranslation();
   return (
     <Card className="p-6 hover:shadow-lg transition-shadow">
       <div className="space-y-4">
@@ -41,7 +43,7 @@ const ProcessingResultPreview: React.FC<ProcessingResultPreviewProps> = ({
             <div className="flex-1 min-w-0">
               <div className="group relative">
                 <h3 className="font-medium text-gray-900 truncate" title={document.fileName}>
-                  处理完成
+                  {t('preview.processingResultPreview.processingComplete')}
                 </h3>
                 <p className="text-sm text-gray-500 truncate" title={document.fileName}>
                   {document.fileName}
@@ -60,14 +62,14 @@ const ProcessingResultPreview: React.FC<ProcessingResultPreviewProps> = ({
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center p-3 bg-blue-50 rounded-lg">
             <p className="text-2xl font-bold text-blue-600">{document.questions.length}</p>
-            <p className="text-xs text-blue-700">识别题目</p>
+            <p className="text-xs text-blue-700">{t('preview.processingResultPreview.questionsIdentified')}</p>
           </div>
           
           <div className="text-center p-3 bg-green-50 rounded-lg">
             <p className="text-2xl font-bold text-green-600">
               {document.confidence ? Math.round(document.confidence * 100) : 0}%
             </p>
-            <p className="text-xs text-green-700">置信度</p>
+            <p className="text-xs text-green-700">{t('preview.processingResultPreview.confidence')}</p>
           </div>
         </div>
 
@@ -79,7 +81,7 @@ const ProcessingResultPreview: React.FC<ProcessingResultPreviewProps> = ({
               className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
             >
               <Eye className="h-4 w-4 mr-2" />
-              进入编辑
+              {t('preview.processingResultPreview.enterEdit')}
             </Button>
             
             <Button
@@ -88,7 +90,7 @@ const ProcessingResultPreview: React.FC<ProcessingResultPreviewProps> = ({
               className="text-green-600 hover:bg-green-50"
             >
               <Download className="h-4 w-4 mr-2" />
-              下载结果
+              {t('preview.processingResultPreview.downloadResult')}
             </Button>
           </div>
           
@@ -98,7 +100,7 @@ const ProcessingResultPreview: React.FC<ProcessingResultPreviewProps> = ({
             className="text-gray-600 hover:bg-gray-50"
           >
             <Share2 className="h-4 w-4 mr-2" />
-            分享
+            {t('preview.processingResultPreview.share')}
           </Button>
         </div>
       </div>

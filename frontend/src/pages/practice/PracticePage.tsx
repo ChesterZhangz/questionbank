@@ -14,6 +14,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
 import { paperBankAPI } from '../../services/api';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface Practice {
   _id: string;
@@ -44,6 +45,7 @@ interface PaperBank {
 }
 
 const PracticePage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   
   // 状态管理
@@ -92,7 +94,7 @@ const PracticePage: React.FC = () => {
         setPaperBanks(banksResponse.data.data.papers);
       }
     } catch (error) {
-      console.error('加载数据失败:', error);
+      console.error(t('paperPage.practicePage.errors.loadFailed'), error);
     } finally {
       setLoading(false);
     }
@@ -142,7 +144,7 @@ const PracticePage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">加载中...</p>
+          <p className="text-gray-600 dark:text-gray-300">{t('paperPage.practicePage.loading')}</p>
         </div>
       </div>
     );
@@ -162,7 +164,7 @@ const PracticePage: React.FC = () => {
                 className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                返回
+                {t('paperPage.practicePage.back')}
               </Button>
               
               <div className="flex items-center space-x-3">
@@ -171,10 +173,10 @@ const PracticePage: React.FC = () => {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    练习模式
+                    {t('paperPage.practicePage.title')}
                   </h1>
                   <p className="text-gray-600 dark:text-gray-300">
-                    管理和练习您的题目
+                    {t('paperPage.practicePage.description')}
                   </p>
                 </div>
               </div>
@@ -185,7 +187,7 @@ const PracticePage: React.FC = () => {
               className="bg-orange-500 hover:bg-orange-600 text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
-              创建练习
+              {t('paperPage.practicePage.createPractice')}
             </Button>
           </div>
         </div>
@@ -201,7 +203,7 @@ const PracticePage: React.FC = () => {
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="搜索练习..."
+                placeholder={t('paperPage.practicePage.search.placeholder')}
                 className="pl-10"
               />
             </div>
@@ -213,7 +215,7 @@ const PracticePage: React.FC = () => {
                 onChange={(e) => setSelectedBank(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
               >
-                <option value="all">所有试卷集</option>
+                <option value="all">{t('paperPage.practicePage.search.allBanks')}</option>
                 {paperBanks.map(bank => (
                   <option key={bank._id} value={bank._id}>
                     {bank.name}
@@ -229,9 +231,9 @@ const PracticePage: React.FC = () => {
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white"
               >
-                <option value="newest">最新更新</option>
-                <option value="oldest">最早创建</option>
-                <option value="name">按名称</option>
+                <option value="newest">{t('paperPage.practicePage.search.sortBy.newest')}</option>
+                <option value="oldest">{t('paperPage.practicePage.search.sortBy.oldest')}</option>
+                <option value="name">{t('paperPage.practicePage.search.sortBy.name')}</option>
               </select>
             </div>
           </div>
@@ -242,12 +244,12 @@ const PracticePage: React.FC = () => {
           <div className="text-center py-12">
             <PenTool className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              {searchQuery || selectedBank !== 'all' ? '没有找到匹配的练习' : '还没有练习'}
+              {searchQuery || selectedBank !== 'all' ? t('paperPage.practicePage.emptyState.noResults') : t('paperPage.practicePage.emptyState.noPractices')}
             </h3>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               {searchQuery || selectedBank !== 'all' 
-                ? '尝试调整搜索条件或筛选器' 
-                : '开始创建您的第一个练习吧！'
+                ? t('paperPage.practicePage.emptyState.noResultsDescription')
+                : t('paperPage.practicePage.emptyState.noPracticesDescription')
               }
             </p>
             {!searchQuery && selectedBank === 'all' && (
@@ -256,7 +258,7 @@ const PracticePage: React.FC = () => {
                 className="bg-orange-500 hover:bg-orange-600 text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                创建练习
+                {t('paperPage.practicePage.createPractice')}
               </Button>
             )}
           </div>
@@ -306,7 +308,7 @@ const PracticePage: React.FC = () => {
                       ))}
                       {practice.tags.length > 3 && (
                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                          +{practice.tags.length - 3} 更多
+                          +{practice.tags.length - 3} {t('paperPage.practicePage.practiceCard.more')}
                         </span>
                       )}
                     </div>
@@ -320,7 +322,7 @@ const PracticePage: React.FC = () => {
                       </span>
                       <span className="flex items-center">
                         <Clock className="w-4 h-4 mr-1" />
-                        {new Date(practice.updatedAt).toLocaleDateString()}
+                        {t('paperPage.practicePage.practiceCard.updatedAt')} {new Date(practice.updatedAt).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
@@ -332,14 +334,14 @@ const PracticePage: React.FC = () => {
                       size="sm"
                       className="flex-1"
                     >
-                      查看
+                      {t('paperPage.practicePage.practiceCard.view')}
                     </Button>
                     <Button
                       onClick={() => handleEditPractice(practice)}
                       size="sm"
                       className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
                     >
-                      编辑
+                      {t('paperPage.practicePage.practiceCard.edit')}
                     </Button>
                   </div>
                 </Card>

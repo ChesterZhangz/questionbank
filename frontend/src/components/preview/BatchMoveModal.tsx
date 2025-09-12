@@ -6,6 +6,7 @@ import { FuzzySelect } from '../ui/menu';
 import LaTeXPreview from '../editor/preview/LaTeXPreview';
 import { LaTeXRenderer } from '../../lib/latex/renderer/LaTeXRenderer';
 import type { Question } from '../../types';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface BatchMoveModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ const BatchMoveModal: React.FC<BatchMoveModalProps> = ({
   onClose,
   onMove
 }) => {
+  const { t } = useTranslation();
   const [targetIndex, setTargetIndex] = useState<number>(-1); // 初始值改为-1，表示未选择
   const [moveAfter, setMoveAfter] = useState<boolean>(true);
 
@@ -82,7 +84,7 @@ const BatchMoveModal: React.FC<BatchMoveModalProps> = ({
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
               <div className="flex items-center space-x-2">
                 <Move className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">批量移动题目</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('preview.batchMoveModal.title')}</h2>
               </div>
               <Button
                 variant="ghost"
@@ -96,7 +98,7 @@ const BatchMoveModal: React.FC<BatchMoveModalProps> = ({
 
             {/* 选中的题目 - 固定高度，可滚动 */}
             <div className="flex-shrink-0 p-4 border-b border-gray-200 dark:border-gray-700 w-full">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">选中的题目 ({selectedQuestions.length})</h3>
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('preview.batchMoveModal.selectedCount', { count: selectedQuestions.length })}</h3>
               <div className="space-y-2 max-h-32 overflow-y-auto w-full">
                 {selectedQuestions.map((question, index) => (
                   <div key={question.id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 w-full">

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Zap, Target, Clock } from 'lucide-react';
 import GameAPIService from '../../services/gameAPI';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface ReactionGameProps {
   onScoreUpdate: (score: number) => void;
@@ -18,6 +19,7 @@ const ReactionGame: React.FC<ReactionGameProps> = ({
   timeLimit,
   difficulty = 'medium'
 }) => {
+  const { t } = useTranslation();
   const [isWaiting, setIsWaiting] = useState(false);
   const [isTargetVisible, setIsTargetVisible] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
@@ -278,35 +280,35 @@ const ReactionGame: React.FC<ReactionGameProps> = ({
           whileHover={{ scale: 1.05 }}
         >
           <div className="text-xl font-bold text-blue-600 dark:text-blue-400">{score}</div>
-          <div className="text-xs text-blue-500 dark:text-blue-300 font-medium">得分</div>
+          <div className="text-xs text-blue-500 dark:text-blue-300 font-medium">{t('games.reactionGame.score')}</div>
         </motion.div>
         <motion.div 
           className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-xl border border-green-200 dark:border-green-700"
           whileHover={{ scale: 1.05 }}
         >
           <div className="text-xl font-bold text-green-600 dark:text-green-400">{rounds}/{config.maxRounds}</div>
-          <div className="text-xs text-green-500 dark:text-green-300 font-medium">回合</div>
+          <div className="text-xs text-green-500 dark:text-green-300 font-medium">{t('games.reactionGame.rounds')}</div>
         </motion.div>
         <motion.div 
           className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl border border-purple-200 dark:border-purple-700"
           whileHover={{ scale: 1.05 }}
         >
           <div className="text-xl font-bold text-purple-600 dark:text-purple-400">{timeLeft}</div>
-          <div className="text-xs text-purple-500 dark:text-purple-300 font-medium">时间</div>
+          <div className="text-xs text-purple-500 dark:text-purple-300 font-medium">{t('games.reactionGame.time')}</div>
         </motion.div>
         <motion.div 
           className="text-center p-3 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-xl border border-orange-200 dark:border-orange-700"
           whileHover={{ scale: 1.05 }}
         >
           <div className="text-xl font-bold text-orange-600">{Math.round(progress)}%</div>
-          <div className="text-xs text-orange-500 font-medium">进度</div>
+          <div className="text-xs text-orange-500 font-medium">{t('games.reactionGame.progress')}</div>
         </motion.div>
       </div>
 
       {/* 进度条 */}
       <div className="mb-6">
         <div className="flex justify-between text-sm text-gray-600 mb-2">
-          <span>游戏进度</span>
+          <span>{t('games.reactionGame.gameProgress')}</span>
           <span>{Math.round(progress)}%</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
@@ -323,19 +325,17 @@ const ReactionGame: React.FC<ReactionGameProps> = ({
       <div className="text-center mb-6">
         <div className="flex items-center justify-center mb-2">
           <Zap className="w-8 h-8 text-orange-600 mr-3" />
-          <h3 className="text-2xl font-bold text-gray-800">反应速度</h3>
+          <h3 className="text-2xl font-bold text-gray-800">{t('games.reactionGame.title')}</h3>
           <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
             difficulty === 'easy' ? 'bg-green-100 text-green-700' :
             difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
             'bg-red-100 text-red-700'
           }`}>
-            {difficulty === 'easy' ? '简单' : difficulty === 'medium' ? '中等' : '困难'}
+            {t(`games.reactionGame.difficulty.${difficulty}`)}
           </span>
         </div>
         <p className="text-gray-600">
-          {difficulty === 'easy' ? '点击出现的圆圈，测试你的反应速度' :
-           difficulty === 'medium' ? '点击出现的目标，注意颜色变化' :
-           '点击出现的目标，注意形状和颜色变化，避开干扰元素'}
+          {t(`games.reactionGame.descriptions.${difficulty}`)}
         </p>
       </div>
 
@@ -365,7 +365,7 @@ const ReactionGame: React.FC<ReactionGameProps> = ({
             >
               <div className="text-center">
                 <Clock className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500">等待目标出现...</p>
+                <p className="text-gray-500">{t('games.reactionGame.waiting')}</p>
               </div>
             </motion.div>
           )}
@@ -411,10 +411,10 @@ const ReactionGame: React.FC<ReactionGameProps> = ({
           className="text-center mb-6 p-4 bg-gradient-to-r from-green-100 to-green-200 rounded-xl border border-green-300"
         >
           <div className="text-lg font-semibold text-green-800">
-            反应时间: {reactionTime}ms
+            {t('games.reactionGame.reactionTime', { time: reactionTime })}
           </div>
           <div className="text-sm text-green-600">
-            得分: +{Math.max(0, Math.floor(1000 - reactionTime))}
+            {t('games.reactionGame.points', { points: Math.max(0, Math.floor(1000 - reactionTime)) })}
           </div>
         </motion.div>
       )}

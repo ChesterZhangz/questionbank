@@ -9,6 +9,7 @@ import {
   AlertOctagon
 } from 'lucide-react';
 import Button from './Button';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export interface AlertProps {
   type?: 'success' | 'error' | 'warning' | 'info';
@@ -37,6 +38,8 @@ const Alert: React.FC<AlertProps> = ({
   autoClose = false,
   autoCloseDelay = 5000
 }) => {
+  const { t } = useTranslation();
+  
   // 自动关闭
   React.useEffect(() => {
     if (autoClose && onClose) {
@@ -146,7 +149,7 @@ const Alert: React.FC<AlertProps> = ({
               <button
                 onClick={onClose}
                 className={`flex-shrink-0 p-2 rounded-lg transition-all duration-200 ${styles.closeButton}`}
-                aria-label="关闭"
+                aria-label={t('ui.alert.close')}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -179,11 +182,12 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   title,
   message,
   description,
-  confirmText = '确认',
-  cancelText = '取消',
+  confirmText,
+  cancelText,
   type = 'danger',
   loading = false
 }) => {
+  const { t } = useTranslation();
   const getTypeStyles = () => {
     switch (type) {
       case 'danger':
@@ -270,14 +274,14 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                   className={`flex-1 ${styles.cancelButton}`}
                   disabled={loading}
                 >
-                  {cancelText}
+                  {cancelText || t('ui.alert.cancel')}
                 </Button>
                 <Button
                   onClick={onConfirm}
                   className={`flex-1 ${styles.confirmButton}`}
                   disabled={loading}
                 >
-                  {loading ? '处理中...' : confirmText}
+                  {loading ? t('ui.alert.processing') : (confirmText || t('ui.alert.confirm'))}
                 </Button>
               </div>
             </div>

@@ -5,6 +5,7 @@ import Button from '../ui/Button';
 import { FuzzySelect } from '../ui/menu';
 import { X, Save, Database, CheckCircle, AlertCircle } from 'lucide-react';
 import type { QuestionBank } from '../../types';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface QuestionSavePanelProps {
   onClose: () => void;
@@ -27,7 +28,7 @@ const QuestionSavePanel: React.FC<QuestionSavePanelProps> = ({
   isSaving,
   saveProgress
 }) => {
-
+  const { t } = useTranslation();
 
   // 调试信息
   // 调试日志已清理
@@ -65,7 +66,7 @@ const QuestionSavePanel: React.FC<QuestionSavePanelProps> = ({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <Save className="h-5 w-5 text-green-600" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">保存题目到题库</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('preview.questionSavePanel.title')}</h3>
             </div>
             <Button
               variant="ghost"
@@ -84,7 +85,7 @@ const QuestionSavePanel: React.FC<QuestionSavePanelProps> = ({
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center space-x-2 mb-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  <span className="text-sm font-medium text-blue-700">正在保存题目...</span>
+                  <span className="text-sm font-medium text-blue-700">{t('preview.questionSavePanel.saving')}</span>
                 </div>
                 <div className="w-full bg-blue-200 rounded-full h-2">
                   <div 
@@ -93,7 +94,7 @@ const QuestionSavePanel: React.FC<QuestionSavePanelProps> = ({
                   ></div>
                 </div>
                 <div className="text-xs text-blue-600 mt-1">
-                  进度: {saveProgress}%
+                  {t('preview.questionSavePanel.saveProgress', { progress: saveProgress })}
                 </div>
               </div>
             )}
@@ -103,7 +104,7 @@ const QuestionSavePanel: React.FC<QuestionSavePanelProps> = ({
               <div className="flex items-center space-x-2 dark:text-gray-300">
                 <CheckCircle className="h-4 w-4 text-green-600" />
                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                  准备保存 {selectedCount} 道题目
+                  {t('preview.questionSavePanel.selectedCount', { count: selectedCount })}
                 </span>
               </div>
             </div>
@@ -111,13 +112,13 @@ const QuestionSavePanel: React.FC<QuestionSavePanelProps> = ({
             {/* 题库选择 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                选择目标题库
+                {t('preview.questionSavePanel.selectBank')}
               </label>
               <FuzzySelect
                 options={bankOptions}
                 value={selectedQuestionBank || ''}
                 onChange={(value) => onQuestionBankChange(value.toString())}
-                placeholder="请选择要保存到的题库"
+                placeholder={t('preview.questionSavePanel.selectBankPlaceholder')}
                 className="w-full"
                 disabled={isSaving}
               />
@@ -128,10 +129,10 @@ const QuestionSavePanel: React.FC<QuestionSavePanelProps> = ({
               <div className="flex items-start space-x-2">
                 <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5" />
                 <div className="text-sm text-yellow-700">
-                  <p className="font-medium">保存说明：</p>
-                  <p>题目将保存到选中的题库中</p>
-                  <p>保存后可在题库管理页面查看</p>
-                  <p>保存过程中请勿关闭页面</p>
+                  <p className="font-medium">{t('preview.questionSavePanel.subtitle')}</p>
+                  <p>{t('preview.questionSavePanel.subtitle')}</p>
+                  <p>{t('preview.questionSavePanel.subtitle')}</p>
+                  <p>{t('preview.questionSavePanel.subtitle')}</p>
                 </div>
               </div>
             </div>
@@ -143,7 +144,7 @@ const QuestionSavePanel: React.FC<QuestionSavePanelProps> = ({
                 onClick={onClose}
                 disabled={isSaving}
               >
-                取消
+                {t('preview.common.cancel')}
               </Button>
               <Button
                 onClick={handleSave}
@@ -151,7 +152,7 @@ const QuestionSavePanel: React.FC<QuestionSavePanelProps> = ({
                 className="flex items-center space-x-1 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700"
               >
                 <Database className="h-4 w-4" />
-                <span>{isSaving ? '保存中...' : '确认保存'}</span>
+                <span>{isSaving ? t('preview.questionSavePanel.saving') : t('preview.questionSavePanel.saveButton')}</span>
               </Button>
             </div>
           </div>

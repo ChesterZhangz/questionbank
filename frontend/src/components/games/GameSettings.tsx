@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Volume2, VolumeX, X, Save } from 'lucide-react';
 import Button from '../ui/Button';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface GameSettingsProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ const GameSettings: React.FC<GameSettingsProps> = ({
   settings,
   onSettingsChange
 }) => {
+  const { t } = useTranslation();
   const [localSettings, setLocalSettings] = React.useState(settings);
 
   React.useEffect(() => {
@@ -65,7 +67,7 @@ const GameSettings: React.FC<GameSettingsProps> = ({
                 <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                   <Settings className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">游戏设置</h2>
+                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t('games.gameSettings.title')}</h2>
               </div>
               <button
                 onClick={onClose}
@@ -81,17 +83,17 @@ const GameSettings: React.FC<GameSettingsProps> = ({
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                   <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                  数学计算游戏
+                  {t('games.gameSettings.mathGame.title')}
                 </h3>
                 <div className="space-y-3">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    难度等级
+                    {t('games.gameSettings.mathGame.difficulty')}
                   </label>
                   <div className="grid grid-cols-3 gap-3">
                                          {[
-                       { value: 'easy', label: '简单', color: 'green', borderColor: '#10b981', bgColor: '#d1fae5', textColor: '#065f46' },
-                       { value: 'medium', label: '中等', color: 'yellow', borderColor: '#f59e0b', bgColor: '#fef3c7', textColor: '#92400e' },
-                       { value: 'hard', label: '困难', color: 'red', borderColor: '#ef4444', bgColor: '#fee2e2', textColor: '#991b1b' }
+                       { value: 'easy', label: t('games.gameSettings.mathGame.levels.easy'), color: 'green', borderColor: '#10b981', bgColor: '#d1fae5', textColor: '#065f46' },
+                       { value: 'medium', label: t('games.gameSettings.mathGame.levels.medium'), color: 'yellow', borderColor: '#f59e0b', bgColor: '#fef3c7', textColor: '#92400e' },
+                       { value: 'hard', label: t('games.gameSettings.mathGame.levels.hard'), color: 'red', borderColor: '#ef4444', bgColor: '#fee2e2', textColor: '#991b1b' }
                      ].map((option) => (
                        <button
                          key={option.value}
@@ -125,11 +127,11 @@ const GameSettings: React.FC<GameSettingsProps> = ({
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                   <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
-                  记忆游戏
+                  {t('games.gameSettings.memoryGame.title')}
                 </h3>
                 <div className="space-y-3">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    网格大小
+                    {t('games.gameSettings.memoryGame.gridSize')}
                   </label>
                                      <div className="grid grid-cols-3 gap-3">
                      {[4, 5, 6].map((size) => (
@@ -161,7 +163,7 @@ const GameSettings: React.FC<GameSettingsProps> = ({
                       color: localSettings.memoryGridSize === size ? '#047857' : document.documentElement.classList.contains('dark') ? '#9ca3af' : '#6b7280'
                     }}
                   >
-                    {size * size / 2}对
+                    {t('games.gameSettings.memoryGame.pairs', { count: size * size / 2 })}
                   </div>
                        </button>
                      ))}
@@ -173,11 +175,11 @@ const GameSettings: React.FC<GameSettingsProps> = ({
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                   <span className="w-2 h-2 bg-purple-500 rounded-full mr-3"></span>
-                  数字拼图
+                  {t('games.gameSettings.puzzleGame.title')}
                 </h3>
                 <div className="space-y-3">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    拼图大小
+                    {t('games.gameSettings.puzzleGame.gridSize')}
                   </label>
                                      <div className="grid grid-cols-2 gap-3">
                      {[3, 4].map((size) => (
@@ -209,7 +211,7 @@ const GameSettings: React.FC<GameSettingsProps> = ({
                       color: localSettings.puzzleGridSize === size ? '#7c3aed' : document.documentElement.classList.contains('dark') ? '#9ca3af' : '#6b7280'
                     }}
                   >
-                    {size * size - 1}块
+                    {t('games.gameSettings.puzzleGame.pieces', { count: size * size - 1 })}
                   </div>
                        </button>
                      ))}
@@ -221,17 +223,17 @@ const GameSettings: React.FC<GameSettingsProps> = ({
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                   <span className="w-2 h-2 bg-orange-500 rounded-full mr-3"></span>
-                  反应速度游戏
+                  {t('games.gameSettings.reactionGame.title')}
                 </h3>
                 <div className="space-y-3">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    难度等级
+                    {t('games.gameSettings.reactionGame.difficulty')}
                   </label>
                   <div className="grid grid-cols-3 gap-3">
                     {[
-                      { value: 'easy', label: '简单', color: 'green', desc: '基础反应测试', borderColor: '#10b981', bgColor: '#d1fae5', textColor: '#065f46' },
-                      { value: 'medium', label: '中等', color: 'yellow', desc: '颜色变化', borderColor: '#f59e0b', bgColor: '#fef3c7', textColor: '#92400e' },
-                      { value: 'hard', label: '困难', color: 'red', desc: '形状+干扰', borderColor: '#ef4444', bgColor: '#fee2e2', textColor: '#991b1b' }
+                      { value: 'easy', label: t('games.gameSettings.reactionGame.levels.easy'), color: 'green', desc: t('games.gameSettings.reactionGame.descriptions.easy'), borderColor: '#10b981', bgColor: '#d1fae5', textColor: '#065f46' },
+                      { value: 'medium', label: t('games.gameSettings.reactionGame.levels.medium'), color: 'yellow', desc: t('games.gameSettings.reactionGame.descriptions.medium'), borderColor: '#f59e0b', bgColor: '#fef3c7', textColor: '#92400e' },
+                      { value: 'hard', label: t('games.gameSettings.reactionGame.levels.hard'), color: 'red', desc: t('games.gameSettings.reactionGame.descriptions.hard'), borderColor: '#ef4444', bgColor: '#fee2e2', textColor: '#991b1b' }
                     ].map((option) => (
                       <button
                         key={option.value}
@@ -273,13 +275,13 @@ const GameSettings: React.FC<GameSettingsProps> = ({
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                   <span className="w-2 h-2 bg-orange-500 rounded-full mr-3"></span>
-                  通用设置
+                  {t('games.gameSettings.common.title')}
                 </h3>
                 <div className="space-y-4">
                   {/* 时间限制 */}
                   <div className="space-y-3">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      游戏时间限制
+                      {t('games.gameSettings.common.timeLimit')}
                     </label>
                     <div className="flex items-center space-x-4">
                       <input
@@ -295,21 +297,21 @@ const GameSettings: React.FC<GameSettingsProps> = ({
                         }}
                       />
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[3rem]">
-                        {localSettings.timeLimit}秒
+                        {t('games.gameSettings.common.timeLimitValue', { seconds: localSettings.timeLimit })}
                       </span>
                     </div>
                     <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                      <span>30秒</span>
-                      <span>60秒</span>
-                      <span>90秒</span>
-                      <span>120秒</span>
+                      <span>{t('games.gameSettings.common.timeLimitLabels.min')}</span>
+                      <span>{t('games.gameSettings.common.timeLimitLabels.mid1')}</span>
+                      <span>{t('games.gameSettings.common.timeLimitLabels.mid2')}</span>
+                      <span>{t('games.gameSettings.common.timeLimitLabels.max')}</span>
                     </div>
                   </div>
 
                   {/* 音效设置 */}
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      音效
+                      {t('games.gameSettings.common.sound')}
                     </label>
                     <button
                       onClick={() => updateSetting('soundEnabled', !localSettings.soundEnabled)}
@@ -337,7 +339,7 @@ const GameSettings: React.FC<GameSettingsProps> = ({
                 variant="outline"
                 className="px-4 py-2"
               >
-                重置
+                {t('games.gameSettings.buttons.reset')}
               </Button>
               <div className="flex space-x-3">
                 <Button
@@ -345,7 +347,7 @@ const GameSettings: React.FC<GameSettingsProps> = ({
                   variant="outline"
                   className="px-4 py-2"
                 >
-                  取消
+                  {t('games.gameSettings.buttons.cancel')}
                 </Button>
                 <Button
                   onClick={handleSave}
@@ -353,7 +355,7 @@ const GameSettings: React.FC<GameSettingsProps> = ({
                   className="px-4 py-2 flex items-center"
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  保存
+                  {t('games.gameSettings.buttons.save')}
                 </Button>
               </div>
             </div>

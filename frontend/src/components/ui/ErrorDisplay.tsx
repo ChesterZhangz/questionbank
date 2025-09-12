@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertCircle, RefreshCw, HelpCircle, ExternalLink } from 'lucide-react';
 import Button from './Button';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface ErrorDisplayProps {
   error: string;
@@ -17,61 +18,43 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   onHelp,
   showDetails = false
 }) => {
+  const { t } = useTranslation();
+  
   const getErrorInfo = (type: string) => {
     switch (type) {
       case 'network':
         return {
-          title: '网络连接错误',
-          description: '无法连接到服务器，请检查网络连接',
-          suggestions: [
-            '检查网络连接是否正常',
-            '确认服务器地址是否正确',
-            '尝试刷新页面重试'
-          ],
+          title: t('ui.errorDisplay.network.title'),
+          description: t('ui.errorDisplay.network.description'),
+          suggestions: t('ui.errorDisplay.network.suggestions'),
           icon: '🌐'
         };
       case 'file':
         return {
-          title: '文件处理错误',
-          description: '文件格式不支持或文件损坏',
-          suggestions: [
-            '确认文件格式为 PDF、Word 或 TeX',
-            '检查文件是否完整且未损坏',
-            '尝试重新上传文件'
-          ],
+          title: t('ui.errorDisplay.file.title'),
+          description: t('ui.errorDisplay.file.description'),
+          suggestions: t('ui.errorDisplay.file.suggestions'),
           icon: '📄'
         };
       case 'processing':
         return {
-          title: '处理过程错误',
-          description: '文档处理过程中出现错误',
-          suggestions: [
-            '文件可能包含复杂格式或特殊字符',
-            '尝试简化文档内容后重新上传',
-            '联系技术支持获取帮助'
-          ],
+          title: t('ui.errorDisplay.processing.title'),
+          description: t('ui.errorDisplay.processing.description'),
+          suggestions: t('ui.errorDisplay.processing.suggestions'),
           icon: '⚙️'
         };
       case 'permission':
         return {
-          title: '权限不足',
-          description: '没有足够的权限执行此操作',
-          suggestions: [
-            '确认已正确登录系统',
-            '检查账户权限设置',
-            '联系管理员获取权限'
-          ],
+          title: t('ui.errorDisplay.permission.title'),
+          description: t('ui.errorDisplay.permission.description'),
+          suggestions: t('ui.errorDisplay.permission.suggestions'),
           icon: '🔒'
         };
       default:
         return {
-          title: '未知错误',
-          description: '发生了意外的错误',
-          suggestions: [
-            '尝试刷新页面',
-            '清除浏览器缓存',
-            '联系技术支持'
-          ],
+          title: t('ui.errorDisplay.unknown.title'),
+          description: t('ui.errorDisplay.unknown.description'),
+          suggestions: t('ui.errorDisplay.unknown.suggestions'),
           icon: '❓'
         };
     }
@@ -109,14 +92,19 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
           )}
           
           <div className="space-y-2">
-            <p className="text-xs font-medium text-red-800 dark:text-red-200">建议解决方案：</p>
+            <p className="text-xs font-medium text-red-800 dark:text-red-200">{t('ui.errorDisplay.suggestions')}</p>
             <ul className="text-xs text-red-700 dark:text-red-300 space-y-1">
-              {errorInfo.suggestions.map((suggestion, index) => (
+              {Array.isArray(errorInfo.suggestions) ? errorInfo.suggestions.map((suggestion: string, index: number) => (
                 <li key={index} className="flex items-start space-x-2">
                   <span className="text-red-500 dark:text-red-400 mt-0.5">•</span>
                   <span>{suggestion}</span>
                 </li>
-              ))}
+              )) : (
+                <li className="flex items-start space-x-2">
+                  <span className="text-red-500 dark:text-red-400 mt-0.5">•</span>
+                  <span>{errorInfo.suggestions}</span>
+                </li>
+              )}
             </ul>
           </div>
           
@@ -129,7 +117,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
                 className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-800/30 border-red-300 dark:border-red-600"
               >
                 <RefreshCw className="h-4 w-4 mr-1" />
-                重试
+                {t('ui.errorDisplay.retry')}
               </Button>
             )}
             
@@ -141,7 +129,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
                 className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-800/30 border-blue-300 dark:border-blue-600"
               >
                 <HelpCircle className="h-4 w-4 mr-1" />
-                获取帮助
+                {t('ui.errorDisplay.help')}
               </Button>
             )}
             
@@ -152,7 +140,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
               className="text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-gray-300 dark:border-gray-600"
             >
               <ExternalLink className="h-4 w-4 mr-1" />
-              查看文档
+              {t('ui.errorDisplay.documentation')}
             </Button>
           </div>
         </div>

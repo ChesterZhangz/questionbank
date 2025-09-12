@@ -16,6 +16,7 @@ import Card from '../../components/ui/Card';
 import { useModal } from '../../hooks/useModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import { paperBankAPI } from '../../services/api';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface PaperBank {
   _id: string;
@@ -28,6 +29,7 @@ interface PaperBank {
 }
 
 const CreatePaperPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { showErrorRightSlide, rightSlideModal } = useModal();
@@ -42,25 +44,25 @@ const CreatePaperPage: React.FC = () => {
   const paperTypeOptions = [
     { 
       value: 'lecture', 
-      label: '讲义', 
+      label: t('paperPage.createPage.paperTypes.lecture.label'), 
       icon: BookOpen,
-      description: '教学讲义，用于知识传授（暂时禁用）',
+      description: t('paperPage.createPage.paperTypes.lecture.description'),
       enabled: false,
       color: 'blue'
     },
     { 
       value: 'practice', 
-      label: '练习', 
+      label: t('paperPage.createPage.paperTypes.practice.label'), 
       icon: PenTool,
-      description: '练习题，用于巩固知识',
+      description: t('paperPage.createPage.paperTypes.practice.description'),
       enabled: true,
       color: 'orange'
     },
     { 
       value: 'test', 
-      label: '试卷', 
+      label: t('paperPage.createPage.paperTypes.test.label'), 
       icon: FileText,
-      description: '考试试卷，用于评估学习效果',
+      description: t('paperPage.createPage.paperTypes.test.description'),
       enabled: false,
       color: 'red'
     }
@@ -84,8 +86,8 @@ const CreatePaperPage: React.FC = () => {
         setPaperBanks(accessibleBanks);
       }
     } catch (error) {
-      console.error('加载试卷集失败:', error);
-      showErrorRightSlide('加载失败', '无法加载试卷集列表');
+      console.error(t('paperPage.createPage.errors.loadFailed'), error);
+      showErrorRightSlide(t('paperPage.createPage.errors.loadFailed'), t('paperPage.createPage.errors.loadFailedMessage'));
     } finally {
       setLoading(false);
     }
@@ -118,14 +120,14 @@ const CreatePaperPage: React.FC = () => {
         showPracticeBankSelection();
       }
     } else {
-      showErrorRightSlide('功能暂未开放', '该功能正在开发中，敬请期待！');
+      showErrorRightSlide(t('paperPage.createPage.errors.featureNotAvailable'), t('paperPage.createPage.errors.featureNotAvailableMessage'));
     }
   };
 
   // 显示试卷集选择
   const showPaperBankSelection = () => {
     if (paperBanks.length === 0) {
-      showErrorRightSlide('无法创建试卷', '您需要先创建试卷集或有编辑权限的试卷集才能创建试卷');
+      showErrorRightSlide(t('paperPage.createPage.errors.cannotCreate'), t('paperPage.createPage.errors.cannotCreateMessage'));
       return;
     }
     
@@ -141,7 +143,7 @@ const CreatePaperPage: React.FC = () => {
   // 显示练习模式试卷集选择
   const showPracticeBankSelection = () => {
     if (paperBanks.length === 0) {
-      showErrorRightSlide('无法创建练习', '您需要先创建试卷集或有编辑权限的试卷集才能创建练习');
+      showErrorRightSlide(t('paperPage.createPage.errors.cannotCreatePractice'), t('paperPage.createPage.errors.cannotCreatePracticeMessage'));
       return;
     }
     
@@ -164,7 +166,7 @@ const CreatePaperPage: React.FC = () => {
       navigate(`/paper-banks/${paperBankId}/lectures/create`);
     } else if (selectedPaperType === 'test') {
       // 试卷类型暂时未实现，显示错误信息
-      showErrorRightSlide('功能暂未开放', '该功能正在开发中，敬请期待！');
+      showErrorRightSlide(t('paperPage.createPage.errors.featureNotAvailable'), t('paperPage.createPage.errors.featureNotAvailableMessage'));
     } else {
       // 默认跳转到练习页面
       navigate(`/paper-banks/${paperBankId}/practices/create`);
@@ -184,29 +186,29 @@ const CreatePaperPage: React.FC = () => {
             <div className="mb-8">
               <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                无法创建试卷
+                {t('paperPage.createPage.noPermission.title')}
               </h1>
               <p className="text-gray-600 dark:text-gray-300 mb-6">
-                您需要拥有试卷集的编辑、管理或拥有者权限才能创建试卷
+                {t('paperPage.createPage.noPermission.description')}
               </p>
             </div>
             
             <Card className="p-6 max-w-md mx-auto">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                获取权限的方法
+                {t('paperPage.createPage.noPermission.methodsTitle')}
               </h3>
               <ul className="text-left text-gray-600 dark:text-gray-300 space-y-2">
                 <li className="flex items-center">
                   <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                  创建自己的试卷集
+                  {t('paperPage.createPage.noPermission.methods.createBank')}
                 </li>
                 <li className="flex items-center">
                   <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                  请试卷集拥有者添加您为成员
+                  {t('paperPage.createPage.noPermission.methods.beInvited')}
                 </li>
                 <li className="flex items-center">
                   <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                  购买已发布的试卷集
+                  {t('paperPage.createPage.noPermission.methods.purchase')}
                 </li>
               </ul>
               
@@ -215,14 +217,14 @@ const CreatePaperPage: React.FC = () => {
                   onClick={() => navigate('/paper-banks')}
                   className="w-full"
                 >
-                  查看试卷集
+                  {t('paperPage.createPage.noPermission.viewBanks')}
                 </Button>
                 <Button
                   onClick={() => navigate('/paper-banks/create')}
                   variant="outline"
                   className="w-full"
                 >
-                  创建试卷集
+                  {t('paperPage.createPage.noPermission.createBank')}
                 </Button>
               </div>
             </Card>
@@ -249,14 +251,14 @@ const CreatePaperPage: React.FC = () => {
               className="mr-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              返回
+              {t('paperPage.createPage.back')}
             </Button>
             <div>
               <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-                创建试卷
+                {t('paperPage.createPage.title')}
               </h1>
               <p className="text-gray-600 dark:text-gray-300 mt-2 text-lg">
-                选择试卷类型，开始创建您的试卷
+                {t('paperPage.createPage.description')}
               </p>
             </div>
           </div>
@@ -316,12 +318,12 @@ const CreatePaperPage: React.FC = () => {
                     {option.enabled ? (
                       <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
                         <CheckCircle className="w-4 h-4 mr-2" />
-                        可用
+                        {t('paperPage.createPage.paperTypes.practice.status')}
                       </span>
                     ) : (
                       <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                         <Lock className="w-4 h-4 mr-2" />
-                        即将开放
+                        {t('paperPage.createPage.paperTypes.lecture.status')}
                       </span>
                     )}
                   </div>
@@ -339,7 +341,7 @@ const CreatePaperPage: React.FC = () => {
           className="mt-12 text-center"
         >
           <p className="text-gray-500 dark:text-gray-400 text-sm">
-            选择试卷类型后，将直接进入编辑页面开始创建
+            {t('paperPage.createPage.bottomTip')}
           </p>
         </motion.div>
       </div>
@@ -354,10 +356,10 @@ const CreatePaperPage: React.FC = () => {
           >
             <div className="p-6">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                选择试卷集
+                {t('paperPage.createPage.selectBank.title')}
               </h3>
               <p className="text-gray-600 dark:text-gray-300 mb-6">
-                请选择要在其中创建内容的试卷集
+                {t('paperPage.createPage.selectBank.description')}
               </p>
               
               <div className="space-y-3 max-h-60 overflow-y-auto">
@@ -376,8 +378,8 @@ const CreatePaperPage: React.FC = () => {
                             {bank.description}
                           </p>
                           <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                            <span>成员: {bank.memberCount}</span>
-                            <span>状态: {bank.status === 'published' ? '已发布' : '草稿'}</span>
+                            <span>{t('paperPage.createPage.selectBank.members')}: {bank.memberCount}</span>
+                            <span>{t('paperPage.createPage.selectBank.status')}: {bank.status === 'published' ? t('paperPage.createPage.selectBank.published') : t('paperPage.createPage.selectBank.draft')}</span>
                           </div>
                         </div>
                         <div className="ml-4">
@@ -396,7 +398,7 @@ const CreatePaperPage: React.FC = () => {
                   variant="outline"
                   onClick={() => setShowPaperBankModal(false)}
                 >
-                  取消
+                  {t('paperPage.createPage.selectBank.cancel')}
                 </Button>
               </div>
             </div>

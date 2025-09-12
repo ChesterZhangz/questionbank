@@ -1,6 +1,7 @@
 import React from 'react';
 import 'katex/dist/katex.min.css';
 import { BlockMath, InlineMath } from 'react-katex';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface FormulaDisplayProps {
   formula: string;
@@ -13,6 +14,8 @@ const FormulaDisplay: React.FC<FormulaDisplayProps> = ({
   display = true,
   className = '',
 }) => {
+  const { t } = useTranslation();
+  
   try {
     if (display) {
       return (
@@ -26,7 +29,7 @@ const FormulaDisplay: React.FC<FormulaDisplayProps> = ({
   } catch (error) {
     return (
       <div className={`text-red-500 text-sm ${className}`}>
-        公式渲染错误: {formula}
+        {t('math.formulaDisplay.renderError', { formula })}
       </div>
     );
   }

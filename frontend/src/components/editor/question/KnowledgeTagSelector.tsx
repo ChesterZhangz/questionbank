@@ -4,6 +4,7 @@ import Button from '../../ui/Button';
 import Input from '../../ui/Input';
 import Card from '../../ui/Card';
 import { useModal } from '../../../hooks/useModal';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface KnowledgeTagSelectorProps {
   selectedTags: string[];
@@ -20,6 +21,7 @@ const KnowledgeTagSelector: React.FC<KnowledgeTagSelectorProps> = ({
   maxCount = 5,
   className = ''
 }) => {
+  const { t } = useTranslation();
   // 弹窗状态管理
   const { showErrorRightSlide } = useModal();
 
@@ -35,7 +37,7 @@ const KnowledgeTagSelector: React.FC<KnowledgeTagSelectorProps> = ({
       if (selectedTags.length < maxCount) {
         onTagsChange([...selectedTags, tag]);
       } else {
-        showErrorRightSlide('选择限制', `知识点标签最多只能选择${maxCount}个`);
+        showErrorRightSlide(t('editor.knowledgeTagSelector.selectLimit'), t('editor.knowledgeTagSelector.maxTagsReached', { maxCount }));
       }
     }
   };
@@ -44,12 +46,12 @@ const KnowledgeTagSelector: React.FC<KnowledgeTagSelectorProps> = ({
     if (!customTag.trim()) return;
     
     if (selectedTags.includes(customTag.trim())) {
-      showErrorRightSlide('重复输入', '该知识点标签已存在');
+      showErrorRightSlide(t('editor.knowledgeTagSelector.duplicateTag'), t('editor.knowledgeTagSelector.tagExists'));
       return;
     }
 
     if (selectedTags.length >= maxCount) {
-      showErrorRightSlide('选择限制', `知识点标签最多只能选择${maxCount}个`);
+      showErrorRightSlide(t('editor.knowledgeTagSelector.selectLimit'), t('editor.knowledgeTagSelector.maxTagsReached', { maxCount }));
       return;
     }
     onTagsChange([...selectedTags, customTag.trim()]);
@@ -69,9 +71,9 @@ const KnowledgeTagSelector: React.FC<KnowledgeTagSelectorProps> = ({
 
   // 按学科分类的知识点
   const categorizedTags = {
-    '数学基础': ['函数', '导数', '积分', '极限', '数列', '概率', '统计', '几何', '代数', '三角'],
-    '高等数学': ['微积分', '线性代数', '概率论', '数理统计', '离散数学', '数值分析'],
-    '中学数学': ['集合', '逻辑', '数系', '整式', '分式', '根式', '二次函数', '指数函数', '对数函数'],
+    [t('editor.knowledgeTagSelector.categories.mathBasic')]: ['函数', '导数', '积分', '极限', '数列', '概率', '统计', '几何', '代数', '三角'],
+    [t('editor.knowledgeTagSelector.categories.advancedMath')]: ['微积分', '线性代数', '概率论', '数理统计', '离散数学', '数值分析'],
+    [t('editor.knowledgeTagSelector.categories.middleSchoolMath')]: ['集合', '逻辑', '数系', '整式', '分式', '根式', '二次函数', '指数函数', '对数函数'],
 
   };
 
@@ -80,7 +82,7 @@ const KnowledgeTagSelector: React.FC<KnowledgeTagSelectorProps> = ({
       <div className="p-4 border-b bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <div className="flex items-center space-x-2">
           <Tag className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          <h3 className="font-medium text-gray-900 dark:text-gray-100">知识点标签</h3>
+          <h3 className="font-medium text-gray-900 dark:text-gray-100">{t('editor.knowledgeTagSelector.title')}</h3>
           <span className="text-xs text-gray-500 dark:text-gray-400">
             ({selectedTags.length}/{maxCount})
           </span>
@@ -94,7 +96,7 @@ const KnowledgeTagSelector: React.FC<KnowledgeTagSelectorProps> = ({
             <Input
               value={customTag}
               onChange={(e) => setCustomTag(e.target.value)}
-              placeholder={`输入或选择知识点标签（最多${maxCount}个）`}
+              placeholder={t('editor.knowledgeTagSelector.placeholder', { maxCount })}
               onKeyPress={handleKeyPress}
               onFocus={() => setShowDropdown(true)}
               onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
@@ -134,6 +136,7 @@ const KnowledgeTagSelector: React.FC<KnowledgeTagSelectorProps> = ({
             size="sm"
             disabled={!customTag.trim() || selectedTags.length >= maxCount}
             className="border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            title={t('editor.knowledgeTagSelector.add')}
           >
             <Plus className="w-4 h-4" />
           </Button>
@@ -162,7 +165,7 @@ const KnowledgeTagSelector: React.FC<KnowledgeTagSelectorProps> = ({
         {/* 提示信息 */}
         {selectedTags.length === 0 && (
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            请选择预设标签或输入自定义知识点标签，帮助更好地分类和检索题目
+            {t('editor.knowledgeTagSelector.hint')}
           </p>
         )}
       </div>

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { BookOpen, X, Search } from 'lucide-react';
 import Input from '../../ui/Input';
 import Card from '../../ui/Card';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface QuestionSourceSelectorProps {
   source: string;
@@ -63,80 +64,6 @@ const quickTemplates = [
   '2024年北京四中高二期中·T1',
   '2024年人大附中高一期中·T1',
   '2024年人大附中高二期中·T1',
-  '2024年清华附中高一期中·T1',
-  '2024年北大附中高一期中·T1',
-  '2024年上海中学高一期中·T1',
-  '2024年上海中学高二期中·T1',
-  '2024年华师大二附中高一期中·T1',
-  '2024年复旦附中高一期中·T1',
-  '2024年交大附中高一期中·T1',
-  
-  // 名校期末考试
-  '2024年北京四中高一期末·T1',
-  '2024年北京四中高二期末·T1',
-  '2024年人大附中高一期末·T1',
-  '2024年人大附中高二期末·T1',
-  '2024年上海中学高一期末·T1',
-  '2024年上海中学高二期末·T1',
-  '2024年华师大二附中高一期末·T1',
-  '2024年复旦附中高一期末·T1',
-  '2024年交大附中高一期末·T1',
-  
-  // 衡水中学系列
-  '2024年衡水中学高一期中·T1',
-  '2024年衡水中学高二期中·T1',
-  '2024年衡水中学高三期中·T1',
-  '2024年衡水中学高一期末·T1',
-  '2024年衡水中学高二期末·T1',
-  '2024年衡水中学高三期末·T1',
-  '2024年衡水中学高三模拟·T1',
-  '2024年衡水中学高三模拟·T2',
-  
-  // 其他名校
-  '2024年天津南开中学高一期中·T1',
-  '2024年天津南开中学高二期中·T1',
-  '2024年重庆巴蜀中学高一期中·T1',
-  '2024年重庆南开中学高一期中·T1',
-  '2024年南京外国语学校高一期中·T1',
-  '2024年南师附中高一期中·T1',
-  '2024年苏州中学高一期中·T1',
-  '2024年杭州二中高一期中·T1',
-  '2024年学军中学高一期中·T1',
-  '2024年镇海中学高一期中·T1',
-  '2024年温州中学高一期中·T1',
-  '2024年合肥一中高一期中·T1',
-  '2024年福州一中高一期中·T1',
-  '2024年厦门双十中学高一期中·T1',
-  '2024年江西师大附中高一期中·T1',
-  '2024年山东实验中学高一期中·T1',
-  '2024年青岛二中高一期中·T1',
-  '2024年郑州外国语学校高一期中·T1',
-  '2024年武汉二中高一期中·T1',
-  '2024年华师一附中高一期中·T1',
-  '2024年黄冈中学高一期中·T1',
-  '2024年长沙雅礼中学高一期中·T1',
-  '2024年长郡中学高一期中·T1',
-  '2024年湖南师大附中高一期中·T1',
-  '2024年华南师大附中高一期中·T1',
-  '2024年深圳中学高一期中·T1',
-  '2024年广州二中高一期中·T1',
-  '2024年成都七中高一期中·T1',
-  '2024年成都树德中学高一期中·T1',
-  '2024年绵阳中学高一期中·T1',
-  '2024年西安交大附中高一期中·T1',
-  '2024年西工大附中高一期中·T1',
-  '2024年铁一中高一期中·T1',
-  
-  // 月考系列
-  '2024年北京四中高一月考·T1',
-  '2024年北京四中高二月考·T1',
-  '2024年人大附中高一月考·T1',
-  '2024年人大附中高二月考·T1',
-  '2024年上海中学高一月考·T1',
-  '2024年上海中学高二月考·T1',
-  '2024年衡水中学高一月考·T1',
-  '2024年衡水中学高二月考·T1',
-  '2024年衡水中学高三月考·T1',
 ];
 
 // 解析当前输入，判断处于哪个阶段
@@ -188,6 +115,7 @@ const QuestionSourceSelector: React.FC<QuestionSourceSelectorProps> = ({
   onSourceChange,
   className = ''
 }) => {
+  const { t } = useTranslation();
   const [showDropdown, setShowDropdown] = useState(false);
   const [customSource, setCustomSource] = useState('');
 
@@ -297,13 +225,13 @@ const QuestionSourceSelector: React.FC<QuestionSourceSelectorProps> = ({
     const { stage } = currentStage;
     switch (stage) {
       case 'year':
-        return '请输入年份';
+        return t('editor.questionSourceSelector.recentYears');
       case 'region':
-        return '请选择地区或学校';
+        return t('editor.questionSourceSelector.placeholder');
       case 'questionNumber':
-        return '请输入题号';
+        return t('editor.questionSourceSelector.placeholder');
       default:
-        return '格式：年份+地区/学校+年级+考试性质+题号';
+        return t('editor.questionSourceSelector.placeholder');
     }
   };
 
@@ -312,7 +240,7 @@ const QuestionSourceSelector: React.FC<QuestionSourceSelectorProps> = ({
       <div className="p-4 border-b bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <div className="flex items-center space-x-2">
           <BookOpen className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          <h3 className="font-medium text-gray-900 dark:text-gray-100">题目出处</h3>
+          <h3 className="font-medium text-gray-900 dark:text-gray-100">{t('editor.questionSourceSelector.title')}</h3>
         </div>
       </div>
       
@@ -345,7 +273,7 @@ const QuestionSourceSelector: React.FC<QuestionSourceSelectorProps> = ({
                       type="text"
                       value={templateSearchTerm}
                       onChange={(e) => setTemplateSearchTerm(e.target.value)}
-                      placeholder="搜索快速模板..."
+                      placeholder={t('questionBankPage.questionSourceSelector.searchTemplates')}
                       className="w-full pl-7 pr-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       onKeyDown={(e) => e.stopPropagation()}
                     />
@@ -369,8 +297,8 @@ const QuestionSourceSelector: React.FC<QuestionSourceSelectorProps> = ({
               {/* 快速模板统计信息 */}
               {currentStage.stage === 'start' && (
                 <div className="px-3 py-1 bg-gray-50 dark:bg-gray-700 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-600">
-                  共 {quickTemplates.length} 个模板
-                  {templateSearchTerm && `，找到 ${getSuggestions.length} 个匹配项`}
+{t('questionBankPage.questionSourceSelector.totalTemplates', { count: quickTemplates.length })}
+                  {templateSearchTerm && t('questionBankPage.questionSourceSelector.foundMatches', { count: getSuggestions.length })}
                 </div>
               )}
             </div>
@@ -393,9 +321,9 @@ const QuestionSourceSelector: React.FC<QuestionSourceSelectorProps> = ({
         {/* 使用示例 */}
         {!source && (
           <div className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
-            <p>使用示例：</p>
+            <p>{t('questionBankPage.questionSourceSelector.usageExample')}</p>
             <div className="flex flex-wrap gap-2 text-xs">
-              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">2024年</span>
+              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">2024{t('questionBankPage.questionSourceSelector.year')}</span>
               <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">上海中学</span>
               <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">高一</span>
               <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300">期中</span>

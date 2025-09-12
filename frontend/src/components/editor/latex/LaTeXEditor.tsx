@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import Button from '../../ui/Button';
 import Card from '../../ui/Card';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 import HoverTooltip from '../preview/HoverTooltip';
 import LaTeXPreview from '../preview/LaTeXPreview';
@@ -42,7 +43,7 @@ interface AutoCompleteSuggestion {
 const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
   value,
   onChange,
-  placeholder = '输入LaTeX公式...',
+  placeholder,
   showPreview = true,
   enableHoverPreview = false,
   questionType,
@@ -51,6 +52,7 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
   className = '',
   simplified = false
 }) => {
+  const { t } = useTranslation();
   const [isPreviewVisible, setIsPreviewVisible] = useState(showPreview);
   const [isSymbolPanelOpen, setIsSymbolPanelOpen] = useState(false);
   const [isQuestionPanelOpen, setIsQuestionPanelOpen] = useState(false);
@@ -509,7 +511,7 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
               className="bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <Sigma className="w-4 h-4" />
-              <span>数学符号</span>
+              <span>{t('editor.latexEditor.mathSymbols')}</span>
             </Button>
             <Button
               variant="outline"
@@ -518,7 +520,7 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
               className="bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <FileText className="w-4 h-4" />
-              <span>题目符号</span>
+              <span>{t('editor.latexEditor.questionSymbols')}</span>
             </Button>
           </div>
           
@@ -529,7 +531,7 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
             className="bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             {isPreviewVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            <span>{isPreviewVisible ? '隐藏预览' : '显示预览'}</span>
+            <span>{isPreviewVisible ? t('editor.latexEditor.hidePreview') : t('editor.latexEditor.showPreview')}</span>
           </Button>
         </div>
       )}
@@ -560,12 +562,12 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
             <div className="p-4 border-b bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                 <Brain className="w-4 h-4" />
-                <span>LaTeX编辑区域</span>
+                <span>{t('editor.latexEditor.title')}</span>
                               {questionType && (
                 <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs">
-                  {questionType === 'choice' ? '选择题' : 
-                   questionType === 'fill' ? '填空题' : 
-                   questionType === 'solution' ? (displayType === 'solution' ? '解析' : '解答题') : '解答题'}
+                  {questionType === 'choice' ? t('editor.latexEditor.questionTypes.choice') : 
+                   questionType === 'fill' ? t('editor.latexEditor.questionTypes.fill') : 
+                   questionType === 'solution' ? (displayType === 'solution' ? t('editor.latexEditor.questionTypes.solutionDisplay') : t('editor.latexEditor.questionTypes.solution')) : t('editor.latexEditor.questionTypes.solution')}
                 </span>
               )}
               </div>
@@ -580,7 +582,7 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
                   <LaTeXHighlightInput
                     value={value}
                     onChange={onChange}
-                    placeholder={placeholder}
+                    placeholder={placeholder || t('editor.latexEditor.placeholder')}
                     enableAutoComplete={true}
                     rows={simplified? 7: 14}
                     className={simplified ? 'border-0' : ''}
@@ -597,7 +599,7 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
                 <LaTeXHighlightInput
                   value={value}
                   onChange={onChange}
-                  placeholder={placeholder}
+                  placeholder={placeholder || t('editor.latexEditor.placeholder')}
                   enableAutoComplete={true}
                   rows={simplified? 7: 14}
                   className={simplified ? 'border-0' : ''}
@@ -619,7 +621,7 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
                     onClick={(e) => setCursorPosition(e.currentTarget.selectionStart)}
-                    placeholder={placeholder}
+                    placeholder={placeholder || t('editor.latexEditor.placeholder')}
                     className="w-full h-96 p-4 font-mono text-sm border-0 resize-none focus:outline-none focus:ring-0 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                     style={{
                       lineHeight: '1.6',
@@ -639,7 +641,7 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
                   onChange={handleChange}
                   onKeyDown={handleKeyDown}
                   onClick={(e) => setCursorPosition(e.currentTarget.selectionStart)}
-                  placeholder={placeholder}
+                  placeholder={placeholder || t('editor.latexEditor.placeholder')}
                   className="w-full h-96 p-4 font-mono text-sm border-0 resize-none focus:outline-none focus:ring-0 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                   style={{
                     lineHeight: '1.6',
@@ -664,7 +666,7 @@ const LaTeXEditor: React.FC<LaTeXEditorProps> = ({
               config={config}
               variant="detailed"
               showTitle={true}
-              title="渲染预览"
+              title={t('editor.preview.title')}
               className="h-full preview-enhanced"
             />
           </div>

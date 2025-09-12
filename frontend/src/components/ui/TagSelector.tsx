@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Plus, Tag } from 'lucide-react';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface TagSelectorProps {
   label: string;
@@ -17,9 +18,10 @@ const TagSelector: React.FC<TagSelectorProps> = ({
   availableTags,
   selectedTags,
   onTagsChange,
-  placeholder = "选择标签",
+  placeholder,
   className = ""
 }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredTags, setFilteredTags] = useState(availableTags);
@@ -125,13 +127,13 @@ const TagSelector: React.FC<TagSelectorProps> = ({
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-medium text-indigo-700 dark:text-indigo-300 flex items-center gap-1">
                 <Tag className="w-3 h-3" />
-                已选标签 ({selectedTags.length})
+                {t('ui.tagSelector.selectedTags')} ({selectedTags.length})
               </span>
               <button
                 onClick={handleClearAll}
                 className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 transition-colors px-2 py-1 rounded hover:bg-indigo-100 dark:hover:bg-indigo-800/50"
               >
-                清空
+                {t('ui.tagSelector.clear')}
               </button>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -172,7 +174,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({
               <div className="flex items-center space-x-2">
                 <Tag className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                 <span className={selectedTags.length === 0 ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-gray-100'}>
-                  {selectedTags.length === 0 ? placeholder : `已选择 ${selectedTags.length} 个标签`}
+                  {selectedTags.length === 0 ? (placeholder || t('ui.tagSelector.selectTags')) : t('ui.tagSelector.totalTags', { total: availableTags.length, selected: selectedTags.length })}
                 </span>
               </div>
               <div className="transition-transform duration-200 group-hover:scale-110">
@@ -203,7 +205,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="搜索标签..."
+                    placeholder={t('ui.tagSelector.searchTags')}
                     className="w-full pl-10 pr-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 placeholder-gray-500 dark:placeholder-gray-400"
                     autoFocus
                     onClick={(e) => e.stopPropagation()}
@@ -215,7 +217,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({
               <div className="max-h-64 overflow-y-auto">
                 {unselectedTags.length > 0 ? (
                   <div className="p-3">
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">可用标签 ({unselectedTags.length})</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">{t('ui.tagSelector.availableTags')} ({unselectedTags.length})</div>
                     <div className="flex flex-wrap gap-2">
                       {unselectedTags.map((tag) => (
                         <motion.button
@@ -234,14 +236,14 @@ const TagSelector: React.FC<TagSelectorProps> = ({
                 ) : (
                   <div className="p-4 text-center">
                     <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                      {searchTerm ? '没有找到匹配的标签' : '所有标签都已选择'}
+                      {searchTerm ? t('ui.tagSelector.noMatchingTags') : t('ui.tagSelector.allTagsSelected')}
                     </div>
                     {searchTerm && (
                       <button
                         onClick={() => setSearchTerm('')}
                         className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition-colors"
                       >
-                        清除搜索
+                        {t('ui.tagSelector.clearSearch')}
                       </button>
                     )}
                   </div>
@@ -251,7 +253,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({
               {/* 底部统计 */}
               <div className="p-2 border-t border-gray-100/50 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-700/30">
                 <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                  共 {availableTags.length} 个标签，已选择 {selectedTags.length} 个
+                  {t('ui.tagSelector.totalTags', { total: availableTags.length, selected: selectedTags.length })}
                 </div>
               </div>
             </motion.div>

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown} from 'lucide-react';
 import './SimpleSelect.css';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface SimpleSelectOption {
   value: string | number;
@@ -35,7 +36,7 @@ const SimpleSelect: React.FC<SimpleSelectProps> = ({
   options,
   value,
   onChange,
-  placeholder = "请选择...",
+  placeholder,
   label,
   className = "",
   disabled = false,
@@ -46,6 +47,7 @@ const SimpleSelect: React.FC<SimpleSelectProps> = ({
   showIcon = true,
   customStyles = {}
 }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState({});
   const containerRef = useRef<HTMLDivElement>(null);
@@ -215,7 +217,7 @@ const SimpleSelect: React.FC<SimpleSelectProps> = ({
               <span className={`flex-1 min-w-0 truncate transition-colors duration-200 ${
                 selectedOption ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'
               }`}>
-                {selectedOption ? selectedOption.label : placeholder}
+                {selectedOption ? selectedOption.label : (placeholder || t('ui.menu.simpleSelect.placeholder'))}
               </span>
             </div>
             
@@ -320,7 +322,7 @@ const SimpleSelect: React.FC<SimpleSelectProps> = ({
                         <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                           <span className="text-2xl opacity-60">📭</span>
                         </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">没有可选项</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{t('ui.menu.simpleSelect.noOptions')}</p>
                       </div>
                     )}
                   </div>

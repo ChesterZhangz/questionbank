@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Wifi, WifiOff, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface NetworkErrorHandlerProps {
   children: React.ReactNode;
 }
 
 const NetworkErrorHandler: React.FC<NetworkErrorHandlerProps> = ({ children }) => {
+  const { t } = useTranslation();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showOfflineMessage, setShowOfflineMessage] = useState(false);
 
@@ -44,7 +46,7 @@ const NetworkErrorHandler: React.FC<NetworkErrorHandlerProps> = ({ children }) =
           >
             <div className="bg-red-500 dark:bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg dark:shadow-red-900/50 flex items-center space-x-3">
               <WifiOff className="w-5 h-5" />
-              <span className="font-medium">网络连接已断开</span>
+              <span className="font-medium">{t('errors.networkError.disconnected')}</span>
               <button
                 onClick={() => setShowOfflineMessage(false)}
                 className="ml-2 hover:bg-red-600 dark:hover:bg-red-700 rounded-full p-1 transition-colors"
@@ -66,7 +68,7 @@ const NetworkErrorHandler: React.FC<NetworkErrorHandlerProps> = ({ children }) =
           >
             <div className="bg-yellow-500 dark:bg-yellow-600 text-white px-6 py-3 rounded-lg shadow-lg dark:shadow-yellow-900/50 flex items-center space-x-3">
               <Wifi className="w-5 h-5" />
-              <span className="font-medium">正在尝试重新连接...</span>
+              <span className="font-medium">{t('errors.networkError.reconnecting')}</span>
             </div>
           </motion.div>
         )}

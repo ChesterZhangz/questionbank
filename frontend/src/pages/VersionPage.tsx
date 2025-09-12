@@ -38,6 +38,26 @@ interface VersionUpdate {
 
 const versionUpdates: VersionUpdate[] = [
   {
+    version: 'v0.82',
+    date: '2025-09-11',
+    title: '双语支持 & 介绍页面完善',
+    description: '新增双语支持，完善介绍页面，优化用户体验和系统稳定性。',
+    features: [
+      '双语支持：新增英文支持，优化用户体验',
+      '介绍页面完善：新增介绍页面，优化用户体验',
+      '优化用户体验：简化操作流程，减少不必要的确认步骤',
+      '优化系统稳定性：优化系统稳定性，提升用户体验',
+    ],
+    improvements: [
+      '在首页设置了语言切换',
+    ],
+    fixes: [
+      '修复了语言翻译时延时的问题',
+    ],
+    icon: FileText,
+    color: 'from-green-500 to-emerald-600'
+  },
+  {
     version: 'v0.81',
     date: '2025-09-02',
     title: '练习卷系统完善 & 试卷集显示修复',

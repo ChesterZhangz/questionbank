@@ -16,6 +16,7 @@ import { ModernUploadSpinner } from '../ui/ModernUploadSpinner';
 import { useModal } from '../../hooks/useModal';
 import ConfirmModal from '../ui/ConfirmModal';
 import RightSlideModal from '../ui/RightSlideModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export interface QuestionImage {
   id: string;
@@ -45,6 +46,7 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
   maxImages = 5,
   className
 }) => {
+  const { t } = useTranslation();
   const { token } = useAuthStore();
   const { 
     confirmModal, 
@@ -75,12 +77,12 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
   // 处理文件上传 - 直接上传不需要命名
   const handleFileUpload = useCallback(async (files: File[]) => {
     if (images.length + files.length > maxImages) {
-      alert(`最多只能上传${maxImages}张图片`);
+      alert(t('question.questionImageManager.maxImagesExceeded', { maxImages }));
       return;
     }
 
     if (!bid) {
-      alert('题库ID不存在，无法上传图片');
+      alert(t('question.questionImageManager.bankIdMissing'));
       return;
     }
 
@@ -113,7 +115,7 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
         });
 
         if (!response.ok) {
-          throw new Error(`图片 ${file.name} 上传失败`);
+          throw new Error(t('question.questionImageManager.uploadFailed', { filename: file.name }));
         }
 
         const uploadResult = await response.json();
@@ -138,20 +140,20 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
           
           setUploadProgress(((i + 1) / totalFiles) * 100);
         } else {
-          throw new Error(uploadResult.error || `图片 ${file.name} 上传失败`);
+          throw new Error(uploadResult.error || t('question.questionImageManager.uploadFailed', { filename: file.name }));
         }
       } catch (error) {
         console.error(`图片 ${file.name} 上传失败:`, error);
-        showErrorRightSlide('上传失败', error instanceof Error ? error.message : `图片 ${file.name} 上传失败`);
+        showErrorRightSlide(t('question.questionImageManager.uploadFailedTitle'), error instanceof Error ? error.message : t('question.questionImageManager.uploadFailed', { filename: file.name }));
       }
     }
     
     // 显示最终结果
     if (successCount === totalFiles) {
-      showSuccessRightSlide('上传完成', `成功上传 ${successCount} 张图片`);
+      showSuccessRightSlide(t('question.questionImageManager.uploadComplete'), t('question.questionImageManager.uploadSuccessMessage', { count: successCount }));
       setUploadStatus('success');
     } else if (successCount > 0) {
-      showSuccessRightSlide('部分成功', `成功上传 ${successCount}/${totalFiles} 张图片`);
+      showSuccessRightSlide(t('question.questionImageManager.partialSuccess'), t('question.questionImageManager.partialSuccessMessage', { success: successCount, total: totalFiles }));
       setUploadStatus('success');
     } else {
       setUploadStatus('error');
@@ -334,7 +336,7 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
       {/* 标题和统计 */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          题目图片 ({images.length}/{maxImages})
+          {t('question.questionImageManager.title', { current: images.length, max: maxImages })}
         </h3>
         <button
           onClick={handleClickUpload}
@@ -345,13 +347,13 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
           <span className="transition-all duration-200">
             {isUploading ? (
               <span className="inline-flex items-center">
-                <span className="animate-pulse">上传中</span>
+                <span className="animate-pulse">{t('question.questionImageManager.uploading')}</span>
                 <span className="ml-1 animate-bounce">.</span>
                 <span className="ml-0.5 animate-bounce" style={{ animationDelay: '0.1s' }}>.</span>
                 <span className="ml-0.5 animate-bounce" style={{ animationDelay: '0.2s' }}>.</span>
               </span>
             ) : (
-              '上传图片'
+              t('question.questionImageManager.uploadImages')
             )}
           </span>
         </button>
@@ -390,11 +392,11 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
         <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
           {isDragActive
-            ? "释放文件以上传"
-            : "拖拽图片文件到这里，或点击上传按钮"}
+            ? t('question.questionImageManager.dropToUpload')
+            : t('question.questionImageManager.dragOrClick')}
         </p>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          支持 JPG、PNG、GIF 格式，单个文件最大 5MB
+          {t('question.questionImageManager.supportedFormats')}
         </p>
       </div>
 
@@ -512,8 +514,8 @@ export const QuestionImageManager: React.FC<QuestionImageManagerProps> = ({
       {images.length === 0 && !isUploading && (
         <div className="text-center py-8 text-gray-500">
           <ImageIcon className="mx-auto h-12 w-12 text-gray-300" />
-          <p className="mt-2 text-sm">暂无图片</p>
-          <p className="text-xs">上传图片来丰富题目内容</p>
+          <p className="mt-2 text-sm">{t('question.questionImageManager.noImages')}</p>
+          <p className="text-xs">{t('question.questionImageManager.uploadToEnrich')}</p>
         </div>
       )}
 

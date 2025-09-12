@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import GameAPIService, { type GameHistoryRecord } from '../../services/gameAPI';
 import PuzzleSolutionModal from './PuzzleSolutionModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface GameHistoryProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface GameHistoryProps {
 }
 
 const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const [history, setHistory] = useState<GameHistoryRecord[]>([]);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -34,11 +36,11 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
   const [isSolutionModalOpen, setIsSolutionModalOpen] = useState(false);
 
   const gameTypes = [
-    { value: '', label: '全部游戏' },
-    { value: 'math', label: '数学计算' },
-    { value: 'memory', label: '记忆游戏' },
-    { value: 'puzzle', label: '数字拼图' },
-    { value: 'reaction', label: '反应速度' }
+    { value: '', label: t('games.gameHistory.gameTypes.all') },
+    { value: 'math', label: t('games.gameHistory.gameTypes.math') },
+    { value: 'memory', label: t('games.gameHistory.gameTypes.memory') },
+    { value: 'puzzle', label: t('games.gameHistory.gameTypes.puzzle') },
+    { value: 'reaction', label: t('games.gameHistory.gameTypes.reaction') }
   ];
 
   // 获取游戏历史
@@ -53,7 +55,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
       
     } catch (error) {
       // 错误日志已清理
-      setError('获取游戏历史失败，请稍后重试');
+      setError(t('games.gameHistory.filter.error'));
     } finally {
       setIsLoading(false);
     }
@@ -68,11 +70,11 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
 
   const getGameTitle = (type: string) => {
     switch (type) {
-      case 'math': return '数学计算';
-      case 'memory': return '记忆游戏';
-      case 'puzzle': return '数字拼图';
-      case 'reaction': return '反应速度';
-      default: return '未知游戏';
+      case 'math': return t('games.gameHistory.gameTypes.math');
+      case 'memory': return t('games.gameHistory.gameTypes.memory');
+      case 'puzzle': return t('games.gameHistory.gameTypes.puzzle');
+      case 'reaction': return t('games.gameHistory.gameTypes.reaction');
+      default: return t('games.gameHistory.record.unknown');
     }
   };
 
@@ -88,7 +90,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleString('zh-CN', {
+    return date.toLocaleString(navigator.language, {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -140,8 +142,8 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
                     <History className="w-6 h-6" />
                   </div>
                                      <div>
-                     <h2 className="text-xl font-bold text-white">游戏历史记录</h2>
-                     <p className="text-sm text-white opacity-90">查看您的游戏记录和统计</p>
+                     <h2 className="text-xl font-bold text-white">{t('games.gameHistory.title')}</h2>
+                     <p className="text-sm text-white opacity-90">{t('games.gameHistory.subtitle')}</p>
                    </div>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -167,7 +169,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">游戏类型:</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('games.gameHistory.filter.gameType')}</span>
                 </div>
                 <div className="flex space-x-2">
                   {gameTypes.map((type) => (
@@ -192,7 +194,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
               {isLoading ? (
                 <div className="flex items-center justify-center py-4">
                   <RefreshCw className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin" />
-                  <span className="ml-3 text-gray-600 dark:text-gray-300">加载历史记录...</span>
+                  <span className="ml-3 text-gray-600 dark:text-gray-300">{t('games.gameHistory.filter.loading')}</span>
                 </div>
               ) : error ? (
                 <div className="text-center py-12">
@@ -204,14 +206,14 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
                     onClick={() => fetchHistory(1, selectedGameType)}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
-                    重试
+                    {t('games.gameHistory.filter.retry')}
                   </button>
                 </div>
               ) : history.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-gray-500 mb-4">
                     <History className="w-12 h-12 mx-auto mb-2" />
-                    <p className="text-sm">暂无游戏记录</p>
+                    <p className="text-sm">{t('games.gameHistory.filter.noRecords')}</p>
                   </div>
                 </div>
               ) : (
@@ -232,7 +234,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
                               {getGameTitle(record.gameType)}
                             </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">
-                              难度: {record.difficulty}
+                              {t('games.gameHistory.record.difficulty')}: {record.difficulty}
                             </div>
                           </div>
                         </div>
@@ -241,7 +243,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
                       <div className="flex items-center space-x-6">
                         <div className="text-center">
                           <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{record.score}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">分数</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">{t('games.gameHistory.record.score')}</div>
                         </div>
                         
                         {record.gameData && (
@@ -249,21 +251,21 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
                             {record.gameData.moves && (
                               <div className="text-center">
                                 <div className="text-sm font-semibold text-green-600 dark:text-green-400">{record.gameData.moves}</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">步数</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">{t('games.gameHistory.record.moves')}</div>
                               </div>
                             )}
                             
                             {record.gameData.timeUsed && (
                               <div className="text-center">
                                 <div className="text-sm font-semibold text-purple-600 dark:text-purple-400">{record.gameData.timeUsed}s</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">用时</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">{t('games.gameHistory.record.timeUsed')}</div>
                               </div>
                             )}
                             
                             {record.gameData.accuracy && (
                               <div className="text-center">
                                 <div className="text-sm font-semibold text-orange-600 dark:text-orange-400">{record.gameData.accuracy}%</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">准确率</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">{t('games.gameHistory.record.accuracy')}</div>
                               </div>
                             )}
                           </>
@@ -273,7 +275,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
                           <div className="text-sm font-semibold text-gray-600 dark:text-gray-300">
                             {formatDate(record.createdAt)}
                           </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">时间</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">{t('games.gameHistory.record.time')}</div>
                         </div>
                         
                         {/* 查看解法按钮 - 仅对数字拼图显示 */}
@@ -282,11 +284,11 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
                             <button
                               onClick={() => handleViewSolution(record)}
                               className="p-2 bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-800/50 rounded-lg transition-colors"
-                              title="查看解法"
+                              title={t('games.gameHistory.record.viewSolution')}
                             >
                               <BookOpen className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                             </button>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">解法</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('games.gameHistory.record.solution')}</div>
                           </div>
                         )}
                       </div>
@@ -301,7 +303,7 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
               <div className="p-6 border-t border-gray-200 dark:border-gray-600">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-600 dark:text-gray-300">
-                    共 {pagination.total} 条记录，第 {pagination.page} / {pagination.pages} 页
+                    {t('games.gameHistory.pagination.total', { total: pagination.total, page: pagination.page, pages: pagination.pages })}
                   </div>
                   <div className="flex space-x-2">
                     <button
@@ -309,14 +311,14 @@ const GameHistory: React.FC<GameHistoryProps> = ({ isOpen, onClose }) => {
                       disabled={pagination.page <= 1}
                       className="px-3 py-1 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      上一页
+                      {t('games.gameHistory.pagination.previous')}
                     </button>
                     <button
                       onClick={() => handlePageChange(pagination.page + 1)}
                       disabled={pagination.page >= pagination.pages}
                       className="px-3 py-1 rounded-lg text-sm font-medium bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      下一页
+                      {t('games.gameHistory.pagination.next')}
                     </button>
                   </div>
                 </div>

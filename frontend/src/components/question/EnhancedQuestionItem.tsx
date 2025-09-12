@@ -13,6 +13,7 @@ import {
 import Button from '../ui/Button';
 import { renderContent } from '../../lib/latex/utils/renderContent';
 import LaTeXPreview from '../editor/preview/LaTeXPreview';
+import { useTranslation } from '../../hooks/useTranslation';
 
 // 题目接口定义
 interface Question {
@@ -46,6 +47,7 @@ const FloatingEditor: React.FC<{
   onClose: () => void;
   position: { x: number; y: number };
 }> = ({ question, onSave, onClose, position }) => {
+  const { t } = useTranslation();
   const [editData, setEditData] = useState({
     content: question.content,
     type: question.type,
@@ -105,7 +107,7 @@ const FloatingEditor: React.FC<{
       <div className="space-y-4">
         {/* 头部 */}
         <div className="flex items-center justify-between pb-2 border-b">
-          <h3 className="font-semibold text-gray-900">快速编辑</h3>
+          <h3 className="font-semibold text-gray-900">{t('question.enhancedQuestionItem.quickEdit')}</h3>
           <Button
             variant="outline"
             size="sm"
@@ -119,23 +121,23 @@ const FloatingEditor: React.FC<{
         {/* 题目类型 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            题目类型
+            {t('question.enhancedQuestionItem.questionTypeLabel')}
           </label>
           <select
             value={editData.type}
             onChange={(e) => setEditData(prev => ({ ...prev, type: e.target.value as any }))}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="choice">选择题</option>
-            <option value="fill">填空题</option>
-            <option value="solution">解答题</option>
+            <option value="choice">{t('question.questionCard.questionType.choice')}</option>
+            <option value="fill">{t('question.questionCard.questionType.fill')}</option>
+            <option value="solution">{t('question.questionCard.questionType.solution')}</option>
           </select>
         </div>
 
         {/* 难度等级 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            难度等级
+            {t('question.enhancedQuestionItem.difficultyLabel')}
           </label>
           <div className="flex items-center space-x-2">
             {[1, 2, 3, 4, 5].map((level) => (
@@ -157,7 +159,7 @@ const FloatingEditor: React.FC<{
         {/* 标签管理 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            标签管理
+            {t('question.enhancedQuestionItem.tagManagement')}
           </label>
           
           {/* 现有标签 */}
@@ -185,7 +187,7 @@ const FloatingEditor: React.FC<{
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && addTag()}
-              placeholder="添加标签..."
+              placeholder={t('question.enhancedQuestionItem.addTag')}
               className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <Button
@@ -207,14 +209,14 @@ const FloatingEditor: React.FC<{
             size="sm"
             onClick={onClose}
           >
-            取消
+            {t('question.enhancedQuestionItem.cancel')}
           </Button>
           <Button
             size="sm"
             onClick={handleSave}
             className="bg-blue-600 hover:bg-blue-700"
           >
-            保存
+            {t('question.enhancedQuestionItem.save')}
           </Button>
         </div>
       </div>
@@ -229,6 +231,7 @@ const EnhancedQuestionItem: React.FC<EnhancedQuestionItemProps> = ({
   onUpdate,
   onDelete 
 }) => {
+  const { t } = useTranslation();
   const [showFloatingEditor, setShowFloatingEditor] = useState(false);
   const [editorPosition, setEditorPosition] = useState({ x: 0, y: 0 });
 
@@ -260,10 +263,10 @@ const EnhancedQuestionItem: React.FC<EnhancedQuestionItemProps> = ({
 
   const getTypeName = (type: Question['type']) => {
     switch (type) {
-      case 'choice': return '选择题';
-      case 'fill': return '填空题';
-      case 'solution': return '解答题';
-      default: return '未知';
+      case 'choice': return t('question.questionCard.questionType.choice');
+      case 'fill': return t('question.questionCard.questionType.fill');
+      case 'solution': return t('question.questionCard.questionType.solution');
+      default: return t('question.questionCard.questionType.unknown');
     }
   };
 
@@ -335,7 +338,7 @@ const EnhancedQuestionItem: React.FC<EnhancedQuestionItemProps> = ({
                   {/* 置信度 */}
                   {question.confidence && (
                     <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                      置信度: {(question.confidence * 100).toFixed(1)}%
+                      {t('question.enhancedQuestionItem.confidence')}: {(question.confidence * 100).toFixed(1)}%
                     </span>
                   )}
                 </div>
@@ -365,7 +368,7 @@ const EnhancedQuestionItem: React.FC<EnhancedQuestionItemProps> = ({
                 className="hover:bg-blue-50"
               >
                 <Edit3 className="h-4 w-4" />
-                快速编辑
+                {t('question.enhancedQuestionItem.quickEdit')}
               </Button>
               
               {onDelete && (
@@ -392,7 +395,7 @@ const EnhancedQuestionItem: React.FC<EnhancedQuestionItemProps> = ({
           {/* 选择题选项 */}
           {question.type === 'choice' && question.options && question.options.length > 0 && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">选项 ({question.options.length})</h4>
+              <h4 className="text-sm font-medium text-gray-700 mb-3">{t('question.enhancedQuestionItem.options')} ({question.options.length})</h4>
               <div className="space-y-2">
                 {question.options.map((option, optionIndex) => (
                   <div key={optionIndex} className="flex items-start space-x-3">
@@ -423,9 +426,9 @@ const EnhancedQuestionItem: React.FC<EnhancedQuestionItemProps> = ({
           {question.type === 'fill' && question.blanks && question.blanks.length > 0 && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-green-800">填空题</span>
+                <span className="text-sm font-medium text-green-800">{t('question.questionCard.questionType.fill')}</span>
                 <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
-                  {question.blanks.length} 个填空
+                  {question.blanks.length} {t('question.enhancedQuestionItem.blanks')}
                 </span>
               </div>
             </div>
@@ -436,15 +439,15 @@ const EnhancedQuestionItem: React.FC<EnhancedQuestionItemProps> = ({
             <div className="flex items-center space-x-4">
               <span className="flex items-center space-x-1">
                 <Clock className="h-3 w-3" />
-                <span>来源: {question.source}</span>
+                <span>{t('question.questionCard.source')}: {question.source}</span>
               </span>
-              <span>文档: {question.documentId.slice(-8)}</span>
+              <span>{t('question.enhancedQuestionItem.document')}: {question.documentId.slice(-8)}</span>
             </div>
             
             <div className="flex items-center space-x-2">
               {question.category && question.category.length > 0 && (
                 <span className="bg-gray-100 px-2 py-1 rounded-full">
-                  分类: {question.category.join(', ')}
+                  {t('question.enhancedQuestionItem.category')}: {question.category.join(', ')}
                 </span>
               )}
             </div>

@@ -26,6 +26,7 @@ import LoadingPage from '../../components/ui/LoadingPage';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import { useModal } from '../../hooks/useModal';
+import { useTranslation } from '../../hooks/useTranslation';
 import { MultiSelect, FuzzySelect } from '../../components/ui/menu';
 import Avatar from '../../components/ui/Avatar';
 
@@ -41,6 +42,7 @@ const QuestionBankMembersPage: React.FC = () => {
   const { bid } = useParams<{ bid: string }>();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { t } = useTranslation();
 
   // 弹窗状态管理
   const { 
@@ -103,10 +105,10 @@ const QuestionBankMembersPage: React.FC = () => {
         setQuestionBank(response.data.questionBank!);
         determineUserRole(response.data.questionBank!);
       } else {
-        setError(response.data.error || '获取题库信息失败');
+        setError(response.data.error || t('questionBankPage.QuestionBankMembersPage.errors.loadFailed'));
       }
     } catch (error: any) {
-      setError(error.response?.data?.error || '获取题库信息失败');
+      setError(error.response?.data?.error || t('questionBankPage.QuestionBankMembersPage.errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -218,23 +220,23 @@ const QuestionBankMembersPage: React.FC = () => {
 
   const handleRemoveMember = async (memberId: string) => {
     showConfirm(
-      '确认移除',
-      '确定要移除这个成员吗？',
+      t('questionBankPage.QuestionBankMembersPage.confirm.removeMember'),
+      t('questionBankPage.QuestionBankMembersPage.confirm.removeMemberMessage'),
       async () => {
         try {
-          setConfirmLoading(true, '正在移除...');
+          setConfirmLoading(true, t('questionBankPage.QuestionBankMembersPage.status.removing'));
           const response = await questionBankAPI.removeMember(bid!, memberId);
           if (response.data.success) {
             fetchMembers(); // 重新获取成员列表
             closeConfirm(); // 成功后关闭弹窗
-            showSuccessRightSlide('移除成功', '成员已成功移除');
+            showSuccessRightSlide(t('questionBankPage.QuestionBankMembersPage.success.removed'), t('questionBankPage.QuestionBankMembersPage.success.memberRemoved'));
           } else {
             closeConfirm();
-            showErrorRightSlide('移除失败', response.data.error || '移除成员失败');
+            showErrorRightSlide(t('questionBankPage.QuestionBankMembersPage.errors.removeFailed'), response.data.error || t('questionBankPage.QuestionBankMembersPage.errors.removeMemberFailed'));
           }
         } catch (error: any) {
           closeConfirm();
-          showErrorRightSlide('移除失败', error.response?.data?.error || '移除成员失败');
+          showErrorRightSlide(t('questionBankPage.QuestionBankMembersPage.errors.removeFailed'), error.response?.data?.error || t('questionBankPage.QuestionBankMembersPage.errors.removeMemberFailed'));
         }
       }
     );
@@ -253,7 +255,7 @@ const QuestionBankMembersPage: React.FC = () => {
         fetchMembers(); // 重新获取成员列表
       }
     } catch (error: any) {
-      showErrorRightSlide('修改失败', error.response?.data?.error || '修改角色失败');
+      showErrorRightSlide(t('questionBankPage.QuestionBankMembersPage.errors.changeRoleFailed'), error.response?.data?.error || t('questionBankPage.QuestionBankMembersPage.errors.changeRoleFailedMessage'));
     }
   };
 
@@ -284,11 +286,11 @@ const QuestionBankMembersPage: React.FC = () => {
     if (selectedMembers.size === 0) return;
 
     showConfirm(
-      '批量删除成员',
-      `确定要删除选中的 ${selectedMembers.size} 个成员吗？`,
+      t('questionBankPage.QuestionBankMembersPage.confirm.batchRemoveMembers'),
+      t('questionBankPage.QuestionBankMembersPage.confirm.batchRemoveMembersMessage', { count: selectedMembers.size }),
       async () => {
         try {
-          setConfirmLoading(true, '正在删除...');
+          setConfirmLoading(true, t('questionBankPage.QuestionBankMembersPage.status.deleting'));
           setIsBatchRemoving(true);
           
           const results = await Promise.allSettled(
@@ -306,13 +308,13 @@ const QuestionBankMembersPage: React.FC = () => {
           closeConfirm(); // 操作完成后关闭弹窗
 
           if (failCount === 0) {
-            showSuccessRightSlide('批量删除成功', `成功删除 ${successCount} 个成员`);
+            showSuccessRightSlide(t('questionBankPage.QuestionBankMembersPage.success.batchRemoved'), t('questionBankPage.QuestionBankMembersPage.success.batchRemovedMessage', { count: successCount }));
           } else {
-            showSuccessRightSlide('批量删除完成', `成功删除 ${successCount} 个成员，${failCount} 个失败`);
+            showSuccessRightSlide(t('questionBankPage.QuestionBankMembersPage.success.batchRemovedPartial'), t('questionBankPage.QuestionBankMembersPage.success.batchRemovedPartialMessage', { successCount, failCount }));
           }
         } catch (error: any) {
           closeConfirm();
-          showErrorRightSlide('批量删除失败', error.response?.data?.error || '批量删除成员失败');
+          showErrorRightSlide(t('questionBankPage.QuestionBankMembersPage.errors.batchRemoveFailed'), error.response?.data?.error || t('questionBankPage.QuestionBankMembersPage.errors.batchRemoveFailedMessage'));
         } finally {
           setIsBatchRemoving(false);
         }
@@ -362,12 +364,12 @@ const QuestionBankMembersPage: React.FC = () => {
       fetchMembers();
 
       if (failCount === 0) {
-        showSuccessRightSlide('添加成功', `成功添加 ${successCount} 个成员`);
+        showSuccessRightSlide(t('questionBankPage.QuestionBankMembersPage.success.added'), t('questionBankPage.QuestionBankMembersPage.success.addedMessage', { count: successCount }));
       } else {
-        showSuccessRightSlide('添加完成', `成功添加 ${successCount} 个成员，${failCount} 个失败`);
+        showSuccessRightSlide(t('questionBankPage.QuestionBankMembersPage.success.addedPartial'), t('questionBankPage.QuestionBankMembersPage.success.addedPartialMessage', { successCount, failCount }));
       }
     } catch (error: any) {
-      showErrorRightSlide('添加失败', error.response?.data?.error || '添加成员失败');
+      showErrorRightSlide(t('questionBankPage.QuestionBankMembersPage.errors.addFailed'), error.response?.data?.error || t('questionBankPage.QuestionBankMembersPage.errors.addMemberFailed'));
     } finally {
       setIsBatchAdding(false);
     }
@@ -393,17 +395,17 @@ const QuestionBankMembersPage: React.FC = () => {
   const getRoleText = (role: string) => {
     switch (role) {
       case 'creator':
-        return '创建者';
+        return t('questionBankPage.QuestionBankMembersPage.roles.creator');
       case 'manager':
-        return '管理者';
+        return t('questionBankPage.QuestionBankMembersPage.roles.manager');
       case 'collaborator':
-        return '协作者';
+        return t('questionBankPage.QuestionBankMembersPage.roles.collaborator');
       case 'viewer':
-        return '查看者';
+        return t('questionBankPage.QuestionBankMembersPage.roles.viewer');
       case 'enterprise_viewer':
-        return '企业查看者';
+        return t('questionBankPage.QuestionBankMembersPage.roles.enterpriseViewer');
       default:
-        return '未知';
+        return t('questionBankPage.QuestionBankMembersPage.roles.unknown');
     }
   };
 
@@ -460,7 +462,7 @@ const QuestionBankMembersPage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 dark:text-red-400 text-lg mb-4">{error}</div>
-          <Button onClick={() => navigate(-1)}>返回</Button>
+          <Button onClick={() => navigate(-1)}>{t('questionBankPage.QuestionBankMembersPage.buttons.back')}</Button>
         </div>
       </div>
     );
@@ -480,10 +482,10 @@ const QuestionBankMembersPage: React.FC = () => {
                 className="flex items-center gap-2"
               >
                 <ArrowLeft className="w-4 w-4" />
-                返回
+                {t('questionBankPage.QuestionBankMembersPage.buttons.back')}
               </Button>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">成员管理</h1>
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('questionBankPage.QuestionBankMembersPage.title')}</h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{questionBank?.name}</p>
               </div>
             </div>
@@ -494,7 +496,7 @@ const QuestionBankMembersPage: React.FC = () => {
                 className="bg-green-500 hover:bg-green-600 text-white"
               >
                 <UserPlus className="w-4 h-4 mr-2" />
-                添加成员
+                {t('questionBankPage.QuestionBankMembersPage.buttons.addMember')}
               </Button>
             )}
           </div>
@@ -514,7 +516,7 @@ const QuestionBankMembersPage: React.FC = () => {
                   <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {members.filter(m => m.role === 'creator').length}
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">创建者</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankMembersPage.stats.creator')}</div>
                 </div>
               </div>
             </div>
@@ -530,7 +532,7 @@ const QuestionBankMembersPage: React.FC = () => {
                   <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {members.filter(m => m.role === 'manager').length}
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">管理者</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankMembersPage.stats.manager')}</div>
                 </div>
               </div>
             </div>
@@ -546,7 +548,7 @@ const QuestionBankMembersPage: React.FC = () => {
                   <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {members.filter(m => m.role === 'collaborator').length}
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">协作者</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankMembersPage.stats.collaborator')}</div>
                 </div>
               </div>
             </div>
@@ -562,7 +564,7 @@ const QuestionBankMembersPage: React.FC = () => {
                   <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {members.filter(m => m.role === 'viewer' || m.role === 'enterprise_viewer').length}
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">查看者</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankMembersPage.stats.viewer')}</div>
                 </div>
               </div>
             </div>
@@ -578,7 +580,7 @@ const QuestionBankMembersPage: React.FC = () => {
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 w-4 text-gray-400 dark:text-gray-500" />
                   <Input
                     type="text"
-                    placeholder="搜索成员姓名或邮箱..."
+                    placeholder={t('questionBankPage.QuestionBankMembersPage.search.placeholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -589,15 +591,15 @@ const QuestionBankMembersPage: React.FC = () => {
                 <MultiSelect
                   label=""
                   options={[
-                    { value: 'all', label: '所有角色' },
-                    { value: 'creator', label: '创建者' },
-                    { value: 'manager', label: '管理者' },
-                    { value: 'collaborator', label: '协作者' },
-                    { value: 'viewer', label: '查看者' }
+                    { value: 'all', label: t('questionBankPage.QuestionBankMembersPage.filter.allRoles') },
+                    { value: 'creator', label: t('questionBankPage.QuestionBankMembersPage.roles.creator') },
+                    { value: 'manager', label: t('questionBankPage.QuestionBankMembersPage.roles.manager') },
+                    { value: 'collaborator', label: t('questionBankPage.QuestionBankMembersPage.roles.collaborator') },
+                    { value: 'viewer', label: t('questionBankPage.QuestionBankMembersPage.roles.viewer') }
                   ]}
                   value={filterRole}
                   onChange={setFilterRole}
-                  placeholder="筛选角色"
+                  placeholder={t('questionBankPage.QuestionBankMembersPage.filter.placeholder')}
                   maxDisplay={2}
                   className="w-full"
                 />
@@ -612,7 +614,7 @@ const QuestionBankMembersPage: React.FC = () => {
         <Card>
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">成员列表</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('questionBankPage.QuestionBankMembersPage.members.title')}</h3>
               
               <div className="flex items-center gap-3">
                 {canManageMembers && (
@@ -625,7 +627,7 @@ const QuestionBankMembersPage: React.FC = () => {
                     ) : (
                       <Square className="w-4 h-4" />
                     )}
-                    {selectedMembers.size === filteredMembers.length ? '取消全选' : '全选'}
+                    {selectedMembers.size === filteredMembers.length ? t('questionBankPage.QuestionBankMembersPage.members.deselectAll') : t('questionBankPage.QuestionBankMembersPage.members.selectAll')}
                   </button>
                 )}
                 
@@ -637,7 +639,7 @@ const QuestionBankMembersPage: React.FC = () => {
                     className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
                   >
                     <UserX className="w-4 h-4 mr-2" />
-                    批量删除 ({selectedMembers.size})
+                    {t('questionBankPage.QuestionBankMembersPage.members.batchDelete', { count: selectedMembers.size })}
                   </Button>
                 )}
               </div>
@@ -646,7 +648,7 @@ const QuestionBankMembersPage: React.FC = () => {
             {filteredMembers.length === 0 ? (
               <div className="text-center py-12">
                 <Users className="w-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-gray-400">暂无成员</p>
+                <p className="text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankMembersPage.members.noMembers')}</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -677,7 +679,7 @@ const QuestionBankMembersPage: React.FC = () => {
                         </span>
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-gray-100">{member.name || '未知用户'}</div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100">{member.name || t('questionBankPage.QuestionBankMembersPage.members.unknownUser')}</div>
                         <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
                           <Mail className="w-3 w-3" />
                           {member.email}
@@ -699,9 +701,9 @@ const QuestionBankMembersPage: React.FC = () => {
                               onChange={(e) => handleChangeRole(member._id, e.target.value as 'manager' | 'collaborator' | 'viewer')}
                               className="text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                             >
-                              <option value="manager">管理者</option>
-                              <option value="collaborator">协作者</option>
-                              <option value="viewer">查看者</option>
+                              <option value="manager">{t('questionBankPage.QuestionBankMembersPage.roles.manager')}</option>
+                              <option value="collaborator">{t('questionBankPage.QuestionBankMembersPage.roles.collaborator')}</option>
+                              <option value="viewer">{t('questionBankPage.QuestionBankMembersPage.roles.viewer')}</option>
                             </select>
                           )}
 
@@ -736,22 +738,22 @@ const QuestionBankMembersPage: React.FC = () => {
             className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">添加成员</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('questionBankPage.QuestionBankMembersPage.addMember.title')}</h3>
               
               <div className="space-y-6">
                 {/* 搜索用户 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    搜索用户
+                    {t('questionBankPage.QuestionBankMembersPage.addMember.searchUser')}
                   </label>
                   <Input
                     type="text"
-                    placeholder="输入用户姓名或邮箱进行搜索..."
+                    placeholder={t('questionBankPage.QuestionBankMembersPage.addMember.searchPlaceholder')}
                     onChange={(e) => searchUsers(e.target.value)}
                     icon={<Users className="w-4 h-4" />}
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    可以搜索所有已注册的用户，不限制邮箱后缀
+                    {t('questionBankPage.QuestionBankMembersPage.addMember.searchDescription')}
                   </p>
                 </div>
 
@@ -759,7 +761,7 @@ const QuestionBankMembersPage: React.FC = () => {
                 {searchResults.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                      搜索结果 (点击选择用户)
+                      {t('questionBankPage.QuestionBankMembersPage.addMember.searchResults')}
                     </label>
                     <div className="max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg">
                       {searchResults.map((user) => (
@@ -803,7 +805,7 @@ const QuestionBankMembersPage: React.FC = () => {
                 {selectedUsers.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                      已选择的用户 ({selectedUsers.length})
+                      {t('questionBankPage.QuestionBankMembersPage.addMember.selectedUsers', { count: selectedUsers.length })}
                     </label>
                     <div className="space-y-2 max-h-40 overflow-y-auto">
                       {selectedUsers.map((user) => (
@@ -839,17 +841,17 @@ const QuestionBankMembersPage: React.FC = () => {
                 {/* 角色选择 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    分配角色
+                    {t('questionBankPage.QuestionBankMembersPage.addMember.assignRole')}
                   </label>
                   <FuzzySelect
                     options={[
-                      { value: 'viewer', label: '查看者', html: '<span>查看者 - 只能查看题库内容</span>' },
-                      { value: 'collaborator', label: '协作者', html: '<span>协作者 - 可以添加和编辑题目</span>' },
-                      { value: 'manager', label: '管理者', html: '<span>管理者 - 可以管理题库和成员</span>' }
+                      { value: 'viewer', label: t('questionBankPage.QuestionBankMembersPage.roles.viewer'), html: `<span>${t('questionBankPage.QuestionBankMembersPage.roles.viewer')} - ${t('questionBankPage.QuestionBankMembersPage.roles.viewerDescription')}</span>` },
+                      { value: 'collaborator', label: t('questionBankPage.QuestionBankMembersPage.roles.collaborator'), html: `<span>${t('questionBankPage.QuestionBankMembersPage.roles.collaborator')} - ${t('questionBankPage.QuestionBankMembersPage.roles.collaboratorDescription')}</span>` },
+                      { value: 'manager', label: t('questionBankPage.QuestionBankMembersPage.roles.manager'), html: `<span>${t('questionBankPage.QuestionBankMembersPage.roles.manager')} - ${t('questionBankPage.QuestionBankMembersPage.roles.managerDescription')}</span>` }
                     ]}
                     value={selectedRole}
                     onChange={(value) => setSelectedRole(value as 'manager' | 'collaborator' | 'viewer')}
-                    placeholder="选择角色"
+                    placeholder={t('questionBankPage.QuestionBankMembersPage.addMember.selectRole')}
                   />
                 </div>
 
@@ -864,7 +866,7 @@ const QuestionBankMembersPage: React.FC = () => {
                     }}
                     className="flex-1"
                   >
-                    取消
+                    {t('questionBankPage.QuestionBankMembersPage.buttons.cancel')}
                   </Button>
                   <Button
                     onClick={handleAddSelectedUsers}
@@ -873,7 +875,7 @@ const QuestionBankMembersPage: React.FC = () => {
                     className="flex-1 bg-green-500 hover:bg-green-600"
                   >
                     <UserPlus className="w-4 h-4 mr-2" />
-                    添加 {selectedUsers.length > 0 ? `${selectedUsers.length} 个` : ''}成员
+                    {t('questionBankPage.QuestionBankMembersPage.buttons.addMembers', { count: selectedUsers.length })}
                   </Button>
                 </div>
               </div>

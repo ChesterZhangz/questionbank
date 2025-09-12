@@ -30,146 +30,290 @@ export interface QuestionSubCategory {
   parent: string;
 }
 
-// 主要分类
+// 主要分类（向后兼容）
 export const QUESTION_CATEGORIES: QuestionCategory[] = [
   {
     value: 'math',
-    label: '数学',
+    label: 'Mathematics',
     icon: Calculator,
-    description: '数学相关题目'
+    description: 'Mathematics related questions'
   },
   {
     value: 'physics',
-    label: '物理',
+    label: 'Physics',
     icon: Atom,
-    description: '物理相关题目'
+    description: 'Physics related questions'
   },
   {
     value: 'chemistry',
-    label: '化学',
+    label: 'Chemistry',
     icon: Beaker,
-    description: '化学相关题目'
+    description: 'Chemistry related questions'
   },
   {
     value: 'biology',
-    label: '生物',
+    label: 'Biology',
     icon: Microscope,
-    description: '生物相关题目'
+    description: 'Biology related questions'
   },
   {
     value: 'computer',
-    label: '计算机',
+    label: 'Computer Science',
     icon: Code,
-    description: '计算机相关题目'
+    description: 'Computer Science related questions'
   },
   {
     value: 'chinese',
-    label: '语文',
+    label: 'Chinese',
     icon: PenTool,
-    description: '语文相关题目'
+    description: 'Chinese related questions'
   },
   {
     value: 'english',
-    label: '英语',
+    label: 'English',
     icon: Languages,
-    description: '英语相关题目'
+    description: 'English related questions'
   },
   {
     value: 'history',
-    label: '历史',
+    label: 'History',
     icon: ScrollText,
-    description: '历史相关题目'
+    description: 'History related questions'
   },
   {
     value: 'geography',
-    label: '地理',
+    label: 'Geography',
     icon: Mountain,
-    description: '地理相关题目'
+    description: 'Geography related questions'
   },
   {
     value: 'politics',
-    label: '政治',
+    label: 'Politics',
     icon: Gavel,
-    description: '政治相关题目'
+    description: 'Politics related questions'
   },
   {
     value: 'other',
-    label: '其他',
+    label: 'Other',
     icon: FileText,
-    description: '其他学科题目'
+    description: 'Other subject questions'
   }
 ];
 
-// 数学子分类
+// 获取翻译后的主要分类
+export const getQuestionCategories = (t: (key: string) => string): QuestionCategory[] => [
+  {
+    value: 'math',
+    label: t('constants.questionCategories.main.math.label'),
+    icon: Calculator,
+    description: t('constants.questionCategories.main.math.description')
+  },
+  {
+    value: 'physics',
+    label: t('constants.questionCategories.main.physics.label'),
+    icon: Atom,
+    description: t('constants.questionCategories.main.physics.description')
+  },
+  {
+    value: 'chemistry',
+    label: t('constants.questionCategories.main.chemistry.label'),
+    icon: Beaker,
+    description: t('constants.questionCategories.main.chemistry.description')
+  },
+  {
+    value: 'biology',
+    label: t('constants.questionCategories.main.biology.label'),
+    icon: Microscope,
+    description: t('constants.questionCategories.main.biology.description')
+  },
+  {
+    value: 'computer',
+    label: t('constants.questionCategories.main.computer.label'),
+    icon: Code,
+    description: t('constants.questionCategories.main.computer.description')
+  },
+  {
+    value: 'chinese',
+    label: t('constants.questionCategories.main.chinese.label'),
+    icon: PenTool,
+    description: t('constants.questionCategories.main.chinese.description')
+  },
+  {
+    value: 'english',
+    label: t('constants.questionCategories.main.english.label'),
+    icon: Languages,
+    description: t('constants.questionCategories.main.english.description')
+  },
+  {
+    value: 'history',
+    label: t('constants.questionCategories.main.history.label'),
+    icon: ScrollText,
+    description: t('constants.questionCategories.main.history.description')
+  },
+  {
+    value: 'geography',
+    label: t('constants.questionCategories.main.geography.label'),
+    icon: Mountain,
+    description: t('constants.questionCategories.main.geography.description')
+  },
+  {
+    value: 'politics',
+    label: t('constants.questionCategories.main.politics.label'),
+    icon: Gavel,
+    description: t('constants.questionCategories.main.politics.description')
+  },
+  {
+    value: 'other',
+    label: t('constants.questionCategories.main.other.label'),
+    icon: FileText,
+    description: t('constants.questionCategories.main.other.description')
+  }
+];
+
+// 数学子分类（向后兼容）
 export const MATH_SUBCATEGORIES: QuestionSubCategory[] = [
   {
     value: 'elementary-math',
-    label: '小学数学',
+    label: 'Elementary Mathematics',
     icon: Ruler,
-    description: '小学1-6年级数学题目',
+    description: 'Elementary school (1-6 grade) mathematics questions',
     parent: 'math'
   },
   {
     value: 'junior-math',
-    label: '初中数学',
+    label: 'Junior Mathematics',
     icon: Calculator,
-    description: '初中7-9年级数学题目',
+    description: 'Junior high school (7-9 grade) mathematics questions',
     parent: 'math'
   },
   {
     value: 'senior-math',
-    label: '高中数学',
+    label: 'Senior Mathematics',
     icon: Brain,
-    description: '高中10-12年级数学题目',
+    description: 'Senior high school (10-12 grade) mathematics questions',
     parent: 'math'
   },
   {
     value: 'calculus',
-    label: '微积分',
+    label: 'Calculus',
     icon: BookOpen,
-    description: '微积分相关题目',
+    description: 'Calculus related questions',
     parent: 'math'
   },
   {
     value: 'linear-algebra',
-    label: '线性代数',
+    label: 'Linear Algebra',
     icon: Ruler,
-    description: '线性代数相关题目',
+    description: 'Linear algebra related questions',
     parent: 'math'
   },
   {
     value: 'probability',
-    label: '概率统计',
+    label: 'Probability & Statistics',
     icon: Calculator,
-    description: '概率论与数理统计题目',
+    description: 'Probability and statistics questions',
     parent: 'math'
   },
   {
     value: 'geometry',
-    label: '几何学',
+    label: 'Geometry',
     icon: Ruler,
-    description: '平面几何、立体几何题目',
+    description: 'Plane and solid geometry questions',
     parent: 'math'
   },
   {
     value: 'algebra',
-    label: '代数学',
+    label: 'Algebra',
     icon: Brain,
-    description: '代数相关题目',
+    description: 'Algebra related questions',
     parent: 'math'
   },
   {
     value: 'number-theory',
-    label: '数论',
+    label: 'Number Theory',
     icon: BookOpen,
-    description: '数论相关题目',
+    description: 'Number theory related questions',
     parent: 'math'
   },
   {
     value: 'analysis',
-    label: '数学分析',
+    label: 'Mathematical Analysis',
     icon: Calculator,
-    description: '数学分析相关题目',
+    description: 'Mathematical analysis related questions',
+    parent: 'math'
+  }
+];
+
+// 获取翻译后的数学子分类
+export const getMathSubCategoriesTranslated = (t: (key: string) => string): QuestionSubCategory[] => [
+  {
+    value: 'elementary-math',
+    label: t('constants.questionCategories.mathSubcategories.elementary-math.label'),
+    icon: Ruler,
+    description: t('constants.questionCategories.mathSubcategories.elementary-math.description'),
+    parent: 'math'
+  },
+  {
+    value: 'junior-math',
+    label: t('constants.questionCategories.mathSubcategories.junior-math.label'),
+    icon: Calculator,
+    description: t('constants.questionCategories.mathSubcategories.junior-math.description'),
+    parent: 'math'
+  },
+  {
+    value: 'senior-math',
+    label: t('constants.questionCategories.mathSubcategories.senior-math.label'),
+    icon: Brain,
+    description: t('constants.questionCategories.mathSubcategories.senior-math.description'),
+    parent: 'math'
+  },
+  {
+    value: 'calculus',
+    label: t('constants.questionCategories.mathSubcategories.calculus.label'),
+    icon: BookOpen,
+    description: t('constants.questionCategories.mathSubcategories.calculus.description'),
+    parent: 'math'
+  },
+  {
+    value: 'linear-algebra',
+    label: t('constants.questionCategories.mathSubcategories.linear-algebra.label'),
+    icon: Ruler,
+    description: t('constants.questionCategories.mathSubcategories.linear-algebra.description'),
+    parent: 'math'
+  },
+  {
+    value: 'probability',
+    label: t('constants.questionCategories.mathSubcategories.probability.label'),
+    icon: Calculator,
+    description: t('constants.questionCategories.mathSubcategories.probability.description'),
+    parent: 'math'
+  },
+  {
+    value: 'geometry',
+    label: t('constants.questionCategories.mathSubcategories.geometry.label'),
+    icon: Ruler,
+    description: t('constants.questionCategories.mathSubcategories.geometry.description'),
+    parent: 'math'
+  },
+  {
+    value: 'algebra',
+    label: t('constants.questionCategories.mathSubcategories.algebra.label'),
+    icon: Brain,
+    description: t('constants.questionCategories.mathSubcategories.algebra.description'),
+    parent: 'math'
+  },
+  {
+    value: 'number-theory',
+    label: t('constants.questionCategories.mathSubcategories.number-theory.label'),
+    icon: BookOpen,
+    description: t('constants.questionCategories.mathSubcategories.number-theory.description'),
+    parent: 'math'
+  },
+  {
+    value: 'analysis',
+    label: t('constants.questionCategories.mathSubcategories.analysis.label'),
+    icon: Calculator,
+    description: t('constants.questionCategories.mathSubcategories.analysis.description'),
     parent: 'math'
   }
 ];
@@ -177,6 +321,11 @@ export const MATH_SUBCATEGORIES: QuestionSubCategory[] = [
 // 获取所有分类（包括主分类和子分类）
 export const getAllCategories = (): (QuestionCategory | QuestionSubCategory)[] => {
   return [...QUESTION_CATEGORIES, ...MATH_SUBCATEGORIES];
+};
+
+// 获取翻译后的所有分类（包括主分类和子分类）
+export const getAllCategoriesTranslated = (t: (key: string) => string): (QuestionCategory | QuestionSubCategory)[] => {
+  return [...getQuestionCategories(t), ...getMathSubCategoriesTranslated(t)];
 };
 
 // 获取数学相关分类（主分类 + 子分类）
@@ -187,9 +336,22 @@ export const getMathCategories = (): (QuestionCategory | QuestionSubCategory)[] 
   ];
 };
 
+// 获取翻译后的数学相关分类（主分类 + 子分类）
+export const getMathCategoriesTranslated = (t: (key: string) => string): (QuestionCategory | QuestionSubCategory)[] => {
+  return [
+    getQuestionCategories(t).find(cat => cat.value === 'math')!,
+    ...getMathSubCategoriesTranslated(t)
+  ];
+};
+
 // 根据分类值获取分类信息
 export const getCategoryByValue = (value: string): QuestionCategory | QuestionSubCategory | undefined => {
   return getAllCategories().find(cat => cat.value === value);
+};
+
+// 根据分类值获取翻译后的分类信息
+export const getCategoryByValueTranslated = (value: string, t: (key: string) => string): QuestionCategory | QuestionSubCategory | undefined => {
+  return getAllCategoriesTranslated(t).find(cat => cat.value === value);
 };
 
 // 获取分类的图标
@@ -201,7 +363,13 @@ export const getCategoryIcon = (categoryValue: string) => {
 // 获取分类的标签
 export const getCategoryLabel = (categoryValue: string): string => {
   const category = getCategoryByValue(categoryValue);
-  return category?.label || '未知分类';
+  return category?.label || 'Unknown Category';
+};
+
+// 获取翻译后的分类标签
+export const getCategoryLabelTranslated = (categoryValue: string, t: (key: string) => string): string => {
+  const category = getCategoryByValueTranslated(categoryValue, t);
+  return category?.label || t('constants.questionCategories.unknown');
 };
 
 // 检查是否为数学分类

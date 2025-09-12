@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, X, Check, Search } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface Option {
   value: string | number;
@@ -25,11 +26,12 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   options,
   value,
   onChange,
-  placeholder = "请选择",
+  placeholder,
   maxDisplay = 2,
   className = "",
   disabled = false
 }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredOptions, setFilteredOptions] = useState(options);
@@ -102,7 +104,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   const getDisplayText = () => {
     const selectedLabels = getSelectedLabels();
     if (selectedLabels.length === 0) {
-      return placeholder;
+      return placeholder || t('ui.menu.multiSelect.placeholder');
     }
     if (selectedLabels.length <= maxDisplay) {
       return selectedLabels.join(', ');
@@ -172,7 +174,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="搜索..."
+                  placeholder={t('ui.menu.multiSelect.searchPlaceholder')}
                   className="w-full pl-8 pr-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 placeholder-gray-500 dark:placeholder-gray-400"
                   autoFocus
                   onClick={(e) => e.stopPropagation()}
@@ -219,7 +221,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                 })
               ) : (
                 <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 text-center">
-                  没有找到匹配的选项
+                  {t('ui.menu.multiSelect.noMatches')}
                 </div>
               )}
             </div>
@@ -232,7 +234,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                   onClick={handleClearAll}
                   className="w-full px-2 py-1 text-xs text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 rounded transition-colors"
                 >
-                  清空所有选择 ({value.length})
+                  {t('ui.menu.multiSelect.clearAll')} ({value.length})
                 </button>
               </div>
             )}

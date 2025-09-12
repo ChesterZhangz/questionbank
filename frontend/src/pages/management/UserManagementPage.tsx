@@ -21,6 +21,7 @@ import { FuzzySelect } from '../../components/ui/menu';
 import LoadingPage from '../../components/ui/LoadingPage';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useModal } from '../../hooks/useModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface UserData {
   _id: string;
@@ -43,6 +44,7 @@ interface EditUserModalProps {
 
 const EditUserModal: React.FC<EditUserModalProps> = ({ user, isOpen, onClose, onUpdate }) => {
   const { user: currentUser } = useAuthStore();
+  const { t } = useTranslation();
   const isSuperAdmin = currentUser?.role === 'superadmin';
   
   const [formData, setFormData] = useState({
@@ -85,14 +87,14 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, isOpen, onClose, on
   };
 
   const roleOptions = [
-    { value: 'student', label: '学生', icon: Users },
-    { value: 'teacher', label: '教师', icon: Shield },
-    { value: 'admin', label: '管理员', icon: Shield }
+    { value: 'student', label: t('management.userManagement.roles.student'), icon: Users },
+    { value: 'teacher', label: t('management.userManagement.roles.teacher'), icon: Shield },
+    { value: 'admin', label: t('management.userManagement.roles.admin'), icon: Shield }
   ];
 
   const statusOptions = [
-    { value: 'true', label: '活跃', icon: CheckCircle },
-    { value: 'false', label: '非活跃', icon: XCircle }
+    { value: 'true', label: t('management.userManagement.statuses.active'), icon: CheckCircle },
+    { value: 'false', label: t('management.userManagement.statuses.inactive'), icon: XCircle }
   ];
 
   return (
@@ -118,51 +120,51 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, isOpen, onClose, on
                   <Edit className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">编辑用户</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">修改用户信息和权限设置</p>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('management.userManagement.editUser.title')}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{t('management.userManagement.editUser.description')}</p>
                 </div>
               </div>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">姓名</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('management.userManagement.editUser.name')}</label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="请输入姓名"
+                  placeholder={t('management.userManagement.editUser.namePlaceholder')}
                   required
                 />
               </div>
 
               {isSuperAdmin && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">角色</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('management.userManagement.editUser.role')}</label>
                   <FuzzySelect
                     options={roleOptions}
                     value={formData.role}
                     onChange={(value) => setFormData({ ...formData, role: value as string })}
-                    placeholder="选择角色"
+                    placeholder={t('management.userManagement.editUser.selectRole')}
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">部门</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('management.userManagement.editUser.department')}</label>
                 <Input
                   value={formData.department}
                   onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  placeholder="请输入部门"
+                  placeholder={t('management.userManagement.editUser.departmentPlaceholder')}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">状态</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('management.userManagement.editUser.status')}</label>
                 <FuzzySelect
                   options={statusOptions}
                   value={formData.isActive.toString()}
                   onChange={(value) => setFormData({ ...formData, isActive: value === 'true' })}
-                  placeholder="选择状态"
+                  placeholder={t('management.userManagement.editUser.selectStatus')}
                 />
               </div>
 
@@ -174,14 +176,14 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, isOpen, onClose, on
                   className="flex-1"
                   disabled={isSubmitting}
                 >
-                  取消
+                  {t('management.userManagement.editUser.cancel')}
                 </Button>
                 <Button
                   type="submit"
                   className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? '保存中...' : '保存'}
+                  {isSubmitting ? t('management.userManagement.editUser.saving') : t('management.userManagement.editUser.save')}
                 </Button>
               </div>
             </form>
@@ -195,6 +197,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, isOpen, onClose, on
 const UserManagementPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { t } = useTranslation();
   const [users, setUsers] = useState<UserData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
@@ -253,11 +256,11 @@ const UserManagementPage: React.FC = () => {
         if (response.data.success) {
           setUsers(response.data.users);
         } else {
-          setError('获取用户列表失败');
+          setError(t('management.userManagement.errors.fetchUsersFailed'));
         }
       } catch (error: any) {
         // 错误日志已清理
-        setError(error.response?.data?.error || '获取用户列表失败');
+        setError(error.response?.data?.error || t('management.userManagement.errors.fetchUsersUnknownError', { error: t('common.unknownError') }));
       } finally {
         setLoading(false);
       }
@@ -271,8 +274,8 @@ const UserManagementPage: React.FC = () => {
   // 删除用户
   const handleDeleteUser = async (userId: string, userName: string) => {
     showConfirm(
-      `确定要删除用户 "${userName}" 吗？`,
-      '此操作不可撤销.',
+      t('management.userManagement.operations.confirmDelete', { name: userName }),
+      t('management.userManagement.operations.deleteConfirmMessage'),
       async () => {
         try {
           // 先关闭模态框
@@ -284,11 +287,11 @@ const UserManagementPage: React.FC = () => {
             setUsers(users.filter(user => user._id !== userId));
             setError('');
           } else {
-            setError('删除用户失败');
+            setError(t('management.userManagement.operations.deleteFailed'));
           }
         } catch (error: any) {
           // 错误日志已清理
-          setError(error.response?.data?.error || '删除用户失败');
+          setError(error.response?.data?.error || t('management.userManagement.operations.deleteFailed'));
         }
       }
     );
@@ -315,11 +318,11 @@ const UserManagementPage: React.FC = () => {
         ));
         setError('');
       } else {
-        setError('更新用户失败');
+        setError(t('management.userManagement.operations.updateFailed'));
       }
     } catch (error: any) {
       // 错误日志已清理
-      setError(error.response?.data?.error || '更新用户失败');
+      setError(error.response?.data?.error || t('management.userManagement.operations.updateFailed'));
     }
   };
 
@@ -335,11 +338,11 @@ const UserManagementPage: React.FC = () => {
         ));
         setError('');
       } else {
-        setError('更新用户状态失败');
+        setError(t('management.userManagement.operations.updateStatusFailed'));
       }
     } catch (error: any) {
       // 错误日志已清理
-      setError(error.response?.data?.error || '更新用户状态失败');
+      setError(error.response?.data?.error || t('management.userManagement.operations.updateStatusFailed'));
     }
   };
 
@@ -362,25 +365,25 @@ const UserManagementPage: React.FC = () => {
   const getRoleBadge = (role: string) => {
     const roleConfig = {
       superadmin: { 
-        label: '超级管理员', 
+        label: t('management.userManagement.roles.superadmin'), 
         bgColor: 'bg-gradient-to-br from-amber-400 via-orange-500 to-red-500',
         textColor: 'text-white',
         borderColor: 'border-amber-200'
       },
       admin: { 
-        label: '管理员', 
+        label: t('management.userManagement.roles.admin'), 
         bgColor: 'bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600',
         textColor: 'text-white',
         borderColor: 'border-blue-200'
       },
       teacher: { 
-        label: '教师', 
+        label: t('management.userManagement.roles.teacher'), 
         bgColor: 'bg-gradient-to-br from-emerald-400 via-green-500 to-teal-600',
         textColor: 'text-white',
         borderColor: 'border-emerald-200'
       },
       student: { 
-        label: '学生', 
+        label: t('management.userManagement.roles.student'), 
         bgColor: 'bg-gradient-to-br from-slate-400 via-gray-500 to-zinc-600',
         textColor: 'text-white',
         borderColor: 'border-slate-200'
@@ -399,19 +402,19 @@ const UserManagementPage: React.FC = () => {
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       active: { 
-        label: '活跃', 
+        label: t('management.userManagement.statuses.active'), 
         bgColor: 'bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600',
         textColor: 'text-white',
         borderColor: 'border-green-200'
       },
       inactive: { 
-        label: '非活跃', 
+        label: t('management.userManagement.statuses.inactive'), 
         bgColor: 'bg-gradient-to-br from-slate-300 via-gray-400 to-zinc-500',
         textColor: 'text-white',
         borderColor: 'border-slate-200'
       },
       suspended: { 
-        label: '已暂停', 
+        label: t('management.userManagement.statuses.suspended'), 
         bgColor: 'bg-gradient-to-br from-red-400 via-pink-500 to-rose-600',
         textColor: 'text-white',
         borderColor: 'border-red-200'
@@ -429,16 +432,16 @@ const UserManagementPage: React.FC = () => {
 
   // 筛选选项
   const roleOptions = [
-    { value: 'superadmin', label: '超级管理员', icon: Shield },
-    { value: 'admin', label: '管理员', icon: Shield },
-    { value: 'teacher', label: '教师', icon: Shield },
-    { value: 'student', label: '学生', icon: Users }
+    { value: 'superadmin', label: t('management.userManagement.roles.superadmin'), icon: Shield },
+    { value: 'admin', label: t('management.userManagement.roles.admin'), icon: Shield },
+    { value: 'teacher', label: t('management.userManagement.roles.teacher'), icon: Shield },
+    { value: 'student', label: t('management.userManagement.roles.student'), icon: Users }
   ];
 
   const statusOptions = [
-    { value: 'active', label: '活跃', icon: CheckCircle },
-    { value: 'inactive', label: '非活跃', icon: XCircle },
-    { value: 'suspended', label: '已暂停', icon: XCircle }
+    { value: 'active', label: t('management.userManagement.statuses.active'), icon: CheckCircle },
+    { value: 'inactive', label: t('management.userManagement.statuses.inactive'), icon: XCircle },
+    { value: 'suspended', label: t('management.userManagement.statuses.suspended'), icon: XCircle }
   ];
 
   if (!isAdmin) {
@@ -448,8 +451,8 @@ const UserManagementPage: React.FC = () => {
   if (loading) {
     return (
       <LoadingPage 
-        title="正在加载用户列表..." 
-        description="请稍候，正在获取用户信息"
+        title={t('management.userManagement.loading.title')} 
+        description={t('management.userManagement.loading.description')}
       />
     );
   }
@@ -493,9 +496,9 @@ const UserManagementPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 dark:from-gray-100 dark:to-blue-400 bg-clip-text text-transparent">
-                  用户管理
+                  {t('management.userManagement.title')}
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">管理系统用户，分配权限和角色</p>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">{t('management.userManagement.subtitle')}</p>
               </div>
               <div className="flex items-center space-x-4">
                 {/* 用户统计面板 */}
@@ -509,7 +512,7 @@ const UserManagementPage: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                       <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                        总用户: {users.length} 人
+                        {t('management.userManagement.stats.total', { count: users.length })}
                       </span>
                     </div>
                   </motion.div>
@@ -523,7 +526,7 @@ const UserManagementPage: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                       <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                        活跃: {users.filter(u => u.status === 'active').length}
+                        {t('management.userManagement.stats.active', { count: users.filter(u => u.status === 'active').length })}
                       </span>
                     </div>
                   </motion.div>
@@ -537,7 +540,7 @@ const UserManagementPage: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                       <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
-                        管理员: {users.filter(u => u.role === 'admin' || u.role === 'superadmin').length}
+                        {t('management.userManagement.stats.admins', { count: users.filter(u => u.role === 'admin' || u.role === 'superadmin').length })}
                       </span>
                     </div>
                   </motion.div>
@@ -561,7 +564,7 @@ const UserManagementPage: React.FC = () => {
                 <div className="relative max-w-md">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
                   <Input
-                    placeholder="搜索用户名或邮箱..."
+                    placeholder={t('management.userManagement.search.placeholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-12 pr-4 py-3 bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm border-gray-200 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-sm font-medium"
@@ -575,8 +578,8 @@ const UserManagementPage: React.FC = () => {
                       options={roleOptions}
                       value={roleFilter}
                       onChange={(value) => setRoleFilter(value as string)}
-                      placeholder="所有角色"
-                      label="角色筛选"
+                      placeholder={t('management.userManagement.filters.role.placeholder')}
+                      label={t('management.userManagement.filters.role.label')}
                       className="w-full"
                     />
                   </div>
@@ -585,8 +588,8 @@ const UserManagementPage: React.FC = () => {
                       options={statusOptions}
                       value={statusFilter}
                       onChange={(value) => setStatusFilter(value as string)}
-                      placeholder="所有状态"
-                      label="状态筛选"
+                      placeholder={t('management.userManagement.filters.status.placeholder')}
+                      label={t('management.userManagement.filters.status.label')}
                       className="w-full"
                     />
                   </div>
@@ -597,7 +600,7 @@ const UserManagementPage: React.FC = () => {
                       onClick={handleResetFilters}
                     >
                       <Filter className="w-4 h-4" />
-                      重置筛选
+                      {t('management.userManagement.filters.reset')}
                     </Button>
                   </div>
                 </div>
@@ -615,9 +618,9 @@ const UserManagementPage: React.FC = () => {
           <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl overflow-hidden">
             <div className="p-6 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/20">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">用户列表</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('management.userManagement.userList.title')}</h2>
                 <span className="text-sm text-gray-500 dark:text-gray-400 bg-white/50 dark:bg-gray-700/50 px-3 py-1 rounded-full">
-                  共 {filteredUsers.length} 个用户
+                  {t('management.userManagement.userList.count', { count: filteredUsers.length })}
                 </span>
               </div>
             </div>
@@ -625,19 +628,19 @@ const UserManagementPage: React.FC = () => {
             {loading ? (
               <div className="p-12 text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600 dark:text-gray-400">正在加载用户数据...</p>
+                <p className="text-gray-600 dark:text-gray-400">{t('management.userManagement.userList.loading')}</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50/50 dark:bg-gray-700/50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">用户信息</th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">角色</th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">状态</th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">最后登录</th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">注册时间</th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">操作</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('management.userManagement.table.userInfo')}</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('management.userManagement.table.role')}</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('management.userManagement.table.status')}</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('management.userManagement.table.lastLogin')}</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('management.userManagement.table.registeredAt')}</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('management.userManagement.table.actions')}</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white/50 dark:bg-gray-800/50 divide-y divide-gray-100 dark:divide-gray-700">
@@ -646,7 +649,7 @@ const UserManagementPage: React.FC = () => {
                         <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                           <div className="flex flex-col items-center gap-2">
                             <Users className="w-8 h-8 text-gray-300 dark:text-gray-600" />
-                            <span>暂无用户数据</span>
+                            <span>{t('management.userManagement.userList.noData')}</span>
                           </div>
                         </td>
                       </tr>
@@ -699,7 +702,7 @@ const UserManagementPage: React.FC = () => {
                                   onClick={() => handleUpdateUserStatus(user._id, user.status !== 'active')}
                                   className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
                                 >
-                                  {user.status === 'active' ? '停用' : '启用'}
+                                  {user.status === 'active' ? t('management.userManagement.actions.deactivate') : t('management.userManagement.actions.activate')}
                                 </button>
                               )}
                             </div>
@@ -707,7 +710,7 @@ const UserManagementPage: React.FC = () => {
                           <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : '从未登录'}
+                              {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : t('management.userManagement.table.neverLoggedIn')}
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
@@ -729,7 +732,7 @@ const UserManagementPage: React.FC = () => {
                                   }}
                                 >
                                   <Edit className="w-3.5 h-3.5" />
-                                  <span className="text-xs font-medium">编辑</span>
+                                  <span className="text-xs font-medium">{t('management.userManagement.actions.edit')}</span>
                                 </Button>
                               )}
                               <Button 
@@ -740,7 +743,7 @@ const UserManagementPage: React.FC = () => {
                                 disabled={user.role === 'superadmin'}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
-                                <span className="text-xs font-medium">删除</span>
+                                <span className="text-xs font-medium">{t('management.userManagement.actions.delete')}</span>
                               </Button>
                             </div>
                           </td>

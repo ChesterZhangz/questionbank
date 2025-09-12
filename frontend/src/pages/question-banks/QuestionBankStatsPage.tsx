@@ -22,6 +22,7 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import { renderContentWithCache } from '../../lib/latex/utils/renderContent';
 import LoadingPage from '../../components/ui/LoadingPage';
+import { useTranslation } from '../../hooks/useTranslation';
 
 /**
  * 统计分析页面 - 简化版本
@@ -78,6 +79,7 @@ interface QuestionBankStats {
 const QuestionBankStatsPage: React.FC = () => {
   const { bid } = useParams<{ bid: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   // const { user } = useAuthStore();
   
   // 状态管理
@@ -165,11 +167,11 @@ const QuestionBankStatsPage: React.FC = () => {
           setLastRefreshTime(new Date());
         }
       } else {
-        setError('获取统计数据失败');
+        setError(t('questionBankPage.QuestionBankStatsPage.errors.loadFailed'));
       }
     } catch (error: any) {
       // 错误日志已清理
-      setError(error.response?.data?.error || '获取统计数据失败，请稍后重试');
+      setError(error.response?.data?.error || t('questionBankPage.QuestionBankStatsPage.errors.loadFailedRetry'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -195,16 +197,16 @@ const QuestionBankStatsPage: React.FC = () => {
     const issues: string[] = [];
     
     if (stats.tagCoverage > 100) {
-      issues.push(`标签覆盖率异常: ${stats.tagCoverage}%`);
+      issues.push(t('questionBankPage.QuestionBankStatsPage.dataQuality.tagCoverageAnomaly', { value: stats.tagCoverage }));
     }
     if (stats.duplicateRate > 100) {
-      issues.push(`重复率异常: ${stats.duplicateRate}%`);
+      issues.push(t('questionBankPage.QuestionBankStatsPage.dataQuality.duplicateRateAnomaly', { value: stats.duplicateRate }));
     }
     if (stats.averageDifficulty < 0 || stats.averageDifficulty > 5) {
-      issues.push(`平均难度异常: ${stats.averageDifficulty}`);
+      issues.push(t('questionBankPage.QuestionBankStatsPage.dataQuality.averageDifficultyAnomaly', { value: stats.averageDifficulty }));
     }
     if (stats.totalQuestions < 0) {
-      issues.push(`总题目数异常: ${stats.totalQuestions}`);
+      issues.push(t('questionBankPage.QuestionBankStatsPage.dataQuality.totalQuestionsAnomaly', { value: stats.totalQuestions }));
     }
     
     if (issues.length > 0) {
@@ -328,23 +330,23 @@ const QuestionBankStatsPage: React.FC = () => {
 
   // 格式化最后活跃时间
   const formatLastActive = useCallback((lastActive: string | null | undefined) => {
-    if (!lastActive) return '未知';
+    if (!lastActive) return t('questionBankPage.QuestionBankStatsPage.time.unknown');
     
     try {
       const date = new Date(lastActive);
-      if (isNaN(date.getTime())) return '未知';
+      if (isNaN(date.getTime())) return t('questionBankPage.QuestionBankStatsPage.time.unknown');
       
       const now = new Date();
       const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
       
       if (diffInDays === 0) {
-        return '今天';
+        return t('questionBankPage.QuestionBankStatsPage.time.today');
       } else if (diffInDays === 1) {
-        return '昨天';
+        return t('questionBankPage.QuestionBankStatsPage.time.yesterday');
       } else if (diffInDays < 7) {
-        return `${diffInDays}天前`;
+        return t('questionBankPage.QuestionBankStatsPage.time.daysAgo', { days: diffInDays });
       } else if (diffInDays < 30) {
-        return `${Math.floor(diffInDays / 7)}周前`;
+        return t('questionBankPage.QuestionBankStatsPage.time.weeksAgo', { weeks: Math.floor(diffInDays / 7) });
       } else {
         return date.toLocaleDateString('zh-CN', { 
           year: 'numeric', 
@@ -354,9 +356,9 @@ const QuestionBankStatsPage: React.FC = () => {
       }
     } catch (error) {
       
-      return '未知';
+      return t('questionBankPage.QuestionBankStatsPage.time.unknown');
     }
-  }, []);
+  }, [t]);
 
 
   if (loading && !stats) {
@@ -369,8 +371,8 @@ const QuestionBankStatsPage: React.FC = () => {
         <div className="text-center max-w-md">
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-6">
             <AlertTriangle className="w-12 w-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-red-800 dark:text-red-200 mb-2">加载失败</h3>
-            <p className="text-red-600 dark:text-red-400 mb-4">{error || '无法加载统计数据'}</p>
+            <h3 className="text-lg font-medium text-red-800 dark:text-red-200 mb-2">{t('questionBankPage.QuestionBankStatsPage.errors.loadFailed')}</h3>
+            <p className="text-red-600 dark:text-red-400 mb-4">{error || t('questionBankPage.QuestionBankStatsPage.errors.cannotLoadStats')}</p>
             <div className="flex items-center justify-center gap-3">
               <Button 
                 onClick={handleRefresh}
@@ -380,12 +382,12 @@ const QuestionBankStatsPage: React.FC = () => {
                 {refreshing ? (
                   <>
                     <RefreshCw className="w-4 w-4 mr-2 animate-spin" />
-                    重试中...
+                    {t('questionBankPage.QuestionBankStatsPage.buttons.retrying')}
                   </>
                 ) : (
                   <>
                     <RefreshCw className="w-4 w-4 mr-2" />
-                    重试
+                    {t('questionBankPage.QuestionBankStatsPage.buttons.retry')}
                   </>
                 )}
               </Button>
@@ -393,7 +395,7 @@ const QuestionBankStatsPage: React.FC = () => {
                 variant="outline"
                 onClick={() => navigate(-1)}
               >
-                返回
+                {t('questionBankPage.QuestionBankStatsPage.buttons.back')}
               </Button>
             </div>
           </div>
@@ -419,7 +421,7 @@ const QuestionBankStatsPage: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
                   <div>
-                    <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">数据质量警告</h4>
+                    <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">{t('questionBankPage.QuestionBankStatsPage.dataQuality.title')}</h4>
                     <div className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
                       {dataQualityIssues.map((issue, index) => (
                         <div key={index}>• {issue}</div>
@@ -455,7 +457,7 @@ const QuestionBankStatsPage: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: 0.05 }}
               >
-                {questionBank.name} - 统计分析
+                {questionBank.name} - {t('questionBankPage.QuestionBankStatsPage.title')}
               </motion.h1>
               <motion.p 
                 className="text-sm text-gray-500 dark:text-gray-400 mt-1"
@@ -463,7 +465,7 @@ const QuestionBankStatsPage: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
               >
-                深入了解题库的使用情况和数据质量
+                {t('questionBankPage.QuestionBankStatsPage.subtitle')}
               </motion.p>
             </div>
           </div>
@@ -475,7 +477,7 @@ const QuestionBankStatsPage: React.FC = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-xs text-gray-400 dark:text-gray-500"
               >
-                最后更新: {lastRefreshTime.toLocaleTimeString()}
+                {t('questionBankPage.QuestionBankStatsPage.lastUpdate')}: {lastRefreshTime.toLocaleTimeString()}
               </motion.div>
             )}
             
@@ -497,7 +499,7 @@ const QuestionBankStatsPage: React.FC = () => {
                 >
                   <RefreshCw className="w-4 h-4" />
                 </motion.div>
-                {refreshing ? '刷新中' : '刷新'}
+                {refreshing ? t('questionBankPage.QuestionBankStatsPage.buttons.refreshing') : t('questionBankPage.QuestionBankStatsPage.buttons.refresh')}
               </Button>
             </motion.div>
 
@@ -513,7 +515,7 @@ const QuestionBankStatsPage: React.FC = () => {
                 className="flex items-center gap-2"
               >
                 <Download className="w-4 h-4" />
-                导出报告
+                {t('questionBankPage.QuestionBankStatsPage.buttons.exportReport')}
               </Button>
             </motion.div>
           </div>
@@ -527,10 +529,10 @@ const QuestionBankStatsPage: React.FC = () => {
           transition={{ duration: 0.4, delay: 0.15 }}
         >
           {[
-            { key: 'overview', label: '概览', icon: BarChart3 },
-            { key: 'questions', label: '题目统计', icon: FileText },
-            { key: 'usage', label: '使用情况', icon: TrendingUp },
-            { key: 'members', label: '成员活动', icon: Users }
+            { key: 'overview', label: t('questionBankPage.QuestionBankStatsPage.tabs.overview'), icon: BarChart3 },
+            { key: 'questions', label: t('questionBankPage.QuestionBankStatsPage.tabs.questions'), icon: FileText },
+            { key: 'usage', label: t('questionBankPage.QuestionBankStatsPage.tabs.usage'), icon: TrendingUp },
+            { key: 'members', label: t('questionBankPage.QuestionBankStatsPage.tabs.members'), icon: Users }
           ].map((tab, index) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;
@@ -576,7 +578,7 @@ const QuestionBankStatsPage: React.FC = () => {
                 className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 flex items-center gap-2"
               >
                 <RefreshCw className="w-4 h-4 text-blue-600 dark:text-blue-400 animate-spin" />
-                <span className="text-sm text-blue-700 dark:text-blue-300">正在刷新数据...</span>
+                <span className="text-sm text-blue-700 dark:text-blue-300">{t('questionBankPage.QuestionBankStatsPage.refreshingData')}</span>
               </motion.div>
             )}
 
@@ -603,7 +605,7 @@ const QuestionBankStatsPage: React.FC = () => {
                               className="text-2xl font-bold text-gray-900 dark:text-gray-100"
                             />
                           </div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">题目总数</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankStatsPage.stats.totalQuestions')}</div>
                         </div>
                       </div>
                     </div>
@@ -632,7 +634,7 @@ const QuestionBankStatsPage: React.FC = () => {
                               className="text-2xl font-bold text-gray-900 dark:text-gray-100"
                             />
                           </div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">总访问量</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankStatsPage.stats.totalViews')}</div>
                         </div>
                       </div>
                     </div>
@@ -660,7 +662,7 @@ const QuestionBankStatsPage: React.FC = () => {
                             className="text-2xl font-bold text-gray-900 dark:text-gray-100"
                           />
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">活跃成员</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankStatsPage.stats.activeMembers')}</div>
                       </div>
                     </div>
                   </div>
@@ -687,7 +689,7 @@ const QuestionBankStatsPage: React.FC = () => {
                             className="text-2xl font-bold text-gray-900 dark:text-gray-100"
                           />
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">平均难度</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankStatsPage.stats.averageDifficulty')}</div>
                       </div>
                     </div>
                   </div>
@@ -702,20 +704,20 @@ const QuestionBankStatsPage: React.FC = () => {
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
                   <div className="p-6">
                     <div className="mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">题目类型分布</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('questionBankPage.QuestionBankStatsPage.charts.questionTypeDistribution')}</h3>
                     </div>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-blue-500 dark:bg-blue-600 rounded-full"></div>
-                          <span className="text-sm text-gray-700 dark:text-gray-300">选择题</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{t('questionBankPage.QuestionBankStatsPage.questionTypes.choice')}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           <AnimatedNumber 
                             value={stats.questionTypes.choice} 
                             format="number"
                             className="text-sm font-medium text-gray-900 dark:text-gray-100"
-                          /> 题 ({calculatePercentage(stats.questionTypes.choice, stats.totalQuestions)}%)
+                          /> {t('questionBankPage.QuestionBankStatsPage.units.questions')} ({calculatePercentage(stats.questionTypes.choice, stats.totalQuestions)}%)
                         </span>
                       </div>
                       <AnimatedProgressBar 
@@ -726,7 +728,7 @@ const QuestionBankStatsPage: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-green-500 dark:bg-green-600 rounded-full"></div>
-                          <span className="text-sm text-gray-700 dark:text-gray-300">填空题</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{t('questionBankPage.QuestionBankStatsPage.questionTypes.fill')}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           <AnimatedNumber 
@@ -744,7 +746,7 @@ const QuestionBankStatsPage: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-purple-500 dark:bg-purple-600 rounded-full"></div>
-                          <span className="text-sm text-gray-700 dark:text-gray-300">多选题</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{t('questionBankPage.QuestionBankStatsPage.questionTypes.multipleChoice')}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           <AnimatedNumber 
@@ -762,7 +764,7 @@ const QuestionBankStatsPage: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-orange-500 dark:bg-orange-600 rounded-full"></div>
-                          <span className="text-sm text-gray-700 dark:text-gray-300">解答题</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{t('questionBankPage.QuestionBankStatsPage.questionTypes.solution')}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           <AnimatedNumber 
@@ -785,12 +787,12 @@ const QuestionBankStatsPage: React.FC = () => {
               <AnimatedCard delay={0.3}>
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
                   <div className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">质量分析</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('questionBankPage.QuestionBankStatsPage.charts.qualityAnalysis')}</h3>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">标签覆盖率</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{t('questionBankPage.QuestionBankStatsPage.quality.tagCoverage')}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           <AnimatedNumber 
@@ -808,7 +810,7 @@ const QuestionBankStatsPage: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">重复率</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{t('questionBankPage.QuestionBankStatsPage.quality.duplicateRate')}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           <AnimatedNumber 
@@ -826,7 +828,7 @@ const QuestionBankStatsPage: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Star className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">平均难度</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{t('questionBankPage.QuestionBankStatsPage.quality.averageDifficulty')}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           <AnimatedNumber 
@@ -844,7 +846,7 @@ const QuestionBankStatsPage: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Activity className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">题目完整度</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{t('questionBankPage.QuestionBankStatsPage.quality.questionCompleteness')}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           <AnimatedNumber 
@@ -866,7 +868,7 @@ const QuestionBankStatsPage: React.FC = () => {
               <AnimatedCard delay={0.35}>
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
                   <div className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">最近活动</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('questionBankPage.QuestionBankStatsPage.charts.recentActivity')}</h3>
                     <div className="space-y-3">
                       {stats.memberActivity.slice(0, 5).map((member, index) => (
                         <motion.div 
@@ -891,7 +893,7 @@ const QuestionBankStatsPage: React.FC = () => {
                               </span>
                             </motion.div>
                             <div>
-                              <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{member.name || '未知用户'}</div>
+                              <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{member.name || t('questionBankPage.QuestionBankStatsPage.members.unknownUser')}</div>
                               <div className="text-xs text-gray-500 dark:text-gray-400">{member.role}</div>
                             </div>
                           </div>
@@ -904,7 +906,7 @@ const QuestionBankStatsPage: React.FC = () => {
                                 value={member.questionCount} 
                                 format="number"
                                 className="text-xs text-gray-400 dark:text-gray-500"
-                              /> 题
+                              /> {t('questionBankPage.QuestionBankStatsPage.units.questions')}
                             </div>
                           </div>
                         </motion.div>
@@ -929,19 +931,19 @@ const QuestionBankStatsPage: React.FC = () => {
               <AnimatedCard delay={0.5}>
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
                   <div className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">题目类型分布</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('questionBankPage.QuestionBankStatsPage.charts.questionTypeDistribution')}</h3>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-blue-500 dark:bg-blue-600 rounded-full"></div>
-                          <span className="text-sm text-gray-700 dark:text-gray-300">选择题</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{t('questionBankPage.QuestionBankStatsPage.questionTypes.choice')}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           <AnimatedNumber 
                             value={stats.questionTypes.choice} 
                             format="number"
                             className="text-sm font-medium text-gray-900 dark:text-gray-100"
-                          /> 题 ({calculatePercentage(stats.questionTypes.choice, stats.totalQuestions)}%)
+                          /> {t('questionBankPage.QuestionBankStatsPage.units.questions')} ({calculatePercentage(stats.questionTypes.choice, stats.totalQuestions)}%)
                         </span>
                       </div>
                       <AnimatedProgressBar 
@@ -952,7 +954,7 @@ const QuestionBankStatsPage: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-green-500 dark:bg-green-600 rounded-full"></div>
-                          <span className="text-sm text-gray-700 dark:text-gray-300">填空题</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{t('questionBankPage.QuestionBankStatsPage.questionTypes.fill')}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           <AnimatedNumber 
@@ -970,7 +972,7 @@ const QuestionBankStatsPage: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-purple-500 dark:bg-purple-600 rounded-full"></div>
-                          <span className="text-sm text-gray-700 dark:text-gray-300">多选题</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{t('questionBankPage.QuestionBankStatsPage.questionTypes.multipleChoice')}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           <AnimatedNumber 
@@ -988,7 +990,7 @@ const QuestionBankStatsPage: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-orange-500 dark:bg-orange-600 rounded-full"></div>
-                          <span className="text-sm text-gray-700 dark:text-gray-300">解答题</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{t('questionBankPage.QuestionBankStatsPage.questionTypes.solution')}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           <AnimatedNumber 
@@ -1011,12 +1013,12 @@ const QuestionBankStatsPage: React.FC = () => {
               <AnimatedCard delay={0.7}>
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
                   <div className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">难度分布</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('questionBankPage.QuestionBankStatsPage.charts.difficultyDistribution')}</h3>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-green-500 dark:bg-green-600 rounded-full"></div>
-                          <span className="text-sm text-gray-700 dark:text-gray-300">简单 (1-2星)</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{t('questionBankPage.QuestionBankStatsPage.difficulty.easy')}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           <AnimatedNumber 
@@ -1034,7 +1036,7 @@ const QuestionBankStatsPage: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-yellow-500 dark:bg-yellow-600 rounded-full"></div>
-                          <span className="text-sm text-gray-700 dark:text-gray-300">中等 (3星)</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{t('questionBankPage.QuestionBankStatsPage.difficulty.medium')}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           <AnimatedNumber 
@@ -1052,7 +1054,7 @@ const QuestionBankStatsPage: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-red-500 dark:bg-red-600 rounded-full"></div>
-                          <span className="text-sm text-gray-700 dark:text-gray-300">困难 (4-5星)</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{t('questionBankPage.QuestionBankStatsPage.difficulty.hard')}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           <AnimatedNumber 
@@ -1076,7 +1078,7 @@ const QuestionBankStatsPage: React.FC = () => {
             <AnimatedCard delay={0.4}>
               <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">热门题目 TOP 5</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('questionBankPage.QuestionBankStatsPage.charts.popularQuestions')}</h3>
                   <div className="space-y-3">
                     {stats.popularQuestions.map((question, index) => (
                       <motion.div 
@@ -1140,7 +1142,7 @@ const QuestionBankStatsPage: React.FC = () => {
             <AnimatedCard delay={0.1}>
               <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">访问趋势</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('questionBankPage.QuestionBankStatsPage.charts.visitTrend')}</h3>
                   <div className="h-64 flex items-end justify-between gap-2">
                     {stats.monthlyViews.map((data, index) => {
                       const maxCount = Math.max(...stats.monthlyViews.map(d => d.count));
@@ -1189,7 +1191,7 @@ const QuestionBankStatsPage: React.FC = () => {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.4, delay: 0.8 }}
                   >
-                    最近6个月访问量统计
+                    {t('questionBankPage.QuestionBankStatsPage.charts.lastSixMonthsStats')}
                   </motion.div>
                 </div>
               </Card>
@@ -1215,7 +1217,7 @@ const QuestionBankStatsPage: React.FC = () => {
                         className="text-2xl font-bold text-gray-900 dark:text-gray-100"
                       />
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">月均访问量</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankStatsPage.stats.monthlyAverageViews')}</div>
                   </div>
                 </Card>
               </AnimatedCard>
@@ -1238,7 +1240,7 @@ const QuestionBankStatsPage: React.FC = () => {
                         className="text-2xl font-bold text-gray-900 dark:text-gray-100"
                       />
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">题目平均访问量</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankStatsPage.stats.averageViewsPerQuestion')}</div>
                   </div>
                 </Card>
               </AnimatedCard>
@@ -1261,7 +1263,7 @@ const QuestionBankStatsPage: React.FC = () => {
                         className="text-2xl font-bold text-gray-900 dark:text-gray-100"
                       />
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">最高单题访问量</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankStatsPage.stats.highestSingleQuestionViews')}</div>
                   </div>
                 </Card>
               </AnimatedCard>
@@ -1279,7 +1281,7 @@ const QuestionBankStatsPage: React.FC = () => {
             <AnimatedCard delay={0.1}>
               <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">成员活跃度</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('questionBankPage.QuestionBankStatsPage.charts.memberActivity')}</h3>
                   <div className="space-y-4">
                     {stats.memberActivity.map((member, index) => (
                       <motion.div 
@@ -1308,7 +1310,7 @@ const QuestionBankStatsPage: React.FC = () => {
                             </span>
                           </motion.div>
                           <div>
-                            <div className="font-medium text-gray-900 dark:text-gray-100">{member.name || '未知用户'}</div>
+                            <div className="font-medium text-gray-900 dark:text-gray-100">{member.name || t('questionBankPage.QuestionBankStatsPage.members.unknownUser')}</div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">{member.role}</div>
                           </div>
                         </div>
@@ -1321,7 +1323,7 @@ const QuestionBankStatsPage: React.FC = () => {
                               value={member.questionCount} 
                               format="number"
                               className="text-sm font-medium text-gray-900 dark:text-gray-100"
-                            /> 题
+                            /> {t('questionBankPage.QuestionBankStatsPage.units.questions')}
                           </div>
                         </div>
                       </motion.div>

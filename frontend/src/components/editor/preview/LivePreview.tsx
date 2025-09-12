@@ -1,6 +1,7 @@
 import React from 'react';
 import LaTeXPreview from './LaTeXPreview';
 import type { RenderConfig, LaTeXRenderResult } from '../../../lib/latex/types';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface LivePreviewProps {
   content: string;
@@ -17,10 +18,11 @@ const LivePreview: React.FC<LivePreviewProps> = ({
   isEditing,
   config = { mode: 'full' },
   className = '',
-  title = '实时预览',
+  title,
   variant = 'default',
   onRenderComplete
 }) => {
+  const { t } = useTranslation();
   if (!isEditing) return null;
   
   return (
@@ -28,7 +30,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
       content={content}
       config={config}
       className={className}
-      title={title}
+      title={title || t('editor.preview.livePreview')}
       variant={variant}
       onRenderComplete={onRenderComplete}
     />

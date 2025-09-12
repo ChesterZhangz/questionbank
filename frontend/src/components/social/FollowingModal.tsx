@@ -7,6 +7,7 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import LoadingPage from '../ui/LoadingPage';
 import type { User } from '../../types';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface FollowingModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface FollowingModalProps {
 }
 
 const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose, userId }) => {
+  const { t } = useTranslation();
   const [following, setFollowing] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -30,11 +32,11 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose, userId
       if (response.data.success && response.data.data) {
         setFollowing(response.data.data);
       } else {
-        setError(response.data.error || '获取关注列表失败');
+        setError(response.data.error || t('social.getFollowingFailed'));
       }
     } catch (error: any) {
       // 错误日志已清理
-      setError(error.response?.data?.error || '获取关注列表失败');
+      setError(error.response?.data?.error || t('social.getFollowingFailed'));
     } finally {
       setLoading(false);
     }
@@ -83,11 +85,11 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose, userId
 
   const getRoleText = (role: string) => {
     switch (role) {
-      case 'superadmin': return '超级管理员';
-      case 'admin': return '管理员';
-      case 'teacher': return '教师';
-      case 'student': return '学生';
-      default: return '用户';
+      case 'superadmin': return t('social.roles.superadmin');
+      case 'admin': return t('social.roles.admin');
+      case 'teacher': return t('social.roles.teacher');
+      case 'student': return t('social.roles.student');
+      default: return t('social.roles.user');
     }
   };
 
@@ -116,8 +118,8 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose, userId
                     <UserPlus className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">我的关注</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">查看您关注的用户</p>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('social.myFollowing')}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('social.viewFollowingUsers')}</p>
                   </div>
                 </div>
                 <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
@@ -129,7 +131,7 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose, userId
             {/* 搜索 */}
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <Input
-                placeholder="搜索关注的用户..."
+                placeholder={t('social.searchFollowing')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 icon={<Search className="w-4 h-4" />}
@@ -144,13 +146,13 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose, userId
                 <div className="text-center py-12">
                   <UserPlus className="w-12 h-12 text-red-500 mx-auto mb-4" />
                   <p className="text-gray-600 dark:text-gray-400">{error}</p>
-                  <Button onClick={fetchFollowing} className="mt-4">重试</Button>
+                  <Button onClick={fetchFollowing} className="mt-4">{t('social.retry')}</Button>
                 </div>
               ) : filteredFollowing.length === 0 ? (
                 <div className="text-center py-12">
                   <UserPlus className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
                   <p className="text-gray-600 dark:text-gray-400">
-                    {searchTerm ? '没有找到匹配的关注用户' : '您还没有关注任何用户'}
+                    {searchTerm ? t('social.noMatchingFollowing') : t('social.noFollowing')}
                   </p>
                 </div>
               ) : (
@@ -179,7 +181,7 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose, userId
                           <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              <span>最近注册</span>
+                              <span>{t('social.recentlyRegistered')}</span>
                             </div>
                           </div>
                         </div>
@@ -188,7 +190,7 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose, userId
                         <div className="flex items-center gap-2">
                           <Button variant="outline" size="sm" className="flex items-center gap-1">
                             <Mail className="w-3 h-3" />
-                            发消息
+                            {t('social.sendMessage')}
                           </Button>
                           <Button
                             variant="outline"
@@ -198,7 +200,7 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose, userId
                             loading={unfollowingId === user._id}
                           >
                             <UserMinus className="w-3 h-3" />
-                            取消关注
+                            {t('social.unfollow')}
                           </Button>
                         </div>
                       </div>
@@ -211,8 +213,8 @@ const FollowingModal: React.FC<FollowingModalProps> = ({ isOpen, onClose, userId
             {/* 底部统计 */}
             <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-600 dark:text-gray-400">共 {following.length} 个关注</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">最近更新: {new Date().toLocaleDateString()}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t('social.totalFollowing', { count: following.length })}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('social.lastUpdated')}: {new Date().toLocaleDateString()}</p>
               </div>
             </div>
           </motion.div>

@@ -8,6 +8,7 @@ import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
 import { FuzzySelect } from '../../components/ui/menu';
 import { getCategoryOptions, getSubcategoryOptions } from '../../config/paperBankCategories';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface CreatePaperBankRequest {
   name: string;
@@ -19,6 +20,7 @@ interface CreatePaperBankRequest {
 }
 
 const CreatePaperBankPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<CreatePaperBankRequest>({
     name: '',
@@ -91,19 +93,19 @@ const CreatePaperBankPage: React.FC = () => {
     const newErrors: Record<string, string> = {};
     
     if (!formData.name.trim()) {
-      newErrors.name = '请输入试卷集名称';
+      newErrors.name = t('paperBanks.validation.nameRequired');
     }
     
     if (formData.name.length > 50) {
-      newErrors.name = '试卷集名称不能超过50个字符';
+      newErrors.name = t('paperBanks.validation.maxLength', { max: 50 });
     }
     
     if (!formData.category) {
-      newErrors.category = '请选择分类';
+      newErrors.category = t('paperBanks.validation.categoryRequired');
     }
     
     if (formData.description && formData.description.length > 500) {
-      newErrors.description = '试卷集描述不能超过500个字符';
+      newErrors.description = t('paperBanks.validation.maxLength', { max: 500 });
     }
     
     setErrors(newErrors);
@@ -123,10 +125,10 @@ const CreatePaperBankPage: React.FC = () => {
       if (response.data.success) {
         navigate('/paper-banks');
       } else {
-        setErrors({ general: '创建试卷集失败' });
+        setErrors({ general: t('paperBanks.createPage.createFailed') });
       }
     } catch (error: any) {
-      setErrors({ general: error.response?.data?.error || '创建试卷集失败' });
+      setErrors({ general: error.response?.data?.error || t('paperBanks.createPage.createFailed') });
     } finally {
       setIsSubmitting(false);
     }
@@ -162,9 +164,9 @@ const CreatePaperBankPage: React.FC = () => {
               </motion.button>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 dark:from-gray-100 to-blue-600 dark:to-blue-400 bg-clip-text text-transparent">
-                  创建试卷集
+                  {t('paperBanks.createPage.title')}
                 </h1>
-                <p className="text-gray-600 dark:text-gray-300 mt-1">创建新的试卷集，支持分类管理和标签系统</p>
+                <p className="text-gray-600 dark:text-gray-300 mt-1">{t('paperBanks.createPage.pageDescription')}</p>
               </div>
             </div>
           </div>
@@ -184,18 +186,18 @@ const CreatePaperBankPage: React.FC = () => {
               <div className="space-y-6">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                   <Calculator className="w-5 h-5 text-blue-600" />
-                  基本信息
+                  {t('paperBanks.createPage.basicInfo')}
                 </h2>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    试卷集名称 *
+                    {t('paperBanks.createPage.name')} {t('paperBanks.createPage.nameRequired')}
                   </label>
                   <Input
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    placeholder="请输入试卷集名称"
+                    placeholder={t('paperBanks.createPage.namePlaceholder')}
                     error={errors.name}
                     maxLength={50}
                   />
@@ -203,13 +205,13 @@ const CreatePaperBankPage: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    试卷集描述
+                    {t('paperBanks.createPage.description')}
                   </label>
                   <textarea
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
-                    placeholder="请描述试卷集的内容、特点和使用说明..."
+                    placeholder={t('paperBanks.createPage.descriptionPlaceholder')}
                     rows={4}
                     maxLength={500}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
@@ -229,19 +231,19 @@ const CreatePaperBankPage: React.FC = () => {
               <div className="space-y-6">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                   <Target className="w-5 h-5 text-green-600" />
-                  分类设置
+                  {t('paperBanks.createPage.categorySettings')}
                 </h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      主分类 *
+                      {t('paperBanks.createPage.mainCategory')} {t('paperBanks.createPage.mainCategoryRequired')}
                     </label>
                     <FuzzySelect
-                      options={getCategoryOptions()}
+                      options={getCategoryOptions(t)}
                       value={formData.category}
                       onChange={handleCategoryChange}
-                      placeholder="选择主分类"
+                      placeholder={t('paperBanks.createPage.selectCategory')}
                       label=""
                     />
                     {errors.category && (
@@ -251,13 +253,13 @@ const CreatePaperBankPage: React.FC = () => {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      子分类
+                      {t('paperBanks.createPage.subcategory')}
                     </label>
                                          <FuzzySelect
-                       options={formData.category ? getSubcategoryOptions(formData.category) : []}
+                        options={formData.category ? getSubcategoryOptions(formData.category, t) : []}
                        value={formData.subcategory || ''}
                        onChange={handleSubcategoryChange}
-                       placeholder={formData.category ? "选择子分类" : "请先选择主分类"}
+                       placeholder={formData.category ? t('paperBanks.createPage.selectSubcategory') : t('paperBanks.createPage.selectCategoryFirst')}
                        label=""
                        disabled={!formData.category}
                      />
@@ -278,16 +280,16 @@ const CreatePaperBankPage: React.FC = () => {
                       {getCategoryIcon(formData.category)}
                       <div>
                         <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                          已选择分类：
+                          {t('paperBanks.createPage.selectedCategory')}
                         </span>
                         <span className="text-sm text-blue-800 dark:text-blue-200 ml-1">
-                          {getCategoryOptions().find(cat => cat.value === formData.category)?.label}
+                          {getCategoryOptions(t).find(cat => cat.value === formData.category)?.label}
                         </span>
                         {formData.subcategory && (
                           <>
                             <span className="text-sm text-blue-700 dark:text-blue-300 mx-2">→</span>
                             <span className="text-sm text-blue-800 dark:text-blue-200">
-                              {getSubcategoryOptions(formData.category).find(sub => sub.value === formData.subcategory)?.label}
+                              {getSubcategoryOptions(formData.category, t).find(sub => sub.value === formData.subcategory)?.label}
                             </span>
                           </>
                         )}
@@ -301,7 +303,7 @@ const CreatePaperBankPage: React.FC = () => {
               <div className="space-y-6">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                   <Tag className="w-5 h-5 text-purple-600" />
-                  标签管理
+                  {t('paperBanks.createPage.tagManagement')}
                 </h2>
                 
                 <div>
@@ -309,7 +311,7 @@ const CreatePaperBankPage: React.FC = () => {
                     <Input
                       value={customTagInput}
                       onChange={(e) => setCustomTagInput(e.target.value)}
-                      placeholder="输入自定义标签"
+                      placeholder={t('paperBanks.createPage.tagPlaceholder')}
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCustomTag())}
                     />
                     <Button
@@ -320,6 +322,7 @@ const CreatePaperBankPage: React.FC = () => {
                       className="px-4"
                     >
                       <Plus className="w-4 h-4" />
+                      {t('paperBanks.createPage.addTag')}
                     </Button>
                   </div>
                   {formData.customTags.length > 0 && (
@@ -348,7 +351,7 @@ const CreatePaperBankPage: React.FC = () => {
               <div className="space-y-6">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                   <Settings className="w-5 h-5 text-orange-600" />
-                  高级设置
+                  {t('paperBanks.createPage.advancedSettings')}
                 </h2>
                 
                 <div className="space-y-4">
@@ -361,7 +364,7 @@ const CreatePaperBankPage: React.FC = () => {
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                      允许协作编辑（其他用户可以参与编辑）
+                      {t('paperBanks.createPage.allowCollaboration')}
                     </span>
                   </label>
                 </div>
@@ -382,7 +385,7 @@ const CreatePaperBankPage: React.FC = () => {
                   onClick={() => navigate('/paper-banks')}
                   disabled={isSubmitting}
                 >
-                  取消
+                  {t('paperBanks.createPage.cancelCreate')}
                 </Button>
                 <Button
                   type="submit"
@@ -392,12 +395,12 @@ const CreatePaperBankPage: React.FC = () => {
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      创建中...
+                      {t('paperBanks.createPage.creating')}
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <Save className="w-4 h-4" />
-                      创建试卷集
+                      {t('paperBanks.createPage.createPaperBank')}
                     </div>
                   )}
                 </Button>

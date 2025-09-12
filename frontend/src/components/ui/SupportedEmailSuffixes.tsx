@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { HelpCircle, Mail, Building2, X, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { authAPI } from '../../services/api';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface SupportedEmailSuffixesProps {
   className?: string;
@@ -10,6 +11,7 @@ interface SupportedEmailSuffixesProps {
 const SupportedEmailSuffixes: React.FC<SupportedEmailSuffixesProps> = ({
   className = ''
 }) => {
+  const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
   const [allowedEnterprises, setAllowedEnterprises] = useState<Array<{
     name: string;
@@ -45,13 +47,13 @@ const SupportedEmailSuffixes: React.FC<SupportedEmailSuffixesProps> = ({
   // 静态的企业邮箱后缀分类（作为补充显示）
   const staticEmailSuffixes = [
     // 教育机构
-    { category: '教育机构', suffixes: ['@edu.cn', '@ac.cn', '@university.edu', '@college.edu'] },
+    { category: t('ui.supportedEmailSuffixes.categories.education'), suffixes: ['@edu.cn', '@ac.cn', '@university.edu', '@college.edu'] },
     // 政府机构
-    { category: '政府机构', suffixes: ['@gov.cn', '@org.cn'] },
+    { category: t('ui.supportedEmailSuffixes.categories.government'), suffixes: ['@gov.cn', '@org.cn'] },
     // 知名科技公司
-    { category: '知名科技公司', suffixes: ['@tencent.com', '@alibaba-inc.com', '@baidu.com', '@bytedance.com', '@huawei.com'] },
+    { category: t('ui.supportedEmailSuffixes.categories.techCompanies'), suffixes: ['@tencent.com', '@alibaba-inc.com', '@baidu.com', '@bytedance.com', '@huawei.com'] },
     // 国际企业
-    { category: '国际企业', suffixes: ['@microsoft.com', '@apple.com', '@google.com', '@amazon.com', '@facebook.com'] }
+    { category: t('ui.supportedEmailSuffixes.categories.international'), suffixes: ['@microsoft.com', '@apple.com', '@google.com', '@amazon.com', '@facebook.com'] }
   ];
 
   return (
@@ -63,7 +65,7 @@ const SupportedEmailSuffixes: React.FC<SupportedEmailSuffixesProps> = ({
         className={`inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors ${className}`}
       >
         <HelpCircle className="w-4 h-4" />
-        <span>查看支持的企业邮箱后缀</span>
+        <span>{t('ui.supportedEmailSuffixes.viewSupported')}</span>
       </button>
 
       {/* 模态框 */}
@@ -96,10 +98,10 @@ const SupportedEmailSuffixes: React.FC<SupportedEmailSuffixesProps> = ({
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                      支持的企业邮箱后缀
+                      {t('ui.supportedEmailSuffixes.title')}
                     </h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      以下邮箱后缀可用于企业用户注册
+                      {t('ui.supportedEmailSuffixes.description')}
                     </p>
                   </div>
                 </div>
@@ -110,7 +112,7 @@ const SupportedEmailSuffixes: React.FC<SupportedEmailSuffixesProps> = ({
                     onClick={fetchAllowedEnterprises}
                     disabled={loading}
                     className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
-                    title="刷新企业信息"
+                    title={t('ui.supportedEmailSuffixes.refresh')}
                   >
                     <RefreshCw className={`w-5 h-5 text-gray-500 dark:text-gray-400 ${loading ? 'animate-spin' : ''}`} />
                   </button>
@@ -140,7 +142,7 @@ const SupportedEmailSuffixes: React.FC<SupportedEmailSuffixesProps> = ({
                       <div className="flex items-center gap-2 mb-3">
                         <Building2 className="w-4 h-4 text-green-600 dark:text-green-400" />
                         <h3 className="text-md font-semibold text-gray-900 dark:text-gray-100">
-                          已开通企业（可直接注册）
+                          {t('ui.supportedEmailSuffixes.registeredEnterprises')}
                         </h3>
                       </div>
                       
@@ -172,8 +174,8 @@ const SupportedEmailSuffixes: React.FC<SupportedEmailSuffixesProps> = ({
                                   : 'text-red-600 dark:text-red-400'
                               }`}>
                                 {enterprise.availableSlots > 0 
-                                  ? `${enterprise.availableSlots}个名额可用`
-                                  : '名额已满'
+                                  ? t('ui.supportedEmailSuffixes.availableSlots', { count: enterprise.availableSlots })
+                                  : t('ui.supportedEmailSuffixes.slotsFull')
                                 }
                               </div>
                               <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -227,14 +229,14 @@ const SupportedEmailSuffixes: React.FC<SupportedEmailSuffixesProps> = ({
                 {/* 说明文字 */}
                 <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                   <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                    注册说明
+                    {t('ui.supportedEmailSuffixes.registrationInstructions')}
                   </h4>
                   <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                    <li>• <span className="text-green-600 dark:text-green-400 font-medium">绿色区域</span>：已开通企业，可直接注册并查看剩余名额</li>
-                    <li>• <span className="text-blue-600 dark:text-blue-400 font-medium">蓝色区域</span>：支持的企业邮箱类型，需要联系管理员开通</li>
-                    <li>• 使用企业邮箱注册可享受企业级功能和服务</li>
-                    <li>• 个人邮箱（如 @qq.com、@163.com、@gmail.com）仅支持个人用户注册</li>
-                    <li>• 如需开通新的企业邮箱支持，请联系系统管理员邮箱：admin@viquard.com</li>
+                    <li>• <span className="text-green-600 dark:text-green-400 font-medium">{t('ui.supportedEmailSuffixes.greenArea')}</span>{t('ui.supportedEmailSuffixes.greenAreaDesc')}</li>
+                    <li>• <span className="text-blue-600 dark:text-blue-400 font-medium">{t('ui.supportedEmailSuffixes.blueArea')}</span>{t('ui.supportedEmailSuffixes.blueAreaDesc')}</li>
+                    <li>{t('ui.supportedEmailSuffixes.enterpriseBenefits')}</li>
+                    <li>{t('ui.supportedEmailSuffixes.personalEmail')}</li>
+                    <li>{t('ui.supportedEmailSuffixes.contactAdmin')}</li>
                   </ul>
                 </div>
               </div>
@@ -245,7 +247,7 @@ const SupportedEmailSuffixes: React.FC<SupportedEmailSuffixesProps> = ({
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                 >
-                  知道了
+                  {t('ui.supportedEmailSuffixes.gotIt')}
                 </button>
               </div>
             </motion.div>

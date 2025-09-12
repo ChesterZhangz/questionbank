@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Button from '../ui/Button';
 import { ocrAPI } from '../../services/api';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface OCRUploaderProps {
   onOCRResult: (latex: string, isChoiceQuestion?: boolean, questionContent?: string, options?: string[]) => void;
@@ -31,6 +32,7 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
   maxFileSize = 5,
   acceptedFormats = ['image/jpeg', 'image/png', 'image/jpg']
 }) => {
+  const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
@@ -77,7 +79,7 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
   const readFromClipboard = async () => {
     try {
       if (!navigator.clipboard || !navigator.clipboard.read) {
-        throw new Error('浏览器不支持剪切板读取功能');
+        throw new Error(t('math.ocrUploader.errors.clipboardNotSupported'));
       }
 
       const clipboardItems = await navigator.clipboard.read();
@@ -96,9 +98,9 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
         }
       }
       
-      throw new Error('剪切板中没有找到图片');
+      throw new Error(t('math.ocrUploader.errors.noImageInClipboard'));
     } catch (err: any) {
-      const errorMsg = err.message || '读取剪切板失败';
+      const errorMsg = err.message || t('math.ocrUploader.errors.clipboardReadFailed');
       setError(errorMsg);
       onError?.(errorMsg);
     }
@@ -112,13 +114,13 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
       await navigator.clipboard.writeText(ocrResult);
       // 可以添加一个临时的成功提示
       const originalText = document.title;
-      document.title = '已复制到剪切板';
+      document.title = t('math.ocrUploader.errors.copySuccess');
       setTimeout(() => {
         document.title = originalText;
       }, 1000);
     } catch (err) {
-      setError('复制到剪切板失败');
-      onError?.('复制到剪切板失败');
+      setError(t('math.ocrUploader.errors.copyToClipboardFailed'));
+      onError?.(t('math.ocrUploader.errors.copyToClipboardFailed'));
     }
   };
 
@@ -126,15 +128,15 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
   const validateFile = (file: File): boolean => {
     // 检查文件类型
     if (!acceptedFormats.includes(file.type)) {
-      setError('不支持的文件格式，请上传 JPG 或 PNG 图片');
-      onError?.('不支持的文件格式');
+      setError(t('math.ocrUploader.errors.unsupportedFormat'));
+      onError?.(t('math.ocrUploader.errors.unsupportedFormat'));
       return false;
     }
 
     // 检查文件大小
     if (file.size > maxFileSize * 1024 * 1024) {
-      setError(`文件大小不能超过 ${maxFileSize}MB`);
-      onError?.(`文件大小不能超过 ${maxFileSize}MB`);
+      setError(t('math.ocrUploader.errors.fileTooLarge', { maxSize: maxFileSize }));
+      onError?.(t('math.ocrUploader.errors.fileTooLarge', { maxSize: maxFileSize }));
       return false;
     }
 
@@ -209,10 +211,10 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
           response.data.options
         );
       } else {
-        throw new Error(response.data.error || 'OCR识别失败');
+        throw new Error(response.data.error || t('math.ocrUploader.errors.ocrFailed'));
       }
     } catch (err: any) {
-      const errorMsg = err.response?.data?.error || err.message || 'OCR识别失败';
+      const errorMsg = err.response?.data?.error || err.message || t('math.ocrUploader.errors.ocrFailed');
       setError(errorMsg);
       onError?.(errorMsg);
     } finally {
@@ -276,11 +278,11 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {isDragging ? '释放以上传图片' : '上传数学题目图片'}
+                <h3 className="text-lg font-medium text-gray-900 mb-2 dark:text-white">
+                  {isDragging ? t('math.ocrUploader.dragTitle') : t('math.ocrUploader.title')}
                 </h3>
                 <p className="text-gray-500 mb-4">
-                  支持 JPG、PNG 格式，最大 {maxFileSize}MB
+                  {t('math.ocrUploader.description', { maxSize: maxFileSize })}
                 </p>
               </div>
 
@@ -291,7 +293,7 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
                   className="flex items-center space-x-2"
                 >
                   <Camera className="w-4 h-4" />
-                  <span>选择文件</span>
+                  <span>{t('math.ocrUploader.selectFile')}</span>
                 </Button>
                 <Button
                   onClick={triggerFileSelect}
@@ -299,7 +301,7 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
                   className="flex items-center space-x-2"
                 >
                   <Image className="w-4 h-4" />
-                  <span>拍照</span>
+                  <span>{t('math.ocrUploader.takePhoto')}</span>
                 </Button>
                 {isClipboardSupported && (
                   <Button
@@ -308,15 +310,15 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
                     className="flex items-center space-x-2"
                   >
                     <Clipboard className="w-4 h-4" />
-                    <span>剪切板</span>
+                    <span>{t('math.ocrUploader.clipboard')}</span>
                   </Button>
                 )}
               </div>
 
               <p className="text-sm text-gray-400">
                 {isClipboardSupported 
-                  ? '或直接拖拽图片到此处，也可以从剪切板粘贴图片 (Ctrl+V)'
-                  : '或直接拖拽图片到此处'
+                  ? t('math.ocrUploader.dragHintWithClipboard')
+                  : t('math.ocrUploader.dragHint')
                 }
               </p>
             </div>
@@ -327,8 +329,8 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
                 animate={{ opacity: 1 }}
                 className="absolute inset-0 bg-blue-500 bg-opacity-10 rounded-lg flex items-center justify-center"
               >
-                <div className="text-blue-600 font-medium">
-                  释放以上传图片
+                <div className="text-blue-600 font-medium dark:text-white">
+                  {t('math.ocrUploader.dragTitle')}
                 </div>
               </motion.div>
             )}
@@ -347,7 +349,7 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
               <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
                 <img
                   src={previewUrl}
-                  alt="题目图片预览"
+                  alt={t('math.ocrUploader.previewAlt')}
                   className="w-full h-full object-contain"
                 />
               </div>
@@ -395,7 +397,7 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <CheckCircle className="w-5 h-5 text-green-500" />
-                    <span className="font-medium text-green-700">OCR识别成功</span>
+                    <span className="font-medium text-green-700">{t('math.ocrUploader.recognitionSuccess')}</span>
                   </div>
                   <Button
                     onClick={copyToClipboard}
@@ -404,7 +406,7 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
                     className="flex items-center space-x-1 text-gray-600 hover:text-gray-800"
                   >
                     <Copy className="w-4 h-4" />
-                    <span className="text-sm">复制</span>
+                    <span className="text-sm">{t('math.ocrUploader.copy')}</span>
                   </Button>
                 </div>
                 <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -418,7 +420,10 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
             {/* 操作按钮 */}
             <div className="flex justify-between items-center">
               <div className="text-sm text-gray-500">
-                {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)}MB)
+                {t('math.ocrUploader.fileSize', { 
+                  fileName: selectedFile.name, 
+                  fileSize: (selectedFile.size / 1024 / 1024).toFixed(2) 
+                })}
               </div>
               
               <div className="flex space-x-2">
@@ -427,7 +432,7 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
                   variant="outline"
                   disabled={isProcessing}
                 >
-                  重新选择
+                  {t('math.ocrUploader.reselect')}
                 </Button>
                 <Button
                   onClick={performOCR}
@@ -437,12 +442,12 @@ const OCRUploader: React.FC<OCRUploaderProps> = ({
                   {isProcessing ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>识别中...</span>
+                      <span>{t('math.ocrUploader.recognizing')}</span>
                     </>
                   ) : (
                     <>
                       <FileText className="w-4 h-4" />
-                      <span>开始识别</span>
+                      <span>{t('math.ocrUploader.startRecognition')}</span>
                     </>
                   )}
                 </Button>

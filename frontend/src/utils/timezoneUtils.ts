@@ -1,5 +1,39 @@
 // 时区定位和管理工具
 
+// 翻译函数类型
+export type TranslationFunction = (key: string, params?: Record<string, any>) => string;
+
+// 检测当前语言环境
+const detectLocale = (t?: TranslationFunction): string => {
+  if (!t) return 'zh-CN';
+  
+  // 通过测试翻译来判断当前语言
+  const testTranslation = t('utils.timezoneUtils.names.Asia_Shanghai');
+  if (testTranslation && testTranslation.includes('China Standard Time')) {
+    return 'en-US';
+  }
+  return 'zh-CN';
+};
+
+// 直接设置语言环境的格式化函数
+export const formatTimezoneTimeWithLocale = (date: Date, timezone: string, locale: 'zh-CN' | 'en-US' = 'zh-CN'): string => {
+  try {
+    return date.toLocaleString(locale, {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  } catch (error) {
+    console.warn('无法格式化时区时间:', error);
+    return date.toLocaleString('zh-CN');
+  }
+};
+
 // 获取用户当前位置的时区
 export const getUserTimezone = (): string => {
   try {
@@ -59,8 +93,12 @@ export const getTimezoneOffset = (timezone: string): number => {
 };
 
 // 格式化时区显示名称
-export const formatTimezoneName = (timezone: string): string => {
-  // 常见时区的友好名称
+export const formatTimezoneName = (timezone: string, t?: TranslationFunction): string => {
+  if (t) {
+    return t(`utils.timezoneUtils.names.${timezone.replace('/', '_')}`);
+  }
+  
+  // 常见时区的友好名称（默认中文）
   const timezoneNames: { [key: string]: string } = {
     'Asia/Shanghai': '中国标准时间',
     'Asia/Hong_Kong': '香港时间',
@@ -122,7 +160,7 @@ export const formatTimezoneName = (timezone: string): string => {
 };
 
 // 获取所有支持的时区列表
-export const getSupportedTimezones = (): Array<{ value: string; label: string }> => {
+export const getSupportedTimezones = (t?: TranslationFunction): Array<{ value: string; label: string }> => {
   const timezones = [
     'Asia/Shanghai',
     'Asia/Hong_Kong',
@@ -151,7 +189,7 @@ export const getSupportedTimezones = (): Array<{ value: string; label: string }>
 
   return timezones.map(tz => ({
     value: tz,
-    label: formatTimezoneName(tz)
+    label: formatTimezoneName(tz, t)
   }));
 };
 
@@ -264,9 +302,11 @@ export const getCurrentTimeInTimezone = (timezone: string): Date => {
 };
 
 // 格式化时区时间显示
-export const formatTimezoneTime = (date: Date, timezone: string): string => {
+export const formatTimezoneTime = (date: Date, timezone: string, t?: TranslationFunction): string => {
   try {
-    return date.toLocaleString('zh-CN', {
+    const locale = detectLocale(t);
+    
+    return date.toLocaleString(locale, {
       timeZone: timezone,
       year: 'numeric',
       month: '2-digit',

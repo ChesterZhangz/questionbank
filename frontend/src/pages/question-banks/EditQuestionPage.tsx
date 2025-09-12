@@ -15,10 +15,12 @@ import RightSlideModal from '../../components/ui/RightSlideModal';
 import { useModal } from '../../hooks/useModal';
 import 'katex/dist/katex.min.css';
 import { renderContentWithCache } from '../../lib/latex/utils/renderContent';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const EditQuestionPage: React.FC = () => {
   const { bid, qid } = useParams<{ bid: string; qid: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // 弹窗状态管理
   const { 
@@ -199,12 +201,12 @@ const EditQuestionPage: React.FC = () => {
       if (response.data.success) {
         setHasChanges(false);
         // 显示成功提示
-        showSuccessRightSlide('保存成功', '题目保存成功！');
+        showSuccessRightSlide(t('questionBankPage.EditQuestionPage.success.saved'), t('questionBankPage.EditQuestionPage.success.saved'));
       } else {
-        setError(response.data.error || '保存失败');
+        setError(response.data.error || t('questionBankPage.EditQuestionPage.errors.saveFailed'));
       }
     } catch (error: any) {
-      setError(error.response?.data?.error || '保存失败');
+      setError(error.response?.data?.error || t('questionBankPage.EditQuestionPage.errors.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -214,8 +216,8 @@ const EditQuestionPage: React.FC = () => {
   const handleCancel = () => {
     if (hasChanges) {
       showConfirm(
-        '确认离开',
-        '您有未保存的更改，确定要离开吗？',
+        t('questionBankPage.EditQuestionPage.confirm.leave'),
+        t('questionBankPage.EditQuestionPage.confirm.leaveMessage'),
         () => {
           closeConfirm();
           navigate(-1); // 回到上一个页面
@@ -229,10 +231,10 @@ const EditQuestionPage: React.FC = () => {
   // 重置更改
   const handleReset = () => {
     showConfirm(
-      '确认重置',
-      '确定要重置所有更改吗？',
+      t('questionBankPage.EditQuestionPage.confirm.reset'),
+      t('questionBankPage.EditQuestionPage.confirm.resetMessage'),
       async () => {
-        setConfirmLoading(true, '正在重置...');
+        setConfirmLoading(true, t('questionBankPage.EditQuestionPage.buttons.resetting'));
         try {
           await fetchQuestion();
           setHasChanges(false);
@@ -506,8 +508,8 @@ const EditQuestionPage: React.FC = () => {
     return (
       <LoadingPage
         type="loading"
-        title="加载题目中..."
-        description="正在获取题目信息，请稍候"
+        title={t('questionBankPage.EditQuestionPage.status.loading')}
+        description={t('questionBankPage.EditQuestionPage.status.loadingDesc')}
         animation="spinner"
       />
     );
@@ -517,9 +519,9 @@ const EditQuestionPage: React.FC = () => {
     return (
       <LoadingPage
         type="error"
-        title="题目不存在"
-        description={error || '无法加载题目信息'}
-        backText="返回题库列表"
+        title={t('questionBankPage.EditQuestionPage.errors.notFound')}
+        description={error || t('questionBankPage.EditQuestionPage.errors.loadFailed')}
+        backText={t('common.backToQuestionBanks')}
         onBack={() => navigate('/question-banks')}
       />
     );
@@ -538,7 +540,7 @@ const EditQuestionPage: React.FC = () => {
                 className="flex items-center space-x-2"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>返回题库</span>
+                <span>{t('questionBankPage.EditQuestionPage.navigation.back')}</span>
               </Button>
               
               <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
@@ -553,7 +555,7 @@ const EditQuestionPage: React.FC = () => {
                   className="flex items-center space-x-1"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  <span>上一题</span>
+                  <span>{t('questionBankPage.EditQuestionPage.navigation.previous')}</span>
                 </Button>
                 
                 <div className="text-sm text-gray-500 dark:text-gray-400 px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded">
@@ -567,7 +569,7 @@ const EditQuestionPage: React.FC = () => {
                   disabled={currentIndex >= allQuestions.length - 1}
                   className="flex items-center space-x-1"
                 >
-                  <span>下一题</span>
+                  <span>{t('questionBankPage.EditQuestionPage.navigation.next')}</span>
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
@@ -576,7 +578,7 @@ const EditQuestionPage: React.FC = () => {
               
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  编辑题目
+                  {t('questionBankPage.EditQuestionPage.title')}
                 </h1>
                 {questionBank && (
                   <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -590,7 +592,7 @@ const EditQuestionPage: React.FC = () => {
               {hasChanges && (
                 <span className="text-sm text-orange-600 dark:text-orange-400 flex items-center space-x-1">
                   <AlertCircle className="w-4 h-4" />
-                  <span>有未保存的更改</span>
+                  <span>{t('questionBankPage.EditQuestionPage.status.hasChanges')}</span>
                 </span>
               )}
               
@@ -605,7 +607,7 @@ const EditQuestionPage: React.FC = () => {
                         : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
                     }`}
                   >
-                    选择题
+                    {t('questionBankPage.EditQuestionPage.questionTypes.choice')}
                   </button>
                   <button
                     onClick={() => handleQuestionTypeChange('fill')}
@@ -615,7 +617,7 @@ const EditQuestionPage: React.FC = () => {
                         : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
                     }`}
                   >
-                    填空题
+                    {t('questionBankPage.EditQuestionPage.questionTypes.fill')}
                   </button>
                   <button
                     onClick={() => handleQuestionTypeChange('solution')}
@@ -625,7 +627,7 @@ const EditQuestionPage: React.FC = () => {
                         : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
                     }`}
                   >
-                    解答题
+                    {t('questionBankPage.EditQuestionPage.questionTypes.solution')}
                   </button>
                 </div>
               </div>
@@ -637,7 +639,7 @@ const EditQuestionPage: React.FC = () => {
                 className="flex items-center space-x-2"
               >
                 <RotateCcw className="w-4 h-4" />
-                <span>重置</span>
+                <span>{t('questionBankPage.EditQuestionPage.buttons.reset')}</span>
               </Button>
               
               <Button
@@ -646,7 +648,7 @@ const EditQuestionPage: React.FC = () => {
                 className="flex items-center space-x-2"
               >
                 <Save className="w-4 h-4" />
-                <span>{saving ? '保存中...' : '保存'}</span>
+                <span>{saving ? t('questionBankPage.EditQuestionPage.buttons.saving') : t('questionBankPage.EditQuestionPage.buttons.save')}</span>
               </Button>
             </div>
           </div>
@@ -670,7 +672,7 @@ const EditQuestionPage: React.FC = () => {
                         : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                     }`}
                   >
-                    题干
+                    {t('questionBankPage.EditQuestionPage.tabs.stem')}
                   </button>
                   <button
                     onClick={() => setActiveTab('media')}
@@ -680,7 +682,7 @@ const EditQuestionPage: React.FC = () => {
                         : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                     }`}
                   >
-                    图形
+                    {t('questionBankPage.EditQuestionPage.tabs.media')}
                   </button>
                   <button
                     onClick={() => setActiveTab('solution')}
@@ -690,7 +692,7 @@ const EditQuestionPage: React.FC = () => {
                         : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                     }`}
                   >
-                    解析
+                    {t('questionBankPage.EditQuestionPage.tabs.solution')}
                   </button>
                 </div>
               </div>
@@ -698,13 +700,13 @@ const EditQuestionPage: React.FC = () => {
                 {activeTab === 'stem' ? (
                   <div className="space-y-4">
                      <div>
-                       <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-2">题目内容</h4>
+                       <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-2">{t('questionBankPage.EditQuestionPage.form.questionContent')}</h4>
                        <LaTeXEditor
                          value={question.content?.stem || ''}
                          onChange={(value) => handleQuestionChange({
                            content: { ...question.content, stem: value }
                          })}
-                         placeholder="输入题目内容"
+                         placeholder={t('questionBankPage.EditQuestionPage.placeholders.questionContent')}
                          showPreview={true}
                          enableHoverPreview={true}
                          questionType={question.type === 'multiple-choice' ? 'choice' : question.type}
@@ -717,7 +719,7 @@ const EditQuestionPage: React.FC = () => {
                      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
                        <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-3 flex items-center">
                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                         题目内容
+                         {t('questionBankPage.EditQuestionPage.form.questionContent')}
                        </h4>
                        <div 
                          className="prose prose-sm max-w-none text-blue-800 dark:text-blue-200"
@@ -749,7 +751,7 @@ const EditQuestionPage: React.FC = () => {
 
                                // 使用 renderContentWithCache 确保正确的 LaTeX 渲染
                                return renderContentWithCache(processedContent);
-                             })() : '暂无题目内容'
+                             })() : t('questionBankPage.EditQuestionPage.status.noContent')
                          }}
                        />
                        
@@ -765,13 +767,13 @@ const EditQuestionPage: React.FC = () => {
 
                      {/* 解析编辑器 */}
                      <div>
-                       <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-2">解析内容</h4>
+                       <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-2">{t('questionBankPage.EditQuestionPage.form.solution')}</h4>
                        <LaTeXEditor
                          value={question.content?.solution || ''}
                          onChange={(value: string) => handleQuestionChange({
                            content: { ...question.content, solution: value }
                          })}
-                         placeholder="输入题目解析"
+                         placeholder={t('questionBankPage.EditQuestionPage.placeholders.solution')}
                          showPreview={true}
                          enableHoverPreview={true}
                          questionType="solution"
@@ -783,7 +785,7 @@ const EditQuestionPage: React.FC = () => {
                    </div>
                  ) : activeTab === 'media' ? (
                    <div className="space-y-4">
-                     <h4 className="font-medium text-gray-700 dark:text-gray-200">图形管理</h4>
+                     <h4 className="font-medium text-gray-700 dark:text-gray-200">{t('questionBankPage.EditQuestionPage.media.title')}</h4>
                      <IntegratedMediaEditor
                        bid={questionBank?._id}
                        tikzCodes={tikzCodes}
@@ -800,13 +802,13 @@ const EditQuestionPage: React.FC = () => {
             {(question.type === 'choice' || question.type === 'multiple-choice') && question.content?.options && (
               <Card>
                 <div className="p-4 border-b bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                  <h3 className="font-medium text-gray-900 dark:text-gray-100">选项设置</h3>
+                  <h3 className="font-medium text-gray-900 dark:text-gray-100">{t('questionBankPage.EditQuestionPage.options.title')}</h3>
                 </div>
                 <div className="p-4 space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      题目类型：{question.type === 'choice' ? '单选题' : '多选题'} 
-                      <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">（系统自动判断）</span>
+                      {t('questionBankPage.EditQuestionPage.options.questionType')}：{question.type === 'choice' ? t('questionBankPage.EditQuestionPage.questionTypes.singleChoice') : t('questionBankPage.EditQuestionPage.questionTypes.multipleChoice')} 
+                      <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">（{t('questionBankPage.EditQuestionPage.options.autoDetected')}）</span>
                     </span>
                   </div>
 
@@ -820,7 +822,7 @@ const EditQuestionPage: React.FC = () => {
                               ? 'bg-blue-500 border-blue-500 text-white'
                               : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-400'
                           }`}
-                          title={question.content.answer.includes(String.fromCharCode(65 + index)) ? '取消选择' : '选择答案'}
+                          title={question.content.answer.includes(String.fromCharCode(65 + index)) ? t('questionBankPage.EditQuestionPage.options.unselect') : t('questionBankPage.EditQuestionPage.options.select')}
                         >
                           {question.content.answer.includes(String.fromCharCode(65 + index)) && <Check className="w-3 h-3" />}
                         </button>
@@ -841,7 +843,7 @@ const EditQuestionPage: React.FC = () => {
                           variant="outline"
                           size="sm"
                           disabled={(question.content.options?.length || 0) <= 2}
-                          title="删除选项"
+                          title={t('questionBankPage.EditQuestionPage.options.delete')}
                         >
                           <Minus className="w-4 h-4" />
                         </Button>
@@ -851,9 +853,9 @@ const EditQuestionPage: React.FC = () => {
                   {question.content.answer && (question.type === 'choice' || question.type === 'multiple-choice') && (
                     <div className="mt-3 p-2 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        已选择答案：<span className="font-medium text-gray-900 dark:text-gray-100">{question.content.answer}</span>
+                        {t('questionBankPage.EditQuestionPage.options.selectedAnswer')}：<span className="font-medium text-gray-900 dark:text-gray-100">{question.content.answer}</span>
                         <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">
-                          （{question.type === 'choice' ? '单选题' : '多选题'}）
+                          （{question.type === 'choice' ? t('questionBankPage.EditQuestionPage.questionTypes.singleChoice') : t('questionBankPage.EditQuestionPage.questionTypes.multipleChoice')}）
                         </span>
                       </p>
                     </div>
@@ -866,7 +868,7 @@ const EditQuestionPage: React.FC = () => {
                      disabled={(question.content.options?.length || 0) >= 6}
                    >
                     <Plus className="w-4 h-4 mr-1" />
-                    添加选项
+                    {t('questionBankPage.EditQuestionPage.buttons.addOption')}
                   </Button>
                 </div>
               </Card>
@@ -876,20 +878,20 @@ const EditQuestionPage: React.FC = () => {
             {(question.type === 'fill' || question.type === 'solution') && (
               <Card>
                 <div className="p-4 border-b bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                  <h3 className="font-medium text-gray-900 dark:text-gray-100">答案设置</h3>
+                  <h3 className="font-medium text-gray-900 dark:text-gray-100">{t('questionBankPage.EditQuestionPage.answers.title')}</h3>
                 </div>
                 <div className="p-4">
                   {question.type === 'fill' ? (
                     <div className="space-y-3">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">根据题干中的 \fill 数量，填写对应的答案：</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{t('questionBankPage.EditQuestionPage.answers.fillInstructions')}</p>
                       {Array.from({ length: getFillCount(question.content.stem) }, (_, index) => (
                         <div key={`fill-answer-${index}`} className="space-y-2">
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">第 {index + 1} 空：</span>
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('questionBankPage.EditQuestionPage.answers.fillNumber', { number: index + 1 })}：</span>
                           <HoverTooltip content={question.content.fillAnswers?.[index] || ''} config={{ mode: 'lightweight' }}>
                             <Input
                               value={question.content.fillAnswers?.[index] || ''}
                               onChange={(e) => handleFillAnswerChange(index, e.target.value)}
-                              placeholder={`答案 ${index + 1}`}
+                              placeholder={t('questionBankPage.EditQuestionPage.placeholders.answer', { number: index + 1 })}
                               className="w-full"
                               enableLatexAutoComplete={true}
                               enableLatexHighlight={true}
@@ -898,12 +900,12 @@ const EditQuestionPage: React.FC = () => {
                         </div>
                       ))}
                       {getFillCount(question.content.stem) === 0 && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">题干中没有找到 \fill，请先添加填空题标记</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.EditQuestionPage.answers.noFillFound')}</p>
                       )}
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">根据题干中的 \subp 和 \subsubp 数量，填写对应的答案：</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{t('questionBankPage.EditQuestionPage.answers.solutionInstructions')}</p>
                       {(() => {
                         const answerInfo = getSolutionAnswerInfo(question.content.stem);
                         return answerInfo.map((info, index) => (
@@ -936,7 +938,7 @@ const EditQuestionPage: React.FC = () => {
               <div className="p-4 border-b bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 <div className="flex items-center space-x-2">
                   <Target className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                  <h3 className="font-medium text-gray-900 dark:text-gray-100">难度</h3>
+                  <h3 className="font-medium text-gray-900 dark:text-gray-100">{t('questionBankPage.EditQuestionPage.difficulty.title')}</h3>
                 </div>
               </div>
               <div className="p-4">
@@ -956,11 +958,11 @@ const EditQuestionPage: React.FC = () => {
                   ))}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  {question.difficulty === 1 && '非常简单'}
-                  {question.difficulty === 2 && '简单'}
-                  {question.difficulty === 3 && '中等'}
-                  {question.difficulty === 4 && '困难'}
-                  {question.difficulty === 5 && '非常困难'}
+                  {question.difficulty === 1 && t('questionBankPage.EditQuestionPage.difficulty.veryEasy')}
+                  {question.difficulty === 2 && t('questionBankPage.EditQuestionPage.difficulty.easy')}
+                  {question.difficulty === 3 && t('questionBankPage.EditQuestionPage.difficulty.medium')}
+                  {question.difficulty === 4 && t('questionBankPage.EditQuestionPage.difficulty.hard')}
+                  {question.difficulty === 5 && t('questionBankPage.EditQuestionPage.difficulty.veryHard')}
                 </p>
               </div>
             </Card>

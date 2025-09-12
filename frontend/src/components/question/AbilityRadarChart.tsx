@@ -10,6 +10,7 @@ import {
 } from 'chart.js';
 import { Radar } from 'react-chartjs-2';
 import type { CoreAbilities } from '../../types';
+import { useTranslation } from '../../hooks/useTranslation';
 
 ChartJS.register(
   RadialLinearScale,
@@ -35,14 +36,16 @@ const AbilityRadarChart: React.FC<AbilityRadarChartProps> = ({
   showValues = true,
   showGrid = true,
 }) => {
+  const { t } = useTranslation();
+  
   // 能力标签映射
   const labels = [
-    '逻辑思维',
-    '数学直观', 
-    '问题解决',
-    '分析能力',
-    '创造性思维',
-    '计算技能'
+    t('question.abilityRadarChart.labels.logicalThinking'),
+    t('question.abilityRadarChart.labels.mathematicalIntuition'),
+    t('question.abilityRadarChart.labels.problemSolving'),
+    t('question.abilityRadarChart.labels.analyticalAbility'),
+    t('question.abilityRadarChart.labels.creativeThinking'),
+    t('question.abilityRadarChart.labels.computationalSkills')
   ];
 
   // 颜色配置

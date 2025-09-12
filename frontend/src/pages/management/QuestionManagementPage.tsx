@@ -18,6 +18,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useModal } from '../../hooks/useModal';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 
 const animationStyles = `
@@ -112,6 +113,7 @@ interface QuestionManagementPageProps {}
 const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { t } = useTranslation();
   
   // 弹窗状态管理
   const { 
@@ -180,15 +182,15 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
         
         setQuestionBanks(banksData);
       } else {
-        setError('获取题库列表失败: ' + response.data.error);
+        setError(t('management.questionManagement.errors.fetchBanksFailed') + ': ' + response.data.error);
       }
     } catch (error: any) {
       if (error.code === 'ECONNABORTED') {
-        setError('获取题库列表超时，请检查网络连接或稍后重试');
+        setError(t('management.questionManagement.errors.fetchBanksTimeout'));
       } else if (error.response?.status === 401) {
-        setError('认证失败，请重新登录');
+        setError(t('management.questionManagement.errors.fetchBanksAuthFailed'));
       } else {
-        setError('获取题库列表失败: ' + (error.response?.data?.error || error.message || '未知错误'));
+        setError(t('management.questionManagement.errors.fetchBanksUnknownError', { error: error.response?.data?.error || error.message || t('common.unknownError') }));
       }
     } finally {
       setBanksLoading(false);
@@ -251,15 +253,15 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
         
         // 移除前端数据补充，避免反复刷新
       } else {
-        setError('获取题目列表失败: ' + response.data.error);
+        setError(t('management.questionManagement.errors.fetchQuestionsFailed') + ': ' + response.data.error);
       }
     } catch (error: any) {
       if (error.code === 'ECONNABORTED') {
-        setError('获取题目列表超时，请检查网络连接或稍后重试');
+        setError(t('management.questionManagement.errors.fetchQuestionsTimeout'));
       } else if (error.response?.status === 401) {
-        setError('认证失败，请重新登录');
+        setError(t('management.questionManagement.errors.fetchQuestionsAuthFailed'));
       } else {
-        setError('获取题目列表失败: ' + (error.response?.data?.error || error.message || '未知错误'));
+        setError(t('management.questionManagement.errors.fetchQuestionsUnknownError', { error: error.response?.data?.error || error.message || t('common.unknownError') }));
       }
     } finally {
       setLoading(false);
@@ -288,11 +290,11 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
         }
         setFavorites(newFavorites);
       } else {
-        setError('收藏操作失败');
+        setError(t('management.questionManagement.operations.favoriteFailed'));
       }
     } catch (error) {
       // 错误日志已清理
-      setError('收藏操作失败');
+      setError(t('management.questionManagement.operations.favoriteFailed'));
     }
   };
 
@@ -308,12 +310,12 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
   // 删除题目
   const handleDeleteQuestion = async (qid: string) => {
     showConfirm(
-      '确认删除',
-      '确定要删除这道题目吗？删除后无法恢复.',
+      t('management.questionManagement.operations.confirmDelete'),
+      t('management.questionManagement.operations.deleteConfirmMessage'),
       async () => {
         try {
           // 设置确认弹窗的加载状态
-          setConfirmLoading(true, '正在删除...');
+          setConfirmLoading(true, t('management.questionManagement.operations.deleting'));
           
           await questionAPI.deleteQuestion(qid);
           // 从题目列表中移除被删除的题目
@@ -346,10 +348,10 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
           
           closeConfirm(); // 删除成功后关闭弹窗
           // 显示成功提示
-          showSuccessRightSlide('删除成功', '题目已成功删除');
+          showSuccessRightSlide(t('management.questionManagement.operations.deleteSuccess'), t('management.questionManagement.operations.deleteSuccessMessage'));
         } catch (error) {
           // 错误日志已清理
-          showErrorRightSlide('删除失败', '删除题目失败，请重试');
+          showErrorRightSlide(t('management.questionManagement.operations.deleteFailed'), t('management.questionManagement.operations.deleteFailedMessage'));
           closeConfirm(); // 删除失败后也关闭弹窗
         }
       }
@@ -572,9 +574,9 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 dark:from-gray-100 to-blue-600 dark:to-blue-400 bg-clip-text text-transparent">
-                题目管理
+                {t('management.questionManagement.title')}
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-1">管理和组织您的题目库，支持批量操作和高级筛选</p>
+              <p className="text-gray-600 dark:text-gray-300 mt-1">{t('management.questionManagement.description')}</p>
             </div>
             <div className="flex items-center space-x-4">
               {/* 快速统计面板 */}
@@ -620,7 +622,7 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                         ease: "easeOut"
                       }}
                     >
-                      已筛选: {questions.length} 题
+                      {t('management.questionManagement.filteredCount', { count: questions.length })}
                     </motion.span>
                   </motion.div>
                 </motion.div>
@@ -644,11 +646,11 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                     className="px-3 py-2 bg-white dark:bg-gray-800 backdrop-blur-sm border-gray-200 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-700 hover:border-blue-300 dark:hover:border-blue-500 text-gray-700 dark:text-gray-200 hover:text-blue-700 dark:hover:text-blue-400 font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
                   >
                     <Plus className="h-4 w-4 mr-1" />
-                    新建
+                    {t('management.questionManagement.createNew')}
                   </Button>
                   {/* 悬停提示 */}
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                    创建新题目
+                    {t('management.questionManagement.createNewTooltip')}
                   </div>
                 </motion.div>
 
@@ -662,7 +664,7 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                 >
                   {/* 悬停提示 */}
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                    智能组卷
+                    {t('management.questionManagement.intelligentPaper')}
                   </div>
                 </motion.div>
               </div>
@@ -687,8 +689,8 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                   <Filter className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-gray-800 dark:text-gray-100">智能筛选</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">快速定位目标题目</p>
+                  <h3 className="text-base font-semibold text-gray-800 dark:text-gray-100">{t('management.questionManagement.smartFilter')}</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('management.questionManagement.quickLocate')}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
@@ -716,7 +718,7 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                       className="px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 bg-white/60 dark:bg-gray-700/60 backdrop-blur-sm"
                     >
                       <RefreshCw className="h-3 w-3 mr-1" />
-                      重置筛选
+                      {t('management.questionManagement.resetFilter')}
                     </Button>
                   </motion.div>
                 </motion.div>
@@ -734,11 +736,11 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                 transition={{ duration: 0.3, delay: 0.1 }}
                 className="lg:col-span-2 relative"
               >
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">搜索题目</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">{t('management.questionManagement.searchQuestions')}</label>
                 <div className="relative group">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-4 w-4 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors duration-200" />
                   <Input
-                    placeholder="搜索题目编号、内容、标签、难度、题型..."
+                    placeholder={t('management.questionManagement.searchPlaceholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-500 group-hover:shadow-md text-gray-900 dark:text-gray-100"
@@ -756,14 +758,14 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                 className="relative z-[100]"
               >
                 <MultiSelect
-                  label="题库归属"
+                  label={t('management.questionManagement.questionBank')}
                   options={questionBanks.map(bank => ({
                     value: bank._id,
                     label: bank.name
                   }))}
                   value={selectedBanks}
                   onChange={(value) => setSelectedBanks(value as string[])}
-                  placeholder="选择题库"
+                  placeholder={t('management.questionManagement.selectQuestionBank')}
                   maxDisplay={2}
                 />
               </motion.div>
@@ -776,17 +778,17 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                 className="relative z-[110]"
               >
                 <MultiSelect
-                  label="题目难度"
+                  label={t('management.questionManagement.difficulty')}
                   options={[
-                    { value: 1, label: '非常简单', icon: '○' },
-                    { value: 2, label: '简单', icon: '○○' },
-                    { value: 3, label: '中等', icon: '○○○' },
-                    { value: 4, label: '困难', icon: '○○○○' },
-                    { value: 5, label: '非常困难', icon: '○○○○○' }
+                    { value: 1, label: t('management.questionManagement.difficulties.veryEasy.label'), icon: t('management.questionManagement.difficulties.veryEasy.icon') },
+                    { value: 2, label: t('management.questionManagement.difficulties.easy.label'), icon: t('management.questionManagement.difficulties.easy.icon') },
+                    { value: 3, label: t('management.questionManagement.difficulties.medium.label'), icon: t('management.questionManagement.difficulties.medium.icon') },
+                    { value: 4, label: t('management.questionManagement.difficulties.hard.label'), icon: t('management.questionManagement.difficulties.hard.icon') },
+                    { value: 5, label: t('management.questionManagement.difficulties.veryHard.label'), icon: t('management.questionManagement.difficulties.veryHard.icon') }
                   ]}
                   value={selectedDifficulties}
                   onChange={(value) => setSelectedDifficulties(value as number[])}
-                  placeholder="选择难度"
+                  placeholder={t('management.questionManagement.selectDifficulty')}
                   maxDisplay={2}
                 />
               </motion.div>
@@ -799,16 +801,16 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                 className="relative z-[120]"
               >
                 <FuzzySelect
-                  label="排序方式"
+                  label={t('management.questionManagement.sortBy')}
                   options={[
-                    { value: 'createdAt', label: '创建时间', icon: '◉' },
-                    { value: 'updatedAt', label: '更新时间', icon: '◐' },
-                    { value: 'difficulty', label: '难度', icon: '◆' },
-                    { value: 'views', label: '访问量', icon: '◇' }
+                    { value: 'createdAt', label: t('management.questionManagement.sortOptions.createdAt.label'), icon: t('management.questionManagement.sortOptions.createdAt.icon') },
+                    { value: 'updatedAt', label: t('management.questionManagement.sortOptions.updatedAt.label'), icon: t('management.questionManagement.sortOptions.updatedAt.icon') },
+                    { value: 'difficulty', label: t('management.questionManagement.sortOptions.difficulty.label'), icon: t('management.questionManagement.sortOptions.difficulty.icon') },
+                    { value: 'views', label: t('management.questionManagement.sortOptions.views.label'), icon: t('management.questionManagement.sortOptions.views.icon') }
                   ]}
                   value={sortBy}
                   onChange={(value) => setSortBy(value as string)}
-                  placeholder="选择排序方式"
+                  placeholder={t('management.questionManagement.selectSortBy')}
                 />
               </motion.div>
 
@@ -819,7 +821,7 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                 transition={{ duration: 0.2, delay: 0.25 }}
                 className="relative z-[130]"
               >
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">排序方向</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">{t('management.questionManagement.sortDirection')}</label>
                 <div className="relative group">
                   <Button
                     variant="outline"
@@ -829,7 +831,7 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                     <div className="flex items-center space-x-2">
                       <TrendingUp className="h-3 w-3 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-100 transition-colors" />
                       <span className="text-xs font-medium text-gray-700 dark:text-gray-100 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
-                        {sortOrder === 'asc' ? '升序 ↑' : '降序 ↓'}
+                        {sortOrder === 'asc' ? t('management.questionManagement.ascending') : t('management.questionManagement.descending')}
                       </span>
                     </div>
                   </Button>
@@ -848,7 +850,7 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {/* 题型筛选 */}
                   <div className="relative z-[95]">
-                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">题型筛选</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">{t('management.questionManagement.questionTypeFilter')}</label>
                     <div className="space-y-2">
                       {/* 已选题型显示 */}
                       {selectedTypes.length > 0 && (
@@ -858,21 +860,21 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                           className="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-900/30 dark:to-indigo-900/30 p-2 rounded-lg border border-blue-100/50 dark:border-blue-700/50"
                         >
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-medium text-blue-700 dark:text-blue-300">已选题型 ({selectedTypes.length})</span>
+                            <span className="text-xs font-medium text-blue-700 dark:text-blue-300">{t('management.questionManagement.selectedTypes', { count: selectedTypes.length })}</span>
                             <button
                               onClick={() => setSelectedTypes([])}
                               className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition-colors"
                             >
-                              清空
+                              {t('management.questionManagement.clear')}
                             </button>
                           </div>
                           <div className="flex flex-wrap gap-1">
                             {selectedTypes.map((type) => {
                               const typeInfo = [
-                                { value: 'choice', label: '选择题', color: 'blue' },
-                                { value: 'multiple-choice', label: '多选题', color: 'green' },
-                                { value: 'fill', label: '填空题', color: 'yellow' },
-                                { value: 'solution', label: '解答题', color: 'purple' }
+                                { value: 'choice', label: t('management.questionManagement.questionTypes.choice.label'), color: 'blue' },
+                                { value: 'multiple-choice', label: t('management.questionManagement.questionTypes.multipleChoice.label'), color: 'green' },
+                                { value: 'fill', label: t('management.questionManagement.questionTypes.fill.label'), color: 'yellow' },
+                                { value: 'solution', label: t('management.questionManagement.questionTypes.solution.label'), color: 'purple' }
                               ].find(t => t.value === type);
                               
                               return (
@@ -901,10 +903,10 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                       {/* 题型选择按钮 */}
                       <div className="flex flex-wrap gap-2">
                         {[
-                          { value: 'choice', label: '选择题', color: 'blue', icon: '○' },
-                          { value: 'multiple-choice', label: '多选题', color: 'green', icon: '□' },
-                          { value: 'fill', label: '填空题', color: 'yellow', icon: '___' },
-                          { value: 'solution', label: '解答题', color: 'purple', icon: '✎' }
+                          { value: 'choice', label: t('management.questionManagement.questionTypes.choice.label'), color: 'blue', icon: t('management.questionManagement.questionTypes.choice.icon') },
+                          { value: 'multiple-choice', label: t('management.questionManagement.questionTypes.multipleChoice.label'), color: 'green', icon: t('management.questionManagement.questionTypes.multipleChoice.icon') },
+                          { value: 'fill', label: t('management.questionManagement.questionTypes.fill.label'), color: 'yellow', icon: t('management.questionManagement.questionTypes.fill.icon') },
+                          { value: 'solution', label: t('management.questionManagement.questionTypes.solution.label'), color: 'purple', icon: t('management.questionManagement.questionTypes.solution.icon') }
                         ].map((type) => (
                           <motion.button
                             key={type.value}
@@ -943,11 +945,11 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                   {/* 知识点标签 */}
                   <div className="relative z-[85]">
                     <TagSelector
-                      label="知识点标签"
+                      label={t('management.questionManagement.knowledgeTags')}
                       availableTags={availableTags}
                       selectedTags={selectedTags}
                       onTagsChange={setSelectedTags}
-                      placeholder="选择知识点标签"
+                      placeholder={t('management.questionManagement.selectKnowledgeTags')}
                     />
                   </div>
                 </div>
@@ -967,7 +969,7 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <span className="text-sm font-medium">
-                      已选择 {selectedQuestions.length} 道题目
+                      {t('management.questionManagement.batchActions.selectedCount', { count: selectedQuestions.length })}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -977,7 +979,7 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                       onClick={() => setSelectedQuestions([])}
                       className="text-red-100 dark:text-red-200 border-red-300 dark:border-red-400 hover:bg-red-600 dark:hover:bg-red-700 hover:text-white"
                     >
-                      取消选择
+                      {t('management.questionManagement.batchActions.cancelSelection')}
                     </Button>
                   </div>
                 </div>
@@ -994,8 +996,8 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
           <div className="p-6">
             {loading ? (
               <LoadingPage 
-                title="正在加载题目..." 
-                description="请稍候，正在获取题目列表"
+                title={t('management.questionManagement.questionList.loading')} 
+                description={t('management.questionManagement.questionList.loadingDescription')}
                 fullScreen={false}
               />
             ) : questions.length === 0 ? (
@@ -1005,8 +1007,8 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">暂无题目数据</h3>
-                <p className="text-gray-600 dark:text-gray-300">尝试调整筛选条件或添加新题目</p>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('management.questionManagement.questionList.noData')}</h3>
+                <p className="text-gray-600 dark:text-gray-300">{t('management.questionManagement.questionList.noDataDescription')}</p>
               </div>
             ) : (
               <>
@@ -1086,10 +1088,10 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                     {/* 分页信息 */}
                     <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-300">
                       <span>
-                        共 {totalQuestions} 道题目，第 {currentPage} / {totalPages} 页
+                        {t('management.questionManagement.questionList.totalQuestions', { total: totalQuestions, current: currentPage, totalPages })}
                       </span>
                       <div className="flex items-center space-x-2">
-                        <span>每页显示：</span>
+                        <span>{t('management.questionManagement.questionList.perPage')}</span>
                         <select
                           value={pageSize}
                           onChange={(e) => {
@@ -1103,7 +1105,7 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                           <option value={50}>50</option>
                           <option value={100}>100</option>
                         </select>
-                        <span>道题目</span>
+                        <span>{t('management.questionManagement.questionList.questions')}</span>
                       </div>
                     </div>
                     
@@ -1119,7 +1121,7 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                             : 'text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
                         }`}
                       >
-                        上一页
+                        {t('management.questionManagement.questionList.previousPage')}
                       </button>
                       
                       {/* 页码按钮 */}
@@ -1189,7 +1191,7 @@ const QuestionManagementPage: React.FC<QuestionManagementPageProps> = () => {
                             : 'text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
                         }`}
                       >
-                        下一页
+                        {t('management.questionManagement.questionList.nextPage')}
                       </button>
                     </div>
                   </div>

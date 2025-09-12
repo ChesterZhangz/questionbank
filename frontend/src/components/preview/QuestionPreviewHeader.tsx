@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Button from '../ui/Button';
 import { ArrowLeft, FileText, Target, Save } from 'lucide-react';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface QuestionPreviewHeaderProps {
   totalQuestions: number;
@@ -18,6 +19,7 @@ const QuestionPreviewHeader: React.FC<QuestionPreviewHeaderProps> = ({
   onOpenDraftManager,
   isDraftMode = false
 }) => {
+  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -32,12 +34,12 @@ const QuestionPreviewHeader: React.FC<QuestionPreviewHeaderProps> = ({
             className="flex items-center space-x-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>返回批量上传</span>
+            <span>{t('preview.questionPreviewHeader.backToUpload')}</span>
           </Button>
           
           <div className="flex items-center space-x-2">
             <FileText className="h-6 w-6 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-300">题目预览与编辑</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-300">{t('preview.questionPreviewHeader.title')}</h1>
           </div>
         </div>
 
@@ -50,7 +52,7 @@ const QuestionPreviewHeader: React.FC<QuestionPreviewHeaderProps> = ({
             }`}
           >
             <Save className="h-4 w-4" />
-            <span>草稿管理</span>
+            <span>{t('preview.questionPreviewHeader.draftManager')}</span>
             {isDraftMode && (
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
             )}
@@ -58,12 +60,12 @@ const QuestionPreviewHeader: React.FC<QuestionPreviewHeaderProps> = ({
           
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <Target className="h-4 w-4 " />
-            <span className='dark:text-gray-30'>总题目: {totalQuestions}</span>
+            <span className='dark:text-gray-30'>{t('preview.questionPreviewHeader.totalQuestions')}: {totalQuestions}</span>
           </div> 
           
           {selectedCount > 0 && (
             <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-              已选择 {selectedCount} 题
+              {t('preview.questionPreviewHeader.selectedQuestions', { count: selectedCount })}
             </div>
           )}
         </div>

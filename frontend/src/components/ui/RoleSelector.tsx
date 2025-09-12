@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Settings, Handshake, Eye, Crown } from 'lucide-react';
 import SimpleSelect from './menu/SimpleSelect';
 import ConfirmModal from './ConfirmModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface RoleSelectorProps {
   currentRole: string;
@@ -19,6 +20,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
   className = '',
   showLabel = true
 }) => {
+  const { t } = useTranslation();
   const [isChanging, setIsChanging] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingRole, setPendingRole] = useState<string>('');
@@ -27,27 +29,27 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
   const roleOptions = [
     {
       value: 'owner',
-      label: '所有者',
+      label: t('ui.roleSelector.roles.owner.label'),
       icon: Crown,
-      description: '拥有所有权限，可以管理试卷集和成员'
+      description: t('ui.roleSelector.roles.owner.description')
     },
     {
       value: 'manager',
-      label: '管理员',
+      label: t('ui.roleSelector.roles.manager.label'),
       icon: Settings,
-      description: '可以管理试卷集内容，但不能删除试卷集'
+      description: t('ui.roleSelector.roles.manager.description')
     },
     {
       value: 'collaborator',
-      label: '协作者',
+      label: t('ui.roleSelector.roles.collaborator.label'),
       icon: Handshake,
-      description: '可以编辑试卷集内容，但不能管理成员'
+      description: t('ui.roleSelector.roles.collaborator.description')
     },
     {
       value: 'viewer',
-      label: '查看者',
+      label: t('ui.roleSelector.roles.viewer.label'),
       icon: Eye,
-      description: '只能查看试卷集内容，不能进行编辑'
+      description: t('ui.roleSelector.roles.viewer.description')
     }
   ];
 
@@ -93,7 +95,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
     <div className={`role-selector ${className}`}>
       {showLabel && (
         <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-2">
-          成员身份
+          {t('ui.roleSelector.memberRole')}
         </label>
       )}
       
@@ -103,7 +105,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
             options={roleOptions}
             value={currentRole}
             onChange={handleRoleChange}
-            placeholder="选择身份..."
+            placeholder={t('ui.roleSelector.selectRole')}
             disabled={disabled || isChanging}
             variant="outline"
             size="sm"
@@ -134,10 +136,10 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({
         isOpen={showConfirmModal}
         onCancel={handleCancelRoleChange}
         onConfirm={handleConfirmRoleChange}
-        title="确认设置所有者身份"
-        message="确定要将此成员设置为试卷集所有者吗？设置后该成员将拥有所有管理权限，包括删除试卷集的权限。"
-        confirmText="确认设置"
-        cancelText="取消"
+        title={t('ui.roleSelector.confirmOwner')}
+        message={t('ui.roleSelector.confirmOwnerMessage')}
+        confirmText={t('ui.roleSelector.confirmSet')}
+        cancelText={t('ui.alert.cancel')}
         type="warning"
       />
     </div>

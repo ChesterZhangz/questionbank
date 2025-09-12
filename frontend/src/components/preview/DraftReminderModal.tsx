@@ -6,6 +6,7 @@ import Button from '../ui/Button';
 import { useQuestionPreviewStore } from '../../stores/questionPreviewStore';
 import { useModal } from '../../hooks/useModal';
 import RightSlideModal from '../ui/RightSlideModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface DraftReminderModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ const DraftReminderModal: React.FC<DraftReminderModalProps> = ({
   questionCount,
   isEditMode = false
 }) => {
+  const { t } = useTranslation();
   const { saveDraft } = useQuestionPreviewStore();
   
   // 弹窗状态管理
@@ -44,24 +46,24 @@ const DraftReminderModal: React.FC<DraftReminderModalProps> = ({
         hour: '2-digit',
         minute: '2-digit'
       });
-      setDraftName(`题目集_${timeStr}`);
+      setDraftName(`${t('preview.draftReminderModal.draftName')}_${timeStr}`);
     }
   }, [isOpen]); // 移除draftName依赖，避免循环设置
 
   const handleSaveDraft = async () => {
     if (!draftName.trim()) {
-      showErrorRightSlide('输入错误', '请输入草稿名称');
+      showErrorRightSlide(t('preview.draftReminderModal.inputError'), t('preview.draftReminderModal.inputErrorMessage'));
       return;
     }
 
     setIsSaving(true);
     try {
       saveDraft(draftName.trim(), draftDescription.trim() || undefined);
-      showSuccessRightSlide('保存成功', '草稿保存成功！');
+      showSuccessRightSlide(t('preview.draftReminderModal.saveSuccess'), t('preview.draftReminderModal.saveSuccessMessage'));
       onSaveSuccess?.();
       onClose();
     } catch (error) {
-      showErrorRightSlide('保存失败', '保存失败，请重试');
+      showErrorRightSlide(t('preview.draftReminderModal.saveFailed'), t('preview.draftReminderModal.saveFailedMessage'));
     } finally {
       setIsSaving(false);
     }
@@ -98,12 +100,12 @@ const DraftReminderModal: React.FC<DraftReminderModalProps> = ({
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                      {isEditMode ? '需要保存草稿' : '保存草稿提醒'}
+                      {isEditMode ? t('preview.draftReminderModal.needSave') : t('preview.draftReminderModal.saveReminder')}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       {isEditMode 
-                        ? '您需要先保存草稿才能进行编辑操作' 
-                        : '您有未保存的题目，建议先保存草稿'
+                        ? t('preview.draftReminderModal.needSaveMessage') 
+                        : t('preview.draftReminderModal.saveReminderMessage')
                       }
                     </p>
                   </div>
@@ -123,16 +125,16 @@ const DraftReminderModal: React.FC<DraftReminderModalProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    <span className="text-sm font-medium text-blue-900 dark:text-blue-100">题目数量</span>
+                    <span className="text-sm font-medium text-blue-900 dark:text-blue-100">{t('preview.draftReminderModal.questionCount')}</span>
                   </div>
-                  <span className="text-lg font-bold text-blue-900 dark:text-blue-100">{questionCount} 道</span>
+                  <span className="text-lg font-bold text-blue-900 dark:text-blue-100">{t('preview.draftReminderModal.questionCountValue', { count: questionCount })}</span>
                 </div>
                 <div className="mt-2 flex items-center space-x-2 text-xs text-blue-700 dark:text-blue-300">
                   <Clock className="h-3 w-3" />
                   <span>
                     {isEditMode 
-                      ? '保存草稿后即可进行编辑、删除、拖拽等操作' 
-                      : '建议及时保存，避免数据丢失'
+                      ? t('preview.draftReminderModal.saveHint') 
+                      : t('preview.draftReminderModal.saveHint2')
                     }
                   </span>
                 </div>
@@ -141,24 +143,24 @@ const DraftReminderModal: React.FC<DraftReminderModalProps> = ({
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    草稿名称 <span className="text-red-500 dark:text-red-400">*</span>
+                    {t('preview.draftReminderModal.draftName')} <span className="text-red-500 dark:text-red-400">*</span>
                   </label>
                   <input
                     type="text"
                     value={draftName}
                     onChange={(e) => setDraftName(e.target.value)}
-                    placeholder="请输入草稿名称"
+                    placeholder={t('preview.draftReminderModal.draftNamePlaceholder')}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                     disabled={isSaving}
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">描述（可选）</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">{t('preview.draftReminderModal.description')}</label>
                   <textarea
                     value={draftDescription}
                     onChange={(e) => setDraftDescription(e.target.value)}
-                    placeholder="请输入草稿描述，帮助您更好地管理题目"
+                    placeholder={t('preview.draftReminderModal.descriptionPlaceholder')}
                     rows={2}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                     disabled={isSaving}
@@ -175,12 +177,12 @@ const DraftReminderModal: React.FC<DraftReminderModalProps> = ({
                   {isSaving ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                      保存中...
+                      {t('preview.draftReminderModal.saving')}
                     </>
                   ) : (
                     <>
                       <Save className="h-4 w-4 mr-2" />
-                      立即保存
+                      {t('preview.draftReminderModal.saveNow')}
                     </>
                   )}
                 </Button>
@@ -191,7 +193,7 @@ const DraftReminderModal: React.FC<DraftReminderModalProps> = ({
                   disabled={isSaving}
                   className="flex-1 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
-                  {isEditMode ? '取消' : '稍后保存'}
+                  {isEditMode ? t('preview.draftReminderModal.cancel') : t('preview.draftReminderModal.saveLater')}
                 </Button>
               </div>
 
@@ -199,11 +201,11 @@ const DraftReminderModal: React.FC<DraftReminderModalProps> = ({
                 <div className="flex items-start space-x-2">
                   <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
                   <div className="text-xs text-gray-600 dark:text-gray-300">
-                    <p className="font-medium mb-1">保存草稿的好处：</p>
+                    <p className="font-medium mb-1">{t('preview.draftReminderModal.benefits')}</p>
                     <ul className="space-y-1">
-                      <li>• 防止数据丢失</li>
-                      <li>• 支持后续编辑和修改</li>
-                      <li>• 可以随时恢复工作进度</li>
+                      <li>• {t('preview.draftReminderModal.benefit1')}</li>
+                      <li>• {t('preview.draftReminderModal.benefit2')}</li>
+                      <li>• {t('preview.draftReminderModal.benefit3')}</li>
                     </ul>
                   </div>
                 </div>

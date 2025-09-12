@@ -4,6 +4,7 @@ import Card from '../ui/Card';
 import Input from '../ui/Input';
 import { Loader2, Upload, FileText, Image as ImageIcon, X } from 'lucide-react';
 import { useMathpixUpload } from '../../hooks/useMathpixUpload';
+import { useTranslation } from '../../hooks/useTranslation';
 // cn函数简单实现
 const cn = (...classes: (string | undefined)[]) => classes.filter(Boolean).join(' ');
 
@@ -22,10 +23,11 @@ export const MathpixUploader: React.FC<MathpixUploaderProps> = ({
   onError,
   className,
   allowedFileTypes = ['image/*', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'],
-  maxFileSize = 10, // 默认10MB
-  title = '上传文件',
-  description = '支持图片、PDF和Word文档'
+  maxFileSize = 20, // 默认20MB
+  title,
+  description
 }) => {
+  const { t } = useTranslation();
   const [dragActive, setDragActive] = useState<boolean>(false);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -76,14 +78,14 @@ export const MathpixUploader: React.FC<MathpixUploaderProps> = ({
     });
     
     if (!isAllowedType) {
-      onError?.({ message: '不支持的文件类型' });
+      onError?.({ message: t('upload.mathpixUploader.unsupportedFileType') });
       return;
     }
     
     // 检查文件大小
     const fileSizeMB = file.size / (1024 * 1024);
     if (fileSizeMB > maxFileSize) {
-      onError?.({ message: `文件大小超过限制（${maxFileSize}MB）` });
+      onError?.({ message: t('upload.mathpixUploader.fileSizeExceeded', { maxSize: maxFileSize }) });
       return;
     }
     
@@ -124,7 +126,7 @@ export const MathpixUploader: React.FC<MathpixUploaderProps> = ({
     if (fileType.startsWith('image/') && preview) {
       return (
         <div className="relative w-full h-40 bg-gray-100 rounded-md overflow-hidden">
-          <img src={preview} alt="Preview" className="w-full h-full object-contain" />
+          <img src={preview} alt={t('upload.mathpixUploader.preview')} className="w-full h-full object-contain" />
           <Button 
                         variant="outline"
             size="sm" 
@@ -199,8 +201,8 @@ export const MathpixUploader: React.FC<MathpixUploaderProps> = ({
   return (
     <Card className={cn("w-full", className)}>
       <div className="p-6 pb-0">
-        <h3 className="text-lg font-semibold">{title}</h3>
-        <p className="text-sm text-gray-600">{description}</p>
+        <h3 className="text-lg font-semibold">{title || t('upload.mathpixUploader.title')}</h3>
+        <p className="text-sm text-gray-600">{description || t('upload.mathpixUploader.description')}</p>
       </div>
       <div className="p-6">
         {file ? (
@@ -226,10 +228,10 @@ export const MathpixUploader: React.FC<MathpixUploaderProps> = ({
               </div>
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium">
-                  {dragActive ? "释放文件以上传" : "拖放文件或点击上传"}
+                  {dragActive ? t('upload.mathpixUploader.dragActive') : t('upload.mathpixUploader.dragInactive')}
                 </p>
                 <p className="text-xs text-gray-500">
-                  支持图片、PDF和Word文档，最大{maxFileSize}MB
+                  {t('upload.mathpixUploader.fileSizeLimit', { maxSize: maxFileSize })}
                 </p>
               </div>
               <Input
@@ -245,7 +247,7 @@ export const MathpixUploader: React.FC<MathpixUploaderProps> = ({
                 className="mt-2"
                 onClick={() => document.getElementById('file-upload')?.click()}
               >
-                <span>选择文件</span>
+                <span>{t('upload.mathpixUploader.selectFile')}</span>
               </Button>
             </div>
           </div>
@@ -260,12 +262,12 @@ export const MathpixUploader: React.FC<MathpixUploaderProps> = ({
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              处理中...
+              {t('upload.mathpixUploader.processing')}
             </>
           ) : (
             <>
               <Upload className="mr-2 h-4 w-4" />
-              上传并识别
+              {t('upload.mathpixUploader.uploadAndRecognize')}
             </>
           )}
         </Button>

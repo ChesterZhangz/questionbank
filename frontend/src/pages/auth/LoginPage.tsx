@@ -8,10 +8,12 @@ import { authAPI } from '../../services/api';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login, setLoading } = useAuthStore();
+  const { t } = useTranslation();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -36,13 +38,13 @@ const LoginPage: React.FC = () => {
     const newErrors: Record<string, string> = {};
     
     if (!formData.email) {
-      newErrors.email = '请输入邮箱地址';
+      newErrors.email = t('auth.login.errors.emailRequired');
     }
     
     if (!formData.password) {
-      newErrors.password = '请输入密码';
+      newErrors.password = t('auth.login.errors.passwordRequired');
     } else if (formData.password.length < 6) {
-      newErrors.password = '密码至少6位';
+      newErrors.password = t('auth.login.errors.passwordMinLength');
     }
     
     setErrors(newErrors);
@@ -79,10 +81,10 @@ const LoginPage: React.FC = () => {
         }
         navigate('/dashboard');
       } else {
-        setErrors({ general: '登录响应数据格式错误' });
+        setErrors({ general: t('auth.login.errors.loginFailed') });
       }
     } catch (error: any) {
-      const message = error.response?.data?.error || error.response?.data?.message || '登录失败，请重试';
+      const message = error.response?.data?.error || error.response?.data?.message || t('auth.login.errors.loginFailed');
       setErrors({ general: message });
     } finally {
       setIsSubmitting(false);
@@ -92,12 +94,12 @@ const LoginPage: React.FC = () => {
 
   const handleForgotPassword = async () => {
     if (!forgotPasswordEmail) {
-      setErrors({ forgotPassword: '请输入邮箱地址' });
+      setErrors({ forgotPassword: t('auth.login.forgotPasswordModal.errors.emailRequired') });
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotPasswordEmail)) {
-      setErrors({ forgotPassword: '请输入有效的邮箱地址' });
+      setErrors({ forgotPassword: t('auth.login.forgotPasswordModal.errors.emailInvalid') });
       return;
     }
 
@@ -110,12 +112,12 @@ const LoginPage: React.FC = () => {
       if (response.data.success) {
         setForgotPasswordSent(true);
       } else {
-        setErrors({ forgotPassword: response.data.message || '发送失败' });
+        setErrors({ forgotPassword: response.data.message || t('auth.login.forgotPasswordModal.errors.sendFailed') });
       }
     } catch (error: any) {
       // 错误日志已清理
       setErrors({ 
-        forgotPassword: error.response?.data?.message || '发送失败，请稍后重试'
+        forgotPassword: error.response?.data?.message || t('auth.login.forgotPasswordModal.errors.sendFailed')
       });
     } finally {
       setIsSubmitting(false);
@@ -145,7 +147,7 @@ const LoginPage: React.FC = () => {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="text-3xl font-bold text-text-primary mb-2"
           >
-            Mareate 题库系统
+            Mareate Question Bank
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -153,7 +155,7 @@ const LoginPage: React.FC = () => {
             transition={{ delay: 0.4, duration: 0.6 }}
             className="text-text-secondary"
           >
-            企业数学题库管理平台
+            {t('auth.login.subtitle')}
           </motion.p>
         </div>
       </motion.div>
@@ -182,7 +184,7 @@ const LoginPage: React.FC = () => {
               transition={{ delay: 0.6, duration: 0.6 }}
             >
               <Input
-                label="企业邮箱"
+                label={t('auth.login.email')}
                 name="email"
                 type="email"
                 value={formData.email}
@@ -200,13 +202,13 @@ const LoginPage: React.FC = () => {
               transition={{ delay: 0.7, duration: 0.6 }}
             >
               <Input
-                label="密码"
+                label={t('auth.login.password')}
                 name="password"
                 type="password"
                 value={formData.password}
                 onChange={handleChange}
                 error={errors.password}
-                placeholder="请输入密码"
+                placeholder={t('auth.login.password')}
                 required
                 icon={<Lock className="w-5 h-5" />}
               />
@@ -218,7 +220,7 @@ const LoginPage: React.FC = () => {
                   onClick={() => setShowForgotPassword(true)}
                   className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                 >
-                  忘记密码？
+                  {t('auth.login.forgotPassword')}
                 </button>
               </div>
             </motion.div>
@@ -234,7 +236,7 @@ const LoginPage: React.FC = () => {
                 loading={isSubmitting}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? '登录中...' : '登录系统'}
+                {isSubmitting ? t('auth.common.loading') : t('auth.login.loginButton')}
                 {!isSubmitting && <ArrowRight className="w-4 h-4 ml-2" />}
               </Button>
             </motion.div>
@@ -246,12 +248,12 @@ const LoginPage: React.FC = () => {
               className="text-center"
             >
               <p className="text-sm text-text-secondary">
-                还没有账号？{' '}
+                {t('auth.login.noAccount')}{' '}
                 <Link
                   to="/register"
                   className="font-medium text-green-600 hover:text-green-500 dark:text-green-400 dark:hover:text-green-300 transition-colors"
                 >
-                  立即注册
+                  {t('auth.login.registerLink')}
                 </Link>
               </p>
             </motion.div>
@@ -297,10 +299,10 @@ const LoginPage: React.FC = () => {
                       </div>
                       <div>
                         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                          重置密码
+                          {t('auth.login.forgotPasswordModal.title')}
                         </h2>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          输入邮箱地址，我们将发送重置链接
+                          {t('auth.login.forgotPasswordModal.description')}
                         </p>
                       </div>
                     </div>
@@ -322,7 +324,7 @@ const LoginPage: React.FC = () => {
                   <div className="p-6">
                     <div className="space-y-4">
                       <Input
-                        label="企业邮箱"
+                        label={t('auth.login.forgotPasswordModal.email')}
                         type="email"
                         value={forgotPasswordEmail}
                         onChange={(e) => {
@@ -342,7 +344,7 @@ const LoginPage: React.FC = () => {
                         disabled={isSubmitting}
                         className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
                       >
-                        {isSubmitting ? '发送中...' : '发送重置链接'}
+                        {isSubmitting ? t('auth.common.loading') : t('auth.login.forgotPasswordModal.sendButton')}
                         {!isSubmitting && <Send className="w-4 h-4 ml-2" />}
                       </Button>
                     </div>
@@ -359,10 +361,10 @@ const LoginPage: React.FC = () => {
                       </div>
                       <div>
                         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                          邮件已发送
+                          {t('auth.login.forgotPasswordModal.successTitle')}
                         </h2>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          请检查您的邮箱
+                          {t('auth.login.forgotPasswordModal.successMessage')}
                         </p>
                       </div>
                     </div>
@@ -385,7 +387,7 @@ const LoginPage: React.FC = () => {
                     <div className="text-center space-y-4">
                       <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                         <p className="text-sm text-green-800 dark:text-green-200">
-                          重置密码链接已发送到：
+                          {t('auth.login.forgotPasswordModal.successMessage')}
                         </p>
                         <p className="text-sm font-medium text-green-900 dark:text-green-100 mt-1">
                           {forgotPasswordEmail}
@@ -393,7 +395,7 @@ const LoginPage: React.FC = () => {
                       </div>
                       
                       <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
-                        <p>• 请查看邮箱中的重置密码邮件</p>
+                        <p>• {t('auth.login.forgotPasswordModal.successMessage')}</p>
                         <p>• 链接有效期为24小时</p>
                         <p>• 如果未收到邮件，请检查垃圾邮件文件夹</p>
                       </div>
@@ -408,7 +410,7 @@ const LoginPage: React.FC = () => {
                         className="w-full"
                         variant="outline"
                       >
-                        知道了
+                        {t('auth.login.forgotPasswordModal.closeButton')}
                       </Button>
                     </div>
                   </div>

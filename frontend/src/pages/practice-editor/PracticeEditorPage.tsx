@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from '../../hooks/useTranslation';
 import {
   DndContext,
   closestCenter,
@@ -27,13 +28,15 @@ interface SortableQuestionProps {
   questionIndex: number;
   onRemove: (questionId: string, sectionId: string) => void;
   sectionId: string;
+  t: (key: string, params?: any) => string;
 }
 
 const SortableQuestion: React.FC<SortableQuestionProps> = ({ 
   question, 
   questionIndex, 
   onRemove, 
-  sectionId 
+  sectionId,
+  t
 }) => {
   const {
     attributes,
@@ -72,7 +75,7 @@ const SortableQuestion: React.FC<SortableQuestionProps> = ({
           </span>
           <div className="text-sm text-gray-700 dark:text-gray-300 flex-1">
             <LaTeXPreview
-              content={question.content?.stem || '题目内容加载中...'}
+              content={question.content?.stem || t('practiceEditor.questionContentLoading')}
               config={{ 
                 mode: 'full',
                 features: {
@@ -97,7 +100,7 @@ const SortableQuestion: React.FC<SortableQuestionProps> = ({
             {((question.images && question.images.length > 0) || (question.tikzCodes && question.tikzCodes.length > 0)) && (
               <div className="mt-2">
                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  图形与图片 ({((question.images?.length || 0) + (question.tikzCodes?.length || 0))} 个)
+                  {t('practiceEditor.graphicsAndImages')} ({((question.images?.length || 0) + (question.tikzCodes?.length || 0))} {t('practiceEditor.count')})
                 </div>
                 
                 {/* 合并图片和图形数据 */}
@@ -121,7 +124,7 @@ const SortableQuestion: React.FC<SortableQuestionProps> = ({
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                           />
                           <div className="absolute top-0.5 left-0.5 bg-blue-500 text-white text-xs px-1 py-0.5 rounded text-[8px]">
-                            图
+                            {t('practiceEditor.image')}
                           </div>
                         </div>
                       ) : (
@@ -137,7 +140,7 @@ const SortableQuestion: React.FC<SortableQuestionProps> = ({
                             className="w-full h-full group-hover:scale-105 transition-transform duration-200 flex items-center justify-center"
                           />
                           <div className="absolute top-0.5 left-0.5 bg-purple-500 text-white text-xs px-1 py-0.5 rounded text-[8px]">
-                            形
+                            {t('practiceEditor.shape')}
                           </div>
                         </div>
                       )}
@@ -150,7 +153,7 @@ const SortableQuestion: React.FC<SortableQuestionProps> = ({
         </div>
       </div>
       <div className="flex items-center space-x-2 ml-4">
-        <Tooltip content="从此部分移除题目">
+        <Tooltip content={t('practiceEditor.removeFromSection')}>
           <Button
             onClick={() => onRemove(question._id, sectionId)}
             size="sm"
@@ -290,6 +293,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
   const navigate = useNavigate();
   const { paperBankId, id: practiceId } = useParams<{ paperBankId: string; id: string }>();
   const { showErrorRightSlide, showSuccessRightSlide, rightSlideModal, closeRightSlide } = useModal();
+  const { t } = useTranslation();
   
   // 练习基本信息
   const [title, setTitle] = useState('');
@@ -301,7 +305,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
   // 试卷集和题目数据
   const [availableQuestions, setAvailableQuestions] = useState<Question[]>([]);
   const [sections, setSections] = useState<Section[]>([
-    { id: '1', title: '第一部分', questions: [] }
+    { id: '1', title: t('practiceEditor.defaultSectionTitle', { number: 1 }), questions: [] }
   ]);
   const [loading, setLoading] = useState(true);
   
@@ -369,7 +373,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
         
         // 如果没有标签，使用默认标签
         if (questionTags.length === 0) {
-          questionTags.push('练习卷', '综合练习');
+          questionTags.push(t('practiceEditor.defaultTags.practice'), t('practiceEditor.defaultTags.comprehensive'));
         }
         
         questionTags.forEach(tag => {
@@ -389,7 +393,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
     
     // 如果仍然没有标签，返回默认标签
     if (result.length === 0) {
-      return ['练习卷', '综合练习', '自测'];
+      return [t('practiceEditor.defaultTags.practice'), t('practiceEditor.defaultTags.comprehensive'), t('practiceEditor.defaultTags.selfTest')];
     }
     
     return result;
@@ -424,9 +428,15 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
         
         // 难度关键词匹配
         const difficultyKeywords = {
-          '简单': 1, '容易': 1, '基础': 1,
-          '中等': 3, '普通': 3, '一般': 3,
-          '困难': 5, '难': 5, '复杂': 5
+          [t('practiceEditor.searchKeywords.difficulty.simple')]: 1, 
+          [t('practiceEditor.searchKeywords.difficulty.easy')]: 1, 
+          [t('practiceEditor.searchKeywords.difficulty.basic')]: 1,
+          [t('practiceEditor.searchKeywords.difficulty.medium')]: 3, 
+          [t('practiceEditor.searchKeywords.difficulty.normal')]: 3, 
+          [t('practiceEditor.searchKeywords.difficulty.general')]: 3,
+          [t('practiceEditor.searchKeywords.difficulty.hard')]: 5, 
+          [t('practiceEditor.searchKeywords.difficulty.difficult')]: 5, 
+          [t('practiceEditor.searchKeywords.difficulty.complex')]: 5
         };
         
         let difficultyMatch = false;
@@ -439,10 +449,15 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
         
         // 题型关键词匹配
         const typeKeywords = {
-          '选择': 'choice', '单选': 'choice',
-          '多选': 'multiple-choice', '多选题': 'multiple-choice',
-          '填空': 'fill', '填空题': 'fill',
-          '解答': 'solution', '解答题': 'solution', '计算': 'solution'
+          [t('practiceEditor.searchKeywords.types.choice')]: 'choice', 
+          [t('practiceEditor.searchKeywords.types.singleChoice')]: 'choice',
+          [t('practiceEditor.searchKeywords.types.multipleChoice')]: 'multiple-choice', 
+          [t('practiceEditor.searchKeywords.types.multipleChoiceQuestion')]: 'multiple-choice',
+          [t('practiceEditor.searchKeywords.types.fill')]: 'fill', 
+          [t('practiceEditor.searchKeywords.types.fillQuestion')]: 'fill',
+          [t('practiceEditor.searchKeywords.types.solution')]: 'solution', 
+          [t('practiceEditor.searchKeywords.types.solutionQuestion')]: 'solution', 
+          [t('practiceEditor.searchKeywords.types.calculation')]: 'solution'
         };
         
         let typeKeywordMatch = false;
@@ -624,11 +639,11 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
   // 题目类型文本
   const getQuestionTypeText = (type: string) => {
     switch (type) {
-      case 'choice': return '选择题';
-      case 'multiple-choice': return '多选题';
-      case 'fill': return '填空题';
-      case 'solution': return '解答题';
-      default: return '未知类型';
+      case 'choice': return t('practiceEditor.questionTypes.choice');
+      case 'multiple-choice': return t('practiceEditor.questionTypes.multipleChoice');
+      case 'fill': return t('practiceEditor.questionTypes.fill');
+      case 'solution': return t('practiceEditor.questionTypes.solution');
+      default: return t('practiceEditor.questionTypes.unknown');
     }
   };
 
@@ -658,12 +673,12 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
   // 难度文本
   const getDifficultyText = (difficulty: number) => {
     switch (difficulty) {
-      case 1: return '非常简单';
-      case 2: return '简单';
-      case 3: return '中等';
-      case 4: return '困难';
-      case 5: return '非常困难';
-      default: return '未知';
+      case 1: return t('practiceEditor.difficulties.veryEasy');
+      case 2: return t('practiceEditor.difficulties.easy');
+      case 3: return t('practiceEditor.difficulties.medium');
+      case 4: return t('practiceEditor.difficulties.hard');
+      case 5: return t('practiceEditor.difficulties.veryHard');
+      default: return t('practiceEditor.difficulties.unknown');
     }
   };
 
@@ -1001,7 +1016,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
           if (practice.sections && practice.sections.length > 0) {
             const loadedSections = practice.sections.map((section: any, index: number) => ({
               id: (index + 1).toString(),
-              title: section.title || `第${index + 1}部分`,
+              title: section.title || t('practiceEditor.defaultSectionTitle', { number: index + 1 }),
               questions: section.items ? section.items.map((item: any) => {
                 // 如果item有question字段，使用它；否则直接使用item
                 const question = item.question || item;
@@ -1026,7 +1041,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
       }
     } catch (error) {
       console.error('加载数据失败:', error);
-      showErrorRightSlide('加载失败', '无法加载数据');
+      showErrorRightSlide(t('practiceEditor.errors.loadFailed'), t('practiceEditor.errors.loadFailedMessage'));
     } finally {
       // 结束所有加载状态
       setQuestionsLoading(false);
@@ -1254,7 +1269,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
             preloadQuestions(currentPage + 1, cacheSize);
           }
         } else {
-          showErrorRightSlide('题目加载失败', questionsResponse.data.error || '无法加载题目数据');
+          showErrorRightSlide(t('practiceEditor.errors.questionLoadFailed'), questionsResponse.data.error || t('practiceEditor.errors.questionLoadFailedMessage'));
         }
       } else {
         // 使用缓存中的题目
@@ -1278,7 +1293,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
       }
     } catch (error) {
       console.error('加载题目失败:', error);
-      showErrorRightSlide('加载失败', '无法加载题目数据');
+      showErrorRightSlide(t('practiceEditor.errors.loadFailed'), t('practiceEditor.errors.questionLoadFailedMessage'));
     } finally {
       if (manageLoading) {
         setQuestionsLoading(false);
@@ -1415,7 +1430,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
     const newId = (sections.length + 1).toString();
     setSections(prevSections => [
       ...prevSections,
-      { id: newId, title: `第${sections.length + 1}部分`, questions: [] }
+      { id: newId, title: t('practiceEditor.defaultSectionTitle', { number: sections.length + 1 }), questions: [] }
     ]);
     setEditingSection(newId);
     setSelectedSection(newId); // 自动切换到新部分
@@ -1506,12 +1521,12 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
   // 保存练习
   const handleSave = async (): Promise<boolean> => {
     if (!title.trim()) {
-      showErrorRightSlide('保存失败', '请输入练习标题');
+      showErrorRightSlide(t('practiceEditor.errors.saveFailed'), t('practiceEditor.errors.noTitleMessage'));
       return false;
     }
 
     if (sections.every(section => section.questions.length === 0)) {
-      showErrorRightSlide('保存失败', '请至少添加一道题目');
+      showErrorRightSlide(t('practiceEditor.errors.saveFailed'), t('practiceEditor.errors.noQuestionsMessage'));
       return false;
     }
 
@@ -1534,7 +1549,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
       const bankId = paperBankId || selectedPaperBank;
       
       if (!bankId) {
-        showErrorRightSlide('保存失败', '请选择试卷集');
+        showErrorRightSlide(t('practiceEditor.errors.saveFailed'), t('practiceEditor.errors.noPaperBankMessage'));
         return false;
       }
 
@@ -1556,17 +1571,17 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
       }
       
       if (response.data.success) {
-        const successMessage = practiceId ? '练习卷已更新' : '练习已保存到试卷集中';
-        showSuccessRightSlide('保存成功', successMessage);
+        const successMessage = practiceId ? t('practiceEditor.success.practiceUpdated') : t('practiceEditor.success.practiceSaved');
+        showSuccessRightSlide(t('practiceEditor.success.saveSuccess'), successMessage);
         setHasBeenSaved(true); // 标记为已保存
         return true;
       } else {
-        showErrorRightSlide('保存失败', '保存失败');
+        showErrorRightSlide(t('practiceEditor.errors.saveFailed'), t('practiceEditor.errors.saveFailedMessage'));
         return false;
       }
     } catch (error) {
       console.error('保存练习失败:', error);
-      showErrorRightSlide('保存失败', '保存练习时发生错误');
+      showErrorRightSlide(t('practiceEditor.errors.saveFailed'), t('practiceEditor.errors.saveError'));
       return false;
     } finally {
       setIsSaving(false);
@@ -1583,7 +1598,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
     
     // 检查是否有非默认的部分标题（排除默认的"第一部分"）
     const hasCustomSectionTitles = sections.some((section, index) => 
-      section.title !== `第${index + 1}部分` && section.title !== '第一部分'
+      section.title !== t('practiceEditor.defaultSectionTitle', { number: index + 1 }) && section.title !== t('practiceEditor.defaultSectionTitle', { number: 1 })
     );
     
     return hasTitle || hasQuestions || hasCustomSectionTitles;
@@ -1608,7 +1623,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
   const handleConfirmSave = async () => {
     // 检查是否有标题
     if (!title.trim()) {
-      showErrorRightSlide('保存失败', '请先输入标题');
+      showErrorRightSlide(t('practiceEditor.errors.saveFailed'), t('practiceEditor.errors.noTitle'));
       setShowSaveModal(false);
       return;
     }
@@ -1636,7 +1651,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">加载中...</p>
+          <p className="text-gray-600 dark:text-gray-300">{t('practiceEditor.loading')}</p>
         </div>
       </div>
     );
@@ -1657,21 +1672,21 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                 className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                返回
+                {t('practiceEditor.back')}
               </Button>
               
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <PenTool className="w-5 h-5 text-orange-500" />
                   <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                    练习编辑器
+                    {t('practiceEditor.pageTitle')}
                   </span>
                 </div>
                 
                 
                 {/* 试卷集选择 */}
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">试卷集:</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">{t('practiceEditor.paperBank')}:</span>
                   <SimpleSelect
                     options={paperBanks.map(bank => ({
                       value: bank._id,
@@ -1679,7 +1694,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                     }))}
                     value={selectedPaperBank}
                     onChange={handlePaperBankChange}
-                    placeholder="选择试卷集"
+                    placeholder={t('practiceEditor.selectPaperBank')}
                     size="sm"
                     variant="outline"
                     theme="gray"
@@ -1694,7 +1709,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
               <Button
                 onClick={async () => {
                   if (!title.trim()) {
-                    showErrorRightSlide('保存失败', '请先输入标题');
+                    showErrorRightSlide(t('practiceEditor.errors.saveFailed'), t('practiceEditor.errors.noTitle'));
                     return;
                   }
                   await handleSave();
@@ -1703,7 +1718,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                 className="bg-orange-500 hover:bg-orange-600 text-white"
               >
                 <Save className="w-4 h-4 mr-2" />
-                {isSaving ? '保存中...' : '保存'}
+                {isSaving ? t('practiceEditor.saving') : t('practiceEditor.save')}
               </Button>
             </div>
           </div>
@@ -1720,7 +1735,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
             <Card className="p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  题目筛选
+                  {t('practiceEditor.questionFilter')}
                 </h3>
                 <div className="flex items-center space-x-2">
                     <Button
@@ -1730,7 +1745,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                       className="flex items-center space-x-1"
                     >
                       <Filter className="w-4 h-4" />
-                      <span>{showFilters ? '隐藏筛选' : '高级筛选'}</span>
+                      <span>{showFilters ? t('practiceEditor.hideFilter') : t('practiceEditor.advancedFilter')}</span>
                     </Button>
                     <Button
                       variant="outline"
@@ -1747,7 +1762,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                       className="flex items-center space-x-1"
                     >
                       <RefreshCw className="w-4 h-4" />
-                      <span>重置</span>
+                      <span>{t('practiceEditor.reset')}</span>
                     </Button>
                 </div>
               </div>
@@ -1771,7 +1786,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                           handleSearch();
                         }
                       }}
-                      placeholder="搜索题目内容、标签..."
+                      placeholder={t('practiceEditor.searchPlaceholder')}
                       className="pl-10 pr-10"
                     />
                     {searchQuery && (
@@ -1791,10 +1806,10 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                     {isSearching ? (
                       <div className="flex items-center gap-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        搜索中
+                        {t('practiceEditor.searching')}
                       </div>
                     ) : (
-                      '搜索'
+                      t('practiceEditor.search')
                     )}
                   </Button>
                 </div>
@@ -1811,33 +1826,33 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                       {/* 题型筛选 */}
                       <div>
                         <MultiSelect
-                          label="题型筛选"
+                          label={t('practiceEditor.typeFilter')}
                           options={[
-                            { value: 'choice', label: '选择题' },
-                            { value: 'multiple-choice', label: '多选题' },
-                            { value: 'fill', label: '填空题' },
-                            { value: 'solution', label: '解答题' }
+                            { value: 'choice', label: t('practiceEditor.questionTypes.choice') },
+                            { value: 'multiple-choice', label: t('practiceEditor.questionTypes.multipleChoice') },
+                            { value: 'fill', label: t('practiceEditor.questionTypes.fill') },
+                            { value: 'solution', label: t('practiceEditor.questionTypes.solution') }
                           ]}
                           value={selectedTypes}
                           onChange={(value) => setSelectedTypes(value as string[])}
-                          placeholder="选择题型"
+                          placeholder={t('practiceEditor.selectTypes')}
                         />
                       </div>
 
                       {/* 难度筛选 */}
                       <div>
                         <MultiSelect
-                          label="题目难度"
+                          label={t('practiceEditor.difficultyFilter')}
                           options={[
-                            { value: 1, label: '非常简单', icon: '○' },
-                            { value: 2, label: '简单', icon: '○○' },
-                            { value: 3, label: '中等', icon: '○○○' },
-                            { value: 4, label: '困难', icon: '○○○○' },
-                            { value: 5, label: '非常困难', icon: '○○○○○' }
+                            { value: 1, label: t('practiceEditor.difficulties.veryEasy'), icon: '○' },
+                            { value: 2, label: t('practiceEditor.difficulties.easy'), icon: '○○' },
+                            { value: 3, label: t('practiceEditor.difficulties.medium'), icon: '○○○' },
+                            { value: 4, label: t('practiceEditor.difficulties.hard'), icon: '○○○○' },
+                            { value: 5, label: t('practiceEditor.difficulties.veryHard'), icon: '○○○○○' }
                           ]}
                           value={selectedDifficulties}
                           onChange={(value) => setSelectedDifficulties(value as number[])}
-                          placeholder="选择难度"
+                          placeholder={t('practiceEditor.selectDifficulty')}
                           maxDisplay={2}
                         />
                       </div>
@@ -1845,14 +1860,14 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                       {/* 题库筛选 */}
                       <div>
                         <MultiSelect
-                          label="题库归属"
+                          label={t('practiceEditor.bankFilter')}
                           options={questionBanks.map(bank => ({
                             value: bank.bid,
                             label: bank.name
                           }))}
                           value={selectedBanks}
                           onChange={(value) => setSelectedBanks(value as string[])}
-                          placeholder="选择题库"
+                          placeholder={t('practiceEditor.selectBank')}
                           maxDisplay={2}
                         />
                       </div>
@@ -1862,11 +1877,11 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                     {/* 标签筛选 */}
                     <div>
                       <TagSelector
-                        label="知识点标签"
+                        label={t('practiceEditor.tagFilter')}
                         availableTags={availableTags}
                         selectedTags={selectedTags}
                         onTagsChange={setSelectedTags}
-                        placeholder="选择知识点标签"
+                        placeholder={t('practiceEditor.selectTags')}
                       />
                     </div>
                   </motion.div>
@@ -1874,7 +1889,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
 
                 {/* 筛选结果统计 */}
                 <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
-                  <span>找到 {totalQuestions} 道题目</span>
+                  <span>{t('practiceEditor.foundQuestions', { count: totalQuestions })}</span>
                 </div>
               </div>
             </Card>
@@ -1883,18 +1898,18 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  可用题目 ({availableQuestions.length})
+                  {t('practiceEditor.availableQuestions')} ({availableQuestions.length})
                 </h3>
                 {questionsLoading && (
                   <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                    <span className="text-sm">加载中...</span>
+                    <span className="text-sm">{t('practiceEditor.loadingQuestions')}</span>
                   </div>
                 )}
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">添加到:</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">{t('practiceEditor.addTo')}:</span>
                   <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                    {sections.find(s => s.id === selectedSection)?.title || `部分 ${selectedSection}`}
+                    {sections.find(s => s.id === selectedSection)?.title || `${t('practiceEditor.section')} ${selectedSection}`}
                   </span>
                 </div>
               </div>
@@ -1904,14 +1919,14 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                   <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 flex items-center justify-center z-10 rounded-lg">
                     <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>正在筛选题目...</span>
+                      <span>{t('practiceEditor.filteringQuestions')}</span>
                     </div>
                   </div>
                 )}
                 {availableQuestions.length === 0 && !questionsLoading ? (
                   <div className="text-center py-20 text-gray-500 dark:text-gray-400">
-                    <p>暂无可用题目</p>
-                    <p className="text-sm mt-2">请尝试调整筛选条件</p>
+                    <p>{t('practiceEditor.noQuestions')}</p>
+                    <p className="text-sm mt-2">{t('practiceEditor.noQuestionsDescription')}</p>
                   </div>
                 ) : (
                   availableQuestions.map((question) => (
@@ -1969,7 +1984,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                         {/* LaTeX渲染的完整题目内容 */}
                         <div className="mb-3">
                           <LaTeXPreview
-                            content={question.content?.stem || '题目内容加载中...'}
+                            content={question.content?.stem || t('practiceEditor.questionContentLoading')}
                             config={{ 
                               mode: 'full',
                               features: {
@@ -1995,7 +2010,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                         {((question.images && question.images.length > 0) || (question.tikzCodes && question.tikzCodes.length > 0)) && (
                           <div className="mb-3">
                             <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                              图形与图片 ({((question.images?.length || 0) + (question.tikzCodes?.length || 0))} 个)
+                              {t('practiceEditor.graphicsAndImages')} ({((question.images?.length || 0) + (question.tikzCodes?.length || 0))} {t('practiceEditor.count')})
                             </div>
                             
                             {/* 合并图片和图形数据 */}
@@ -2019,7 +2034,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                                       />
                                       <div className="absolute top-0.5 left-0.5 bg-blue-500 text-white text-xs px-1 py-0.5 rounded text-[10px]">
-                                        图
+                                        {t('practiceEditor.image')}
                                       </div>
                                     </div>
                                   ) : (
@@ -2035,7 +2050,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                                         className="w-full h-full group-hover:scale-105 transition-transform duration-200 flex items-center justify-center"
                                       />
                                       <div className="absolute top-0.5 left-0.5 bg-purple-500 text-white text-xs px-1 py-0.5 rounded text-[10px]">
-                                        形
+                                        {t('practiceEditor.shape')}
                                       </div>
                                     </div>
                                   )}
@@ -2048,7 +2063,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                         {/* 显示选项（如果是选择题） */}
                         {question.content?.options && question.content.options.length > 0 && (
                           <div className="mb-3">
-                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">选项：</div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">{t('practiceEditor.options')}：</div>
                             <div className="space-y-1">
                               {question.content.options.map((option, index) => (
                                 <div key={index} className="flex items-start space-x-2">
@@ -2089,7 +2104,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                           className="ml-4 bg-orange-500 hover:bg-orange-600 text-white"
                         >
                           <PlusCircle className="w-4 h-4 mr-1" />
-                          添加
+                          {t('practiceEditor.add')}
                         </Button>
                     </div>
                   </motion.div>
@@ -2107,7 +2122,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                       variant="outline"
                       size="sm"
                     >
-                      上一页
+                      {t('practiceEditor.previousPage')}
                     </Button>
                     <Button
                       onClick={handleNextPage}
@@ -2115,16 +2130,16 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                       variant="outline"
                       size="sm"
                     >
-                      下一页
+                      {t('practiceEditor.nextPage')}
                     </Button>
                   </div>
                   
                   <div className="flex items-center space-x-2">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      第 {currentPage} 页，共 {totalPages} 页
+                      {t('practiceEditor.page')} {currentPage} {t('practiceEditor.of')} {totalPages} {t('practiceEditor.page')}
                     </span>
                     <span className="text-sm text-gray-500 dark:text-gray-500">
-                      （共 {totalQuestions} 道题目）
+                      （{t('practiceEditor.totalQuestions', { count: totalQuestions })}）
                     </span>
                   </div>
                   
@@ -2167,7 +2182,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                 {previewLoading && (
                   <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 mb-4">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                    <span className="text-sm">正在加载练习内容...</span>
+                    <span className="text-sm">{t('practiceEditor.loadingPracticeContent')}</span>
                   </div>
                 )}
                 <div className="flex items-center space-x-2 flex-1">
@@ -2179,7 +2194,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                         setTitle(e.target.value);
                         setHasBeenSaved(false); // 重置保存状态
                       }}
-                      placeholder="请输入练习标题"
+                      placeholder={t('practiceEditor.enterTitle')}
                       className="text-lg font-medium flex-1"
                       autoFocus
                       onBlur={() => handlePracticeTitleSave(title)}
@@ -2196,7 +2211,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                       className="text-lg font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 px-2 py-1 rounded transition-colors flex-1"
                       onClick={handlePracticeTitleEdit}
                     >
-                      {title || '点击设置练习标题'}
+                      {title || t('practiceEditor.clickToSetTitle')}
                     </span>
                   )}
                 </div>
@@ -2206,7 +2221,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                     variant="outline"
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    添加部分
+                    {t('practiceEditor.addSection')}
                   </Button>
               </div>
 
@@ -2215,7 +2230,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                   <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 flex items-center justify-center z-10 rounded-lg">
                     <div className="flex items-center space-x-2 text-blue-600 dark:text-blue-400">
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>正在加载练习内容...</span>
+                      <span>{t('practiceEditor.loadingPracticeContent')}</span>
                     </div>
                   </div>
                 )}
@@ -2239,7 +2254,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                             <Input
                               value={section.title}
                               onChange={(e) => updateSection(section.id, 'title', e.target.value)}
-                              placeholder="部分标题"
+                              placeholder={t('practiceEditor.sectionTitle')}
                               className="text-sm font-medium flex-1"
                               autoFocus
                               onBlur={() => handleTitleSave(section.id, section.title)}
@@ -2256,23 +2271,23 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                               className="font-medium text-gray-900 dark:text-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 px-2 py-1 rounded transition-colors flex-1"
                               onClick={() => handleTitleEdit(section.id)}
                             >
-                              {section.title || `部分 ${section.id}`}
+                              {section.title || `${t('practiceEditor.section')} ${section.id}`}
                             </span>
                           )}
                           <span className="text-sm text-gray-500 dark:text-gray-400">
-                            ({section.questions.length} 题)
+                            ({section.questions.length} {t('practiceEditor.questions')})
                           </span>
                           {/* 当前选中状态指示 */}
                           {selectedSection === section.id && (
                             <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full">
-                              当前
+                              {t('practiceEditor.current')}
                             </span>
                           )}
                         </div>
                         <div className="flex items-center space-x-1">
                           {/* 切换按钮 - 只有非当前部分才显示 */}
                           {selectedSection !== section.id && (
-                            <Tooltip content="切换到此部分添加题目">
+                            <Tooltip content={t('practiceEditor.switchToSection')}>
                               <Button
                                 onClick={() => switchToSection(section.id)}
                                 size="sm"
@@ -2285,7 +2300,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                           )}
                           {/* 上移按钮 */}
                           {sections.findIndex(s => s.id === section.id) > 0 && (
-                            <Tooltip content="上移此部分">
+                            <Tooltip content={t('practiceEditor.moveUp')}>
                               <Button
                                 onClick={() => {
                                   const currentIndex = sections.findIndex(s => s.id === section.id);
@@ -2301,7 +2316,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                           )}
                           {/* 下移按钮 */}
                           {sections.findIndex(s => s.id === section.id) < sections.length - 1 && (
-                            <Tooltip content="下移此部分">
+                            <Tooltip content={t('practiceEditor.moveDown')}>
                               <Button
                                 onClick={() => {
                                   const currentIndex = sections.findIndex(s => s.id === section.id);
@@ -2317,7 +2332,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                           )}
                           {/* 删除按钮 */}
                           {sections.length > 1 && (
-                            <Tooltip content="删除此部分">
+                            <Tooltip content={t('practiceEditor.deleteSection')}>
                               <Button
                                 onClick={() => removeSection(section.id)}
                                 size="sm"
@@ -2343,6 +2358,7 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
                               questionIndex={questionIndex}
                               onRemove={removeQuestionFromSection}
                               sectionId={section.id}
+                              t={t}
                             />
                           ))}
                         </div>
@@ -2361,13 +2377,13 @@ const PracticeEditorPage: React.FC<PracticeEditorPageProps> = () => {
         isOpen={showSaveModal}
         onCancel={handleCancelSave}
         onConfirm={handleConfirmSave}
-        title="保存练习"
-        message="您有未保存的更改，是否要保存后退出？"
-        confirmText="保存并退出"
-        cancelText="不保存退出"
+        title={t('practiceEditor.savePractice')}
+        message={t('practiceEditor.unsavedChanges')}
+        confirmText={t('practiceEditor.saveAndExit')}
+        cancelText={t('practiceEditor.exitWithoutSaving')}
         type="warning"
         confirmLoading={isSaving}
-        loadingText="正在保存..."
+        loadingText={t('practiceEditor.savingChanges')}
       />
 
       {/* 错误提示模态框 */}

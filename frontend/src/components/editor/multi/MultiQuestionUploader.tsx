@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Button from '../../ui/Button';
 import { ocrAPI } from '../../../services/api';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface QuestionData {
   id: string;
@@ -42,6 +43,7 @@ const MultiQuestionUploader: React.FC<MultiQuestionUploaderProps> = ({
   maxFileSize = 5,
   acceptedFormats = ['image/jpeg', 'image/png', 'image/jpg']
 }) => {
+  const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
@@ -56,13 +58,13 @@ const MultiQuestionUploader: React.FC<MultiQuestionUploaderProps> = ({
   const validateFile = (file: File): boolean => {
     // 检查文件类型
     if (!acceptedFormats.includes(file.type)) {
-      setError(`不支持的文件类型: ${file.type}`);
+      setError(t('editor.multiQuestionUploader.unsupportedFormat', { type: file.type }));
       return false;
     }
 
     // 检查文件大小
     if (file.size > maxFileSize * 1024 * 1024) {
-      setError(`文件大小不能超过 ${maxFileSize}MB`);
+      setError(t('editor.multiQuestionUploader.fileTooLarge', { maxSize: maxFileSize }));
       return false;
     }
 
@@ -78,7 +80,7 @@ const MultiQuestionUploader: React.FC<MultiQuestionUploaderProps> = ({
 
     // 检查总文件数量限制
     if (selectedFiles.length + validFiles.length > 10) {
-      setError('最多只能上传10张图片');
+      setError(t('editor.multiQuestionUploader.maxFilesExceeded'));
       return;
     }
 
@@ -269,14 +271,14 @@ const MultiQuestionUploader: React.FC<MultiQuestionUploaderProps> = ({
             onQuestionsGenerated(questions);
           }, 500);
         } else {
-          throw new Error('没有生成任何题目');
+          throw new Error(t('editor.multiQuestionUploader.noQuestionsGenerated'));
         }
       } else {
-        throw new Error(response.data.error || '批量OCR识别失败');
+        throw new Error(response.data.error || t('editor.multiQuestionUploader.recognitionFailed'));
       }
     } catch (err: any) {
       // 错误日志已清理
-      const errorMsg = err.response?.data?.error || err.message || '批量OCR识别失败';
+      const errorMsg = err.response?.data?.error || err.message || t('editor.multiQuestionUploader.recognitionFailed');
       setError(errorMsg);
       onError?.(errorMsg);
     } finally {
@@ -326,13 +328,13 @@ const MultiQuestionUploader: React.FC<MultiQuestionUploaderProps> = ({
 
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {isDragging ? '释放以上传图片' : '上传题目图片'}
+                {isDragging ? t('editor.multiQuestionUploader.dragToUpload') : t('editor.multiQuestionUploader.title')}
               </h3>
               <p className="text-gray-500 mb-4">
-                支持 JPG、PNG 格式，最大 {maxFileSize}MB，最多10张图片
+                {t('editor.multiQuestionUploader.supportFormats', { maxSize: maxFileSize })}
               </p>
               <p className="text-sm text-gray-400">
-                已选择 {selectedFiles.length}/10 张图片
+                {t('editor.multiQuestionUploader.selectedCount', { count: selectedFiles.length })}
               </p>
             </div>
 
@@ -343,7 +345,7 @@ const MultiQuestionUploader: React.FC<MultiQuestionUploaderProps> = ({
                 disabled={selectedFiles.length >= 10}
               >
                 <Camera className="w-4 h-4 mr-2" />
-                选择图片
+                {t('editor.multiQuestionUploader.selectImages')}
               </Button>
               
               {selectedFiles.length > 0 && (
@@ -353,7 +355,7 @@ const MultiQuestionUploader: React.FC<MultiQuestionUploaderProps> = ({
                   size="sm"
                 >
                   <RotateCcw className="w-4 h-4 mr-2" />
-                  清空
+                  {t('editor.multiQuestionUploader.clear')}
                 </Button>
               )}
             </div>
@@ -379,7 +381,7 @@ const MultiQuestionUploader: React.FC<MultiQuestionUploaderProps> = ({
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
-            <h4 className="text-lg font-medium text-gray-900">已选择的图片</h4>
+            <h4 className="text-lg font-medium text-gray-900">{t('editor.multiQuestionUploader.selectedImages')}</h4>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {selectedFiles.map((file, index) => (
                 <div key={index} className="relative group">
@@ -389,7 +391,7 @@ const MultiQuestionUploader: React.FC<MultiQuestionUploaderProps> = ({
                   >
                     <img
                       src={previewUrls[index]}
-                      alt={`预览 ${index + 1}`}
+                      alt={t('editor.multiQuestionUploader.preview', { index: index + 1 })}
                       className="w-full h-full object-cover"
                     />
                     
@@ -413,7 +415,7 @@ const MultiQuestionUploader: React.FC<MultiQuestionUploaderProps> = ({
                   {/* 文件信息 */}
                   <div className="mt-2 text-xs text-gray-500">
                     <p className="truncate">{file.name}</p>
-                    <p>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <p>{t('editor.multiQuestionUploader.fileSize', { size: (file.size / 1024 / 1024).toFixed(2) })}</p>
                   </div>
                 </div>
               ))}
@@ -429,7 +431,7 @@ const MultiQuestionUploader: React.FC<MultiQuestionUploaderProps> = ({
             className="space-y-2"
           >
             <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>正在识别图片...</span>
+              <span>{t('editor.multiQuestionUploader.recognizing')}</span>
               <span>{progress}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -452,12 +454,12 @@ const MultiQuestionUploader: React.FC<MultiQuestionUploaderProps> = ({
             {isProcessing ? (
               <>
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                识别中...
+                {t('editor.multiQuestionUploader.recognizing')}
               </>
             ) : (
               <>
                 <Image className="w-5 h-5 mr-2" />
-                开始识别 ({selectedFiles.length} 张图片)
+                {t('editor.multiQuestionUploader.startRecognition', { count: selectedFiles.length })}
               </>
             )}
           </Button>
@@ -491,13 +493,13 @@ const MultiQuestionUploader: React.FC<MultiQuestionUploaderProps> = ({
               
               {/* 图片信息 */}
               <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-black bg-opacity-50 text-white rounded-lg text-sm">
-                {selectedImageIndex + 1} / {selectedFiles.length}
+                {t('editor.multiQuestionUploader.imageViewer', { current: selectedImageIndex + 1, total: selectedFiles.length })}
               </div>
               
               {/* 图片 */}
               <img
                 src={previewUrls[selectedImageIndex]}
-                alt={`图片 ${selectedImageIndex + 1}`}
+                alt={t('editor.multiQuestionUploader.preview', { index: selectedImageIndex + 1 })}
                 className="w-full h-full object-contain max-h-[90vh]"
               />
               

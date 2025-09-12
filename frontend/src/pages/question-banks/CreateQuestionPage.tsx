@@ -26,6 +26,7 @@ import 'katex/dist/katex.min.css';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import { useModal } from '../../hooks/useModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface QuestionContent {
   stem: string;
@@ -44,6 +45,7 @@ const CreateQuestionPage: React.FC = () => {
   const { bid } = useParams<{ bid: string }>();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuthStore();
+  const { t } = useTranslation();
   const [questionType, setQuestionType] = useState<'choice' | 'multiple-choice' | 'fill' | 'solution'>('choice');
   const [content, setContent] = useState<QuestionContent>({
       stem: '',
@@ -133,7 +135,7 @@ const CreateQuestionPage: React.FC = () => {
   // 多题目上传处理函数
   const handleMultiQuestionsGenerated = (questions: any[]) => {
     setMultiQuestions(questions);
-    showSuccessRightSlide('生成成功', `已成功生成 ${questions.length} 道题目！`);
+    showSuccessRightSlide(t('questionBankPage.CreateQuestionPage.success.multiQuestionsGenerated', { count: questions.length }), t('questionBankPage.CreateQuestionPage.success.multiQuestionsGenerated', { count: questions.length }));
   };
 
   const handleMultiQuestionsUpdate = (questions: any[]) => {
@@ -146,7 +148,7 @@ const CreateQuestionPage: React.FC = () => {
     setMultiQuestions([]);
     
     // 显示成功提示
-    showSuccessRightSlide('保存成功', '多道题目已成功保存！');
+    showSuccessRightSlide(t('questionBankPage.CreateQuestionPage.success.multiQuestionsSaved'), t('questionBankPage.CreateQuestionPage.success.multiQuestionsSaved'));
     
     // 根据来源决定返回路径
     if (bid) {
@@ -171,7 +173,7 @@ const CreateQuestionPage: React.FC = () => {
       setPendingQuestionData(null);
       
       // 显示成功提示
-      showSuccessRightSlide('创建成功', '多道题目已成功创建！');
+      showSuccessRightSlide(t('questionBankPage.CreateQuestionPage.success.multiQuestionsSaved'), t('questionBankPage.CreateQuestionPage.success.multiQuestionsSaved'));
       
       // 根据来源决定返回路径
       if (bid) {
@@ -181,7 +183,7 @@ const CreateQuestionPage: React.FC = () => {
       }
     } catch (error) {
       // 创建题目失败
-      showErrorRightSlide('创建失败', '创建题目时发生错误，请重试');
+      showErrorRightSlide(t('questionBankPage.CreateQuestionPage.errors.saveFailed'), t('questionBankPage.CreateQuestionPage.errors.saveFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -217,8 +219,8 @@ const CreateQuestionPage: React.FC = () => {
         
         // 显示相似度警告
         showRightSlide(
-          '相似度警告', 
-          `检测到 ${response.data.similarCount} 道相似题目，最高相似度 ${(response.data.maxSimilarity * 100).toFixed(1)}%`,
+          t('questionBankPage.CreateQuestionPage.status.similarityWarning', { count: response.data.similarCount, percentage: (response.data.maxSimilarity * 100).toFixed(1) }), 
+          t('questionBankPage.CreateQuestionPage.status.similarityWarning', { count: response.data.similarCount, percentage: (response.data.maxSimilarity * 100).toFixed(1) }),
           { type: 'warning' }
         );
       } else {
@@ -227,7 +229,7 @@ const CreateQuestionPage: React.FC = () => {
     } catch (error) {
       // 实时相似度检测失败
       setSimilarityWarning(null);
-      showErrorRightSlide('检测失败', '相似度检测失败，请稍后重试');
+      showErrorRightSlide(t('questionBankPage.CreateQuestionPage.errors.similarityDetectionFailed'), t('questionBankPage.CreateQuestionPage.errors.similarityDetectionFailed'));
     } finally {
       setIsDetectingSimilarity(false);
     }
@@ -282,7 +284,7 @@ const CreateQuestionPage: React.FC = () => {
       // 错误时关闭模态框
       setShowSimilarityModal(false);
       setPendingQuestionData(null);
-      showErrorRightSlide('检测失败', '详细相似度检测失败，请稍后重试');
+      showErrorRightSlide(t('questionBankPage.CreateQuestionPage.errors.similarityDetectionFailed'), t('questionBankPage.CreateQuestionPage.errors.similarityDetectionFailed'));
     } finally {
       setIsLoadingDetailedSimilarity(false);
     }
@@ -292,8 +294,8 @@ const CreateQuestionPage: React.FC = () => {
   const handleExitMultiMode = () => {
     if (multiQuestions.length > 0) {
       showConfirm(
-        '退出多题目模式',
-        '确定要退出多题目模式吗？未保存的题目将会丢失.',
+        t('questionBankPage.CreateQuestionPage.confirm.exitMultiMode'),
+        t('questionBankPage.CreateQuestionPage.confirm.exitMultiModeMessage'),
         () => {
           // 先关闭模态框
           closeConfirm();
@@ -347,7 +349,7 @@ const CreateQuestionPage: React.FC = () => {
         setQuestionBanks(response.data.questionBanks || []);
       } catch (error) {
         // 获取题库列表失败
-        showErrorRightSlide('加载失败', '获取题库列表失败，请刷新页面重试');
+        showErrorRightSlide(t('questionBankPage.CreateQuestionPage.errors.loadFailed'), t('questionBankPage.CreateQuestionPage.errors.loadFailed'));
       } finally {
         setLoadingBanks(false);
       }
@@ -443,7 +445,7 @@ const CreateQuestionPage: React.FC = () => {
     setOcrError('');
     
     // 显示成功提示
-    showSuccessRightSlide('OCR完成', '图片识别完成，内容已自动填充');
+    showSuccessRightSlide(t('questionBankPage.CreateQuestionPage.success.ocrComplete'), t('questionBankPage.CreateQuestionPage.success.ocrComplete'));
   };
 
   // 智能分析
@@ -466,15 +468,15 @@ const CreateQuestionPage: React.FC = () => {
         }));
         
         // 显示成功提示
-        showSuccessRightSlide('分析完成', '智能分析已完成，已自动填充相关属性');
+        showSuccessRightSlide(t('questionBankPage.CreateQuestionPage.success.analysisComplete'), t('questionBankPage.CreateQuestionPage.success.analysisComplete'));
       } else {
-        setAnalysisError('智能分析失败，请稍后重试');
+        setAnalysisError(t('questionBankPage.CreateQuestionPage.errors.analysisFailed'));
       }
     } catch (error: any) {
       // 智能分析失败
-      const errorMessage = error.response?.data?.error || '智能分析失败，请稍后重试';
+      const errorMessage = error.response?.data?.error || t('questionBankPage.CreateQuestionPage.errors.analysisFailed');
       setAnalysisError(errorMessage);
-      showErrorRightSlide('分析失败', errorMessage);
+      showErrorRightSlide(t('questionBankPage.CreateQuestionPage.errors.analysisFailed'), errorMessage);
     } finally {
       setIsAnalyzing(false);
     }
@@ -483,7 +485,7 @@ const CreateQuestionPage: React.FC = () => {
   // OCR错误处理
   const handleOCRError = (error: string) => {
     setOcrError(error);
-    showErrorRightSlide('OCR失败', error);
+    showErrorRightSlide(t('questionBankPage.CreateQuestionPage.errors.ocrFailed'), error);
   };
 
   // 点击外部关闭下拉菜单
@@ -666,23 +668,23 @@ const CreateQuestionPage: React.FC = () => {
   // 保存题目
   const handleSave = async () => {
     if (!selectedBankId) {
-      showErrorRightSlide('提示', '请先选择题库');
+      showErrorRightSlide(t('questionBankPage.CreateQuestionPage.errors.selectBank'), t('questionBankPage.CreateQuestionPage.errors.selectBank'));
       return;
     }
 
     // 权限检查：确保用户对当前选择题库有创建题目的权限
     const selectedBank = questionBanks.find(bank => bank.bid === selectedBankId);
     if (!selectedBank || (selectedBank.userRole !== 'creator' && selectedBank.userRole !== 'manager' && selectedBank.userRole !== 'collaborator')) {
-      const errorMessage = '您没有权限为该题库创建题目.只有题库的创建者、管理员或协作者才能创建题目.';
+      const errorMessage = t('questionBankPage.CreateQuestionPage.permissions.noPermissionForBank');
       setPermissionError(errorMessage);
-      showErrorRightSlide('权限不足', errorMessage);
+      showErrorRightSlide(t('questionBankPage.CreateQuestionPage.permissions.insufficient'), errorMessage);
       // 3秒后自动清除错误提示
       setTimeout(() => setPermissionError(''), 3000);
       return;
     }
 
     if (!content.stem.trim()) {
-      showErrorRightSlide('提示', '请输入题目内容');
+      showErrorRightSlide(t('questionBankPage.CreateQuestionPage.errors.enterContent'), t('questionBankPage.CreateQuestionPage.errors.enterContent'));
       return;
     }
 
@@ -690,23 +692,23 @@ const CreateQuestionPage: React.FC = () => {
     if (questionType === 'choice' || questionType === 'multiple-choice') {
       // 选择题：验证答案和选项
       if (!content.answer.trim()) {
-        showErrorRightSlide('提示', '请选择答案');
+        showErrorRightSlide(t('questionBankPage.CreateQuestionPage.errors.selectAnswer'), t('questionBankPage.CreateQuestionPage.errors.selectAnswer'));
         return;
       }
       if (!content.options || content.options.some(option => !option.trim())) {
-        showErrorRightSlide('提示', '请完善选项内容');
+        showErrorRightSlide(t('questionBankPage.CreateQuestionPage.errors.completeOptions'), t('questionBankPage.CreateQuestionPage.errors.completeOptions'));
         return;
       }
     } else if (questionType === 'fill') {
       // 填空题：验证填空题答案
       if (!content.fillAnswers || content.fillAnswers.some(answer => !answer.trim())) {
-        showErrorRightSlide('提示', '请完善填空题答案');
+        showErrorRightSlide(t('questionBankPage.CreateQuestionPage.errors.completeFillAnswers'), t('questionBankPage.CreateQuestionPage.errors.completeFillAnswers'));
         return;
       }
     } else if (questionType === 'solution') {
       // 解答题：验证解答题答案
       if (!content.solutionAnswers || content.solutionAnswers.some(answer => !answer.trim())) {
-        showErrorRightSlide('提示', '请完善解答题答案');
+        showErrorRightSlide(t('questionBankPage.CreateQuestionPage.errors.completeSolutionAnswers'), t('questionBankPage.CreateQuestionPage.errors.completeSolutionAnswers'));
         return;
       }
     }
@@ -760,7 +762,7 @@ const CreateQuestionPage: React.FC = () => {
       await questionAPI.createQuestion(selectedBankId, questionData);
       
       // 显示成功提示
-      showSuccessRightSlide('保存成功', '题目已成功保存！');
+      showSuccessRightSlide(t('questionBankPage.CreateQuestionPage.success.saved'), t('questionBankPage.CreateQuestionPage.success.saved'));
       
       // 根据来源决定返回路径
       if (bid) {
@@ -772,7 +774,7 @@ const CreateQuestionPage: React.FC = () => {
       }
     } catch (error) {
       // 保存题目失败
-      showErrorRightSlide('保存失败', '保存题目时发生错误，请重试');
+      showErrorRightSlide(t('questionBankPage.CreateQuestionPage.errors.saveFailed'), t('questionBankPage.CreateQuestionPage.errors.saveFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -809,7 +811,7 @@ const CreateQuestionPage: React.FC = () => {
               transition={{ delay: 0.3, duration: 0.3 }}
               className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2"
             >
-              权限不足
+              {t('questionBankPage.CreateQuestionPage.permissions.insufficient')}
             </motion.h2>
             <motion.p 
               initial={{ opacity: 0, y: 10 }}
@@ -817,7 +819,7 @@ const CreateQuestionPage: React.FC = () => {
               transition={{ delay: 0.4, duration: 0.3 }}
               className="text-gray-600 dark:text-gray-300 mb-4"
             >
-              您没有权限为任何题库创建题目.只有题库的创建者、管理员或协作者才能创建题目.
+              {t('questionBankPage.CreateQuestionPage.permissions.noPermission')}
             </motion.p>
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -833,7 +835,7 @@ const CreateQuestionPage: React.FC = () => {
                   onClick={() => navigate('/question-banks')}
                   className="w-full"
                 >
-                  返回题库列表
+                  {t('common.backToQuestionBanks')}
                 </Button>
               </motion.div>
               <motion.div
@@ -845,7 +847,7 @@ const CreateQuestionPage: React.FC = () => {
                   onClick={() => navigate('/')}
                   className="w-full"
                 >
-                  返回首页
+                  {t('common.backToHome')}
                 </Button>
               </motion.div>
             </motion.div>
@@ -859,8 +861,8 @@ const CreateQuestionPage: React.FC = () => {
     return (
       <LoadingPage
         type="loading"
-        title="加载题库信息中..."
-        description="正在获取题库信息，请稍候"
+        title={t('questionBankPage.CreateQuestionPage.status.loadingBanks')}
+        description={t('questionBankPage.CreateQuestionPage.status.loadingBanksDesc')}
         animation="spinner"
       />
     );
@@ -893,15 +895,15 @@ const CreateQuestionPage: React.FC = () => {
                 className="flex items-center space-x-1"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>{isMultiMode ? '退出批量编辑' : '返回'}</span>
+                <span>{isMultiMode ? t('questionBankPage.CreateQuestionPage.navigation.exitBatch') : t('questionBankPage.CreateQuestionPage.navigation.back')}</span>
               </Button>
               
               <div>
                 <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                  {isMultiMode ? '批量编辑题目' : '创建题目'}
+                  {isMultiMode ? t('questionBankPage.CreateQuestionPage.batchTitle') : t('questionBankPage.CreateQuestionPage.title')}
                 </h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {isMultiMode ? '批量编辑多个题目' : '为题库添加新的题目'}
+                  {isMultiMode ? t('questionBankPage.CreateQuestionPage.batchDescription') : t('questionBankPage.CreateQuestionPage.description')}
                 </p>
               </div>
             </div>
@@ -916,7 +918,7 @@ const CreateQuestionPage: React.FC = () => {
                   >
                     <BookOpen className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {selectedBank ? selectedBank.name : '选择题库'}
+                      {selectedBank ? selectedBank.name : t('questionBankPage.CreateQuestionPage.placeholders.category')}
                     </span>
                     <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                   </button>
@@ -924,10 +926,10 @@ const CreateQuestionPage: React.FC = () => {
                   {showBankDropdown && (
                     <div className="absolute z-50 mt-1 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg dark:shadow-gray-900/50 max-h-60 overflow-y-auto">
                       {loadingBanks ? (
-                        <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">加载中...</div>
+                        <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">{t('common.loading')}</div>
                       ) : availableBanks.length === 0 ? (
                         <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                          没有可用的题库 ({questionBanks.length} 个题库，{availableBanks.length} 个可用)
+                          {t('questionBankPage.CreateQuestionPage.status.noAvailableBanks', { total: questionBanks.length, available: availableBanks.length })}
                         </div>
                       ) : (
                         availableBanks.map((bank) => (
@@ -957,7 +959,7 @@ const CreateQuestionPage: React.FC = () => {
                   >
                     <BookOpen className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {selectedBank ? selectedBank.name : '选择题库'}
+                      {selectedBank ? selectedBank.name : t('questionBankPage.CreateQuestionPage.placeholders.category')}
                     </span>
                     <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                   </button>
@@ -965,10 +967,10 @@ const CreateQuestionPage: React.FC = () => {
                   {showBankDropdown && (
                     <div className="absolute z-50 mt-1 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg dark:shadow-gray-900/50 max-h-60 overflow-y-auto">
                       {loadingBanks ? (
-                        <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">加载中...</div>
+                        <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">{t('common.loading')}</div>
                       ) : availableBanks.length === 0 ? (
                         <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                          没有可用的题库 ({questionBanks.length} 个题库，{availableBanks.length} 个可用)
+                          {t('questionBankPage.CreateQuestionPage.status.noAvailableBanks', { total: questionBanks.length, available: availableBanks.length })}
                         </div>
                       ) : (
                         availableBanks.map((bank) => (
@@ -1000,7 +1002,7 @@ const CreateQuestionPage: React.FC = () => {
                         : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
                     }`}
                   >
-                    选择题
+                    {t('questionBankPage.CreateQuestionPage.questionTypes.choice')}
                   </button>
                   <button
                     onClick={() => setQuestionType('fill')}
@@ -1010,7 +1012,7 @@ const CreateQuestionPage: React.FC = () => {
                         : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
                     }`}
                   >
-                    填空题
+                    {t('questionBankPage.CreateQuestionPage.questionTypes.fill')}
                   </button>
                   <button
                     onClick={() => setQuestionType('solution')}
@@ -1020,7 +1022,7 @@ const CreateQuestionPage: React.FC = () => {
                         : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
                     }`}
                   >
-                    解答题
+                    {t('questionBankPage.CreateQuestionPage.questionTypes.solution')}
                   </button>
                 </div>
               )}
@@ -1036,12 +1038,12 @@ const CreateQuestionPage: React.FC = () => {
                   {isHeaderExpanded ? (
                     <>
                       <ChevronUp className="w-4 h-4" />
-                      <span>收起</span>
+                      <span>{t('questionBankPage.CreateQuestionPage.buttons.collapse')}</span>
                     </>
                   ) : (
                     <>
                       <ChevronDownIcon className="w-4 h-4" />
-                      <span>展开</span>
+                      <span>{t('questionBankPage.CreateQuestionPage.buttons.expand')}</span>
                     </>
                   )}
                 </Button>
@@ -1080,7 +1082,7 @@ const CreateQuestionPage: React.FC = () => {
                   {isSaving ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : null}
-                  <span>{isSaving ? '保存中...' : '保存题目'}</span>
+                  <span>{isSaving ? t('questionBankPage.CreateQuestionPage.buttons.saving') : t('questionBankPage.CreateQuestionPage.buttons.save')}</span>
                 </Button>
               )}
             </div>
@@ -1101,8 +1103,8 @@ const CreateQuestionPage: React.FC = () => {
                     className="flex items-center space-x-1"
                   >
                     <Upload className="w-4 h-4" />
-                    <span>上传多题</span>
-                    <span className="text-xs text-gray-400 ml-1">(Ctrl+Shift+M)</span>
+                    <span>{t('questionBankPage.CreateQuestionPage.actions.multiUpload')}</span>
+                    <span className="text-xs text-gray-400 ml-1">{t('questionBankPage.CreateQuestionPage.shortcuts.multiMode')}</span>
                   </Button>
 
                   {/* OCR扫描按钮 */}
@@ -1113,8 +1115,8 @@ const CreateQuestionPage: React.FC = () => {
                     className="flex items-center space-x-1"
                   >
                     <Camera className="w-4 h-4" />
-                    <span>OCR扫描</span>
-                    <span className="text-xs text-gray-400 ml-1">(Ctrl+Shift+O)</span>
+                    <span>{t('questionBankPage.CreateQuestionPage.actions.ocrScan')}</span>
+                    <span className="text-xs text-gray-400 ml-1">{t('questionBankPage.CreateQuestionPage.shortcuts.ocr')}</span>
                   </Button>
 
                   {/* 智能分析按钮 */}
@@ -1130,8 +1132,8 @@ const CreateQuestionPage: React.FC = () => {
                     ) : (
                       <Brain className="w-4 h-4" />
                     )}
-                    <span>{isAnalyzing ? '分析中...' : '智能分析'}</span>
-                    <span className="text-xs text-gray-400 ml-1">(Ctrl+Shift+A)</span>
+                    <span>{isAnalyzing ? t('questionBankPage.CreateQuestionPage.actions.analyzing') : t('questionBankPage.CreateQuestionPage.actions.smartAnalysis')}</span>
+                    <span className="text-xs text-gray-400 ml-1">{t('questionBankPage.CreateQuestionPage.shortcuts.analysis')}</span>
                   </Button>
                 </div>
               </div>
@@ -1183,7 +1185,7 @@ const CreateQuestionPage: React.FC = () => {
                             : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                         }`}
                       >
-                        题干
+                        {t('questionBankPage.CreateQuestionPage.tabs.stem')}
                       </button>
                       <button
                         onClick={() => setActiveTab('media')}
@@ -1193,7 +1195,7 @@ const CreateQuestionPage: React.FC = () => {
                             : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                         }`}
                       >
-                        图形
+                        {t('questionBankPage.CreateQuestionPage.tabs.media')}
                       </button>
                       <button
                         onClick={() => setActiveTab('solution')}
@@ -1203,24 +1205,24 @@ const CreateQuestionPage: React.FC = () => {
                             : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                         }`}
                       >
-                        解析
+                        {t('questionBankPage.CreateQuestionPage.tabs.solution')}
                       </button>
                     </div>
                     {/* 右侧标签区域缩放按钮 */}
                     <button
                       onClick={() => setIsRightPanelCollapsed(!isRightPanelCollapsed)}
                       className="flex items-center space-x-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
-                      title={isRightPanelCollapsed ? "展开标签区域" : "收起标签区域"}
+                      title={isRightPanelCollapsed ? t('questionBankPage.CreateQuestionPage.buttons.expandTags') : t('questionBankPage.CreateQuestionPage.buttons.collapseTags')}
                     >
                       {isRightPanelCollapsed ? (
                         <>
                           <ChevronLeft className="w-4 h-4" />
-                          <span>展开标签</span>
+                          <span>{t('questionBankPage.CreateQuestionPage.buttons.expandTags')}</span>
                         </>
                       ) : (
                         <>
                           <ChevronRight className="w-4 h-4" />
-                          <span>收起标签</span>
+                          <span>{t('questionBankPage.CreateQuestionPage.buttons.collapseTags')}</span>
                         </>
                       )}
                     </button>
@@ -1230,13 +1232,13 @@ const CreateQuestionPage: React.FC = () => {
                   {activeTab === 'stem' ? (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-gray-700 dark:text-gray-200">题目内容</h4>
+                        <h4 className="font-medium text-gray-700 dark:text-gray-200">{t('questionBankPage.CreateQuestionPage.form.questionContent')}</h4>
                         <div className="flex items-center space-x-2">
                           {/* 实时相似度检测状态 */}
                           {isAuthenticated && isDetectingSimilarity && (
                             <div className="flex items-center space-x-1 text-sm text-blue-600 dark:text-blue-400">
                               <div className="w-3 h-3 border-2 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                              <span>检测中...</span>
+                              <span>{t('questionBankPage.CreateQuestionPage.status.detecting')}</span>
                             </div>
                           )}
                           {isAuthenticated && similarityWarning && (
@@ -1252,12 +1254,12 @@ const CreateQuestionPage: React.FC = () => {
                               {isLoadingDetailedSimilarity ? (
                                 <>
                                   <div className="w-4 h-4 border-2 border-gray-400 dark:border-gray-500 border-t-transparent rounded-full animate-spin"></div>
-                                  <span>加载中...</span>
+                                  <span>{t('common.loading')}</span>
                                 </>
                               ) : (
                                 <>
                                   <AlertTriangle className="w-4 h-4" />
-                                  <span>发现 {similarityWarning.similarCount} 个相似题目 ({Math.round(similarityWarning.maxSimilarity * 100)}%)</span>
+                                  <span>{t('questionBankPage.CreateQuestionPage.status.similarityFound', { count: similarityWarning.similarCount, percentage: Math.round(similarityWarning.maxSimilarity * 100) })}</span>
                                 </>
                               )}
                             </button>
@@ -1292,7 +1294,7 @@ const CreateQuestionPage: React.FC = () => {
                       <LaTeXEditor
                         value={content.stem}
                         onChange={handleStemChange}
-                        placeholder="输入题目内容"
+                        placeholder={t('questionBankPage.CreateQuestionPage.placeholders.questionContent')}
                         showPreview={true}
                         enableHoverPreview={true}
                         questionType={questionType === 'multiple-choice' ? 'choice' : questionType}
@@ -1302,7 +1304,7 @@ const CreateQuestionPage: React.FC = () => {
                     <div className="space-y-4">
                       {/* 题目预览 */}
                       <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-2">题目预览</h4>
+                        <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-2">{t('questionBankPage.CreateQuestionPage.preview.title')}</h4>
                         <div 
                           className="prose prose-sm max-w-none dark:prose-invert"
                           dangerouslySetInnerHTML={{ 
@@ -1320,11 +1322,11 @@ const CreateQuestionPage: React.FC = () => {
 
                       {/* 解析编辑器 */}
                       <div>
-                        <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-2">解析内容</h4>
+                        <h4 className="font-medium text-gray-700 dark:text-gray-200 mb-2">{t('questionBankPage.CreateQuestionPage.form.solution')}</h4>
                         <LaTeXEditor
                           value={content.solution || ''}
                           onChange={handleSolutionChange}
-                          placeholder="输入题目解析"
+                          placeholder={t('questionBankPage.CreateQuestionPage.placeholders.solution')}
                           showPreview={true}
                           enableHoverPreview={true}
                           questionType="solution"
@@ -1336,7 +1338,7 @@ const CreateQuestionPage: React.FC = () => {
                     </div>
                   ) : activeTab === 'media' ? (
                     <div className="space-y-4">
-                      <h4 className="font-medium text-gray-700 dark:text-gray-200">图形管理</h4>
+                      <h4 className="font-medium text-gray-700 dark:text-gray-200">{t('questionBankPage.CreateQuestionPage.media.title')}</h4>
                       <IntegratedMediaEditor
                         bid={selectedBankId}
                         tikzCodes={tikzCodes}
@@ -1353,13 +1355,13 @@ const CreateQuestionPage: React.FC = () => {
               {(questionType === 'choice' || questionType === 'multiple-choice') && (
                 <Card>
                   <div className="p-4 border-b bg-gray-50 dark:bg-gray-800">
-                    <h3 className="font-medium text-gray-900 dark:text-gray-100">选项设置</h3>
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100">{t('questionBankPage.CreateQuestionPage.options.title')}</h3>
                   </div>
                   <div className="p-4 space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 dark:text-gray-300">
-                        题目类型：{questionType === 'choice' ? '单选题' : '多选题'} 
-                        <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">（系统自动判断）</span>
+                        {t('questionBankPage.CreateQuestionPage.options.questionType')}：{questionType === 'choice' ? t('questionBankPage.CreateQuestionPage.questionTypes.singleChoice') : t('questionBankPage.CreateQuestionPage.questionTypes.multipleChoice')} 
+                        <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">（{t('questionBankPage.CreateQuestionPage.options.autoDetected')}）</span>
                       </span>
                     </div>
 
@@ -1404,9 +1406,9 @@ const CreateQuestionPage: React.FC = () => {
                     {content.answer && (
                       <div className="mt-3 p-2 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
                         <p className="text-sm text-gray-600 dark:text-gray-300">
-                          已选择答案：<span className="font-medium text-gray-900 dark:text-gray-100">{content.answer}</span>
+                          {t('questionBankPage.CreateQuestionPage.options.selectedAnswer')}：<span className="font-medium text-gray-900 dark:text-gray-100">{content.answer}</span>
                           <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">
-                            （{questionType === 'choice' ? '单选题' : '多选题'}）
+                            （{questionType === 'choice' ? t('questionBankPage.CreateQuestionPage.questionTypes.singleChoice') : t('questionBankPage.CreateQuestionPage.questionTypes.multipleChoice')}）
                           </span>
                         </p>
                       </div>
@@ -1419,7 +1421,7 @@ const CreateQuestionPage: React.FC = () => {
                       disabled={(content.options || []).length >= 6}
                     >
                       <Plus className="w-4 h-4 mr-1" />
-                      添加选项
+                      {t('questionBankPage.CreateQuestionPage.buttons.addOption')}
                     </Button>
                   </div>
                 </Card>
@@ -1429,20 +1431,20 @@ const CreateQuestionPage: React.FC = () => {
               {(questionType === 'fill' || questionType === 'solution') && (
                 <Card>
                   <div className="p-4 border-b bg-gray-50 dark:bg-gray-800">
-                    <h3 className="font-medium text-gray-900 dark:text-gray-100">答案设置</h3>
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100">{t('questionBankPage.CreateQuestionPage.answers.title')}</h3>
                   </div>
                   <div className="p-4">
                     {questionType === 'fill' ? (
                       <div className="space-y-3">
-                        <p className="text-sm text-gray-600 dark:text-gray-300">根据题干中的 \fill 数量，填写对应的答案：</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">{t('questionBankPage.CreateQuestionPage.answers.fillInstructions')}</p>
                         {Array.from({ length: getFillCount(content.stem) }, (_, index) => (
                           <div key={`fill-answer-${index}`} className="space-y-2">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">第 {index + 1} 空：</span>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('questionBankPage.CreateQuestionPage.answers.fillNumber', { number: index + 1 })}：</span>
                             <HoverTooltip content={content.fillAnswers?.[index] || ''} config={{ mode: 'lightweight' }}>
                               <Input
                                 value={content.fillAnswers?.[index] || ''}
                                 onChange={(e) => handleFillAnswerChange(index, e.target.value)}
-                                placeholder={`答案 ${index + 1}`}
+                                placeholder={t('questionBankPage.CreateQuestionPage.placeholders.answer', { number: index + 1 })}
                                 className="w-full"
                                 enableLatexAutoComplete={true}
                                 enableLatexHighlight={true}
@@ -1451,12 +1453,12 @@ const CreateQuestionPage: React.FC = () => {
                           </div>
                         ))}
                         {getFillCount(content.stem) === 0 && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400">题干中没有找到 \fill，请先添加填空题标记</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.CreateQuestionPage.answers.noFillFound')}</p>
                         )}
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        <p className="text-sm text-gray-600 dark:text-gray-300">根据题干中的 \subp 和 \subsubp 数量，填写对应的答案：</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">{t('questionBankPage.CreateQuestionPage.answers.solutionInstructions')}</p>
                         {(() => {
                           const answerInfo = getSolutionAnswerInfo(content.stem);
                           return answerInfo.map((info, index) => (
@@ -1466,7 +1468,7 @@ const CreateQuestionPage: React.FC = () => {
                                 <Input
                                   value={content.solutionAnswers?.[index] || ''}
                                   onChange={(e) => handleSolutionAnswerChange(index, e.target.value)}
-                                  placeholder={`答案 ${index + 1}`}
+                                  placeholder={t('questionBankPage.CreateQuestionPage.placeholders.answer', { number: index + 1 })}
                                   className="w-full"
                                   enableLatexAutoComplete={true}
                                 enableLatexHighlight={true}
@@ -1491,7 +1493,7 @@ const CreateQuestionPage: React.FC = () => {
                 <div className="p-4 border-b bg-gray-50 dark:bg-gray-800">
                   <div className="flex items-center space-x-2">
                     <Target className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                    <h3 className="font-medium text-gray-900 dark:text-gray-100">难度</h3>
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100">{t('questionBankPage.CreateQuestionPage.difficulty.title')}</h3>
                   </div>
                 </div>
                 <div className="p-4">
@@ -1511,11 +1513,11 @@ const CreateQuestionPage: React.FC = () => {
                     ))}
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    {content.difficulty === 1 && '非常简单'}
-                    {content.difficulty === 2 && '简单'}
-                    {content.difficulty === 3 && '中等'}
-                    {content.difficulty === 4 && '困难'}
-                    {content.difficulty === 5 && '非常困难'}
+                    {content.difficulty === 1 && t('questionBankPage.CreateQuestionPage.difficulty.veryEasy')}
+                    {content.difficulty === 2 && t('questionBankPage.CreateQuestionPage.difficulty.easy')}
+                    {content.difficulty === 3 && t('questionBankPage.CreateQuestionPage.difficulty.medium')}
+                    {content.difficulty === 4 && t('questionBankPage.CreateQuestionPage.difficulty.hard')}
+                    {content.difficulty === 5 && t('questionBankPage.CreateQuestionPage.difficulty.veryHard')}
                   </p>
                 </div>
               </Card>

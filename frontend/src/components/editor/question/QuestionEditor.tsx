@@ -17,6 +17,7 @@ import LivePreview from '../preview/LivePreview';
 import { renderContentWithCache } from '../../../lib/latex/utils/renderContent';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface QuestionEditorProps {
   question: Question | null; // Can be null for creation
@@ -34,6 +35,8 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
   onSave,
   onCancel
 }) => {
+  const { t } = useTranslation();
+  
   // 预设知识点标签 - 与后端DeepSeek选项保持一致
   const presetKnowledgeTags = [
     '函数', '导数', '积分', '极限', '数列', '概率', '统计', '几何', '代数', '三角',
@@ -302,9 +305,9 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
         <Card className="p-4">
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <BookOpen className="w-4 h-4" />
-            <span>题库：{questionBank.name}</span>
+            <span>{t('questionBankPage.questionEditor.questionBank')}：{questionBank.name}</span>
             <span>•</span>
-            <span>题目ID：{question?.qid}</span>
+            <span>{t('questionBankPage.questionEditor.questionId')}：{question?.qid}</span>
           </div>
         </Card>
       )}
@@ -312,7 +315,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
       {/* 题目类型选择 */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">题目类型</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('questionBankPage.questionEditor.questionType')}</h3>
           <div className="relative dropdown-container">
             <Button
               variant="outline"
@@ -322,9 +325,9 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
               {/* Target icon was removed, so using EyeOff for now */}
               <EyeOff className="w-4 h-4" />
               <span>
-                {questionType === 'choice' ? '单选题' : 
-                 questionType === 'multiple-choice' ? '多选题' : 
-                 questionType === 'fill' ? '填空题' : '解答题'}
+                {questionType === 'choice' ? t('questionBankPage.questionEditor.singleChoice') : 
+                 questionType === 'multiple-choice' ? t('questionBankPage.questionEditor.multipleChoice') : 
+                 questionType === 'fill' ? t('questionBankPage.questionEditor.fillInBlank') : t('questionBankPage.questionEditor.solution')}
               </span>
               {/* ChevronDown icon was removed, so using Check for now */}
               <Check className="w-4 h-4" />
@@ -337,25 +340,25 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                     onClick={() => handleSelectQuestionType('choice')}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    单选题
+                    {t('questionBankPage.questionEditor.singleChoice')}
                   </button>
                   <button
                     onClick={() => handleSelectQuestionType('multiple-choice')}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    多选题
+                    {t('questionBankPage.questionEditor.multipleChoice')}
                   </button>
                   <button
                     onClick={() => handleSelectQuestionType('fill')}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    填空题
+                    {t('questionBankPage.questionEditor.fillInBlank')}
                   </button>
                   <button
                     onClick={() => handleSelectQuestionType('solution')}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    解答题
+                    {t('questionBankPage.questionEditor.solution')}
                   </button>
                 </div>
               </div>
@@ -367,7 +370,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
       {/* 题目内容编辑 */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">题目内容</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('questionBankPage.questionEditor.questionContent')}</h3>
         </div>
 
         {/* 题目内容编辑器 */}
@@ -382,7 +385,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                   : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
               }`}
             >
-              题目内容
+{t('questionBankPage.questionEditor.questionContent')}
             </button>
             <button
               onClick={() => setShowSolution(true)}
@@ -392,7 +395,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                   : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
               }`}
             >
-              解析
+{t('questionBankPage.questionEditor.solutionContent')}
             </button>
           </div>
 
@@ -402,14 +405,14 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
               <div className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
                 <div className="flex items-start justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    题目内容
+{t('questionBankPage.questionEditor.questionContent')}
                   </label>
                   {!quickEditMode && (
                     <button
                       type="button"
                       onClick={() => startQuickEdit('stem')}
                       className="p-1 text-gray-400 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100"
-                      title="快捷编辑题目内容"
+                      title={t('questionBankPage.questionEditor.quickEditTitle')}
                     >
                       {/* FileText icon was removed, so using Edit3 for now */}
                       <Edit3 className="w-4 h-4" />
@@ -442,7 +445,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         }}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                         rows={6}
-                        placeholder="输入题目内容，支持LaTeX公式和自定义标签..."
+                        placeholder={t('questionBankPage.questionEditor.inputQuestionContent')}
                         autoFocus
                       />
                       {/* 悬浮实时预览 */}
@@ -459,7 +462,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         className="flex items-center space-x-1"
                       >
                         <Check className="w-3 h-3" />
-                        <span>保存</span>
+                        <span>{t('questionBankPage.questionEditor.save')}</span>
                       </Button>
                       <Button
                         variant="outline"
@@ -468,7 +471,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         className="flex items-center space-x-1"
                       >
                         <X className="w-3 h-3" />
-                        <span>取消</span>
+                        <span>{t('questionBankPage.questionEditor.cancel')}</span>
                       </Button>
                     </div>
                   </div>
@@ -476,7 +479,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                   <div 
                     className="text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
                     onClick={() => startQuickEdit('stem')}
-                    title="点击编辑题目内容"
+                    title={t('questionBankPage.questionEditor.clickToEdit')}
                   >
                     {content.stem ? (
                       <div 
@@ -486,7 +489,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         }}
                       />
                     ) : (
-                      <span className="text-gray-400">点击此处添加题目内容</span>
+                      <span className="text-gray-400">{t('questionBankPage.questionEditor.clickToAddContent')}</span>
                     )}
                   </div>
                 )}
@@ -500,14 +503,14 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
               <div className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200">
                 <div className="flex items-start justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    解析
+{t('questionBankPage.questionEditor.solutionContent')}
                   </label>
                   {!quickEditMode && (
                     <button
                       type="button"
                       onClick={() => startQuickEdit('solution')}
                       className="p-1 text-gray-400 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100"
-                      title="快捷编辑解析"
+                      title={t('questionBankPage.questionEditor.quickEditSolution')}
                     >
                       {/* FileText icon was removed, so using Edit3 for now */}
                       <Edit3 className="w-4 h-4" />
@@ -540,7 +543,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         }}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                         rows={6}
-                        placeholder="输入解析内容，支持LaTeX公式和自定义标签..."
+                        placeholder={t('questionBankPage.questionEditor.inputSolutionContent')}
                         autoFocus
                       />
                       {/* 悬浮实时预览 */}
@@ -553,7 +556,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         className="flex items-center space-x-1"
                       >
                         <Check className="w-3 h-3" />
-                        <span>保存</span>
+                        <span>{t('questionBankPage.questionEditor.save')}</span>
                       </Button>
                       <Button
                         variant="outline"
@@ -562,7 +565,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         className="flex items-center space-x-1"
                       >
                         <X className="w-3 h-3" />
-                        <span>取消</span>
+                        <span>{t('questionBankPage.questionEditor.cancel')}</span>
                       </Button>
                     </div>
                   </div>
@@ -570,7 +573,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                   <div 
                     className="text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
                     onClick={() => startQuickEdit('solution')}
-                    title="点击编辑解析内容"
+                    title={t('questionBankPage.questionEditor.clickToEditSolution')}
                   >
                     {content.solution ? (
                       <div 
@@ -580,7 +583,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         }}
                       />
                     ) : (
-                      <span className="text-gray-400">点击此处添加解析内容</span>
+                      <span className="text-gray-400">{t('questionBankPage.questionEditor.clickToAddSolution')}</span>
                     )}
                   </div>
                 )}
@@ -592,7 +595,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
           {(questionType === 'choice' || questionType === 'multiple-choice') && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                选项
+{t('questionBankPage.questionEditor.options')}
               </label>
               <div className="space-y-2">
                 {content.options?.map((option, index) => (
@@ -647,7 +650,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                               type="button"
                               onClick={saveOptionEdit}
                               className="p-1 text-green-600 hover:text-green-800 transition-colors"
-                              title="保存选项"
+                              title={t('questionBankPage.questionEditor.saveOption')}
                             >
                               <Check className="w-3 h-3" />
                             </button>
@@ -655,7 +658,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                               type="button"
                               onClick={cancelOptionEdit}
                               className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                              title="取消选项"
+                              title={t('questionBankPage.questionEditor.cancelOption')}
                             >
                               <X className="w-3 h-3" />
                             </button>
@@ -666,7 +669,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                               type="button"
                               onClick={() => startEditOption(index)}
                               className="p-1 text-blue-600 hover:text-blue-800 transition-colors"
-                              title="编辑选项"
+                              title={t('questionBankPage.questionEditor.editOption')}
                             >
                               <Edit3 className="w-3 h-3" />
                             </button>
@@ -677,7 +680,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                 type="button"
                                 onClick={() => removeOption(index)}
                                 className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                                title="删除选项"
+                                title={t('questionBankPage.questionEditor.deleteOption')}
                               >
                                 <Trash2 className="w-3 h-3" />
                               </button>
@@ -692,7 +695,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                       <div className="absolute left-0 top-full mt-1 z-10">
                         <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 max-w-sm">
                           <div className="text-xs font-medium text-gray-900 mb-1">
-                            选项 {String.fromCharCode(65 + index)} 预览
+{t('questionBankPage.questionEditor.optionPreview', { letter: String.fromCharCode(65 + index) })}
                           </div>
                           <div className="text-xs text-gray-700">
                             {editingOptionText ? (
@@ -717,7 +720,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                                 }}
                               />
                             ) : (
-                              <span className="text-gray-400">暂无内容</span>
+                              <span className="text-gray-400">{t('questionBankPage.questionEditor.noContent')}</span>
                             )}
                           </div>
                         </div>
@@ -733,7 +736,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                   className="flex items-center space-x-2 w-full justify-center py-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 text-sm"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>添加选项</span>
+                  <span>{t('questionBankPage.questionEditor.addOption')}</span>
                 </Button>
               </div>
             </div>
@@ -743,7 +746,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
           {questionType === 'fill' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                填空题答案 ({getFillCount(content.stem)} 个空)
+{t('questionBankPage.questionEditor.fillAnswers', { count: getFillCount(content.stem) })}
               </label>
               <div className="space-y-2">
                 {Array.from({ length: getFillCount(content.stem) }, (_, index) => (
@@ -754,7 +757,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                     <Input
                       value={content.fillAnswers?.[index] || ''}
                       onChange={(e) => handleFillAnswerChange(index, e.target.value)}
-                      placeholder={`第 ${index + 1} 空答案`}
+                      placeholder={t('questionBankPage.questionEditor.fillAnswerPlaceholder', { number: index + 1 })}
                       className="flex-1"
                     />
                   </div>
@@ -767,7 +770,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
           {questionType === 'solution' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                解答题答案
+{t('questionBankPage.questionEditor.solutionAnswers')}
               </label>
               <div className="space-y-2">
                 {Array.from({ length: getSolutionAnswerInfo(content.stem).totalParts }, (_, index) => (
@@ -778,7 +781,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                     <Input
                       value={content.solutionAnswers?.[index] || ''}
                       onChange={(e) => handleSolutionAnswerChange(index, e.target.value)}
-                      placeholder={`第 ${index + 1} 问答案`}
+                      placeholder={t('questionBankPage.questionEditor.solutionAnswerPlaceholder', { number: index + 1 })}
                       className="flex-1"
                     />
                   </div>
@@ -790,7 +793,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
           {/* 答案 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              答案
+{t('questionBankPage.questionEditor.answer')}
             </label>
             {questionType === 'choice' || questionType === 'multiple-choice' ? (
               <div className="flex flex-wrap gap-2">
@@ -816,7 +819,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
               <Input
                 value={content.answer}
                 onChange={(e) => handleAnswerChange(e.target.value)}
-                placeholder="输入答案"
+                placeholder={t('questionBankPage.questionEditor.inputAnswer')}
               />
             )}
           </div>
@@ -825,13 +828,13 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
 
       {/* 题目属性 */}
       <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">题目属性</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('questionBankPage.questionEditor.questionAttributes')}</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 难度 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              难度
+{t('questionBankPage.questionEditor.difficulty')}
             </label>
             <div className="flex items-center space-x-2">
               {[1, 2, 3, 4, 5].map((level) => (
@@ -844,7 +847,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  {level}星
+{level}星
                 </button>
               ))}
             </div>
@@ -853,38 +856,38 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
           {/* 分类 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              分类
+{t('questionBankPage.questionEditor.category')}
             </label>
             <Input
               value={content.category}
               onChange={(e) => handleCategoryChange(e.target.value)}
-              placeholder="输入题目分类"
+              placeholder={t('questionBankPage.questionEditor.inputCategory')}
             />
           </div>
 
           {/* 来源 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              来源
+{t('questionBankPage.questionEditor.source')}
             </label>
             <Input
               value={content.source}
               onChange={(e) => handleSourceChange(e.target.value)}
-              placeholder="输入题目来源"
+              placeholder={t('questionBankPage.questionEditor.inputSource')}
             />
           </div>
 
           {/* 知识点标签 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              知识点标签
+{t('questionBankPage.questionEditor.knowledgeTags')}
             </label>
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Input
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
-                  placeholder="输入知识点标签"
+                  placeholder={t('questionBankPage.questionEditor.inputKnowledgeTag')}
                   onKeyPress={(e) => e.key === 'Enter' && addTag()}
                 />
                 <Button onClick={addTag} disabled={!newTag.trim()}>
@@ -900,7 +903,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                   className="flex items-center space-x-2"
                 >
                   <Tag className="w-4 h-4" />
-                  <span>选择预设标签</span>
+                  <span>{t('questionBankPage.questionEditor.selectPresetTags')}</span>
                   {/* ChevronDown icon was removed, so using Check for now */}
                   <Check className="w-4 h-4" />
                 </Button>
@@ -947,10 +950,10 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
       {/* 操作按钮 */}
       <div className="flex items-center justify-end space-x-4">
         <Button variant="outline" onClick={onCancel}>
-          取消
+{t('questionBankPage.questionEditor.cancelQuestion')}
         </Button>
         <Button onClick={onSave}>
-          保存题目
+{t('questionBankPage.questionEditor.saveQuestion')}
         </Button>
       </div>
     </div>

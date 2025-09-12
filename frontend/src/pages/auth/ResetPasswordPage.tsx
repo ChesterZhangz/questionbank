@@ -8,10 +8,12 @@ import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
 import PasswordStrengthIndicator from '../../components/ui/PasswordStrengthIndicator';
 import { PasswordValidator } from '../../utils/passwordValidator';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
+  const { t } = useTranslation();
   
   const [formData, setFormData] = useState({
     password: '',
@@ -47,20 +49,20 @@ const ResetPasswordPage: React.FC = () => {
     const newErrors: Record<string, string> = {};
     
     if (!formData.password) {
-      newErrors.password = '请输入新密码';
+      newErrors.password = t('auth.resetPassword.errors.passwordRequired');
     } else {
       // 使用密码验证器
       const passwordValidation = PasswordValidator.validate(formData.password);
       
       if (!passwordValidation.isValid) {
-        newErrors.password = passwordValidation.errors[0] || '密码不符合安全要求';
+        newErrors.password = passwordValidation.errors[0] || t('auth.resetPassword.errors.passwordWeak');
       }
     }
     
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = '请确认新密码';
+      newErrors.confirmPassword = t('auth.resetPassword.errors.confirmPasswordRequired');
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = '两次输入的密码不一致';
+      newErrors.confirmPassword = t('auth.resetPassword.errors.passwordsNotMatch');
     }
     
     setErrors(newErrors);
@@ -86,12 +88,12 @@ const ResetPasswordPage: React.FC = () => {
       if (response.data.success) {
         setResetSuccess(true);
       } else {
-        setErrors({ general: response.data.message || '密码重置失败' });
+        setErrors({ general: response.data.message || t('auth.resetPassword.errors.resetFailed') });
       }
     } catch (error: any) {
       // 错误日志已清理
       setErrors({ 
-        general: error.response?.data?.message || '密码重置失败，请稍后重试'
+        general: error.response?.data?.message || t('auth.resetPassword.errors.resetFailed')
       });
     } finally {
       setIsSubmitting(false);
@@ -114,10 +116,10 @@ const ResetPasswordPage: React.FC = () => {
             </div>
           </div>
           <h2 className="mt-4 text-3xl font-bold text-gray-900 dark:text-gray-100">
-            链接无效
+            {t('auth.resetPassword.tokenValidation.invalid')}
           </h2>
           <p className="mt-2 text-text-secondary">
-            重置密码链接已过期或无效
+            {t('auth.resetPassword.tokenValidation.invalid')}
           </p>
         </motion.div>
 
@@ -130,18 +132,18 @@ const ResetPasswordPage: React.FC = () => {
           <Card>
             <div className="text-center space-y-4">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                链接可能已过期（有效期24小时）或已被使用
+                {t('auth.resetPassword.tokenValidation.expired')}
               </p>
               
               <div className="space-y-3">
                 <Link to="/login">
                   <Button className="w-full">
-                    返回登录页
+                    {t('auth.resetPassword.loginButton')}
                   </Button>
                 </Link>
                 
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  如需重新发送重置链接，请在登录页点击"忘记密码"
+                  {t('auth.resetPassword.tokenValidation.expired')}
                 </p>
               </div>
             </div>
@@ -167,10 +169,10 @@ const ResetPasswordPage: React.FC = () => {
             </div>
           </div>
           <h2 className="mt-4 text-3xl font-bold text-gray-900 dark:text-gray-100">
-            密码重置成功
+            {t('auth.resetPassword.successTitle')}
           </h2>
           <p className="mt-2 text-text-secondary">
-            您的密码已成功更新
+            {t('auth.resetPassword.successMessage')}
           </p>
         </motion.div>
 
@@ -184,13 +186,13 @@ const ResetPasswordPage: React.FC = () => {
             <div className="text-center space-y-4">
               <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                 <p className="text-sm text-green-800 dark:text-green-200">
-                  🎉 密码已成功重置！请使用新密码登录系统
+                  🎉 {t('auth.resetPassword.successMessage')}
                 </p>
               </div>
               
               <Link to="/login">
                 <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700">
-                  立即登录
+                  {t('auth.resetPassword.loginButton')}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
@@ -221,7 +223,7 @@ const ResetPasswordPage: React.FC = () => {
           transition={{ delay: 0.2, duration: 0.6 }}
           className="mt-4 text-3xl font-bold text-gray-900 dark:text-gray-100"
         >
-          重置密码
+          {t('auth.resetPassword.title')}
         </motion.h2>
         <motion.p 
           initial={{ opacity: 0 }}
@@ -229,7 +231,7 @@ const ResetPasswordPage: React.FC = () => {
           transition={{ delay: 0.4, duration: 0.6 }}
           className="mt-2 text-text-secondary"
         >
-          请输入您的新密码
+          {t('auth.resetPassword.subtitle')}
         </motion.p>
       </motion.div>
 
@@ -257,13 +259,13 @@ const ResetPasswordPage: React.FC = () => {
               transition={{ delay: 0.6, duration: 0.6 }}
             >
               <Input
-                label="新密码"
+                label={t('auth.resetPassword.newPassword')}
                 name="password"
                 type="password"
                 value={formData.password}
                 onChange={handleChange}
                 error={errors.password}
-                placeholder="请输入新密码（8-20位）"
+                placeholder={t('auth.resetPassword.newPassword')}
                 required
                 icon={<Lock className="w-5 h-5" />}
               />
@@ -285,13 +287,13 @@ const ResetPasswordPage: React.FC = () => {
               transition={{ delay: 0.7, duration: 0.6 }}
             >
               <Input
-                label="确认新密码"
+                label={t('auth.resetPassword.confirmPassword')}
                 name="confirmPassword"
                 type="password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 error={errors.confirmPassword}
-                placeholder="请再次输入新密码"
+                placeholder={t('auth.resetPassword.confirmPassword')}
                 required
                 icon={<Lock className="w-5 h-5" />}
               />
@@ -308,7 +310,7 @@ const ResetPasswordPage: React.FC = () => {
                 loading={isSubmitting}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? '重置中...' : '重置密码'}
+                {isSubmitting ? t('auth.common.loading') : t('auth.resetPassword.resetButton')}
                 {!isSubmitting && <ArrowRight className="w-4 h-4 ml-2" />}
               </Button>
             </motion.div>
@@ -320,12 +322,12 @@ const ResetPasswordPage: React.FC = () => {
               className="text-center"
             >
               <p className="text-sm text-text-secondary">
-                记起密码了？{' '}
+                {t('auth.resetPassword.loginButton')}{' '}
                 <Link
                   to="/login"
                   className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                 >
-                  返回登录
+                  {t('auth.resetPassword.loginButton')}
                 </Link>
               </p>
             </motion.div>

@@ -24,11 +24,13 @@ import LoadingPage from '../../components/ui/LoadingPage';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import { useModal } from '../../hooks/useModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const QuestionBankDetailPage: React.FC = () => {
   const { bid } = useParams<{ bid: string }>();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { t } = useTranslation();
 
   // 弹窗状态管理
   const { 
@@ -77,10 +79,10 @@ const QuestionBankDetailPage: React.FC = () => {
         setQuestionBank(response.data.questionBank!);
         determineUserRole(response.data.questionBank!);
       } else {
-        setError(response.data.error || '获取题库信息失败');
+        setError(response.data.error || t('questionBankPage.QuestionBankDetailPage.errors.loadFailed'));
       }
     } catch (error: any) {
-      setError(error.response?.data?.error || '获取题库信息失败');
+      setError(error.response?.data?.error || t('questionBankPage.QuestionBankDetailPage.errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -132,12 +134,12 @@ const QuestionBankDetailPage: React.FC = () => {
 
   const handleDeleteQuestion = async (qid: string) => {
     showConfirm(
-      '确认删除',
-      '确定要删除这道题目吗？删除后无法恢复.',
+      t('questionBankPage.QuestionBankDetailPage.confirm.deleteQuestion'),
+      t('questionBankPage.QuestionBankDetailPage.confirm.deleteQuestionMessage'),
       async () => {
         try {
           // 设置确认弹窗的加载状态
-          setConfirmLoading(true, '正在删除...');
+          setConfirmLoading(true, t('questionBankPage.QuestionBankDetailPage.status.deleting'));
           
           const response = await questionAPI.deleteQuestion(qid);
           if (response.data.success) {
@@ -146,13 +148,13 @@ const QuestionBankDetailPage: React.FC = () => {
             fetchQuestionBank();
             closeConfirm(); // 删除成功后关闭弹窗
             // 显示成功提示
-            showSuccessRightSlide('删除成功', '题目已成功删除');
+            showSuccessRightSlide(t('questionBankPage.QuestionBankDetailPage.success.deleted'), t('questionBankPage.QuestionBankDetailPage.success.questionDeleted'));
           } else {
-            showErrorRightSlide('删除失败', response.data.error || '删除失败');
+            showErrorRightSlide(t('questionBankPage.QuestionBankDetailPage.errors.deleteFailed'), response.data.error || t('questionBankPage.QuestionBankDetailPage.errors.deleteFailed'));
             closeConfirm(); // 删除失败后也关闭弹窗
           }
         } catch (error: any) {
-          showErrorRightSlide('删除失败', error.response?.data?.error || '删除失败');
+          showErrorRightSlide(t('questionBankPage.QuestionBankDetailPage.errors.deleteFailed'), error.response?.data?.error || t('questionBankPage.QuestionBankDetailPage.errors.deleteFailed'));
           closeConfirm(); // 发生错误后也关闭弹窗
         }
       }
@@ -177,13 +179,13 @@ const QuestionBankDetailPage: React.FC = () => {
         });
         
         // 显示提示
-        showSuccessRightSlide('收藏成功', response.data.isFavorited ? '已添加到收藏' : '已取消收藏');
+        showSuccessRightSlide(t('questionBankPage.QuestionBankDetailPage.success.favorited'), response.data.isFavorited ? t('questionBankPage.QuestionBankDetailPage.success.addedToFavorites') : t('questionBankPage.QuestionBankDetailPage.success.removedFromFavorites'));
       } else {
-        showErrorRightSlide('收藏失败', '收藏操作失败，请重试');
+        showErrorRightSlide(t('questionBankPage.QuestionBankDetailPage.errors.favoriteFailed'), t('questionBankPage.QuestionBankDetailPage.errors.favoriteFailedMessage'));
       }
     } catch (error: any) {
       // 错误日志已清理
-      showErrorRightSlide('收藏失败', '收藏操作失败，请重试');
+      showErrorRightSlide(t('questionBankPage.QuestionBankDetailPage.errors.favoriteFailed'), t('questionBankPage.QuestionBankDetailPage.errors.favoriteFailedMessage'));
     }
   };
 
@@ -209,10 +211,10 @@ const QuestionBankDetailPage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">题库不存在</h1>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">{error || '无法加载题库信息'}</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('questionBankPage.QuestionBankDetailPage.errors.notFound')}</h1>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">{error || t('questionBankPage.QuestionBankDetailPage.errors.loadFailed')}</p>
             <Button onClick={() => navigate('/question-banks')}>
-              返回题库列表
+              {t('questionBankPage.QuestionBankDetailPage.buttons.backToList')}
             </Button>
           </div>
         </div>
@@ -233,11 +235,11 @@ const QuestionBankDetailPage: React.FC = () => {
                 className="mr-4"
               >
                 <ArrowLeft className="w-4 w-4 mr-2" />
-                返回
+                {t('questionBankPage.QuestionBankDetailPage.buttons.back')}
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{questionBank.name}</h1>
-                <p className="text-gray-600 dark:text-gray-300">题库详情</p>
+                <p className="text-gray-600 dark:text-gray-300">{t('questionBankPage.QuestionBankDetailPage.title')}</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
@@ -247,7 +249,7 @@ const QuestionBankDetailPage: React.FC = () => {
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   <Plus className="w-4 w-4 mr-2" />
-                  添加题目
+                  {t('questionBankPage.QuestionBankDetailPage.buttons.addQuestion')}
                 </Button>
               )}
               <div className="relative group">
@@ -264,14 +266,14 @@ const QuestionBankDetailPage: React.FC = () => {
                           className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
                           <Edit className="w-4 w-4 mr-2" />
-                          编辑题库
+                          {t('questionBankPage.QuestionBankDetailPage.buttons.editBank')}
                         </button>
                         <button
                           onClick={handleManageMembers}
                           className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
                           <Users className="w-4 w-4 mr-2" />
-                          成员管理
+                          {t('questionBankPage.QuestionBankDetailPage.buttons.manageMembers')}
                         </button>
                       </>
                     )}
@@ -281,7 +283,7 @@ const QuestionBankDetailPage: React.FC = () => {
                         className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         <Settings className="w-4 w-4 mr-2" />
-                        题库设置
+                        {t('questionBankPage.QuestionBankDetailPage.buttons.bankSettings')}
                       </button>
                     )}
                     <button
@@ -289,7 +291,7 @@ const QuestionBankDetailPage: React.FC = () => {
                       className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
                       <TrendingUp className="w-4 w-4 mr-2" />
-                      统计分析
+                      {t('questionBankPage.QuestionBankDetailPage.buttons.statistics')}
                     </button>
                   </div>
                 </div>
@@ -312,24 +314,24 @@ const QuestionBankDetailPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* 基本信息 */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">基本信息</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('questionBankPage.QuestionBankDetailPage.info.basicInfo')}</h3>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">创建者：</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankDetailPage.info.creator')}：</span>
                       <span className="text-sm text-gray-900 dark:text-gray-100">{questionBank.creator.name}</span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">您的角色：</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankDetailPage.info.yourRole')}：</span>
                       <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                        {userRole === 'creator' ? '创建者' : 
-                         userRole === 'manager' ? '管理者' : 
-                         userRole === 'collaborator' ? '协作者' : '查看者'}
+                        {userRole === 'creator' ? t('questionBankPage.QuestionBankDetailPage.roles.creator') : 
+                         userRole === 'manager' ? t('questionBankPage.QuestionBankDetailPage.roles.manager') : 
+                         userRole === 'collaborator' ? t('questionBankPage.QuestionBankDetailPage.roles.collaborator') : t('questionBankPage.QuestionBankDetailPage.roles.viewer')}
                       </span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">状态：</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankDetailPage.info.status')}：</span>
                       <span className="text-sm text-gray-900 dark:text-gray-100">
-                        {questionBank.isPublic ? '公开' : '私有'}
+                        {questionBank.isPublic ? t('questionBankPage.QuestionBankDetailPage.status.public') : t('questionBankPage.QuestionBankDetailPage.status.private')}
                       </span>
                     </div>
                   </div>
@@ -337,25 +339,25 @@ const QuestionBankDetailPage: React.FC = () => {
 
                 {/* 统计信息 */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">统计信息</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('questionBankPage.QuestionBankDetailPage.info.statistics')}</h3>
                   <div className="space-y-3">
                     <div className="flex items-center">
                       <BookOpen className="w-4 w-4 text-blue-500 dark:text-blue-400 mr-2" />
-                      <span className="text-sm text-gray-500 dark:text-gray-400">题目数量：</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankDetailPage.info.questionCount')}：</span>
                       <span className="text-sm font-medium text-gray-900 dark:text-gray-100 ml-1">
                         {questionBank.questionCount}
                       </span>
                     </div>
                     <div className="flex items-center">
                       <Users className="w-4 w-4 text-green-500 dark:text-green-400 mr-2" />
-                      <span className="text-sm text-gray-500 dark:text-gray-400">成员数量：</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankDetailPage.info.memberCount')}：</span>
                       <span className="text-sm font-medium text-gray-900 dark:text-gray-100 ml-1">
                         {questionBank.managers.length + questionBank.collaborators.length + 1}
                       </span>
                     </div>
                     <div className="flex items-center">
                       <Calendar className="w-4 w-4 text-purple-500 dark:text-purple-400 mr-2" />
-                      <span className="text-sm text-gray-500 dark:text-gray-400">最后更新：</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankDetailPage.info.lastUpdated')}：</span>
                       <span className="text-sm text-gray-900 dark:text-gray-100 ml-1">
                         {new Date(questionBank.lastUpdated).toLocaleDateString()}
                       </span>
@@ -365,17 +367,17 @@ const QuestionBankDetailPage: React.FC = () => {
 
                 {/* 分类和标签 */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">分类标签</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('questionBankPage.QuestionBankDetailPage.info.categoryTags')}</h3>
                   <div className="space-y-3">
                     {questionBank.category && (
                       <div>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">分类：</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankDetailPage.info.category')}：</span>
                         <span className="text-sm text-gray-900 dark:text-gray-100">{questionBank.category}</span>
                       </div>
                     )}
                     {questionBank.tags.length > 0 && (
                       <div>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">标签：</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">{t('questionBankPage.QuestionBankDetailPage.info.tags')}：</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {questionBank.tags.slice(0, 3).map((tag, index) => (
                             <span
@@ -398,9 +400,9 @@ const QuestionBankDetailPage: React.FC = () => {
 
                 {/* 描述 */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">描述</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('questionBankPage.QuestionBankDetailPage.info.description')}</h3>
                   <div className="text-sm text-gray-600 dark:text-gray-300">
-                    {questionBank.description || '暂无描述'}
+                    {questionBank.description || t('questionBankPage.QuestionBankDetailPage.info.noDescription')}
                   </div>
                 </div>
               </div>
@@ -415,9 +417,9 @@ const QuestionBankDetailPage: React.FC = () => {
           transition={{ delay: 0.1 }}
         >
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">题目列表</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('questionBankPage.QuestionBankDetailPage.questions.title')}</h2>
             <div className="text-sm text-gray-500 dark:text-gray-400">
-              共 {questions.length} 道题目
+              {t('questionBankPage.QuestionBankDetailPage.questions.totalCount', { count: questions.length })}
             </div>
           </div>
 
@@ -425,15 +427,15 @@ const QuestionBankDetailPage: React.FC = () => {
             <Card>
               <div className="text-center py-12">
                 <Target className="w-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">还没有题目</h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">开始添加您的第一道题目</p>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">{t('questionBankPage.QuestionBankDetailPage.questions.noQuestions')}</h3>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">{t('questionBankPage.QuestionBankDetailPage.questions.startAdding')}</p>
                 {(userRole === 'creator' || userRole === 'manager' || userRole === 'collaborator') && (
                   <Button
                     onClick={handleCreateQuestion}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     <Plus className="w-4 w-4 mr-2" />
-                    添加题目
+                    {t('questionBankPage.QuestionBankDetailPage.buttons.addQuestion')}
                   </Button>
                 )}
               </div>

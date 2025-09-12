@@ -6,9 +6,11 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import { useModal } from '../../hooks/useModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const RegisterSuccessPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // 弹窗状态管理
   const { 
@@ -23,7 +25,7 @@ const RegisterSuccessPage: React.FC = () => {
 
   const handleResendEmail = () => {
     // 这里可以添加重新发送验证邮件的功能
-    showErrorRightSlide('功能开发中', '重新发送功能开发中...');
+    showErrorRightSlide(t('auth.registerSuccess.resendFeatureDeveloping'), t('auth.registerSuccess.resendFeatureDevelopingMessage'));
   };
 
   return (
@@ -49,7 +51,7 @@ const RegisterSuccessPage: React.FC = () => {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2"
           >
-            注册成功
+            {t('auth.registerSuccess.title')}
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -57,7 +59,7 @@ const RegisterSuccessPage: React.FC = () => {
             transition={{ delay: 0.4, duration: 0.6 }}
             className="text-gray-600 dark:text-gray-400"
           >
-            请查收您的企业邮箱
+            {t('auth.registerSuccess.checkEmail')}
           </motion.p>
         </div>
       </motion.div>
@@ -85,7 +87,7 @@ const RegisterSuccessPage: React.FC = () => {
               transition={{ delay: 0.7, duration: 0.5 }}
               className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2"
             >
-              验证邮件已发送
+              {t('auth.registerSuccess.title')}
             </motion.h2>
             
             <motion.p 
@@ -94,7 +96,7 @@ const RegisterSuccessPage: React.FC = () => {
               transition={{ delay: 0.8, duration: 0.5 }}
               className="text-gray-600 dark:text-gray-400 mb-6"
             >
-              我们已向您的企业邮箱发送了验证邮件，请查收并点击邮件中的验证链接完成注册.
+              {t('auth.registerSuccess.message')}
             </motion.p>
             
             <motion.div 
@@ -105,24 +107,24 @@ const RegisterSuccessPage: React.FC = () => {
             >
               <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-3 flex items-center">
                 <CheckCircle className="w-4 h-4 mr-2" />
-                下一步操作：
+                {t('auth.registerSuccess.nextSteps')}
               </h3>
               <ol className="text-sm text-blue-700 dark:text-blue-300 space-y-2 text-left">
                 <li className="flex items-center">
                   <span className="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center text-xs font-medium mr-3">1</span>
-                  打开您的企业邮箱
+                  {t('auth.registerSuccess.step1')}
                 </li>
                 <li className="flex items-center">
                   <span className="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center text-xs font-medium mr-3">2</span>
-                  查找来自 "Mareate题库系统" 的邮件
+                  {t('auth.registerSuccess.step2')}
                 </li>
                 <li className="flex items-center">
                   <span className="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center text-xs font-medium mr-3">3</span>
-                  点击邮件中的 "验证邮箱地址" 按钮
+                  {t('auth.registerSuccess.step3')}
                 </li>
                 <li className="flex items-center">
                   <span className="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center text-xs font-medium mr-3">4</span>
-                  验证成功后即可登录使用系统
+                  {t('auth.registerSuccess.step4')}
                 </li>
               </ol>
             </motion.div>
@@ -136,7 +138,7 @@ const RegisterSuccessPage: React.FC = () => {
               <p className="text-sm text-yellow-800 dark:text-yellow-300 flex items-start">
                 <AlertCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
                 <span>
-                  <strong>注意：</strong>验证链接将在24小时后失效.如果未收到邮件，请检查垃圾邮件文件夹.
+                  <strong>{t('auth.registerSuccess.note')}</strong>{t('auth.registerSuccess.noteMessage')}
                 </span>
               </p>
             </motion.div>
@@ -153,13 +155,13 @@ const RegisterSuccessPage: React.FC = () => {
                 className="w-full border-blue-200 dark:border-blue-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
-                重新发送验证邮件
+                {t('auth.registerSuccess.resendEmail')}
               </Button>
               <Button 
                 onClick={handleGoToLogin} 
                 className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
               >
-                前往登录
+                {t('auth.registerSuccess.loginButton')}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </motion.div>

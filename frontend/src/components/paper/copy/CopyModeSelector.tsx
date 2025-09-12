@@ -1,5 +1,6 @@
 import React from 'react';
 import type { CopyMode, CopyConfig } from './types';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface CopyModeSelectorProps {
   config: CopyConfig;
@@ -14,22 +15,25 @@ const CopyModeSelector: React.FC<CopyModeSelectorProps> = ({
   className = '',
   disableOverleafOption = false
 }) => {
+  const { t } = useTranslation();
+  
   // 如果禁用Overleaf选项且当前选择的是overleaf，自动切换到clipboard
   React.useEffect(() => {
     if (disableOverleafOption && config.copyMethod === 'overleaf') {
       onConfigChange({ ...config, copyMethod: 'clipboard' });
     }
   }, [disableOverleafOption, config.copyMethod, config, onConfigChange]);
+  
   const modes: Array<{ value: CopyMode; label: string; description: string }> = [
     {
       value: 'mareate',
-      label: 'Mareate版',
-      description: 'Mareate部门独创，排版美观'
+      label: t('paper.copyModeSelector.modes.mareate.label'),
+      description: t('paper.copyModeSelector.modes.mareate.description')
     },
     {
       value: 'normal',
-      label: '常规',
-      description: '无自定义与答案，均为必要包'
+      label: t('paper.copyModeSelector.modes.normal.label'),
+      description: t('paper.copyModeSelector.modes.normal.description')
     }
   ];
 
@@ -83,7 +87,7 @@ const CopyModeSelector: React.FC<CopyModeSelectorProps> = ({
       {/* 复制方式选择 */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          复制方式
+          {t('paper.copyModeSelector.copyMethod.label')}
         </label>
         <div className="space-y-2">
           <label className="flex items-start space-x-3 cursor-pointer">
@@ -97,10 +101,10 @@ const CopyModeSelector: React.FC<CopyModeSelectorProps> = ({
             />
             <div>
               <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                复制到剪贴板
+                {t('paper.copyModeSelector.copyMethod.clipboard.label')}
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400">
-                将LaTeX代码复制到系统剪贴板
+                {t('paper.copyModeSelector.copyMethod.clipboard.description')}
               </div>
             </div>
           </label>
@@ -115,12 +119,12 @@ const CopyModeSelector: React.FC<CopyModeSelectorProps> = ({
                 className="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
               />
               <div>
-                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  在Overleaf中打开
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">
-                  直接在新标签页中打开Overleaf项目
-                </div>
+              <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                {t('paper.copyModeSelector.copyMethod.overleaf.label')}
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                {t('paper.copyModeSelector.copyMethod.overleaf.description')}
+              </div>
               </div>
             </label>
           )}
@@ -130,7 +134,7 @@ const CopyModeSelector: React.FC<CopyModeSelectorProps> = ({
       {/* 复制模式选择 */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          复制模式
+          {t('paper.copyModeSelector.copyMode.label')}
         </label>
         <div className="space-y-2">
           {modes.map((mode) => (
@@ -166,7 +170,7 @@ const CopyModeSelector: React.FC<CopyModeSelectorProps> = ({
             className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
           />
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            添加题目间距
+            {t('paper.copyModeSelector.vspace.addVspace')}
           </span>
         </label>
 
@@ -175,7 +179,7 @@ const CopyModeSelector: React.FC<CopyModeSelectorProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                  选择题间距
+                  {t('paper.copyModeSelector.vspace.choiceSpacing')}
                 </label>
                 <input
                   type="text"
@@ -187,7 +191,7 @@ const CopyModeSelector: React.FC<CopyModeSelectorProps> = ({
               </div>
               <div>
                 <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                  填空题间距
+                  {t('paper.copyModeSelector.vspace.fillSpacing')}
                 </label>
                 <input
                   type="text"
@@ -199,7 +203,7 @@ const CopyModeSelector: React.FC<CopyModeSelectorProps> = ({
               </div>
               <div>
                 <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                  解答题间距
+                  {t('paper.copyModeSelector.vspace.solutionSpacing')}
                 </label>
                 <input
                   type="text"
@@ -211,7 +215,7 @@ const CopyModeSelector: React.FC<CopyModeSelectorProps> = ({
               </div>
               <div>
                 <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                  默认间距
+                  {t('paper.copyModeSelector.vspace.defaultSpacing')}
                 </label>
                 <input
                   type="text"
@@ -230,7 +234,7 @@ const CopyModeSelector: React.FC<CopyModeSelectorProps> = ({
       {config.mode === 'normal' && (
         <div>
           <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            常规模式配置
+            {t('paper.copyModeSelector.normalConfig.title')}
           </h4>
           <div className="space-y-3 pl-4">
             
@@ -256,9 +260,9 @@ const CopyModeSelector: React.FC<CopyModeSelectorProps> = ({
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
               <span className="text-sm text-gray-700 dark:text-gray-300">
-                添加完整LaTeX文档环境
+                {t('paper.copyModeSelector.normalConfig.addDocumentEnvironment')}
                 {config.copyMethod === 'overleaf' && (
-                  <span className="text-xs text-gray-500 ml-1">(Overleaf模式默认启用)</span>
+                  <span className="text-xs text-gray-500 ml-1">({t('paper.copyModeSelector.normalConfig.overleafDefault')})</span>
                 )}
               </span>
             </label>
@@ -267,7 +271,7 @@ const CopyModeSelector: React.FC<CopyModeSelectorProps> = ({
               <div className="space-y-2 pl-6">
                 <div>
                   <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    纸张尺寸
+                    {t('paper.copyModeSelector.normalConfig.paperSize')}
                   </label>
                   <select
                     value={config.normalConfig?.paperSize || 'A4'}
@@ -284,16 +288,16 @@ const CopyModeSelector: React.FC<CopyModeSelectorProps> = ({
                     }}
                     className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   >
-                    <option value="A4">A4 (21cm × 29.7cm)</option>
-                    <option value="B5">B5 (18.2cm × 25.7cm)</option>
-                    <option value="custom">自定义</option>
+                    <option value="A4">{t('paper.copyModeSelector.normalConfig.paperSizes.a4')}</option>
+                    <option value="B5">{t('paper.copyModeSelector.normalConfig.paperSizes.b5')}</option>
+                    <option value="custom">{t('paper.copyModeSelector.normalConfig.paperSizes.custom')}</option>
                   </select>
                 </div>
 
                 {config.normalConfig?.paperSize === 'custom' && (
                   <div>
                     <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                      自定义Geometry配置
+                      {t('paper.copyModeSelector.normalConfig.customGeometry')}
                     </label>
                     <input
                       type="text"

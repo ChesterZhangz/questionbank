@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { type SolutionStep } from '../../lib/puzzle/PuzzleSolver';
 import PuzzleSolverService, { type PuzzleSolutionResponse } from '../../services/puzzleSolverAPI';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface PuzzleSolutionModalProps {
   isOpen: boolean;
@@ -39,6 +40,7 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
   gridSize,
   gameData
 }) => {
+  const { t } = useTranslation();
   const [solution, setSolution] = useState<SolutionStep[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -84,10 +86,10 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
         setSolution(response.solution);
         setCurrentStep(0);
       } else {
-        setError(response.error || '无法生成解题方案');
+        setError(response.error || t('games.puzzleSolutionModal.error'));
       }
     } catch (err) {
-      setError('解题算法执行失败');
+      setError(t('games.puzzleSolutionModal.algorithmError'));
       // 错误日志已清理
     } finally {
       setIsLoading(false);
@@ -162,8 +164,8 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
     if (currentStep === 0 || !solution[currentStep]?.move) {
       return (
         <div className="text-center text-gray-500 dark:text-gray-400">
-          <div className="text-lg font-medium">初始状态</div>
-          <div className="text-sm">开始解题</div>
+          <div className="text-lg font-medium">{t('games.puzzleSolutionModal.initialState')}</div>
+          <div className="text-sm">{t('games.puzzleSolutionModal.initialState')}</div>
         </div>
       );
     }
@@ -172,13 +174,13 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
     return (
       <div className="text-center">
         <div className="text-lg font-medium text-gray-800 dark:text-gray-100 mb-2">
-          第 {move.step} 步
+          {t('games.puzzleSolutionModal.step', { step: move.step })}
         </div>
         <div className="text-sm text-gray-600 dark:text-gray-300">
-          移动数字 <span className="font-bold text-blue-600 dark:text-blue-400">{move.piece + 1}</span>
+          {t('games.puzzleSolutionModal.moveNumber', { number: move.piece + 1 })}
         </div>
         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          从位置 {move.from + 1} 到位置 {move.to + 1}
+          {t('games.puzzleSolutionModal.fromPosition', { from: move.from + 1, to: move.to + 1 })}
         </div>
       </div>
     );
@@ -212,9 +214,9 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
                     <Target className="w-6 h-6" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold">拼图解法演示</h2>
+                    <h2 className="text-xl font-bold">{t('games.puzzleSolutionModal.title')}</h2>
                     <p className="text-purple-100 text-sm">
-                      {gridSize}×{gridSize} 拼图的最优解法步骤
+                      {t('games.puzzleSolutionModal.subtitle', { size: gridSize })}
                     </p>
                   </div>
                 </div>
@@ -232,7 +234,7 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="w-8 h-8 text-purple-600 dark:text-purple-400 animate-spin mr-3" />
-                  <span className="text-gray-600 dark:text-gray-300">正在计算最优解法...</span>
+                  <span className="text-gray-600 dark:text-gray-300">{t('games.puzzleSolutionModal.loading')}</span>
                 </div>
               ) : error ? (
                 <div className="text-center py-12">
@@ -242,7 +244,7 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
                     onClick={solvePuzzle}
                     className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                   >
-                    重试
+                    {t('games.puzzleSolutionModal.retry')}
                   </button>
                 </div>
               ) : solution.length > 0 ? (
@@ -253,25 +255,25 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
                       <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                         {solution.length - 1}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300">最优步数</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">{t('games.puzzleSolutionModal.optimalMoves')}</div>
                     </div>
                     <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {gameData?.moves || 'N/A'}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300">实际步数</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">{t('games.puzzleSolutionModal.actualMoves')}</div>
                     </div>
                     <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {gameData?.timeUsed ? `${gameData.timeUsed}s` : 'N/A'}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300">用时</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">{t('games.puzzleSolutionModal.timeUsed')}</div>
                     </div>
                     <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                         {currentStep}/{solution.length - 1}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300">当前步骤</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">{t('games.puzzleSolutionModal.currentStep')}</div>
                     </div>
                   </div>
 
@@ -290,7 +292,7 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
                       {/* 进度条 */}
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300">
-                          <span>解题进度</span>
+                          <span>{t('games.puzzleSolutionModal.solutionProgress')}</span>
                           <span>{Math.round(progress)}%</span>
                         </div>
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -308,7 +310,7 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
                         <button
                           onClick={handleReset}
                           className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
-                          title="重置到开始"
+                          title={t('games.puzzleSolutionModal.resetToStart')}
                         >
                           <RotateCcw className="w-4 h-4" />
                         </button>
@@ -316,14 +318,14 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
                           onClick={handlePrevStep}
                           disabled={currentStep === 0}
                           className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="上一步"
+                          title={t('games.puzzleSolutionModal.previousStep')}
                         >
                           <ChevronLeft className="w-4 h-4" />
                         </button>
                         <button
                           onClick={handlePlay}
                           className="p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-                          title={isPlaying ? "暂停" : "播放"}
+                          title={isPlaying ? t('games.puzzleSolutionModal.pause') : t('games.puzzleSolutionModal.play')}
                         >
                           {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                         </button>
@@ -331,14 +333,14 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
                           onClick={handleNextStep}
                           disabled={currentStep === solution.length - 1}
                           className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="下一步"
+                          title={t('games.puzzleSolutionModal.nextStep')}
                         >
                           <ChevronRight className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => setCurrentStep(solution.length - 1)}
                           className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
-                          title="跳到结尾"
+                          title={t('games.puzzleSolutionModal.jumpToEnd')}
                         >
                           <SkipForward className="w-4 h-4" />
                         </button>
@@ -347,7 +349,7 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
                       {/* 播放速度控制 */}
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          播放速度
+                          {t('games.puzzleSolutionModal.playbackSpeed')}
                         </label>
                         <div className="flex space-x-2">
                           {[
@@ -374,7 +376,7 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
                       {/* 步骤列表 */}
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          步骤列表
+                          {t('games.puzzleSolutionModal.stepList')}
                         </label>
                         <div className="max-h-48 overflow-y-auto space-y-1 bg-gray-50 dark:bg-gray-700 rounded-lg p-2">
                           {solution.map((step, index) => (
@@ -388,9 +390,9 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
                               }`}
                             >
                               {index === 0 ? (
-                                '初始状态'
+                                t('games.puzzleSolutionModal.initialState')
                               ) : (
-                                `步骤 ${index}: 移动 ${step.move!.piece + 1}`
+                                t('games.puzzleSolutionModal.stepNumber', { step: index, number: step.move!.piece + 1 })
                               )}
                             </button>
                           ))}
@@ -402,7 +404,7 @@ const PuzzleSolutionModal: React.FC<PuzzleSolutionModalProps> = ({
               ) : (
                 <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                   <Target className="w-12 h-12 mx-auto mb-4" />
-                  <p>暂无解法数据</p>
+                  <p>{t('games.puzzleSolutionModal.noData')}</p>
                 </div>
               )}
             </div>

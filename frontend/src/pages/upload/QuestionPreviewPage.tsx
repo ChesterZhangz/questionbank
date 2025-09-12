@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+import { useTranslation } from '../../hooks/useTranslation';
 import {
   DndContext,
   closestCenter,
@@ -41,6 +42,7 @@ import QuestionSplitModal from '../../components/preview/QuestionSplitModal';
 import SimilarityDetectionModal from '../../components/similarity/SimilarityDetectionModal';
 
 const QuestionPreviewPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
@@ -241,15 +243,15 @@ const QuestionPreviewPage: React.FC = () => {
       // 如果用户没有保存过草稿且当前有题目，显示离开提醒
       if (!hasUserSavedDraft && !isDraftMode && questions.length > 0) {
         e.preventDefault();
-        e.returnValue = '您有未保存的题目，确定要离开吗？';
-        return '您有未保存的题目，确定要离开吗？';
+        e.returnValue = t('questionBankPage.QuestionPreviewPage.leaveConfirm.message');
+        return t('questionBankPage.QuestionPreviewPage.leaveConfirm.message');
       }
       // 在页面离开时，我们只能做同步操作，无法进行异步的草稿保存
       // 但可以提示用户数据可能会丢失
       if (questions.length > 0 && !hasUserSavedDraft) {
         e.preventDefault();
-        e.returnValue = '您有未保存的题目，建议先保存草稿再离开';
-        return '您有未保存的题目，建议先保存草稿再离开';
+        e.returnValue = t('questionBankPage.QuestionPreviewPage.leaveConfirm.suggestion');
+        return t('questionBankPage.QuestionPreviewPage.leaveConfirm.suggestion');
       }
     };
 
@@ -358,7 +360,7 @@ const QuestionPreviewPage: React.FC = () => {
           setIsDraftMode(true);
           
           // 显示数据加载成功提示
-          showSuccessRightSlide('数据已加载', `已加载 ${processedQuestions.length} 道题目，请及时保存草稿`);
+          showSuccessRightSlide(t('questionBankPage.QuestionPreviewPage.notifications.dataLoaded'), t('questionBankPage.QuestionPreviewPage.notifications.dataLoadedMessage', { count: processedQuestions.length }));
         }
 
         if (routeData?.questions) {
@@ -453,7 +455,7 @@ const QuestionPreviewPage: React.FC = () => {
           // 加载题库列表失败
         }
       } catch (error) {
-        showErrorRightSlide('初始化失败', '页面初始化失败，请刷新重试');
+        showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.initFailed'), t('questionBankPage.QuestionPreviewPage.errors.initFailedMessage'));
       }
     };
 
@@ -503,7 +505,7 @@ const QuestionPreviewPage: React.FC = () => {
   // 处理批量设置来源
   const handleBatchSetSource = useCallback(async (source: string) => {
     if (selectedQuestions.length === 0) {
-      showErrorRightSlide('选择错误', '请先选择题目');
+      showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.selectionError'), t('questionBankPage.QuestionPreviewPage.errors.pleaseSelectQuestions'));
       return;
     }
 
@@ -514,17 +516,17 @@ const QuestionPreviewPage: React.FC = () => {
       }));
 
       await batchUpdateQuestions(updates);
-      showSuccessRightSlide('设置成功', `已为 ${selectedQuestions.length} 道题目设置来源`);
+      showSuccessRightSlide(t('questionBankPage.QuestionPreviewPage.notifications.setSourceSuccess'), t('questionBankPage.QuestionPreviewPage.notifications.setSourceSuccessMessage', { count: selectedQuestions.length }));
       setShowSourcePanel(false);
     } catch (error) {
-      showErrorRightSlide('设置失败', '批量设置来源失败');
+      showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.setSourceFailed'), t('questionBankPage.QuestionPreviewPage.errors.setSourceFailedMessage'));
     }
   }, [selectedQuestions, batchUpdateQuestions, setShowSourcePanel]);
 
   // 处理批量AI分析
   const handleBatchAnalysis = useCallback(async () => {
     if (selectedQuestions.length === 0) {
-      showErrorRightSlide('选择错误', '请先选择题目');
+      showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.selectionError'), t('questionBankPage.QuestionPreviewPage.errors.pleaseSelectQuestions'));
       return;
     }
 
@@ -532,7 +534,7 @@ const QuestionPreviewPage: React.FC = () => {
       setAnalyzingQuestions(selectedQuestions.map(q => q.id!).filter(Boolean));
       
       // 显示开始分析提示
-      showSuccessRightSlide("开始分析", `正在分析 ${selectedQuestions.length} 道题目，请稍候...`);
+      showSuccessRightSlide(t('questionBankPage.QuestionPreviewPage.notifications.startAnalysis'), t('questionBankPage.QuestionPreviewPage.notifications.analyzingQuestions', { count: selectedQuestions.length }));
       
       // 1. 先进行AI分析获取标签
       const results = await batchAnalyzeQuestions(selectedQuestions);
@@ -561,7 +563,7 @@ const QuestionPreviewPage: React.FC = () => {
       setAnalysisResults(newResults);
 
       // 4. 显示标签分析完成的消息
-      showSuccessRightSlide("操作成功", `已完成 ${selectedQuestions.length} 道题目的AI分析`);
+      showSuccessRightSlide(t('questionBankPage.QuestionPreviewPage.notifications.operationSuccess'), t('questionBankPage.QuestionPreviewPage.notifications.analysisCompleted', { count: selectedQuestions.length }));
       
       // 5. 异步生成答案（不阻塞UI）
       const lowDifficultyQuestions = selectedQuestions.filter((_, index) => 
@@ -576,7 +578,7 @@ const QuestionPreviewPage: React.FC = () => {
       }
       
     } catch (error) {
-      showErrorRightSlide("操作失败", '批量AI分析失败');
+      showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.operationFailed'), t('questionBankPage.QuestionPreviewPage.errors.batchAnalysisFailed'));
     } finally {
       setAnalyzingQuestions([]);
     }
@@ -632,7 +634,7 @@ const QuestionPreviewPage: React.FC = () => {
       
       // 答案生成完成后显示提示
       if (completedCount > 0) {
-        showSuccessRightSlide("答案生成完成", `已为 ${completedCount} 道低难度题目生成答案和解析`);
+        showSuccessRightSlide(t('questionBankPage.QuestionPreviewPage.notifications.answerGenerationCompleted'), t('questionBankPage.QuestionPreviewPage.notifications.answerGenerationCompletedMessage', { count: completedCount }));
       }
     } catch (error) {
       // 错误日志已清理
@@ -676,7 +678,7 @@ const QuestionPreviewPage: React.FC = () => {
 
       
       // 4. 显示标签分析完成的消息
-      showSuccessRightSlide("操作成功", 'AI分析完成，已应用到题目');
+      showSuccessRightSlide(t('questionBankPage.QuestionPreviewPage.notifications.operationSuccess'), t('questionBankPage.QuestionPreviewPage.notifications.singleAnalysisCompleted'));
       
       // 5. 如果难度为3星及以下，异步生成答案
       if (result.difficulty <= 3) {
@@ -685,7 +687,7 @@ const QuestionPreviewPage: React.FC = () => {
       }
       
     } catch (error) {
-      showErrorRightSlide("操作失败", 'AI分析失败');
+      showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.operationFailed'), t('questionBankPage.QuestionPreviewPage.errors.singleAnalysisFailed'));
     } finally {
       setAnalyzingQuestions(analyzingQuestions.filter(id => id !== questionId));
     }
@@ -721,7 +723,7 @@ const QuestionPreviewPage: React.FC = () => {
 
         
         // 显示答案生成完成的消息
-        showSuccessRightSlide("答案生成完成", '已为题目生成答案和解析');
+        showSuccessRightSlide(t('questionBankPage.QuestionPreviewPage.notifications.answerGenerationCompleted'), t('questionBankPage.QuestionPreviewPage.notifications.singleAnswerGenerationCompleted'));
       }
     } catch (answerError) {
       // 错误日志已清理
@@ -915,9 +917,9 @@ const QuestionPreviewPage: React.FC = () => {
       
 
       
-      showSuccessRightSlide("操作成功", `已将题目分割为 ${newQuestions.length} 道新题目`);
+      showSuccessRightSlide(t('questionBankPage.QuestionPreviewPage.notifications.operationSuccess'), t('questionBankPage.QuestionPreviewPage.notifications.questionSplitSuccess', { count: newQuestions.length }));
     } catch (error) {
-      showErrorRightSlide("操作失败", '分割题目失败');
+      showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.operationFailed'), t('questionBankPage.QuestionPreviewPage.errors.questionSplitFailed'));
     } finally {
       setSplittingQuestion(null);
     }
@@ -934,17 +936,17 @@ const QuestionPreviewPage: React.FC = () => {
           
           // 如果已经保存过试卷，显示自动保存提示
           if (isDraftMode) {
-            showSuccessRightSlide("操作成功", '题目更新成功，已自动保存');
+            showSuccessRightSlide(t('questionBankPage.QuestionPreviewPage.notifications.operationSuccess'), t('questionBankPage.QuestionPreviewPage.notifications.questionUpdatedAutoSaved'));
           } else {
-            showSuccessRightSlide("操作成功", '题目更新成功');
+            showSuccessRightSlide(t('questionBankPage.QuestionPreviewPage.notifications.operationSuccess'), t('questionBankPage.QuestionPreviewPage.notifications.questionUpdated'));
           }
         } else {
-          showErrorRightSlide("操作失败", '题目ID不存在，无法保存');
+          showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.operationFailed'), t('questionBankPage.QuestionPreviewPage.errors.questionIdNotFound'));
         }
       }
       setEditingQuestion(null);
     } catch (error) {
-      showErrorRightSlide("操作失败", '保存编辑失败');
+      showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.operationFailed'), t('questionBankPage.QuestionPreviewPage.errors.saveEditFailed'));
     }
   }, [editingQuestion, updateQuestion, isDraftMode]);
 
@@ -983,9 +985,9 @@ const QuestionPreviewPage: React.FC = () => {
     
     try {
       await deleteQuestion(questionId);
-      showSuccessRightSlide("操作成功", '题目删除成功');
+      showSuccessRightSlide(t('questionBankPage.QuestionPreviewPage.notifications.operationSuccess'), t('questionBankPage.QuestionPreviewPage.notifications.questionDeleted'));
     } catch (error) {
-      showErrorRightSlide("操作失败", '题目删除失败');
+      showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.operationFailed'), t('questionBankPage.QuestionPreviewPage.errors.questionDeleteFailed'));
     }
   }, [deleteQuestion, isDraftMode]);
 
@@ -998,17 +1000,17 @@ const QuestionPreviewPage: React.FC = () => {
     }
     
     if (selectedQuestions.length === 0) {
-      showErrorRightSlide("操作失败", '请先选择题目');
+      showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.operationFailed'), t('questionBankPage.QuestionPreviewPage.errors.pleaseSelectQuestions'));
       return;
     }
 
     try {
       await batchDeleteQuestions(selectedQuestions.map(q => q.id!).filter(Boolean));
-      showSuccessRightSlide("操作成功", `已删除 ${selectedQuestions.length} 道题目`);
+      showSuccessRightSlide(t('questionBankPage.QuestionPreviewPage.notifications.operationSuccess'), t('questionBankPage.QuestionPreviewPage.notifications.batchDeleteSuccess', { count: selectedQuestions.length }));
       setSelectedQuestions([]);
       setShowConfirmDelete(false);
     } catch (error) {
-      showErrorRightSlide("操作失败", '批量删除失败');
+      showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.operationFailed'), t('questionBankPage.QuestionPreviewPage.errors.batchDeleteFailed'));
     }
   }, [selectedQuestions, batchDeleteQuestions, setSelectedQuestions, setShowConfirmDelete, isDraftMode]);
 
@@ -1021,7 +1023,7 @@ const QuestionPreviewPage: React.FC = () => {
     }
     
     if (selectedQuestions.length === 0) {
-      showErrorRightSlide("操作失败", '请先选择题目');
+      showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.operationFailed'), t('questionBankPage.QuestionPreviewPage.errors.pleaseSelectQuestions'));
       return;
     }
 
@@ -1032,7 +1034,7 @@ const QuestionPreviewPage: React.FC = () => {
       // 获取目标题目的ID
       const targetQuestionId = questions[targetIndex]?.id;
       if (!targetQuestionId) {
-        showErrorRightSlide("操作失败", '目标题目不存在');
+        showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.operationFailed'), t('questionBankPage.QuestionPreviewPage.errors.targetQuestionNotFound'));
         return;
       }
       
@@ -1042,7 +1044,7 @@ const QuestionPreviewPage: React.FC = () => {
       // 在剩余题目中找到目标题目的新位置
       const newTargetIndex = remainingQuestions.findIndex(q => q.id === targetQuestionId);
       if (newTargetIndex === -1) {
-        showErrorRightSlide("操作失败", '目标题目不存在');
+        showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.operationFailed'), t('questionBankPage.QuestionPreviewPage.errors.targetQuestionNotFound'));
         return;
       }
       
@@ -1062,9 +1064,9 @@ const QuestionPreviewPage: React.FC = () => {
       // 清空选择
       setSelectedQuestions([]);
       
-      showSuccessRightSlide("操作成功", `已移动 ${selectedQuestions.length} 道题目`);
+      showSuccessRightSlide(t('questionBankPage.QuestionPreviewPage.notifications.operationSuccess'), t('questionBankPage.QuestionPreviewPage.notifications.batchMoveSuccess', { count: selectedQuestions.length }));
     } catch (error) {
-      showErrorRightSlide("操作失败", '批量移动失败');
+      showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.operationFailed'), t('questionBankPage.QuestionPreviewPage.errors.batchMoveFailed'));
     }
   }, [selectedQuestions, questions, setQuestions, setSelectedQuestions, isDraftMode, setIsEditModeReminder, setShowDraftReminder]);
 
@@ -1073,7 +1075,7 @@ const QuestionPreviewPage: React.FC = () => {
   // 处理题目保存
   const handleSaveQuestions = useCallback(async (targetBankId: string) => {
     if (selectedQuestions.length === 0) {
-      showErrorRightSlide("操作失败", '请先选择题目');
+      showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.operationFailed'), t('questionBankPage.QuestionPreviewPage.errors.pleaseSelectQuestions'));
       return;
     }
 
@@ -1097,8 +1099,8 @@ const QuestionPreviewPage: React.FC = () => {
         ).join('\n');
         
         showErrorRightSlide(
-          "数据验证失败", 
-          `请检查以下题目的数据完整性：\n\n${validationDetails}`,
+          t('questionBankPage.QuestionPreviewPage.errors.dataValidationFailed'), 
+          t('questionBankPage.QuestionPreviewPage.errors.dataValidationFailedMessage', { details: validationDetails }),
           { autoClose: 8000, width: 'lg' }
         );
         
@@ -1111,8 +1113,12 @@ const QuestionPreviewPage: React.FC = () => {
         ).join('\n');
         
         showErrorRightSlide(
-          "保存完成，但有部分失败", 
-          `成功保存 ${saveResult.savedCount} 道题目，失败 ${saveResult.failedCount} 道题目。\n\n失败详情：\n${failedDetails}`,
+          t('questionBankPage.QuestionPreviewPage.errors.savePartialFailure'), 
+          t('questionBankPage.QuestionPreviewPage.errors.savePartialFailureMessage', { 
+            savedCount: saveResult.savedCount, 
+            failedCount: saveResult.failedCount, 
+            details: failedDetails 
+          }),
           { autoClose: 8000, width: 'lg' }
         );
         
@@ -1121,8 +1127,8 @@ const QuestionPreviewPage: React.FC = () => {
       } else {
         // 全部成功
         showSuccessRightSlide(
-          "保存成功", 
-          `已成功保存 ${saveResult.savedCount} 道题目到题库`,
+          t('questionBankPage.QuestionPreviewPage.notifications.saveSuccess'), 
+          t('questionBankPage.QuestionPreviewPage.notifications.saveSuccessMessage', { count: saveResult.savedCount }),
           { autoClose: 2000 }
         );
         
@@ -1134,8 +1140,8 @@ const QuestionPreviewPage: React.FC = () => {
         }, 2000);
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.message || '保存题目失败';
-      showErrorRightSlide("操作失败", errorMessage, { autoClose: 3000 });
+      const errorMessage = error.response?.data?.error || error.message || t('questionBankPage.QuestionPreviewPage.errors.saveQuestionsFailed');
+      showErrorRightSlide(t('questionBankPage.QuestionPreviewPage.errors.operationFailed'), errorMessage, { autoClose: 3000 });
     } finally {
       setSavingQuestions([]);
       setSaveProgress(0);
@@ -1231,21 +1237,21 @@ const QuestionPreviewPage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">草稿已清空</h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-6">所有题目已被删除，草稿已自动清理</p>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">{t('questionBankPage.QuestionPreviewPage.emptyState.draftCleared')}</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6">{t('questionBankPage.QuestionPreviewPage.emptyState.draftClearedMessage')}</p>
               <div className="flex space-x-4">
                 <Button
                   onClick={handleBack}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  返回批量上传
+                  {t('questionBankPage.QuestionPreviewPage.buttons.backToBatchUpload')}
                 </Button>
                 <Button
                   onClick={() => setShowDraftManager(true)}
                   variant="outline"
                   className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
-                  查看其他草稿
+                  {t('questionBankPage.QuestionPreviewPage.buttons.viewOtherDrafts')}
                 </Button>
               </div>
             </div>
@@ -1409,10 +1415,10 @@ const QuestionPreviewPage: React.FC = () => {
         isOpen={showConfirmDelete}
         onClose={() => setShowConfirmDelete(false)}
         onConfirm={handleBatchDelete}
-        title="确认删除"
-        message={`确定要删除选中的 ${selectedQuestions.length} 道题目吗？此操作不可撤销.`}
-        confirmText="删除"
-        cancelText="取消"
+        title={t('questionBankPage.QuestionPreviewPage.confirm.delete.title')}
+        message={t('questionBankPage.QuestionPreviewPage.confirm.delete.message', { count: selectedQuestions.length })}
+        confirmText={t('questionBankPage.QuestionPreviewPage.confirm.delete.confirmText')}
+        cancelText={t('questionBankPage.QuestionPreviewPage.confirm.delete.cancelText')}
         type="danger"
       />
 
@@ -1421,10 +1427,10 @@ const QuestionPreviewPage: React.FC = () => {
         isOpen={showLeaveConfirm}
         onClose={handleCancelLeave}
         onConfirm={handleConfirmLeave}
-        title="确认离开"
-        message="您有未保存的题目，确定要离开吗？离开后未保存的更改将丢失."
-        confirmText="离开"
-        cancelText="取消"
+        title={t('questionBankPage.QuestionPreviewPage.confirm.leave.title')}
+        message={t('questionBankPage.QuestionPreviewPage.confirm.leave.message')}
+        confirmText={t('questionBankPage.QuestionPreviewPage.confirm.leave.confirmText')}
+        cancelText={t('questionBankPage.QuestionPreviewPage.confirm.leave.cancelText')}
         type="warning"
       />
 

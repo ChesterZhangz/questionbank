@@ -4,6 +4,7 @@ import Button from '../../ui/Button';
 import Input from '../../ui/Input';
 import Card from '../../ui/Card';
 import { useModal } from '../../../hooks/useModal';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface QuestionTypeSelectorProps {
   selectedTypes: string[];
@@ -15,7 +16,7 @@ interface QuestionTypeSelectorProps {
 // 预设小题型选项 - 与后端DeepSeek选项保持一致
 const presetQuestionTypes = [
   '计算题', '创新题', '新定义题', '应用题', '证明题', '综合题', 
-  '实验题', '探究题', '开放题', '竞赛题', '连线题', '排序题', '匹配题', '简答题',
+  '实验题', '探究题', '开放题', '竞赛题', '连线题', '排序题', '匹配题',
   '论述题', '分析题', '设计题', '评价题', '比较题', '归纳题',
   '概念题'
 ];
@@ -26,6 +27,7 @@ const QuestionTypeSelector: React.FC<QuestionTypeSelectorProps> = ({
   maxCount = 3,
   className = ''
 }) => {
+  const { t } = useTranslation();
   // 弹窗状态管理
   const { showErrorRightSlide } = useModal();
 
@@ -41,7 +43,7 @@ const QuestionTypeSelector: React.FC<QuestionTypeSelectorProps> = ({
       if (selectedTypes.length < maxCount) {
         onTypesChange([...selectedTypes, type]);
       } else {
-        showErrorRightSlide('选择限制', `小题型最多只能选择${maxCount}个`);
+        showErrorRightSlide(t('editor.questionTypeSelector.selectLimit'), t('editor.questionTypeSelector.maxTypesReached', { maxCount }));
       }
     }
   };
@@ -51,17 +53,17 @@ const QuestionTypeSelector: React.FC<QuestionTypeSelectorProps> = ({
     
     // 检查是否在预设选项中
     if (!presetQuestionTypes.includes(customType.trim())) {
-      showErrorRightSlide('输入限制', '小题型只能从预设选项中选择，不能自定义输入');
+      showErrorRightSlide(t('editor.questionTypeSelector.selectLimit'), t('editor.questionTypeSelector.hint'));
       return;
     }
     
     if (selectedTypes.includes(customType.trim())) {
-      showErrorRightSlide('重复输入', '该小题型已存在');
+      showErrorRightSlide(t('editor.questionTypeSelector.duplicateType'), t('editor.questionTypeSelector.typeExists'));
       return;
     }
 
     if (selectedTypes.length >= maxCount) {
-      showErrorRightSlide('选择限制', `小题型最多只能选择${maxCount}个`);
+      showErrorRightSlide(t('editor.questionTypeSelector.selectLimit'), t('editor.questionTypeSelector.maxTypesReached', { maxCount }));
       return;
     }
 
@@ -87,7 +89,7 @@ const QuestionTypeSelector: React.FC<QuestionTypeSelectorProps> = ({
           <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center">
             <span className="text-white text-xs font-bold">题</span>
           </div>
-          <h3 className="font-medium text-gray-900 dark:text-gray-100">小题型</h3>
+          <h3 className="font-medium text-gray-900 dark:text-gray-100">{t('editor.questionTypeSelector.title')}</h3>
           <span className="text-xs text-gray-500 dark:text-gray-400">
             ({selectedTypes.length}/{maxCount})
           </span>
@@ -101,7 +103,7 @@ const QuestionTypeSelector: React.FC<QuestionTypeSelectorProps> = ({
             <Input
               value={customType}
               onChange={(e) => setCustomType(e.target.value)}
-              placeholder={`从预设选项中选择小题型（最多${maxCount}个）`}
+              placeholder={t('editor.questionTypeSelector.placeholder', { maxCount })}
               onKeyPress={handleKeyPress}
               onFocus={() => setShowDropdown(true)}
               onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
@@ -163,7 +165,7 @@ const QuestionTypeSelector: React.FC<QuestionTypeSelectorProps> = ({
         {/* 提示信息 */}
         {selectedTypes.length === 0 && (
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            请从预设选项中选择小题型，帮助更好地分类题目
+            {t('editor.questionTypeSelector.hint')}
           </p>
         )}
       </div>

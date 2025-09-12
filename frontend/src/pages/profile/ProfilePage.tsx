@@ -37,6 +37,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { useModal } from '../../hooks/useModal';
 import { useUserAvatar } from '../../hooks/useUserAvatar';
+import { useTranslation } from '../../hooks/useTranslation';
 import { 
   getUserTimezone, 
   getSupportedTimezones, 
@@ -115,6 +116,7 @@ const ProfilePage: React.FC = () => {
   const { user } = useAuthStore();
   const { showSuccessRightSlide, showErrorRightSlide } = useModal();
   const { src: userAvatarSrc } = useUserAvatar();
+  const { t } = useTranslation();
   
   // 表单状态
   const [profileData, setProfileData] = useState<ProfileFormData>({
@@ -290,11 +292,11 @@ const ProfilePage: React.FC = () => {
           // updateUser(updatedUser);
         }
         setIsEditingProfile(false);
-        showSuccessRightSlide('保存成功', '个人资料已更新');
+        showSuccessRightSlide(t('profile.success.saveSuccess'), t('profile.success.profileUpdated'));
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || '更新个人资料时发生错误';
-      showErrorRightSlide('保存失败', errorMessage);
+      const errorMessage = error.response?.data?.error || t('profile.errors.profileUpdateError');
+      showErrorRightSlide(t('profile.errors.saveFailed'), errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -303,7 +305,7 @@ const ProfilePage: React.FC = () => {
   // 修改密码
   const handleChangePassword = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      showErrorRightSlide('密码不匹配', '新密码和确认密码不一致');
+      showErrorRightSlide(t('profile.errors.passwordMismatch'), t('profile.errors.passwordMismatchMessage'));
       return;
     }
 
@@ -317,11 +319,11 @@ const ProfilePage: React.FC = () => {
           newPassword: '',
           confirmPassword: ''
         });
-        showSuccessRightSlide('密码修改成功', '您的密码已成功更新');
+        showSuccessRightSlide(t('profile.success.passwordChanged'), t('profile.success.passwordUpdated'));
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || '修改密码时发生错误';
-      showErrorRightSlide('密码修改失败', errorMessage);
+      const errorMessage = error.response?.data?.error || t('profile.errors.passwordChangeError');
+      showErrorRightSlide(t('profile.errors.passwordChangeFailed'), errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -350,10 +352,10 @@ const ProfilePage: React.FC = () => {
   // 获取角色显示名称
   const getRoleDisplayName = (role: string) => {
     const roleNames: { [key: string]: string } = {
-      'superadmin': '超级管理员',
-      'admin': '管理员',
-      'teacher': '教师',
-      'student': '学生'
+      'superadmin': t('profile.roles.superadmin'),
+      'admin': t('profile.roles.admin'),
+      'teacher': t('profile.roles.teacher'),
+      'student': t('profile.roles.student')
     };
     return roleNames[role] || role;
   };
@@ -402,13 +404,13 @@ const ProfilePage: React.FC = () => {
         }));
         
         if (result.city && result.country) {
-          showSuccessRightSlide('定位成功', `检测到您位于 ${result.country} ${result.city}，已自动设置时区为 ${formatTimezoneName(result.timezone)}`);
+          showSuccessRightSlide(t('profile.success.locationDetected'), t('profile.success.locationDetectedWithCity', { country: result.country, city: result.city, timezone: formatTimezoneName(result.timezone) }));
         } else {
-          showSuccessRightSlide('定位成功', `已自动设置时区为 ${formatTimezoneName(result.timezone)}`);
+          showSuccessRightSlide(t('profile.success.locationDetected'), t('profile.success.locationDetectedWithoutCity', { timezone: formatTimezoneName(result.timezone) }));
         }
       }
     } catch (error) {
-      showErrorRightSlide('定位失败', '无法获取您的位置信息，请手动选择时区');
+      showErrorRightSlide(t('profile.errors.locationFailed'), t('profile.errors.locationFailedMessage'));
     } finally {
       setIsDetectingLocation(false);
     }
@@ -423,7 +425,7 @@ const ProfilePage: React.FC = () => {
           className="text-center"
         >
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">加载中...</p>
+          <p className="text-gray-600 dark:text-gray-400">{t('profile.loading')}</p>
         </motion.div>
       </div>
     );
@@ -434,8 +436,8 @@ const ProfilePage: React.FC = () => {
     return (
       <LoadingPage 
         type="loading"
-        title="加载个人资料"
-        description="正在获取您的个人信息、企业信息和VCount余额..."
+        title={t('profile.loadingProfile')}
+        description={t('profile.loadingProfileDescription')}
         animation="shimmer"
       />
     );
@@ -460,8 +462,8 @@ const ProfilePage: React.FC = () => {
               <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </motion.button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">个人资料</h1>
-              <p className="text-gray-600 dark:text-gray-400">管理您的账户信息和偏好设置</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('profile.pageTitle')}</h1>
+              <p className="text-gray-600 dark:text-gray-400">{t('profile.pageDescription')}</p>
             </div>
           </div>
         </motion.div>
@@ -508,18 +510,18 @@ const ProfilePage: React.FC = () => {
                   className="mt-4 space-y-2"
                 >
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">账户状态</span>
+                    <span className="text-gray-600 dark:text-gray-400">{t('profile.accountStatus')}</span>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(user.isActive)}
                       <span className={getStatusColor(user.isActive)}>
-                        {user.isActive ? '正常' : '已禁用'}
+                        {user.isActive ? t('profile.normal') : t('profile.disabled')}
                       </span>
                     </div>
                   </div>
 
                   
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">邮箱验证</span>
+                    <span className="text-gray-600 dark:text-gray-400">{t('profile.emailVerification')}</span>
                     <div className="flex items-center gap-2">
                       {user.isEmailVerified ? (
                         <CheckCircle className="w-4 h-4 text-green-500" />
@@ -527,7 +529,7 @@ const ProfilePage: React.FC = () => {
                         <AlertCircle className="w-4 h-4 text-yellow-500" />
                       )}
                       <span className={user.isEmailVerified ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}>
-                        {user.isEmailVerified ? '已验证' : '未验证'}
+                        {user.isEmailVerified ? t('profile.verified') : t('profile.unverified')}
                       </span>
                     </div>
                   </div>
@@ -544,12 +546,12 @@ const ProfilePage: React.FC = () => {
                 >
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
-                    <span>注册时间：{new Date(user.createdAt).toLocaleDateString('zh-CN')}</span>
+                    <span>{t('profile.registrationTime')}：{new Date(user.createdAt).toLocaleDateString('zh-CN')}</span>
                   </div>
                   {user.lastLogin && (
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4" />
-                      <span>最后登录：{new Date(user.lastLogin).toLocaleDateString('zh-CN')}</span>
+                      <span>{t('profile.lastLogin')}：{new Date(user.lastLogin).toLocaleDateString('zh-CN')}</span>
                     </div>
                   )}
                 </motion.div>
@@ -570,7 +572,7 @@ const ProfilePage: React.FC = () => {
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-pulse"></div>
-                          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">VCount</span>
+                          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('profile.vcount')}</span>
                         </div>
                         <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
                           <span className="text-xs font-bold text-white">V</span>
@@ -590,7 +592,7 @@ const ProfilePage: React.FC = () => {
                         <div className="space-y-3">
                           {/* 主要余额 */}
                           <div className="text-center">
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">当前余额</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('profile.currentBalance')}</div>
                             <motion.div
                               initial={{ scale: 0.8, opacity: 0 }}
                               animate={{ scale: 1, opacity: 1 }}
@@ -609,7 +611,7 @@ const ProfilePage: React.FC = () => {
                               transition={{ delay: 0.3 }}
                               className="text-center p-2 bg-white/50 dark:bg-white/10 rounded-lg"
                             >
-                              <div className="text-gray-500 dark:text-gray-400 mb-1">总充值</div>
+                              <div className="text-gray-500 dark:text-gray-400 mb-1">{t('profile.totalRecharged')}</div>
                               <div className="font-semibold text-green-600 dark:text-green-400">
                                 {vcountInfo.totalRecharged.toFixed(2)}
                               </div>
@@ -621,7 +623,7 @@ const ProfilePage: React.FC = () => {
                               transition={{ delay: 0.4 }}
                               className="text-center p-2 bg-white/50 dark:bg-white/10 rounded-lg"
                             >
-                              <div className="text-gray-500 dark:text-gray-400 mb-1">总消费</div>
+                              <div className="text-gray-500 dark:text-gray-400 mb-1">{t('profile.totalSpent')}</div>
                               <div className="font-semibold text-red-600 dark:text-red-400">
                                 {vcountInfo.totalSpent.toFixed(2)}
             </div>
@@ -635,7 +637,7 @@ const ProfilePage: React.FC = () => {
                             transition={{ delay: 0.5 }}
                             className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-200/50 dark:border-gray-700/50"
                           >
-                            <span>交易次数：{vcountInfo.transactionCount}</span>
+                            <span>{t('profile.transactionCount')}：{vcountInfo.transactionCount}</span>
                             {vcountInfo.lastRechargeDate && (
                               <span>{new Date(vcountInfo.lastRechargeDate).toLocaleDateString('zh-CN')}</span>
                             )}
@@ -644,7 +646,7 @@ const ProfilePage: React.FC = () => {
                       ) : (
                         <div className="text-center py-6 text-gray-500 dark:text-gray-400">
                           <div className="w-8 h-8 mx-auto mb-2 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
-                          <div className="text-xs">加载失败</div>
+                          <div className="text-xs">{t('profile.loadFailed')}</div>
       </div>
                       )}
 
@@ -663,7 +665,7 @@ const ProfilePage: React.FC = () => {
                           whileTap={{ scale: 0.98 }}
                           className="w-full py-2.5 px-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white text-sm font-medium rounded-lg transition-all duration-300 transform"
                         >
-                          充值 VCount
+                          {t('profile.rechargeVCount')}
             </motion.button>
                       </motion.div>
             </div>
@@ -686,11 +688,11 @@ const ProfilePage: React.FC = () => {
                   <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                       <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">基本信息</h2>
+                      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('profile.basicInfo')}</h2>
                       {isLoadingProfile && (
                         <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                           <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
-                          加载中...
+                          {t('profile.loading')}
                     </div>
                       )}
                   </div>
@@ -704,7 +706,7 @@ const ProfilePage: React.FC = () => {
                           disabled={isLoadingProfile}
                         >
                           <Edit3 className="w-4 h-4" />
-                          编辑
+                          {t('profile.edit')}
                         </Button>
                       </motion.div>
                     ) : (
@@ -721,7 +723,7 @@ const ProfilePage: React.FC = () => {
                             ) : (
                               <Save className="w-4 h-4" />
                             )}
-                            保存
+                            {t('profile.save')}
                           </Button>
                         </motion.div>
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -732,7 +734,7 @@ const ProfilePage: React.FC = () => {
                             className="flex items-center gap-2"
                           >
                             <X className="w-4 h-4" />
-                            取消
+                            {t('profile.cancel')}
                           </Button>
                         </motion.div>
                       </div>
@@ -743,13 +745,13 @@ const ProfilePage: React.FC = () => {
                     {/* 姓名 */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        姓名
+                        {t('profile.name')}
                         </label>
                       {isEditingProfile ? (
                     <Input
                       value={profileData.name}
                           onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                          placeholder="请输入姓名"
+                          placeholder={t('profile.enterName')}
                         />
                       ) : (
                         <p className="text-gray-900 dark:text-gray-100 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -761,7 +763,7 @@ const ProfilePage: React.FC = () => {
                     {/* 邮箱 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        邮箱
+                        {t('profile.email')}
                     </label>
                       <p className="text-gray-900 dark:text-gray-100 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg flex items-center gap-2">
                         <Mail className="w-4 h-4 text-gray-500" />
@@ -772,18 +774,18 @@ const ProfilePage: React.FC = () => {
                     {/* 企业名称（只读） */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        企业名称
+                        {t('profile.enterpriseName')}
                       </label>
                       <p className="text-gray-900 dark:text-gray-100 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-gray-500" />
-                        {enterpriseInfo?.enterprise.name || user.enterpriseName || '未加入企业'}
+                        {enterpriseInfo?.enterprise.name || user.enterpriseName || t('profile.notJoinedEnterprise')}
                       </p>
                     </div>
 
                     {/* 角色 */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        角色
+                        {t('profile.role')}
                       </label>
                       <p className="text-gray-900 dark:text-gray-100 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg flex items-center gap-2">
                         {getRoleIcon(user.role)}
@@ -806,7 +808,7 @@ const ProfilePage: React.FC = () => {
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                       <Settings className="w-6 h-6 text-green-600 dark:text-green-400" />
-                      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">偏好设置</h2>
+                      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('profile.preferences')}</h2>
                 </div>
                     {!isEditingProfile ? (
                       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -817,7 +819,7 @@ const ProfilePage: React.FC = () => {
                       className="flex items-center gap-2"
                     >
                       <Edit3 className="w-4 h-4" />
-                          编辑
+                          {t('profile.edit')}
                     </Button>
                       </motion.div>
                     ) : null}
@@ -827,14 +829,14 @@ const ProfilePage: React.FC = () => {
                     {/* 主题 */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        主题
+                        {t('profile.theme')}
                       </label>
                       {isEditingProfile ? (
                         <SimpleSelect
                           options={[
-                            { value: 'auto', label: '跟随系统' },
-                            { value: 'light', label: '浅色' },
-                            { value: 'dark', label: '深色' }
+                            { value: 'auto', label: t('profile.themes.auto') },
+                            { value: 'light', label: t('profile.themes.light') },
+                            { value: 'dark', label: t('profile.themes.dark') }
                           ]}
                           value={profileData.preferences?.theme || 'auto'}
                           onChange={(value) => setProfileData({
@@ -844,15 +846,15 @@ const ProfilePage: React.FC = () => {
                               theme: value as 'light' | 'dark' | 'auto'
                             }
                           })}
-                          placeholder="选择主题"
+                          placeholder={t('profile.theme')}
                       variant="outline"
                           size="md"
                           theme="blue"
                         />
                       ) : (
                         <p className="text-gray-900 dark:text-gray-100 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                          {profileData.preferences?.theme === 'auto' ? '跟随系统' : 
-                           profileData.preferences?.theme === 'light' ? '浅色' : '深色'}
+                          {profileData.preferences?.theme === 'auto' ? t('profile.themes.auto') : 
+                           profileData.preferences?.theme === 'light' ? t('profile.themes.light') : t('profile.themes.dark')}
                         </p>
                       )}
                   </div>
@@ -860,13 +862,13 @@ const ProfilePage: React.FC = () => {
                     {/* 语言 */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        语言
+                        {t('profile.language')}
                       </label>
                       {isEditingProfile ? (
                         <SimpleSelect
                           options={[
-                            { value: 'zh-CN', label: '中文' },
-                            { value: 'en-US', label: 'English' }
+                            { value: 'zh-CN', label: t('profile.languages.zh-CN') },
+                            { value: 'en-US', label: t('profile.languages.en-US') }
                           ]}
                           value={profileData.preferences?.language || 'zh-CN'}
                           onChange={(value) => setProfileData({
@@ -876,14 +878,14 @@ const ProfilePage: React.FC = () => {
                               language: value as 'zh-CN' | 'en-US'
                             }
                           })}
-                          placeholder="选择语言"
+                          placeholder={t('profile.language')}
                       variant="outline"
                           size="md"
                           theme="blue"
                         />
                       ) : (
                         <p className="text-gray-900 dark:text-gray-100 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                          {profileData.preferences?.language === 'zh-CN' ? '中文' : 'English'}
+                          {profileData.preferences?.language === 'zh-CN' ? t('profile.languages.zh-CN') : t('profile.languages.en-US')}
                         </p>
                       )}
                   </div>
@@ -891,7 +893,7 @@ const ProfilePage: React.FC = () => {
                     {/* 时区 */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        时区
+                        {t('profile.timezone')}
                       </label>
                       {isEditingProfile ? (
                         <div className="space-y-3">
@@ -906,7 +908,7 @@ const ProfilePage: React.FC = () => {
                                   timezone: value as string
                                 }
                               })}
-                              placeholder="选择时区"
+                              placeholder={t('profile.selectTimezone')}
                       variant="outline"
                               size="md"
                               theme="blue"
@@ -924,7 +926,7 @@ const ProfilePage: React.FC = () => {
                               ) : (
                                 <Globe className="w-4 h-4" />
                               )}
-                              {isDetectingLocation ? '检测中...' : '定位'}
+                              {isDetectingLocation ? t('profile.detecting') : t('profile.detectLocation')}
                             </motion.button>
                   </div>
                           
@@ -943,13 +945,13 @@ const ProfilePage: React.FC = () => {
                     {/* 通知设置 */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        通知设置
+                        {t('profile.notifications')}
                       </label>
                       <div className="space-y-2">
                   <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                           <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
                             <Bell className="w-4 h-4" />
-                            邮件通知
+                            {t('profile.emailNotifications')}
                     </span>
                           {isEditingProfile ? (
                             <input
@@ -969,7 +971,7 @@ const ProfilePage: React.FC = () => {
                             />
                           ) : (
                             <span className={`text-sm ${profileData.preferences?.notifications?.email ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                              {profileData.preferences?.notifications?.email ? '开启' : '关闭'}
+                              {profileData.preferences?.notifications?.email ? t('profile.enabled') : t('profile.disabledSetting')}
                     </span>
                           )}
                   </div>
@@ -991,7 +993,7 @@ const ProfilePage: React.FC = () => {
                   <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                       <Lock className="w-6 h-6 text-red-600 dark:text-red-400" />
-                      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">密码修改</h2>
+                      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('profile.passwordChange')}</h2>
                     </div>
                     {!isChangingPassword ? (
                       <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -1002,7 +1004,7 @@ const ProfilePage: React.FC = () => {
                           className="flex items-center gap-2"
                         >
                           <Edit3 className="w-4 h-4" />
-                          修改密码
+                          {t('profile.changePassword')}
                         </Button>
                 </motion.div>
                     ) : (
@@ -1019,7 +1021,7 @@ const ProfilePage: React.FC = () => {
                             ) : (
                               <Save className="w-4 h-4" />
                             )}
-                            确认修改
+                            {t('profile.confirmChange')}
                 </Button>
                         </motion.div>
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -1037,7 +1039,7 @@ const ProfilePage: React.FC = () => {
                             className="flex items-center gap-2"
                 >
                             <X className="w-4 h-4" />
-                            取消
+                            {t('profile.cancel')}
                 </Button>
                         </motion.div>
               </div>
@@ -1055,14 +1057,14 @@ const ProfilePage: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              当前密码
+                              {t('profile.currentPassword')}
                             </label>
                             <div className="relative">
                     <Input
                                 type={showPassword ? 'text' : 'password'}
                       value={passwordData.currentPassword}
                                 onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                                placeholder="请输入当前密码"
+                                placeholder={t('profile.enterCurrentPassword')}
                               />
                               <button
                                 type="button"
@@ -1080,14 +1082,14 @@ const ProfilePage: React.FC = () => {
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              新密码
+                              {t('profile.newPassword')}
                             </label>
                             <div className="relative">
                     <Input
                                 type={showNewPassword ? 'text' : 'password'}
                       value={passwordData.newPassword}
                                 onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                                placeholder="请输入新密码"
+                                placeholder={t('profile.enterNewPassword')}
                               />
                               <button
                                 type="button"
@@ -1106,14 +1108,14 @@ const ProfilePage: React.FC = () => {
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            确认新密码
+                            {t('profile.confirmNewPassword')}
                           </label>
                           <div className="relative">
                     <Input
                               type={showConfirmPassword ? 'text' : 'password'}
                       value={passwordData.confirmPassword}
                               onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                              placeholder="请再次输入新密码"
+                              placeholder={t('profile.enterNewPasswordAgain')}
                             />
                             <button
                               type="button"
@@ -1135,7 +1137,7 @@ const ProfilePage: React.FC = () => {
                         animate={{ opacity: 1 }}
                         className="text-gray-600 dark:text-gray-400 text-center py-8"
                       >
-                        定期修改密码可以提高账户安全性
+                        {t('profile.passwordSecurityTip')}
                       </motion.p>
           )}
         </AnimatePresence>
@@ -1153,7 +1155,7 @@ const ProfilePage: React.FC = () => {
                 <div className="p-6">
                   <div className="flex items-center gap-3 mb-6">
                     <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">社交功能</h2>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('profile.socialFeatures')}</h2>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <motion.button
@@ -1164,12 +1166,12 @@ const ProfilePage: React.FC = () => {
                     >
                       <div className="flex items-center gap-3 mb-2">
                         <Heart className="w-6 h-6 text-red-500" />
-                        <span className="font-medium text-red-700 dark:text-red-300">收藏题目</span>
+                        <span className="font-medium text-red-700 dark:text-red-300">{t('profile.favoriteQuestions')}</span>
                       </div>
                       <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                         {user.favorites?.length || 0}
                       </p>
-                      <p className="text-sm text-red-600 dark:text-red-400">个收藏</p>
+                      <p className="text-sm text-red-600 dark:text-red-400">{t('profile.favorites')}</p>
                     </motion.button>
 
                     <motion.button
@@ -1180,12 +1182,12 @@ const ProfilePage: React.FC = () => {
                     >
                       <div className="flex items-center gap-3 mb-2">
                         <Users className="w-6 h-6 text-blue-500" />
-                        <span className="font-medium text-blue-700 dark:text-blue-300">粉丝</span>
+                        <span className="font-medium text-blue-700 dark:text-blue-300">{t('profile.followers')}</span>
                   </div>
                       <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {user.followers?.length || 0}
                       </p>
-                      <p className="text-sm text-blue-600 dark:text-blue-400">个粉丝</p>
+                      <p className="text-sm text-blue-600 dark:text-blue-400">{t('profile.followersCount')}</p>
                     </motion.button>
 
                     <motion.button
@@ -1196,12 +1198,12 @@ const ProfilePage: React.FC = () => {
                     >
                       <div className="flex items-center gap-3 mb-2">
                         <UserPlus className="w-6 h-6 text-green-500" />
-                        <span className="font-medium text-green-700 dark:text-green-300">关注</span>
+                        <span className="font-medium text-green-700 dark:text-green-300">{t('profile.following')}</span>
                 </div>
                       <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {user.following?.length || 0}
                       </p>
-                      <p className="text-sm text-green-600 dark:text-green-400">个关注</p>
+                      <p className="text-sm text-green-600 dark:text-green-400">{t('profile.followingCount')}</p>
                     </motion.button>
                             </div>
                             </div>

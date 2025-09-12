@@ -14,6 +14,7 @@ import { TikZEditor } from '../tikz/core/TikZEditor';
 import type { TikZCode } from '../tikz/core/TikZEditor';
 import { TikZRenderer } from '../tikz/core/TikZRenderer';
 import { cn } from '../../lib/utils';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface QuestionMediaManagerProps {
   questionId: string;
@@ -32,6 +33,7 @@ export const QuestionMediaManager: React.FC<QuestionMediaManagerProps> = ({
   onTikZCodesChange,
   className
 }) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'images' | 'tikz'>('images');
   const [expandedSections, setExpandedSections] = useState({
     images: true,
@@ -74,20 +76,20 @@ export const QuestionMediaManager: React.FC<QuestionMediaManagerProps> = ({
       <div className="border-b border-gray-200">
         <div className="flex items-center justify-between pb-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">题目媒体管理</h2>
+            <h2 className="text-xl font-bold text-gray-900">{t('question.questionMediaManager.title')}</h2>
             <p className="text-sm text-gray-600 mt-1">
-              管理题目的图片和TikZ图形，提升题目的可视化效果
+              {t('question.questionMediaManager.description')}
             </p>
           </div>
           
           <div className="flex items-center space-x-4 text-sm text-gray-500">
             <div className="flex items-center space-x-2">
               <ImageIcon className="w-4 h-4" />
-              <span>{images.length} 张图片</span>
+              <span>{t('question.questionMediaManager.imageCount', { count: images.length })}</span>
             </div>
             <div className="flex items-center space-x-2">
               <Code className="w-4 h-4" />
-              <span>{tikzCodes.length} 个TikZ图形</span>
+              <span>{t('question.questionMediaManager.tikzCount', { count: tikzCodes.length })}</span>
             </div>
           </div>
         </div>
@@ -104,7 +106,7 @@ export const QuestionMediaManager: React.FC<QuestionMediaManagerProps> = ({
             )}
           >
             <ImageIcon className="w-4 h-4 inline mr-2" />
-            图片管理
+            {t('question.questionMediaManager.imageManagement')}
           </button>
           <button
             onClick={() => handleTabChange('tikz')}
@@ -116,7 +118,7 @@ export const QuestionMediaManager: React.FC<QuestionMediaManagerProps> = ({
             )}
           >
             <Code className="w-4 h-4 inline mr-2" />
-            TikZ图形
+            {t('question.questionMediaManager.tikzGraphics')}
           </button>
         </div>
       </div>
@@ -144,7 +146,7 @@ export const QuestionMediaManager: React.FC<QuestionMediaManagerProps> = ({
                     ) : (
                       <ChevronRight className="w-5 h-5" />
                     )}
-                    <span>图片管理</span>
+                    <span>{t('question.questionMediaManager.imageManagement')}</span>
                   </button>
                   
                   <div className="flex items-center space-x-2">
@@ -203,7 +205,7 @@ export const QuestionMediaManager: React.FC<QuestionMediaManagerProps> = ({
                     ) : (
                       <ChevronRight className="w-5 h-5" />
                     )}
-                    <span>TikZ图形管理</span>
+                    <span>{t('question.questionMediaManager.tikzManagement')}</span>
                   </button>
                   
                   <div className="flex items-center space-x-2">
@@ -252,11 +254,11 @@ export const QuestionMediaManager: React.FC<QuestionMediaManagerProps> = ({
               ) : (
                 <ChevronRight className="w-5 h-5" />
               )}
-              <span>媒体预览</span>
+              <span>{t('question.questionMediaManager.mediaPreview')}</span>
             </button>
             
             <div className="text-sm text-gray-500">
-              实时预览题目的图片和TikZ图形
+              {t('question.questionMediaManager.realTimePreview')}
             </div>
           </div>
           
@@ -273,7 +275,7 @@ export const QuestionMediaManager: React.FC<QuestionMediaManagerProps> = ({
                   {/* 图片预览 */}
                   {images.length > 0 && (
                     <div>
-                      <h4 className="text-lg font-medium text-gray-900 mb-3">图片预览</h4>
+                      <h4 className="text-lg font-medium text-gray-900 mb-3">{t('question.questionMediaManager.imagePreview')}</h4>
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {images.map((image, index) => (
                           <div key={image.id} className="border border-gray-200 rounded-lg overflow-hidden">
@@ -295,7 +297,7 @@ export const QuestionMediaManager: React.FC<QuestionMediaManagerProps> = ({
                   {/* TikZ图形预览 */}
                   {tikzCodes.length > 0 && (
                     <div>
-                      <h4 className="text-lg font-medium text-gray-900 mb-3">TikZ图形预览</h4>
+                      <h4 className="text-lg font-medium text-gray-900 mb-3">{t('question.questionMediaManager.tikzPreview')}</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {tikzCodes.map((tikzCode) => (
                           <TikZRenderer
@@ -315,8 +317,8 @@ export const QuestionMediaManager: React.FC<QuestionMediaManagerProps> = ({
                       <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                         <ImageIcon className="w-8 h-8 text-gray-400" />
                       </div>
-                      <p className="text-lg font-medium">暂无媒体内容</p>
-                      <p className="text-sm">添加图片或TikZ图形来丰富题目内容</p>
+                      <p className="text-lg font-medium">{t('question.questionMediaManager.noMediaContent')}</p>
+                      <p className="text-sm">{t('question.questionMediaManager.addMediaToEnrich')}</p>
                     </div>
                   )}
                 </div>
@@ -331,12 +333,12 @@ export const QuestionMediaManager: React.FC<QuestionMediaManagerProps> = ({
         <div className="flex items-start space-x-3">
           <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
           <div className="text-sm text-blue-800">
-            <h4 className="font-medium mb-2">使用提示</h4>
+            <h4 className="font-medium mb-2">{t('question.questionMediaManager.usageTips')}</h4>
             <ul className="space-y-1 text-xs">
-              <li>• 图片支持拖拽上传，最大5MB，支持JPG、PNG、GIF格式</li>
-              <li>• TikZ图形支持模拟渲染（无需后端）和真实渲染（需要LaTeX环境）</li>
-              <li>• 可以调整图片和TikZ图形的显示顺序</li>
-              <li>• 所有媒体内容都会自动保存到题目中</li>
+              <li>• {t('question.questionMediaManager.tip1')}</li>
+              <li>• {t('question.questionMediaManager.tip2')}</li>
+              <li>• {t('question.questionMediaManager.tip3')}</li>
+              <li>• {t('question.questionMediaManager.tip4')}</li>
             </ul>
           </div>
         </div>

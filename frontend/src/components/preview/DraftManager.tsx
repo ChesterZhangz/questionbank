@@ -16,6 +16,7 @@ import type { QuestionDraft } from '../../services/questionDraftAPI';
 import { useModal } from '../../hooks/useModal';
 import RightSlideModal from '../ui/RightSlideModal';
 import ConfirmModal from '../ui/ConfirmModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface DraftManagerProps {
   isOpen: boolean;
@@ -26,6 +27,8 @@ interface DraftManagerProps {
 }
 
 const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdit, onUserSaveDraft, onDraftSaved }) => {
+  const { t } = useTranslation();
+  
   // 弹窗状态管理
   const { 
     showConfirm,
@@ -68,12 +71,12 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
 
   const handleSaveDraft = async () => {
     if (!draftName.trim()) {
-      showErrorRightSlide('输入错误', '请输入草稿名称');
+      showErrorRightSlide(t('preview.draftManager.inputError'), t('preview.draftManager.inputErrorMessage'));
       return;
     }
 
     if (questions.length === 0) {
-      showErrorRightSlide('保存失败', '没有题目可以保存');
+      showErrorRightSlide(t('preview.draftManager.saveFailed'), t('preview.draftManager.saveFailedMessage'));
       return;
     }
 
@@ -103,14 +106,19 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
     });
     
           if (duplicateDraft) {
-        const confirmMessage = `检测到与草稿"${duplicateDraft.name}"高度相似的习题集.\n\n相似度：${Math.round((duplicateDraft.questions.filter((_, index) => 
+        const similarity = Math.round((duplicateDraft.questions.filter((_, index) => 
           index < questions.length && 
           duplicateDraft.questions[index]?.content.stem === questions[index]?.content.stem &&
           duplicateDraft.questions[index]?.type === questions[index]?.type
-        ).length / Math.max(questions.length, duplicateDraft.questions.length)) * 100)}%\n\n是否要覆盖现有草稿？\n\n注意：这将更新草稿"${duplicateDraft.name}"的内容，而不是创建新的草稿.`;
+        ).length / Math.max(questions.length, duplicateDraft.questions.length)) * 100);
+        
+        const confirmMessage = t('preview.draftManager.confirmOverwriteMessage', { 
+          name: duplicateDraft.name, 
+          similarity: similarity 
+        });
         
         showConfirm(
-          '确认覆盖',
+          t('preview.draftManager.confirmOverwrite'),
           confirmMessage,
           async () => {
             try {
@@ -127,14 +135,14 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
               setDraftName('');
               setDraftDescription('');
               setShowSaveForm(false);
-              showSuccessRightSlide('更新成功', `已更新草稿：${duplicateDraft.name}`);
+              showSuccessRightSlide(t('preview.draftManager.updateSuccess'), t('preview.draftManager.updateSuccessMessage', { name: duplicateDraft.name }));
               
               // 通知父组件用户已主动保存草稿
               if (onUserSaveDraft) {
                 onUserSaveDraft();
               }
             } catch (error) {
-              showErrorRightSlide('更新失败', '草稿更新失败，请重试');
+              showErrorRightSlide(t('preview.draftManager.updateFailed'), t('preview.draftManager.updateFailedMessage'));
             }
             
             // 关闭确认弹窗
@@ -149,7 +157,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
       setDraftName('');
       setDraftDescription('');
       setShowSaveForm(false);
-      showSuccessRightSlide('保存成功', `草稿"${draftName.trim()}"保存成功`);
+      showSuccessRightSlide(t('preview.draftManager.saveSuccess'), t('preview.draftManager.saveSuccessMessage', { name: draftName.trim() }));
       
       // 通知父组件用户已主动保存草稿
       if (onUserSaveDraft) {
@@ -162,23 +170,23 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
       }
     } catch (error) {
       console.error('保存草稿失败:', error);
-      showErrorRightSlide('保存失败', error instanceof Error ? error.message : '保存草稿失败，请重试');
+      showErrorRightSlide(t('preview.draftManager.saveFailed'), error instanceof Error ? error.message : t('preview.draftManager.updateFailedMessage'));
     }
   };
 
   const handleLoadDraft = async (draft: QuestionDraft) => {
     if (isDraftMode && currentDraftId && currentDraftId !== draft._id) {
       showConfirm(
-        '确认加载',
-        '当前有未保存的草稿，确定要加载其他草稿吗？',
+        t('preview.draftManager.confirmLoad'),
+        t('preview.draftManager.confirmLoadMessage'),
         async () => {
           try {
             setLoadingDraftId(draft._id);
             await loadDraft(draft._id);
-            showSuccessRightSlide('加载成功', `已加载草稿：${draft.name}`);
+            showSuccessRightSlide(t('preview.draftManager.loadSuccess'), t('preview.draftManager.loadSuccessMessage', { name: draft.name }));
           } catch (error) {
             console.error('加载草稿失败:', error);
-            showErrorRightSlide('加载失败', error instanceof Error ? error.message : '加载草稿失败，请重试');
+            showErrorRightSlide(t('preview.draftManager.loadFailed'), error instanceof Error ? error.message : t('preview.draftManager.loadFailedMessage'));
           } finally {
             setLoadingDraftId(null);
             closeConfirm();
@@ -197,10 +205,10 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
       
       await Promise.all([loadPromise, timeoutPromise]);
       
-      showSuccessRightSlide('加载成功', `已加载草稿：${draft.name}`);
+      showSuccessRightSlide(t('preview.draftManager.loadSuccess'), t('preview.draftManager.loadSuccessMessage', { name: draft.name }));
     } catch (error) {
       console.error('加载草稿失败:', error);
-      showErrorRightSlide('加载失败', error instanceof Error ? error.message : '加载草稿失败，请重试');
+      showErrorRightSlide(t('preview.draftManager.loadFailed'), error instanceof Error ? error.message : t('preview.draftManager.loadFailedMessage'));
     } finally {
       setLoadingDraftId(null);
     }
@@ -208,18 +216,18 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
 
   const handleDeleteDraft = async (draft: QuestionDraft) => {
     showConfirm(
-      '确认删除',
-      `确定要删除草稿"${draft.name}"吗？`,
+      t('preview.draftManager.confirmDelete'),
+      t('preview.draftManager.confirmDeleteMessage', { name: draft.name }),
       async () => {
         try {
           setDeletingDraftId(draft._id);
-          setConfirmLoading(true, '正在删除...');
+          setConfirmLoading(true, t('preview.draftManager.deleting'));
           await deleteDraft(draft._id);
-          showSuccessRightSlide('删除成功', '草稿删除成功');
+          showSuccessRightSlide(t('preview.draftManager.deleteSuccess'), t('preview.draftManager.deleteSuccessMessage'));
           closeConfirm();
         } catch (error) {
           console.error('删除草稿失败:', error);
-          showErrorRightSlide('删除失败', error instanceof Error ? error.message : '草稿删除失败，请重试');
+          showErrorRightSlide(t('preview.draftManager.deleteFailed'), error instanceof Error ? error.message : t('preview.draftManager.deleteFailedMessage'));
         } finally {
           setDeletingDraftId(null);
           setConfirmLoading(false);
@@ -267,7 +275,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
     
     setEditingDraftId(null);
     setEditingDraftName('');
-    showSuccessRightSlide('重命名成功', '草稿重命名成功');
+    showSuccessRightSlide(t('preview.draftManager.renameSuccess'), t('preview.draftManager.renameSuccessMessage'));
   };
 
   const handleCancelRename = () => {
@@ -316,10 +324,10 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                 <div>
                   <h3 className="text-lg font-semibold flex items-center">
                     <FileText className="mr-2 h-5 w-5" />
-                    题目集草稿
+                    {t('preview.draftManager.title')}
                   </h3>
                   <p className="text-sm opacity-90">
-                    {isDraftMode ? `当前草稿：${getCurrentDraft()?.name || '未命名'}` : '未在草稿模式'}
+                    {isDraftMode ? t('preview.draftManager.currentDraft', { name: getCurrentDraft()?.name || '未命名' }) : t('preview.draftManager.notInDraftMode')}
                   </p>
                 </div>
                 <Button
@@ -345,14 +353,14 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                     ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                     : 'bg-gradient-to-r from-green-500 to-blue-600 text-white hover:from-green-600 hover:to-blue-700'
                 }`}
-                title={questions.length === 0 ? '当前没有题目可以保存' : '保存当前题目集为草稿'}
+                title={questions.length === 0 ? t('preview.draftManager.noQuestionsToSave') : t('preview.draftManager.saveCurrent')}
               >
                 <Save className="h-4 w-4 mr-2" />
-                {questions.length === 0 ? '暂无题目可保存' : '保存当前题目集为草稿'}
+                {questions.length === 0 ? t('preview.draftManager.noQuestionsToSave') : t('preview.draftManager.saveCurrent')}
               </Button>
               {questions.length === 0 && (
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                  请先上传文档或加载草稿
+                  {t('preview.draftManager.noQuestionsHint')}
                 </p>
               )}
             </div>
@@ -369,24 +377,24 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                     <div className="space-y-3">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                          草稿名称 *
+                          {t('preview.draftManager.draftName')} *
                         </label>
                         <input
                           type="text"
                           value={draftName}
                           onChange={(e) => setDraftName(e.target.value)}
-                          placeholder="请输入草稿名称"
+                          placeholder={t('preview.draftManager.draftNamePlaceholder')}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                          描述（可选）
+                          {t('preview.draftManager.description')}
                         </label>
                         <textarea
                           value={draftDescription}
                           onChange={(e) => setDraftDescription(e.target.value)}
-                          placeholder="请输入草稿描述"
+                          placeholder={t('preview.draftManager.descriptionPlaceholder')}
                           rows={2}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                         />
@@ -396,7 +404,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                           onClick={handleSaveDraft}
                           className="flex-1 bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
                         >
-                          保存
+                          {t('preview.draftManager.save')}
                         </Button>
                         <Button
                           onClick={() => {
@@ -407,7 +415,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                           variant="outline"
                           className="flex-1"
                         >
-                          取消
+                          {t('preview.draftManager.cancel')}
                         </Button>
                       </div>
                     </div>
@@ -418,19 +426,19 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
               {/* 草稿列表 */}
               <div className="p-4">
                 <h4 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
-                  草稿列表 ({drafts.length})
+                  {t('preview.draftManager.draftList', { count: drafts.length })}
                 </h4>
                 
                 {isLoadingDrafts ? (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     <div className="h-8 w-8 mx-auto mb-3 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-                    <p>正在加载草稿...</p>
+                    <p>{t('preview.draftManager.loadingDrafts')}</p>
                   </div>
                 ) : drafts.length === 0 ? (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>暂无草稿</p>
-                    <p className="text-sm">保存题目集后，草稿将显示在这里</p>
+                    <p>{t('preview.draftManager.noDrafts')}</p>
+                    <p className="text-sm">{t('preview.draftManager.noDraftsHint')}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -473,7 +481,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                                   </span>
                                 )}
                                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  {draft.questions.length}题
+                                  {t('preview.draftManager.questionCount', { count: draft.questions.length })}
                                 </span>
                               </div>
                               
@@ -498,7 +506,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                                       className="text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 text-xs px-2 py-1"
                                     >
                                       <Save className="h-3 w-3 mr-1" />
-                                      保存
+                                      {t('preview.draftManager.saveRename')}
                                     </Button>
                                     <Button
                                       variant="outline"
@@ -507,7 +515,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                                       className="text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs px-2 py-1"
                                     >
                                       <X className="h-3 w-3 mr-1" />
-                                      取消
+                                      {t('preview.draftManager.cancelRename')}
                                     </Button>
                                   </div>
                                 ) : (
@@ -522,12 +530,12 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                                       {loadingDraftId === draft._id ? (
                                         <>
                                           <div className="h-3 w-3 mr-1 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-                                          正在加载...
+                                          {t('preview.draftManager.loading')}
                                         </>
                                       ) : (
                                         <>
                                           <FolderOpen className="h-3 w-3 mr-1" />
-                                          {currentDraftId === draft._id ? '当前草稿' : '加载'}
+                                          {currentDraftId === draft._id ? t('preview.draftManager.currentDraftStatus') : t('preview.draftManager.load')}
                                         </>
                                       )}
                                     </Button>
@@ -540,7 +548,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                                       disabled={editingDraftId === draft._id}
                                     >
                                       <Edit3 className="h-3 w-3 mr-1" />
-                                      重命名
+                                      {t('preview.draftManager.rename')}
                                     </Button>
                                     
                                     {onEnterEdit && (
@@ -551,7 +559,7 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                                         className="text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 text-xs px-2 py-1"
                                       >
                                         <Edit3 className="h-3 w-3 mr-1" />
-                                        编辑
+                                        {t('preview.draftManager.edit')}
                                       </Button>
                                     )}
                                   </div>
@@ -567,12 +575,12 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
                                   {deletingDraftId === draft._id ? (
                                     <>
                                       <div className="h-3 w-3 mr-1 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
-                                      正在删除...
+                                      {t('preview.draftManager.deleting')}
                                     </>
                                   ) : (
                                     <>
                                       <Trash2 className="h-3 w-3 mr-1" />
-                                      删除
+                                      {t('preview.draftManager.delete')}
                                     </>
                                   )}
                                 </Button>
@@ -590,8 +598,8 @@ const DraftManager: React.FC<DraftManagerProps> = ({ isOpen, onClose, onEnterEdi
             {/* 底部信息 */}
             <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
               <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                <p>草稿保存在云端数据库中</p>
-                <p>数据安全可靠，支持多设备同步</p>
+                <p>{t('preview.draftManager.cloudStorage')}</p>
+                <p>{t('preview.draftManager.dataSecurity')}</p>
               </div>
             </div>
           </motion.div>

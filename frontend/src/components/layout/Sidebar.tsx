@@ -22,6 +22,7 @@ import Avatar from '../ui/Avatar';
 import { useTheme } from '../../hooks/useTheme';
 import { useUserAvatar } from '../../hooks/useUserAvatar';
 import { getLogoPath, getSiteName, getSiteTagline } from '../../config/siteConfig';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface NavItem {
   id: string;
@@ -39,37 +40,37 @@ interface NavSection {
   items: NavItem[];
 }
 
-const navSections: NavSection[] = [
+const getNavSections = (t: any): NavSection[] => [
   {
     id: 'overview',
-    title: '总览',
+    title: t('layout.sidebar.overview'),
     items: [
-      { id: 'dashboard', label: '仪表盘', icon: Home, path: '/dashboard' }
+      { id: 'dashboard', label: t('layout.sidebar.dashboard'), icon: Home, path: '/dashboard' }
     ]
   },
   {
     id: 'questions',
-    title: '题目与题库',
+    title: t('layout.sidebar.questionBank'),
     items: [
-      { id: 'question-banks', label: '题库管理', icon: BookOpen, path: '/question-banks' },
-      { id: 'questions', label: '题目管理', icon: FileText, path: '/questions' },
-      { id: 'batch-upload', label: '批量上传', icon: Upload, path: '/batch-upload' }
+      { id: 'question-banks', label: t('layout.sidebar.bankManagement'), icon: BookOpen, path: '/question-banks' },
+      { id: 'questions', label: t('layout.sidebar.questionList'), icon: FileText, path: '/questions' },
+      { id: 'batch-upload', label: t('layout.sidebar.batchUpload'), icon: Upload, path: '/batch-upload' }
     ]
   },
   {
     id: 'papers',
-    title: '试卷',
+    title: t('layout.sidebar.papers'),
     items: [
-      { id: 'paper-banks', label: '试卷集', icon: ClipboardList, path: '/paper-banks' },
-      { id: 'my-papers', label: '我的试卷', icon: FileText, path: '/my-papers' },
+      { id: 'paper-banks', label: t('layout.sidebar.paperBanks'), icon: ClipboardList, path: '/paper-banks' },
+      { id: 'my-papers', label: t('layout.sidebar.myPapers'), icon: FileText, path: '/my-papers' },
     ]
   },
   {
     id: 'admin',
-    title: '管理者页面',
+    title: t('layout.sidebar.admin'),
     items: [
-      { id: 'enterprise-management', label: '企业管理', icon: Shield, path: '/enterprise-management', requiresSuperAdmin: true },
-      { id: 'users', label: '用户管理', icon: Users, path: '/users', requiresAdmin: true }
+      { id: 'enterprise-management', label: t('layout.sidebar.enterpriseManagement'), icon: Shield, path: '/enterprise-management', requiresSuperAdmin: true },
+      { id: 'users', label: t('layout.sidebar.userManagement'), icon: Users, path: '/users', requiresAdmin: true }
     ]
   }
 ];
@@ -81,12 +82,15 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const [activeSection, setActiveSection] = useState('dashboard');
   const { isDark } = useTheme();
   const { src: userAvatarSrc } = useUserAvatar();
+  
+  const navSections = getNavSections(t);
 
   // 检查用户权限
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
@@ -201,7 +205,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
                   <img 
                     src={getLogoPath(isDark)} 
-                    alt="网站Logo" 
+                    alt={t('layout.sidebar.siteLogo')} 
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       // 如果头像加载失败，使用彩色logo作为fallback
@@ -222,7 +226,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
         <button 
           className="p-2.5 rounded-xl hover:bg-white/60 dark:hover:bg-gray-700/60 transition-all duration-200 hover:shadow-md backdrop-blur-sm"
           onClick={onToggle}
-          aria-label={collapsed ? '展开侧边栏' : '收起侧边栏'}
+          aria-label={collapsed ? t('layout.sidebar.expand') : t('layout.sidebar.collapse')}
         >
           <ChevronLeft className={`w-5 h-5 text-gray-600 dark:text-gray-300 transition-transform duration-300 ${
             collapsed ? 'rotate-180' : ''
@@ -291,14 +295,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                 className="flex-1 min-w-0"
               >
                 <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
-                  {user?.name || '用户'}
+                  {user?.name || t('layout.sidebar.user')}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                   {user?.email || 'user@example.com'}
                 </p>
                 <div className="flex items-center gap-1 mt-1">
                   <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium">
-                    {isSuperAdmin || isAdminEmail ? '超级管理员' : isAdmin ? '管理员' : '普通用户'}
+                    {isSuperAdmin || isAdminEmail ? t('layout.sidebar.superAdmin') : isAdmin ? t('layout.sidebar.admin') : t('layout.sidebar.normalUser')}
                   </span>
                 </div>
               </motion.div>
@@ -329,7 +333,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                   exit={{ opacity: 0 }}
                   className="font-medium"
                 >
-                  个人信息
+                  {t('layout.sidebar.profile')}
                 </motion.span>
               )}
             </AnimatePresence>
@@ -358,7 +362,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                     exit={{ opacity: 0 }}
                     className="font-medium"
                   >
-                    我的企业
+                    {t('layout.sidebar.myEnterprise')}
                   </motion.span>
                 )}
               </AnimatePresence>
@@ -386,7 +390,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                   exit={{ opacity: 0 }}
                   className="font-medium"
                 >
-                  设置
+                  {t('layout.sidebar.settings')}
                 </motion.span>
               )}
             </AnimatePresence>
@@ -407,7 +411,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                   exit={{ opacity: 0 }}
                   className="font-medium"
                 >
-                  退出登录
+                  {t('layout.sidebar.logout')}
                 </motion.span>
               )}
             </AnimatePresence>
@@ -440,7 +444,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                   className="flex items-center gap-2"
                 >
                   <span className="text-xs">v0.81</span>
-                  <span className="text-xs opacity-75">版本信息</span>
+                  <span className="text-xs opacity-75">{t('layout.sidebar.version')}</span>
                 </motion.div>
               )}
             </AnimatePresence>

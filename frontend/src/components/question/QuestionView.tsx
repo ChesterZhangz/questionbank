@@ -22,6 +22,7 @@ import { questionAPI } from '../../services/api';
 import { questionEvaluationAPI } from '../../services/questionEvaluationAPI';
 import { autoAIAnalysisService } from '../../services/autoAIAnalysisService';
 import { useModal } from '../../hooks/useModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 import MagicTextTransition from '../animations/MagicTextTransition';
 // 导入LaTeXPreview组件，使用与QuestionCard相同的渲染逻辑
@@ -54,6 +55,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
 }) => {
   // 弹窗状态管理
   const { showSuccessRightSlide, showErrorRightSlide } = useModal();
+  const { t } = useTranslation();
 
   const navigate = useNavigate();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(currentIndex);
@@ -532,11 +534,11 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   // 题目类型文本
   const getQuestionTypeText = (type: string) => {
     switch (type) {
-      case 'choice': return '选择题';
-      case 'multiple-choice': return '多选题';
-      case 'fill': return '填空题';
-      case 'solution': return '解答题';
-      default: return '未知';
+      case 'choice': return t('question.questionCard.questionType.choice');
+      case 'multiple-choice': return t('question.questionCard.questionType.multipleChoice');
+      case 'fill': return t('question.questionCard.questionType.fill');
+      case 'solution': return t('question.questionCard.questionType.solution');
+      default: return t('question.questionCard.questionType.unknown');
     }
   };
 
@@ -566,12 +568,12 @@ const QuestionView: React.FC<QuestionViewProps> = ({
   // 难度文本
   const getDifficultyText = (difficulty: number) => {
     switch (difficulty) {
-      case 1: return '非常简单';
-      case 2: return '简单';
-      case 3: return '中等';
-      case 4: return '困难';
-      case 5: return '非常困难';
-      default: return '未知';
+      case 1: return t('question.questionCard.difficult_level.easy');
+      case 2: return t('question.questionCard.difficult_level.mediumEasy');
+      case 3: return t('question.questionCard.difficult_level.medium');
+      case 4: return t('question.questionCard.difficult_level.mediumHard');
+      case 5: return t('question.questionCard.difficult_level.hard');
+      default: return t('question.questionCard.questionType.unknown');
     }
   };
   // 难度星级
@@ -641,7 +643,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
             <div className="flex items-center justify-between p-6 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center space-x-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                  题目详情
+                  {t('question.questionView.title')}
                 </h2>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
                   {currentQuestionIndex + 1} / {questions.length}
@@ -824,7 +826,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                       animate={{ opacity: 1, scale: 1 }}
                                       transition={{ duration: 0.06, delay: 0.1, ease: "easeOut" }}
                                     >
-                                      出处:
+                                      {t('question.questionCard.source')}:
                                     </motion.span>
                                     <motion.span 
                                       className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md"
@@ -891,7 +893,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                   >
-                                    题目
+                                    {t('question.questionView.tabs.question')}
                                   </motion.button>
                                   <motion.button
                                     onClick={() => setActiveTab('solution')}
@@ -903,7 +905,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                   >
-                                    解析
+                                    {t('question.questionView.tabs.solution')}
                                   </motion.button>
                                   <motion.button
                                     onClick={() => setActiveTab('analysis')}
@@ -915,7 +917,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                   >
-                                    分析
+                                    {t('question.questionView.tabs.analysis')}
                                   </motion.button>
                                 </nav>
                               </div>
@@ -944,7 +946,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                           animate={{ opacity: 1, scale: 1, x: 0 }}
                                           transition={{ duration: 0.08, delay: 0.18, ease: "easeOut" }}
                                         >
-                                          题目内容
+                                          {t('question.questionView.content.title')}
                                         </motion.h3>
                                         <MagicTextTransition>
                                           <LaTeXPreview 
@@ -987,7 +989,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                                 animate={{ opacity: 1, scale: 1, x: 0 }}
                                                 transition={{ duration: 0.06, delay: 0.22, ease: "easeOut" }}
                                               >
-                                                图形与图片
+                                                {t('question.questionView.media.title')}
                                               </motion.span>
                                               <motion.span 
                                                 className="text-xs text-gray-400 dark:text-gray-500"
@@ -1021,7 +1023,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                                                        />
                                                        <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded">
-                                                         图片
+                                                         {t('question.questionView.media.image')}
                                                        </div>
                                                      </div>
                                                    ) : (
@@ -1037,13 +1039,13 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                                          className="w-full h-full group-hover:scale-105 transition-transform duration-200 flex items-center justify-center"
                                                        />
                                                        <div className="absolute top-1 left-1 bg-purple-500 text-white text-xs px-1 py-0.5 rounded">
-                                                         图形
+                                                         {t('question.questionView.media.tikz')}
                                                        </div>
                                                      </div>
                                                    )}
                                                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
                                                      <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-white text-xs font-medium">
-                                                       查看
+                                                       {t('question.questionView.actions.view')}
                                                      </div>
                                                    </div>
                                                  </div>
@@ -1113,7 +1115,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                         <div className="mb-6">
                                         <div className="flex items-center mb-4">
                                           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                            答案
+                                            {t('question.questionCard.answer')}
                                             <motion.span
                                               onClick={() => setShowAnswer(!showAnswer)}
                                               className="answer-text-toggle ml-2 cursor-pointer"
@@ -1121,7 +1123,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                               whileTap={{ scale: 0.98 }}
                                             >
                                               <span className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-semibold">
-                                                {showAnswer ? '隐藏' : '显示'}
+                                                {showAnswer ? t('question.questionView.answer.hide') : t('question.questionView.answer.show')}
                                               </span>
                                             </motion.span>
                                           </h3>
@@ -1137,7 +1139,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                           >
                                             {currentQuestion.type === 'choice' || currentQuestion.type === 'multiple-choice' ? (
                                               <div className="choice-hint text-sm text-gray-600 dark:text-gray-400">
-                                                正确答案已在上方选项中高亮显示
+                                                {t('question.questionView.answer.correctHighlighted')}
                                               </div>
                                             ) : (
                                             <LaTeXPreview 
@@ -1176,7 +1178,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                       exit={{ opacity: 0, y: -8 }}
                                       transition={{ duration: 0.12 }}
                                     >
-                                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">解析</h3>
+                                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('question.questionCard.solution')}</h3>
                                       <div className="prose max-w-none dark:prose-invert">
                                         {currentQuestion.content.solution ? (
                                           <LaTeXPreview 
@@ -1201,7 +1203,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                             maxWidth="max-w-none"
                                           />
                                         ) : (
-                                          <p className="text-gray-500 dark:text-gray-400 italic">暂无解析</p>
+                                          <p className="text-gray-500 dark:text-gray-400 italic">{t('question.questionView.solution.noSolution')}</p>
                                         )}
                                       </div>
                                     </motion.div>
@@ -1215,13 +1217,13 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                       exit={{ opacity: 0, y: -8 }}
                                       transition={{ duration: 0.12 }}
                                     >
-                                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">AI智能分析</h3>
+                                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('question.questionView.analysis.title')}</h3>
                                       
                                       {/* AI分析状态 */}
                                       {loadingAnalysis && (
                                         <div className="mb-6 text-center py-8">
                                           <div className="loading-spinner-enhanced mx-auto mb-3"></div>
-                                          <p className="text-gray-500 dark:text-gray-400">AI分析生成中，请稍候...</p>
+                                          <p className="text-gray-500 dark:text-gray-400">{t('question.questionView.analysis.loading')}</p>
                                         </div>
                                       )}
                                       
@@ -1229,13 +1231,13 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                         <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
                                           <div className="flex items-center">
                                             <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-                                            <span className="text-red-700 dark:text-red-300">AI分析失败: {analysisError}</span>
+                                            <span className="text-red-700 dark:text-red-300">{t('question.questionView.analysis.error')}: {analysisError}</span>
                                           </div>
                                           <button
                                             onClick={() => fetchAIAnalysis()}
                                             className="mt-2 text-sm text-red-600 dark:text-red-400 underline hover:no-underline"
                                           >
-                                            重试
+                                            {t('question.questionView.analysis.retry')}
                                           </button>
                                         </div>
                                       )}
@@ -1383,7 +1385,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                               >
                               <TrendingUp className="w-5 h-5 mr-2 text-blue-500" />
                               </motion.div>
-                              题目信息
+                              {t('question.questionView.sidebar.title')}
                             </motion.h3>
                             <div className="space-y-3">
                               <motion.div 
@@ -1394,7 +1396,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                               >
                                 <div className="flex items-center">
                                   <User className="w-4 h-4 text-blue-500 mr-2" />
-                                  <span className="text-xs text-gray-600 dark:text-gray-400">创建者</span>
+                                  <span className="text-xs text-gray-600 dark:text-gray-400">{t('question.questionView.sidebar.creator')}</span>
                                 </div>
                                 <span className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate max-w-[80px]" title={currentQuestion.creator.name}>
                                   {currentQuestion.creator.name}
@@ -1409,7 +1411,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                               >
                                 <div className="flex items-center">
                                   <Clock className="w-4 h-4 text-green-500 mr-2" />
-                                  <span className="text-xs text-gray-600 dark:text-gray-400">创建时间</span>
+                                  <span className="text-xs text-gray-600 dark:text-gray-400">{t('question.questionView.sidebar.createdAt')}</span>
                                 </div>
                                 <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
                                   {new Date(currentQuestion.createdAt).toLocaleDateString()}
@@ -1425,7 +1427,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                               >
                                 <div className="flex items-center">
                                   <Eye className="w-4 h-4 text-purple-500 mr-2" />
-                                  <span className="text-xs text-gray-600 dark:text-gray-400">浏览量</span>
+                                  <span className="text-xs text-gray-600 dark:text-gray-400">{t('question.questionView.sidebar.views')}</span>
                               </div>
                                 <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
                                   {currentQuestion.views || 0}
@@ -1441,7 +1443,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                               >
                                 <div className="flex items-center">
                                   <Heart className="w-4 h-4 text-red-500 mr-2" />
-                                  <span className="text-xs text-gray-600 dark:text-gray-400">收藏数</span>
+                                  <span className="text-xs text-gray-600 dark:text-gray-400">{t('question.questionView.sidebar.favorites')}</span>
                                   </div>
                                 <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
                                   {currentQuestion.favorites?.length || 0}
@@ -1468,7 +1470,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                     animate={{ opacity: 1, scale: 1, x: 0 }}
                                     transition={{ duration: 0.08, delay: 0.2, ease: "easeOut" }}
                                   >
-                                    相关题目
+                                    {t('question.questionView.related.title')}
                                   </motion.h3>
                                   <motion.span 
                                     className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full"
@@ -1476,7 +1478,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                     animate={{ opacity: 1, scale: 1, x: 0 }}
                                     transition={{ duration: 0.08, delay: 0.22, ease: "easeOut" }}
                                   >
-                                    显示前3个
+                                    {t('question.questionView.related.showFirst3')}
                                   </motion.span>
                                 </div>
                                 {relatedError && (
@@ -1484,7 +1486,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                     onClick={fetchRelatedQuestions}
                                     className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                                   >
-                                    重试
+                                    {t('question.questionView.related.retry')}
                                   </button>
                                 )}
                               </div>
@@ -1493,7 +1495,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                 <div className="text-center py-8 text-gray-500 dark:text-gray-400 flex-1 flex items-center justify-center">
                                   <div>
                                     <div className="loading-spinner-enhanced mx-auto mb-3"></div>
-                                    <p className="text-sm">加载中...</p>
+                                    <p className="text-sm">{t('question.questionView.related.loading')}</p>
                                   </div>
                                 </div>
                               ) : relatedError ? (
@@ -1505,7 +1507,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                       onClick={fetchRelatedQuestions}
                                       className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline px-3 py-1 rounded hover:bg-blue-900/20 transition-colors"
                                     >
-                                      重试
+                                      {t('question.questionView.related.retry')}
                                     </button>
                                   </div>
                                 </div>
@@ -1513,7 +1515,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                                 <div className="text-center py-8 text-gray-500 dark:text-gray-400 flex-1 flex items-center justify-center">
                                   <div>
                                     <BookOpen className="w-8 h-8 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                                    <p className="text-sm">暂无高相似度题目</p>
+                                    <p className="text-sm">{t('question.questionView.related.noSimilar')}</p>
                                   </div>
                                 </div>
                               ) : (
@@ -1625,9 +1627,9 @@ const QuestionView: React.FC<QuestionViewProps> = ({
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.08, delay: 0.42, ease: "easeOut" }}
               >
-                使用 ← → 键切换题目
-                {(userRole === 'creator' || userRole === 'manager' || userRole === 'collaborator') && '，Ctrl+E 编辑题目'}
-                ，ESC 键关闭弹窗
+                {t('question.questionView.keyboard.instructions')}
+                {(userRole === 'creator' || userRole === 'manager' || userRole === 'collaborator') && `，${t('question.questionView.keyboard.edit')}`}
+                ，{t('question.questionView.keyboard.close')}
               </motion.p>
             </motion.div>
           </motion.div>
@@ -1661,7 +1663,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({
             {/* 标题 */}
             <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                TikZ 图形预览
+                {t('question.questionView.tikzPreview.title')}
               </span>
             </div>
             

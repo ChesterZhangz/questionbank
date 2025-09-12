@@ -10,10 +10,12 @@ import Card from '../../components/ui/Card';
 import PasswordStrengthIndicator from '../../components/ui/PasswordStrengthIndicator';
 import SupportedEmailSuffixes from '../../components/ui/SupportedEmailSuffixes';
 import { PasswordValidator } from '../../utils/passwordValidator';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const { setLoading } = useAuthStore();
+  const { t } = useTranslation();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -40,17 +42,17 @@ const RegisterPage: React.FC = () => {
     const newErrors: Record<string, string> = {};
     
     if (!formData.name.trim()) {
-      newErrors.name = '请输入姓名';
+      newErrors.name = t('auth.register.errors.nameRequired');
     }
     
     if (!formData.email) {
-      newErrors.email = '请输入邮箱地址';
+      newErrors.email = t('auth.register.errors.emailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = '请输入有效的邮箱地址';
+      newErrors.email = t('auth.register.errors.emailInvalid');
     }
     
     if (!formData.password) {
-      newErrors.password = '请输入密码';
+      newErrors.password = t('auth.register.errors.passwordRequired');
     } else {
       // 使用新的密码验证器
       const passwordValidation = PasswordValidator.validate(
@@ -60,14 +62,14 @@ const RegisterPage: React.FC = () => {
       );
       
       if (!passwordValidation.isValid) {
-        newErrors.password = passwordValidation.errors[0] || '密码不符合安全要求';
+        newErrors.password = passwordValidation.errors[0] || t('auth.register.errors.passwordWeak');
       }
     }
     
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = '请确认密码';
+      newErrors.confirmPassword = t('auth.register.errors.confirmPasswordRequired');
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = '两次密码不一致';
+      newErrors.confirmPassword = t('auth.register.errors.passwordsNotMatch');
     }
     
     setErrors(newErrors);
@@ -95,10 +97,10 @@ const RegisterPage: React.FC = () => {
         // 注册成功，跳转到成功页面
         navigate('/register-success');
       } else {
-        setErrors({ general: '注册失败，请重试' });
+        setErrors({ general: t('auth.register.errors.registerFailed') });
       }
     } catch (error: any) {
-      const message = error.response?.data?.error || error.response?.data?.message || '注册失败，请重试';
+      const message = error.response?.data?.error || error.response?.data?.message || t('auth.register.errors.registerFailed');
       setErrors({ general: message });
     } finally {
       setIsSubmitting(false);
@@ -129,7 +131,7 @@ const RegisterPage: React.FC = () => {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="text-3xl font-bold text-text-primary mb-2"
           >
-            注册账号
+            {t('auth.register.title')}
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -137,7 +139,7 @@ const RegisterPage: React.FC = () => {
             transition={{ delay: 0.4, duration: 0.6 }}
             className="text-text-secondary"
           >
-            创建您的企业题库账号
+            {t('auth.register.subtitle')}
           </motion.p>
         </div>
       </motion.div>
@@ -174,13 +176,13 @@ const RegisterPage: React.FC = () => {
               transition={{ delay: 0.6, duration: 0.6 }}
             >
               <Input
-                label="姓名"
+                label={t('auth.register.name')}
                 name="name"
                 type="text"
                 value={formData.name}
                 onChange={handleChange}
                 error={errors.name}
-                placeholder="请输入您的姓名"
+                placeholder={t('auth.register.name')}
                 required
                 icon={<User className="w-5 h-5" />}
               />
@@ -192,7 +194,7 @@ const RegisterPage: React.FC = () => {
               transition={{ delay: 0.7, duration: 0.6 }}
             >
               <Input
-                label="企业邮箱"
+                label={t('auth.register.email')}
                 name="email"
                 type="email"
                 value={formData.email}
@@ -215,13 +217,13 @@ const RegisterPage: React.FC = () => {
               transition={{ delay: 0.8, duration: 0.6 }}
             >
               <Input
-                label="密码"
+                label={t('auth.register.password')}
                 name="password"
                 type="password"
                 value={formData.password}
                 onChange={handleChange}
                 error={errors.password}
-                placeholder="请输入安全密码（8-20位）"
+                placeholder={t('auth.register.password')}
                 required
                 icon={<Lock className="w-5 h-5" />}
               />
@@ -245,13 +247,13 @@ const RegisterPage: React.FC = () => {
               transition={{ delay: 0.9, duration: 0.6 }}
             >
               <Input
-                label="确认密码"
+                label={t('auth.register.confirmPassword')}
                 name="confirmPassword"
                 type="password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 error={errors.confirmPassword}
-                placeholder="请再次输入密码"
+                placeholder={t('auth.register.confirmPassword')}
                 required
                 icon={<Lock className="w-5 h-5" />}
               />
@@ -268,7 +270,7 @@ const RegisterPage: React.FC = () => {
                 loading={isSubmitting}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? '注册中...' : '注册账号'}
+                {isSubmitting ? t('auth.common.loading') : t('auth.register.registerButton')}
                 {!isSubmitting && <ArrowRight className="w-4 h-4 ml-2" />}
               </Button>
             </motion.div>
@@ -280,12 +282,12 @@ const RegisterPage: React.FC = () => {
               className="text-center"
             >
               <p className="text-sm text-text-secondary">
-                已有账号？{' '}
+                {t('auth.register.hasAccount')}{' '}
                 <Link
                   to="/login"
                   className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                 >
-                  立即登录
+                  {t('auth.register.loginLink')}
                 </Link>
               </p>
             </motion.div>

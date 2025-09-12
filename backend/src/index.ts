@@ -489,7 +489,6 @@ app.get('/debug/spa-assets/:filename', (req, res) => {
 app.use('*', (req, res) => {
   // 确保API请求不会被这个中间件处理
   if (req.path.startsWith('/api/')) {
-    console.log(`❌ API路由未找到: ${req.path}`);
     return res.status(404).json({ 
       success: false, 
       error: '接口不存在',

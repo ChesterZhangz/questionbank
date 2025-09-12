@@ -7,6 +7,29 @@ export interface TikZStyle {
   opacity?: number;
 }
 
+// 获取翻译后的样式配置
+export const getDefaultStyles = (t: (key: string) => string) => ({
+  title: t('config.tikz.defaultStyles.title'),
+  description: t('config.tikz.defaultStyles.description'),
+  stroke: t('config.tikz.defaultStyles.stroke'),
+  fill: t('config.tikz.defaultStyles.fill'),
+  lineWidth: t('config.tikz.defaultStyles.lineWidth'),
+  lineCap: t('config.tikz.defaultStyles.lineCap'),
+  lineJoin: t('config.tikz.defaultStyles.lineJoin'),
+  dashPattern: t('config.tikz.defaultStyles.dashPattern'),
+  opacity: t('config.tikz.defaultStyles.opacity'),
+  color: t('config.tikz.defaultStyles.color'),
+  gradient: t('config.tikz.defaultStyles.gradient'),
+  shadow: t('config.tikz.defaultStyles.shadow'),
+  arrow: t('config.tikz.defaultStyles.arrow'),
+  node: t('config.tikz.defaultStyles.node'),
+  coordinate: t('config.tikz.defaultStyles.coordinate'),
+  grid: t('config.tikz.defaultStyles.grid'),
+  axis: t('config.tikz.defaultStyles.axis'),
+  legend: t('config.tikz.defaultStyles.legend'),
+  label: t('config.tikz.defaultStyles.label')
+});
+
 // 预定义样式
 export const defaultStyles: Record<string, TikZStyle> = {
   'thin': {

@@ -5,6 +5,7 @@ import Button from '../../ui/Button';
 import LaTeXPreview from '../../editor/preview/LaTeXPreview';
 import TikZPreview from '../../tikz/core/TikZPreview';
 import { paperAPI } from '../../../services/api';
+import { useTranslation } from '../../../hooks/useTranslation';
 import './PracticePaperPreviewModal.css';
 
 interface PracticePaper {
@@ -82,6 +83,7 @@ const PracticePaperPreviewModal: React.FC<PracticePaperPreviewModalProps> = ({
   isOpen,
   onClose
 }) => {
+  const { t } = useTranslation();
   const [fullPaper, setFullPaper] = useState<PracticePaper | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -97,7 +99,7 @@ const PracticePaperPreviewModal: React.FC<PracticePaperPreviewModalProps> = ({
           setFullPaper(response.data.data);
         }
       } catch (error) {
-        console.error('获取练习卷详情失败:', error);
+        console.error(t('paper.practicePaperPreviewModal.errors.fetchFailed'), error);
       } finally {
         setLoading(false);
       }
@@ -119,10 +121,10 @@ const PracticePaperPreviewModal: React.FC<PracticePaperPreviewModalProps> = ({
 
   const getQuestionTypeText = (type: string) => {
     const typeMap: { [key: string]: string } = {
-      'choice': '选择题',
-      'multiple-choice': '多选题',
-      'fill': '填空题',
-      'solution': '解答题'
+      'choice': t('paper.practicePaperPreviewModal.questionTypes.choice'),
+      'multiple-choice': t('paper.practicePaperPreviewModal.questionTypes.multipleChoice'),
+      'fill': t('paper.practicePaperPreviewModal.questionTypes.fill'),
+      'solution': t('paper.practicePaperPreviewModal.questionTypes.solution')
     };
     return typeMap[type] || type;
   };
@@ -157,8 +159,14 @@ const PracticePaperPreviewModal: React.FC<PracticePaperPreviewModalProps> = ({
   };
 
   const getDifficultyText = (difficulty: number) => {
-    const texts = ['很简单', '简单', '中等', '困难', '很困难'];
-    return texts[difficulty - 1] || '未知';
+    const texts = [
+      t('paper.practicePaperPreviewModal.difficulty.veryEasy'),
+      t('paper.practicePaperPreviewModal.difficulty.easy'),
+      t('paper.practicePaperPreviewModal.difficulty.medium'),
+      t('paper.practicePaperPreviewModal.difficulty.hard'),
+      t('paper.practicePaperPreviewModal.difficulty.veryHard')
+    ];
+    return texts[difficulty - 1] || t('paper.practicePaperPreviewModal.difficulty.unknown');
   };
 
   return (
@@ -194,11 +202,11 @@ const PracticePaperPreviewModal: React.FC<PracticePaperPreviewModalProps> = ({
                   {displayPaper.name}
                 </h2>
                 <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                  练习卷
+                  {t('paper.practicePaperPreviewModal.labels.practicePaper')}
                 </span>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                试卷集: {displayPaper.bank.name}
+                {t('paper.practicePaperPreviewModal.labels.paperBank')} {displayPaper.bank.name}
               </p>
               {displayPaper.overleafEditLink && (
                 <div className="mt-2">
@@ -209,7 +217,7 @@ const PracticePaperPreviewModal: React.FC<PracticePaperPreviewModalProps> = ({
                     className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
                   >
                     <ExternalLink className="w-4 h-4 mr-1" />
-                    Overleaf编辑链接
+                    {t('paper.practicePaperPreviewModal.labels.overleafEditLink')}
                   </a>
                 </div>
               )}
@@ -232,7 +240,7 @@ const PracticePaperPreviewModal: React.FC<PracticePaperPreviewModalProps> = ({
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-1">
                   <FileText className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">部分数</span>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('paper.practicePaperPreviewModal.labels.sectionCount')}</span>
                 </div>
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
                   {sectionCount}
@@ -242,7 +250,7 @@ const PracticePaperPreviewModal: React.FC<PracticePaperPreviewModalProps> = ({
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-1">
                   <Play className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">总题数</span>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('paper.practicePaperPreviewModal.labels.totalQuestions')}</span>
                 </div>
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
                   {totalQuestions}
@@ -252,7 +260,7 @@ const PracticePaperPreviewModal: React.FC<PracticePaperPreviewModalProps> = ({
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-1">
                   <Clock className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">创建时间</span>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('paper.practicePaperPreviewModal.labels.createdAt')}</span>
                 </div>
                 <div className="text-sm text-gray-900 dark:text-white">
                   {new Date(displayPaper.createdAt).toLocaleDateString()}
@@ -262,10 +270,10 @@ const PracticePaperPreviewModal: React.FC<PracticePaperPreviewModalProps> = ({
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-1">
                   <Users className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">创建者</span>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('paper.practicePaperPreviewModal.labels.creator')}</span>
                 </div>
                 <div className="text-sm text-gray-900 dark:text-white">
-                  {displayPaper.owner.name || displayPaper.owner.username || '未知用户'}
+                  {displayPaper.owner.name || displayPaper.owner.username || t('paper.practicePaperCard.unknownUser')}
                 </div>
               </div>
             </div>
@@ -275,7 +283,7 @@ const PracticePaperPreviewModal: React.FC<PracticePaperPreviewModalProps> = ({
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
                   <Tag className="w-4 h-4 mr-1" />
-                  标签
+                  {t('paper.practicePaperPreviewModal.labels.tags')}
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {displayPaper.tags.map((tag, idx) => (
@@ -293,11 +301,11 @@ const PracticePaperPreviewModal: React.FC<PracticePaperPreviewModalProps> = ({
             {/* 题目预览 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                题目预览
+                {t('paper.practicePaperPreviewModal.labels.questionPreview')}
               </h3>
               {loading ? (
                 <div className="text-center py-8">
-                  <div className="text-gray-500 dark:text-gray-400">加载题目中...</div>
+                  <div className="text-gray-500 dark:text-gray-400">{t('paper.practicePaperPreviewModal.labels.loadingQuestions')}</div>
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -496,14 +504,14 @@ const PracticePaperPreviewModal: React.FC<PracticePaperPreviewModalProps> = ({
           {/* 底部操作 */}
           <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 mt-6">
             <div className="text-sm text-gray-600 dark:text-gray-300">
-              共 {sectionCount} 个部分，{totalQuestions} 道题目
+              {t('paper.practicePaperPreviewModal.labels.summary', { sectionCount, totalQuestions })}
             </div>
             <div className="flex items-center space-x-3">
               <Button
                 variant="outline"
                 onClick={onClose}
               >
-                关闭
+                {t('paper.practicePaperPreviewModal.labels.close')}
               </Button>
             </div>
           </div>

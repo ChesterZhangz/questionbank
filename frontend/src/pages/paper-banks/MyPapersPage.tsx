@@ -12,6 +12,7 @@ import { useModal } from '../../hooks/useModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { PracticePaperCard } from '../../components/paper';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const animationStyles = `
   @keyframes fade-in {
@@ -92,6 +93,7 @@ interface Paper {
 
 const MyPapersPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { 
     rightSlideModal, 
     closeRightSlide, 
@@ -130,24 +132,24 @@ const MyPapersPage: React.FC = () => {
 
   // 状态选项
   const statusOptions = [
-    { value: 'draft', label: '草稿', icon: PenTool },
-    { value: 'published', label: '已发布', icon: CheckCircle },
-    { value: 'modified', label: '已修改', icon: Edit }
+    { value: 'draft', label: t('paperBanks.myPapers.statusOptions.draft'), icon: PenTool },
+    { value: 'published', label: t('paperBanks.myPapers.statusOptions.published'), icon: CheckCircle },
+    { value: 'modified', label: t('paperBanks.myPapers.statusOptions.modified'), icon: Edit }
   ];
 
   // 试卷类型选项
   const typeOptions = [
-    { value: 'lecture', label: '讲义', icon: BookOpen },
-    { value: 'practice', label: '练习', icon: PenTool },
-    { value: 'test', label: '测试', icon: FileText }
+    { value: 'lecture', label: t('paperBanks.myPapers.typeOptions.lecture'), icon: BookOpen },
+    { value: 'practice', label: t('paperBanks.myPapers.typeOptions.practice'), icon: PenTool },
+    { value: 'test', label: t('paperBanks.myPapers.typeOptions.test'), icon: FileText }
   ];
 
   // 角色选项
   const roleOptions = [
-    { value: 'creator', label: '创建者', icon: Crown },
-    { value: 'manager', label: '管理员', icon: Settings },
-    { value: 'collaborator', label: '协作者', icon: Handshake },
-    { value: 'viewer', label: '查看者', icon: EyeIcon }
+    { value: 'creator', label: t('paperBanks.myPapers.roleOptions.creator'), icon: Crown },
+    { value: 'manager', label: t('paperBanks.myPapers.roleOptions.manager'), icon: Settings },
+    { value: 'collaborator', label: t('paperBanks.myPapers.roleOptions.collaborator'), icon: Handshake },
+    { value: 'viewer', label: t('paperBanks.myPapers.roleOptions.viewer'), icon: EyeIcon }
   ];
 
   // 加载试卷集数据
@@ -197,13 +199,13 @@ const MyPapersPage: React.FC = () => {
           setTotalPapers(response.data.data.pagination.total);
         }
       } else {
-        setError('获取试卷列表失败');
+        setError(t('paperBanks.myPapers.messages.fetchFailed'));
       }
     } catch (error: any) {
       if (error.response?.status === 401) {
-        setError('认证失败，请重新登录');
+        setError(t('paperBanks.myPapers.messages.authFailed'));
       } else {
-        setError('获取试卷列表失败: ' + (error.response?.data?.error || error.message || '未知错误'));
+        setError(t('paperBanks.myPapers.messages.fetchFailed') + ': ' + (error.response?.data?.error || error.message || t('paperBanks.myPapers.messages.unknownError')));
       }
     } finally {
       setLoading(false);
@@ -254,12 +256,12 @@ const MyPapersPage: React.FC = () => {
   // 删除试卷
   const handleDeletePaper = (paper: any) => {
     showConfirm(
-      '删除试卷', 
-      `确定要删除试卷"${paper.name}"吗？此操作不可撤销。`, 
+      t('paperBanks.myPapers.deleteConfirm.title'), 
+      t('paperBanks.myPapers.deleteConfirm.message', { name: paper.name }), 
       async () => {
         try {
           // 设置加载状态
-          setConfirmLoading(true, '正在删除...');
+          setConfirmLoading(true, t('paperBanks.myPapers.deleteConfirm.deleting'));
           
           const response = await paperAPI.deletePaper(paper._id);
           if (response.data.success) {
@@ -270,20 +272,20 @@ const MyPapersPage: React.FC = () => {
             closeConfirm();
             
             // 显示成功提示
-            showSuccessRightSlide('删除成功', `试卷"${paper.name}"已删除`);
+            showSuccessRightSlide(t('paperBanks.myPapers.messages.deleteSuccess'), t('paperBanks.myPapers.messages.deleteSuccessMessage', { name: paper.name }));
           } else {
             setConfirmLoading(false);
-            showErrorRightSlide('删除失败', '删除试卷失败');
+            showErrorRightSlide(t('paperBanks.myPapers.messages.deleteFailed'), t('paperBanks.myPapers.messages.deleteFailedMessage'));
           }
         } catch (error: any) {
           console.error('删除试卷失败:', error);
           setConfirmLoading(false);
-          showErrorRightSlide('删除失败', error.response?.data?.message || '删除试卷时发生错误');
+          showErrorRightSlide(t('paperBanks.myPapers.messages.deleteFailed'), error.response?.data?.message || t('paperBanks.myPapers.messages.deleteError'));
         }
       },
       {
         type: 'danger',
-        confirmText: '删除',
+        confirmText: t('paperBanks.myPapers.deleteConfirm.confirmText'),
         confirmDanger: true
       }
     );
@@ -361,11 +363,11 @@ const MyPapersPage: React.FC = () => {
                   {paper.name}
                 </h3>
                 <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                  {paper.bank && <p>试卷集: {paper.bank.name}</p>}
-                  {paper.subject && <p>科目: {paper.subject}</p>}
-                  {paper.grade && <p>年级: {paper.grade}</p>}
-                  <p>总分: {paper.totalScore}分</p>
-                  {paper.timeLimit && <p>时长: {paper.timeLimit}分钟</p>}
+                  {paper.bank && <p>{t('paperBanks.myPapers.paperInfo.bank', { name: paper.bank.name })}</p>}
+                  {paper.subject && <p>{t('paperBanks.myPapers.paperInfo.subject', { subject: paper.subject })}</p>}
+                  {paper.grade && <p>{t('paperBanks.myPapers.paperInfo.grade', { grade: paper.grade })}</p>}
+                  <p>{t('paperBanks.myPapers.paperInfo.totalScore', { score: paper.totalScore })}</p>
+                  {paper.timeLimit && <p>{t('paperBanks.myPapers.paperInfo.timeLimit', { minutes: paper.timeLimit })}</p>}
                 </div>
               </div>
               <div className="flex flex-col items-end space-y-2 ml-4">
@@ -385,11 +387,11 @@ const MyPapersPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4 mb-4 text-sm text-gray-600 dark:text-gray-300">
               <div className="flex items-center space-x-1">
                 <Calendar className="w-4 h-4" />
-                <span>创建: {new Date(paper.createdAt).toLocaleDateString()}</span>
+                <span>{t('paperBanks.myPapers.paperInfo.created', { date: new Date(paper.createdAt).toLocaleDateString() })}</span>
               </div>
               <div className="flex items-center space-x-1">
                 <Tag className="w-4 h-4" />
-                <span>版本: v{paper.version}</span>
+                <span>{t('paperBanks.myPapers.paperInfo.version', { version: paper.version })}</span>
               </div>
             </div>
 
@@ -404,7 +406,7 @@ const MyPapersPage: React.FC = () => {
                     className="flex items-center space-x-1"
                   >
                     <Eye className="w-4 h-4" />
-                    <span>预览</span>
+                    <span>{t('paperBanks.myPapers.actions.preview')}</span>
                   </Button>
                   
                   {canEdit && (
@@ -415,14 +417,14 @@ const MyPapersPage: React.FC = () => {
                       className="flex items-center space-x-1"
                     >
                       <Edit className="w-4 h-4" />
-                      <span>编辑</span>
+                      <span>{t('paperBanks.myPapers.actions.edit')}</span>
                     </Button>
                   )}
                 </div>
                 
                 <div className="flex items-center space-x-3">
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    创建者: {paper.owner.name}
+                    {t('paperBanks.myPapers.paperInfo.creator', { name: paper.owner.name })}
                   </div>
                   
                   {/* 删除按钮 - 只有创建者和管理员可以删除 */}
@@ -434,7 +436,7 @@ const MyPapersPage: React.FC = () => {
                       className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:border-red-300 dark:text-red-400 dark:hover:text-red-300"
                     >
                       <X className="w-4 h-4" />
-                      <span>删除</span>
+                      <span>{t('paperBanks.myPapers.actions.delete')}</span>
                     </Button>
                   )}
                 </div>
@@ -482,9 +484,9 @@ const MyPapersPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 dark:from-gray-100 to-blue-600 dark:to-blue-400 bg-clip-text text-transparent">
-                我的试卷
+                {t('paperBanks.myPapers.title')}
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-1">管理您有权限访问的所有试卷</p>
+              <p className="text-gray-600 dark:text-gray-300 mt-1">{t('paperBanks.myPapers.subtitle')}</p>
             </div>
             <div className="flex items-center space-x-4">
               {/* 快速统计面板 */}
@@ -530,7 +532,7 @@ const MyPapersPage: React.FC = () => {
                         ease: "easeOut"
                       }}
                     >
-                      已筛选: {papers.length} 个试卷
+                      {t('paperBanks.myPapers.filteredCount', { count: papers.length })}
                     </motion.span>
                   </motion.div>
                 </motion.div>
@@ -549,7 +551,7 @@ const MyPapersPage: React.FC = () => {
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-2"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>创建试卷</span>
+                    <span>{t('paperBanks.myPapers.createPaper')}</span>
                   </Button>
                 </motion.div>
               </div>
@@ -574,8 +576,8 @@ const MyPapersPage: React.FC = () => {
                   <Filter className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-gray-800 dark:text-gray-100">智能筛选</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">快速定位目标试卷</p>
+                  <h3 className="text-base font-semibold text-gray-800 dark:text-gray-100">{t('paperBanks.myPapers.smartFilter')}</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('paperBanks.myPapers.smartFilterDescription')}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
@@ -590,7 +592,7 @@ const MyPapersPage: React.FC = () => {
                     className="px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 bg-white/60 dark:bg-gray-700/60 backdrop-blur-sm"
                   >
                     <RefreshCw className="h-3 w-3 mr-1" />
-                    重置筛选
+                    {t('paperBanks.myPapers.resetFilter')}
                   </Button>
                 </motion.div>
               </div>
@@ -607,11 +609,11 @@ const MyPapersPage: React.FC = () => {
                 transition={{ duration: 0.3, delay: 0.1 }}
                 className="lg:col-span-2 relative"
               >
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">搜索试卷</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">{t('paperBanks.myPapers.searchLabel')}</label>
                 <div className="relative group">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-4 w-4 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors duration-200" />
                   <Input
-                    placeholder="搜索试卷标题、描述、标签..."
+                    placeholder={t('paperBanks.myPapers.searchPlaceholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-lg transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-500 group-hover:shadow-md text-gray-900 dark:text-gray-100"
@@ -628,11 +630,11 @@ const MyPapersPage: React.FC = () => {
                 className="relative z-[110]"
               >
                 <MultiSelect
-                  label="发布状态"
+                  label={t('paperBanks.myPapers.statusLabel')}
                   options={statusOptions}
                   value={selectedStatuses}
                   onChange={(value) => setSelectedStatuses(value as string[])}
-                  placeholder="选择状态"
+                  placeholder={t('paperBanks.myPapers.statusPlaceholder')}
                   maxDisplay={2}
                 />
               </motion.div>
@@ -645,11 +647,11 @@ const MyPapersPage: React.FC = () => {
                 className="relative z-[115]"
               >
                 <MultiSelect
-                  label="试卷类型"
+                  label={t('paperBanks.myPapers.typeLabel')}
                   options={typeOptions}
                   value={selectedTypes}
                   onChange={(value) => setSelectedTypes(value as string[])}
-                  placeholder="选择类型"
+                  placeholder={t('paperBanks.myPapers.typePlaceholder')}
                   maxDisplay={2}
                 />
               </motion.div>
@@ -662,16 +664,16 @@ const MyPapersPage: React.FC = () => {
                 className="relative z-[120]"
               >
                 <FuzzySelect
-                  label="排序方式"
+                  label={t('paperBanks.myPapers.sortLabel')}
                   options={[
-                    { value: 'createdAt', label: '创建时间', icon: Clock },
-                    { value: 'updatedAt', label: '更新时间', icon: Calendar },
-                    { value: 'name', label: '标题', icon: Type },
-                    { value: 'totalScore', label: '总分', icon: TrendingUp }
+                    { value: 'createdAt', label: t('paperBanks.myPapers.sortOptions.createdAt'), icon: Clock },
+                    { value: 'updatedAt', label: t('paperBanks.myPapers.sortOptions.updatedAt'), icon: Calendar },
+                    { value: 'name', label: t('paperBanks.myPapers.sortOptions.name'), icon: Type },
+                    { value: 'totalScore', label: t('paperBanks.myPapers.sortOptions.totalScore'), icon: TrendingUp }
                   ]}
                   value={sortBy}
                   onChange={(value) => setSortBy(value as string)}
-                  placeholder="选择排序方式"
+                  placeholder={t('paperBanks.myPapers.sortPlaceholder')}
                 />
               </motion.div>
 
@@ -682,7 +684,7 @@ const MyPapersPage: React.FC = () => {
                 transition={{ duration: 0.2, delay: 0.25 }}
                 className="relative z-[130]"
               >
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">排序方向</label>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">{t('paperBanks.myPapers.sortDirectionLabel')}</label>
                 <div className="relative group">
                   <Button
                     variant="outline"
@@ -692,7 +694,7 @@ const MyPapersPage: React.FC = () => {
                     <div className="flex items-center space-x-2">
                       <TrendingUp className="h-3 w-3 text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-100 transition-colors" />
                       <span className="text-xs font-medium text-gray-700 dark:text-gray-100 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
-                        {sortOrder === 'asc' ? '升序 ↑' : '降序 ↓'}
+                        {sortOrder === 'asc' ? t('paperBanks.myPapers.ascending') : t('paperBanks.myPapers.descending')}
                       </span>
                     </div>
                   </Button>
@@ -706,8 +708,8 @@ const MyPapersPage: React.FC = () => {
         <div className="mt-8">
           {loading ? (
             <LoadingPage 
-              title="正在加载试卷..." 
-              description="请稍候，正在获取试卷列表"
+              title={t('paperBanks.myPapers.loadingTitle')} 
+              description={t('paperBanks.myPapers.loadingDescription')}
               fullScreen={false}
             />
           ) : papers.length === 0 ? (
@@ -717,14 +719,14 @@ const MyPapersPage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">暂无试卷数据</h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">尝试调整筛选条件或创建新试卷</p>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('paperBanks.myPapers.noDataTitle')}</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">{t('paperBanks.myPapers.noDataDescription')}</p>
               <Button
                 onClick={handleCreatePaper}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-2 mx-auto"
               >
                 <Plus className="w-4 h-4" />
-                <span>创建第一个试卷</span>
+                <span>{t('paperBanks.myPapers.createFirstPaper')}</span>
               </Button>
             </div>
           ) : (
@@ -745,10 +747,10 @@ const MyPapersPage: React.FC = () => {
                   {/* 分页信息 */}
                   <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-300">
                     <span>
-                      共 {totalPapers} 个试卷集，第 {currentPage} / {totalPages} 页
+                      {t('paperBanks.myPapers.pagination.total', { total: totalPapers, current: currentPage, pages: totalPages })}
                     </span>
                     <div className="flex items-center space-x-2">
-                      <span>每页显示：</span>
+                      <span>{t('paperBanks.myPapers.pagination.perPage')}</span>
                       <select
                         value={pageSize}
                         onChange={(e) => {
@@ -762,7 +764,7 @@ const MyPapersPage: React.FC = () => {
                         <option value={50}>50</option>
                         <option value={100}>100</option>
                       </select>
-                      <span>个试卷集</span>
+                      <span>{t('paperBanks.myPapers.pagination.papers')}</span>
                     </div>
                   </div>
                   
@@ -778,7 +780,7 @@ const MyPapersPage: React.FC = () => {
                           : 'text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
                       }`}
                     >
-                      上一页
+                      {t('paperBanks.myPapers.pagination.previous')}
                     </button>
                     
                     {/* 页码按钮 */}
@@ -848,7 +850,7 @@ const MyPapersPage: React.FC = () => {
                           : 'text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
                       }`}
                     >
-                      下一页
+                      {t('paperBanks.myPapers.pagination.next')}
                     </button>
                   </div>
                 </div>

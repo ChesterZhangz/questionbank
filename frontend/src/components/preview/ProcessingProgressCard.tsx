@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface ProcessingStep {
   step: string;
@@ -46,8 +47,10 @@ const ProcessingProgressCard: React.FC<ProcessingProgressCardProps> = ({
   onResume,
   onRetry
 }) => {
+  const { t } = useTranslation();
+  
   const formatTime = (seconds: number): string => {
-    if (seconds < 60) return `${Math.round(seconds)}秒`;
+    if (seconds < 60) return `${Math.round(seconds)}${t('preview.processingProgressCard.processTimeUnit')}`;
     if (seconds < 3600) return `${Math.round(seconds / 60)}分钟`;
     return `${Math.round(seconds / 3600)}小时${Math.round((seconds % 3600) / 60)}分钟`;
   };
@@ -99,7 +102,7 @@ const ProcessingProgressCard: React.FC<ProcessingProgressCardProps> = ({
                 </div>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                预估时间: {document.estimatedTime ? formatTime(document.estimatedTime) : '计算中...'}
+                {t('preview.processingProgressCard.estimatedTime', { time: document.estimatedTime ? formatTime(document.estimatedTime) : t('preview.processingProgressCard.calculating') })}
               </p>
             </div>
           </div>
@@ -114,7 +117,7 @@ const ProcessingProgressCard: React.FC<ProcessingProgressCardProps> = ({
                 className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
               >
                 <Trash2 className="h-4 w-4 mr-1" />
-                {isProcessing ? '取消' : '删除'}
+                {isProcessing ? t('preview.processingProgressCard.cancel') : t('preview.processingProgressCard.delete')}
               </Button>
             )}
             
@@ -126,7 +129,7 @@ const ProcessingProgressCard: React.FC<ProcessingProgressCardProps> = ({
                 className="text-green-600 dark:text-green-400 border-green-200 dark:border-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
               >
                 <Play className="h-4 w-4 mr-1" />
-                继续
+                {t('preview.processingProgressCard.continue')}
               </Button>
             )}
             
@@ -138,7 +141,7 @@ const ProcessingProgressCard: React.FC<ProcessingProgressCardProps> = ({
                 className="text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/20"
               >
                 <RotateCcw className="h-4 w-4 mr-1" />
-                重试
+                {t('preview.processingProgressCard.retry')}
               </Button>
             )}
           </div>
@@ -148,7 +151,7 @@ const ProcessingProgressCard: React.FC<ProcessingProgressCardProps> = ({
         {isProcessing && (
           <div className="space-y-2">
             <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-              <span>总体进度</span>
+              <span>{t('preview.processingProgressCard.overallProgress')}</span>
               <span>{Math.round(document.processingProgress || 0)}%</span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -165,7 +168,7 @@ const ProcessingProgressCard: React.FC<ProcessingProgressCardProps> = ({
         {/* 处理步骤详情 */}
         {document.processingSteps && document.processingSteps.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-700 dark:text-gray-300">处理步骤</p>
+            <p className="text-xs font-medium text-gray-700 dark:text-gray-300">{t('preview.processingProgressCard.processingSteps')}</p>
             <div className="space-y-2">
               {document.processingSteps.map((step, index) => (
                 <div key={index} className="flex items-center space-x-3">
@@ -210,7 +213,7 @@ const ProcessingProgressCard: React.FC<ProcessingProgressCardProps> = ({
             </div>
             {canRetry && (
               <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                重试次数: {document.retryCount || 0}/{document.maxRetries || 3}
+                {t('preview.processingProgressCard.retryCount', { current: document.retryCount || 0, max: document.maxRetries || 3 })}
               </p>
             )}
           </div>

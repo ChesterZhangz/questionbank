@@ -26,6 +26,7 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import { paperBankAPI, authAPI } from '../../services/api';
 import { FuzzySelect } from '../../components/ui/menu';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface PaperBankMember {
   _id: string;
@@ -51,6 +52,7 @@ interface PaperBankInfo {
 const PaperBankMembersPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { t } = useTranslation();
   const { 
     showConfirm, 
     confirmModal,
@@ -103,10 +105,10 @@ const PaperBankMembersPage: React.FC = () => {
           setIsOwner(currentUser.data.user._id === paperBankData.ownerId);
         }
       } else {
-        showErrorRightSlide('获取失败', '获取试卷集信息失败');
+        showErrorRightSlide(t('paperBanks.members.messages.fetchFailed'), t('paperBanks.members.messages.fetchPaperBankFailed'));
       }
     } catch (error: any) {
-      showErrorRightSlide('获取失败', '获取试卷集信息失败');
+      showErrorRightSlide(t('paperBanks.members.messages.fetchFailed'), t('paperBanks.members.messages.fetchPaperBankFailed'));
     }
   };
 
@@ -117,10 +119,10 @@ const PaperBankMembersPage: React.FC = () => {
       if (response.data.success) {
         setMembers(response.data.data.members);
       } else {
-        showErrorRightSlide('获取失败', '获取成员列表失败');
+        showErrorRightSlide(t('paperBanks.members.messages.fetchFailed'), t('paperBanks.members.messages.fetchMembersFailed'));
       }
     } catch (error: any) {
-      showErrorRightSlide('获取失败', '获取成员列表失败');
+      showErrorRightSlide(t('paperBanks.members.messages.fetchFailed'), t('paperBanks.members.messages.fetchMembersFailed'));
     } finally {
       setLoading(false);
     }
@@ -128,11 +130,11 @@ const PaperBankMembersPage: React.FC = () => {
 
   const getRoleLabel = (role: string) => {
     switch (role) {
-      case 'owner': return '所有者';
-      case 'manager': return '管理员';
-      case 'collaborator': return '协作者';
-      case 'viewer': return '查看者';
-      default: return '未知';
+      case 'owner': return t('paperBanks.members.roles.owner');
+      case 'manager': return t('paperBanks.members.roles.manager');
+      case 'collaborator': return t('paperBanks.members.roles.collaborator');
+      case 'viewer': return t('paperBanks.members.roles.viewer');
+      default: return t('paperBanks.members.roles.unknown');
     }
   };
 
@@ -221,16 +223,16 @@ const PaperBankMembersPage: React.FC = () => {
       }
 
       if (failed === 0) {
-        showSuccessRightSlide('邀请成功', `成功邀请 ${success} 个成员`);
+        showSuccessRightSlide(t('paperBanks.members.messages.inviteSuccess'), t('paperBanks.members.messages.inviteSuccessMessage', { count: success }));
       } else {
-        showSuccessRightSlide('邀请完成', `成功邀请 ${success} 个成员，${failed} 个失败`);
+        showSuccessRightSlide(t('paperBanks.members.messages.inviteComplete'), t('paperBanks.members.messages.inviteCompleteMessage', { success, failed }));
       }
 
       setSelectedUsers([]);
       setSearchResults([]);
       setShowInviteForm(false);
     } catch (error: any) {
-      showErrorRightSlide('邀请失败', '邀请成员失败');
+      showErrorRightSlide(t('paperBanks.members.messages.inviteFailed'), t('paperBanks.members.messages.inviteFailedMessage'));
     } finally {
       setInviting(false);
     }
@@ -252,22 +254,22 @@ const PaperBankMembersPage: React.FC = () => {
             ? { ...member, role: newRole as 'manager' | 'collaborator' | 'viewer' }
             : member
         ));
-        showSuccessRightSlide('角色更新成功', '成员角色已成功更新');
+        showSuccessRightSlide(t('paperBanks.members.messages.roleUpdateSuccess'), t('paperBanks.members.messages.roleUpdateSuccessMessage'));
       } else {
-        showErrorRightSlide('角色更新失败', response.data.message || '更新成员角色失败');
+        showErrorRightSlide(t('paperBanks.members.messages.roleUpdateFailed'), response.data.message || t('paperBanks.members.messages.roleUpdateFailedMessage'));
       }
     } catch (error: any) {
-      showErrorRightSlide('角色更新失败', '更新成员角色失败');
+      showErrorRightSlide(t('paperBanks.members.messages.roleUpdateFailed'), t('paperBanks.members.messages.roleUpdateFailedMessage'));
     }
   };
 
   const handleRemoveMember = (memberId: string) => {
     showConfirm(
-      '确认移除',
-      '确定要移除这个成员吗？移除后该成员将无法访问此试卷集。',
+      t('paperBanks.members.confirm.removeTitle'),
+      t('paperBanks.members.confirm.removeMessage'),
       async () => {
         try {
-          setConfirmLoading(true, '删除中...');
+          setConfirmLoading(true, t('paperBanks.members.confirm.removeConfirm'));
           const response = await paperBankAPI.removePaperBankMember(id!, memberId);
           if (response.data.success) {
             // 直接从本地状态中移除成员，不刷新页面
@@ -275,14 +277,14 @@ const PaperBankMembersPage: React.FC = () => {
             // 更新试卷集成员数量
             setPaperBank(prev => prev ? { ...prev, memberCount: prev.memberCount - 1 } : null);
             closeConfirm();
-            showSuccessRightSlide('移除成功', '成员已成功移除');
+            showSuccessRightSlide(t('paperBanks.members.messages.removeSuccess'), t('paperBanks.members.messages.removeSuccessMessage'));
           } else {
             setConfirmLoading(false);
-            showErrorRightSlide('移除失败', response.data.message || '移除成员失败');
+            showErrorRightSlide(t('paperBanks.members.messages.removeFailed'), response.data.message || t('paperBanks.members.messages.removeFailedMessage'));
           }
         } catch (error: any) {
           setConfirmLoading(false);
-          showErrorRightSlide('移除失败', '移除成员失败');
+          showErrorRightSlide(t('paperBanks.members.messages.removeFailed'), t('paperBanks.members.messages.removeFailedMessage'));
         }
       }
     );
@@ -328,7 +330,7 @@ const PaperBankMembersPage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">加载中...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">{t('paperBanks.members.loading')}</p>
         </div>
       </div>
     );
@@ -350,10 +352,10 @@ const PaperBankMembersPage: React.FC = () => {
               </Button>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 dark:from-gray-100 to-blue-600 dark:to-blue-400 bg-clip-text text-transparent">
-                  试卷集成员管理
+                  {t('paperBanks.members.title')}
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300 mt-1">
-                  {paperBank?.name} - 管理试卷集成员和权限
+                  {t('paperBanks.members.subtitle', { name: paperBank?.name || '' })}
                 </p>
               </div>
             </div>
@@ -363,7 +365,7 @@ const PaperBankMembersPage: React.FC = () => {
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <UserPlus className="w-4 h-4 mr-2" />
-                邀请成员
+                {t('paperBanks.members.inviteMember')}
               </Button>
             </div>
           </div>
@@ -386,7 +388,7 @@ const PaperBankMembersPage: React.FC = () => {
                   <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">总成员数</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('paperBanks.members.stats.totalMembers')}</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {paperBank?.memberCount || 0}
                   </p>
@@ -400,7 +402,7 @@ const PaperBankMembersPage: React.FC = () => {
                   <Crown className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">所有者</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('paperBanks.members.stats.owners')}</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {members.filter(m => m.role === 'owner').length}
                   </p>
@@ -414,7 +416,7 @@ const PaperBankMembersPage: React.FC = () => {
                   <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">管理员</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('paperBanks.members.stats.managers')}</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {members.filter(m => m.role === 'manager').length}
                   </p>
@@ -428,7 +430,7 @@ const PaperBankMembersPage: React.FC = () => {
                   <User className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">其他成员</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('paperBanks.members.stats.otherMembers')}</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {members.filter(m => !['owner', 'manager'].includes(m.role)).length}
                   </p>
@@ -453,7 +455,7 @@ const PaperBankMembersPage: React.FC = () => {
                   <Input
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="搜索成员姓名或邮箱..."
+                    placeholder={t('paperBanks.members.search.placeholder')}
                     className="pl-10"
                   />
                 </div>
@@ -462,26 +464,26 @@ const PaperBankMembersPage: React.FC = () => {
               <div className="flex gap-4">
                 <FuzzySelect
                   options={[
-                    { value: 'all', label: '所有角色' },
-                    { value: 'owner', label: '所有者' },
-                    { value: 'manager', label: '管理员' },
-                    { value: 'collaborator', label: '协作者' },
-                    { value: 'viewer', label: '查看者' }
+                    { value: 'all', label: t('paperBanks.members.search.allRoles') },
+                    { value: 'owner', label: t('paperBanks.members.roles.owner') },
+                    { value: 'manager', label: t('paperBanks.members.roles.manager') },
+                    { value: 'collaborator', label: t('paperBanks.members.roles.collaborator') },
+                    { value: 'viewer', label: t('paperBanks.members.roles.viewer') }
                   ]}
                   value={roleFilter}
                   onChange={(value) => setRoleFilter(String(value))}
-                  placeholder="选择角色"
+                  placeholder={t('paperBanks.members.search.selectRole')}
                 />
                 
                 <FuzzySelect
                   options={[
-                    { value: 'joinedAt', label: '加入时间' },
-                    { value: 'username', label: '姓名' },
-                    { value: 'role', label: '角色' }
+                    { value: 'joinedAt', label: t('paperBanks.members.search.sortOptions.joinedAt') },
+                    { value: 'username', label: t('paperBanks.members.search.sortOptions.username') },
+                    { value: 'role', label: t('paperBanks.members.search.sortOptions.role') }
                   ]}
                   value={sortBy}
                   onChange={(value) => setSortBy(String(value))}
-                  placeholder="排序方式"
+                  placeholder={t('paperBanks.members.search.sortBy')}
                 />
                 
                 <Button
@@ -515,11 +517,11 @@ const PaperBankMembersPage: React.FC = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">成员</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">角色</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">加入时间</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">最后活跃</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">操作</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">{t('paperBanks.members.table.member')}</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">{t('paperBanks.members.table.role')}</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">{t('paperBanks.members.table.joinedAt')}</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">{t('paperBanks.members.table.lastActive')}</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 dark:text-gray-300">{t('paperBanks.members.table.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -565,7 +567,7 @@ const PaperBankMembersPage: React.FC = () => {
                         <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400">
                           {member.lastActiveAt 
                             ? new Date(member.lastActiveAt).toLocaleDateString()
-                            : '从未活跃'
+                            : t('paperBanks.members.table.neverActive')
                           }
                         </td>
                         
@@ -586,7 +588,7 @@ const PaperBankMembersPage: React.FC = () => {
                                   variant="ghost"
                                   size="sm"
                                   className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                  title="移除成员"
+                                  title={t('paperBanks.members.table.removeMember')}
                                 >
                                   <UserMinus className="w-4 h-4" />
                                 </Button>
@@ -596,14 +598,14 @@ const PaperBankMembersPage: React.FC = () => {
                             {member.role === 'owner' && (
                               <div className="flex items-center text-gray-500 dark:text-gray-400">
                                 <Crown className="w-4 h-4 mr-2" />
-                                <span className="text-sm">试卷集所有者</span>
+                                <span className="text-sm">{t('paperBanks.members.table.paperBankOwner')}</span>
                               </div>
                             )}
                             
                             {!isOwner && (
                               <div className="flex items-center text-gray-500 dark:text-gray-400">
                                 <Eye className="w-4 h-4 mr-2" />
-                                <span className="text-sm">无权限修改</span>
+                                <span className="text-sm">{t('paperBanks.members.table.noPermission')}</span>
                               </div>
                             )}
                           </div>
@@ -617,7 +619,7 @@ const PaperBankMembersPage: React.FC = () => {
               {sortedMembers.length === 0 && (
                 <div className="text-center py-12">
                   <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 dark:text-gray-400">暂无成员</p>
+                  <p className="text-gray-500 dark:text-gray-400">{t('paperBanks.members.table.noMembers')}</p>
                 </div>
               )}
             </div>
@@ -639,22 +641,22 @@ const PaperBankMembersPage: React.FC = () => {
             className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">邀请成员</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('paperBanks.members.inviteForm.title')}</h3>
               
               <div className="space-y-6">
                 {/* 搜索用户 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    搜索用户
+                    {t('paperBanks.members.inviteForm.searchUser')}
                   </label>
                   <Input
                     type="text"
-                    placeholder="输入用户姓名或邮箱进行搜索..."
+                    placeholder={t('paperBanks.members.inviteForm.searchPlaceholder')}
                     onChange={(e) => searchUsers(e.target.value)}
                     icon={<Users className="w-4 h-4" />}
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    可以搜索所有已注册的用户，不限制邮箱后缀
+                    {t('paperBanks.members.inviteForm.searchDescription')}
                   </p>
                 </div>
 
@@ -662,7 +664,7 @@ const PaperBankMembersPage: React.FC = () => {
                 {searchResults.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                      搜索结果 (点击选择用户)
+                      {t('paperBanks.members.inviteForm.searchResults')}
                     </label>
                     <div className="max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg">
                       {searchResults.map((user) => (
@@ -706,7 +708,7 @@ const PaperBankMembersPage: React.FC = () => {
                 {selectedUsers.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                      已选择的用户 ({selectedUsers.length})
+                      {t('paperBanks.members.inviteForm.selectedUsers', { count: selectedUsers.length })}
                     </label>
                     <div className="space-y-2 max-h-40 overflow-y-auto">
                       {selectedUsers.map((user) => (
@@ -742,17 +744,17 @@ const PaperBankMembersPage: React.FC = () => {
                 {/* 角色选择 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    分配角色
+                    {t('paperBanks.members.inviteForm.assignRole')}
                   </label>
                   <FuzzySelect
                     options={[
-                      { value: 'viewer', label: '查看者', html: '<span>查看者 - 只能查看试卷集内容</span>' },
-                      { value: 'collaborator', label: '协作者', html: '<span>协作者 - 可以添加和编辑试卷</span>' },
-                      { value: 'manager', label: '管理者', html: '<span>管理者 - 可以管理试卷集和成员</span>' }
+                      { value: 'viewer', label: t('paperBanks.members.inviteForm.roleOptions.viewer'), html: `<span>${t('paperBanks.members.inviteForm.roleOptions.viewer')}</span>` },
+                      { value: 'collaborator', label: t('paperBanks.members.inviteForm.roleOptions.collaborator'), html: `<span>${t('paperBanks.members.inviteForm.roleOptions.collaborator')}</span>` },
+                      { value: 'manager', label: t('paperBanks.members.inviteForm.roleOptions.manager'), html: `<span>${t('paperBanks.members.inviteForm.roleOptions.manager')}</span>` }
                     ]}
                     value={inviteRole}
                     onChange={(value) => setInviteRole(value as 'manager' | 'collaborator' | 'viewer')}
-                    placeholder="选择角色"
+                    placeholder={t('paperBanks.members.inviteForm.selectRole')}
                   />
                 </div>
 
@@ -763,7 +765,7 @@ const PaperBankMembersPage: React.FC = () => {
                     onClick={handleCancelInvite}
                     className="flex-1"
                   >
-                    取消
+                    {t('paperBanks.members.inviteForm.cancel')}
                   </Button>
                   <Button
                     onClick={handleAddSelectedUsers}
@@ -772,7 +774,7 @@ const PaperBankMembersPage: React.FC = () => {
                     className="flex-1 bg-green-500 hover:bg-green-600"
                   >
                     <UserPlus className="w-4 h-4 mr-2" />
-                    邀请 {selectedUsers.length > 0 ? `${selectedUsers.length} 个` : ''}成员
+                    {t('paperBanks.members.inviteForm.invite', { count: selectedUsers.length })}
                   </Button>
                 </div>
               </div>

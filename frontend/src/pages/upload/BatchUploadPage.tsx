@@ -15,6 +15,7 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 
 import { useModal } from '../../hooks/useModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 import { 
   Upload,
@@ -127,6 +128,7 @@ interface Question {
 
 const BatchUploadPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { 
     drafts = [], 
     currentDraftId, 
@@ -395,7 +397,7 @@ const BatchUploadPage: React.FC = () => {
         }));
         setDocuments(restoredDocuments);
       } catch (error) {
-        showErrorRightSlide('加载失败', '加载当前文档状态失败');
+        showErrorRightSlide(t('questionBankPage.BatchUploadPage.errors.loadFailed'), t('questionBankPage.BatchUploadPage.errors.loadDocumentStateFailed'));
       }
     }
     
@@ -404,7 +406,7 @@ const BatchUploadPage: React.FC = () => {
         const questions = JSON.parse(savedQuestions);
         setAllQuestions(questions);
       } catch (error) {
-        showErrorRightSlide('加载失败', '加载当前题目状态失败');
+        showErrorRightSlide(t('questionBankPage.BatchUploadPage.errors.loadFailed'), t('questionBankPage.BatchUploadPage.errors.loadQuestionStateFailed'));
       }
     }
     
@@ -413,7 +415,7 @@ const BatchUploadPage: React.FC = () => {
         const globalStatus = JSON.parse(savedGlobalStatus);
         setGlobalProcessingStatus(globalStatus);
       } catch (error) {
-        showErrorRightSlide('加载失败', '加载全局处理状态失败');
+        showErrorRightSlide(t('questionBankPage.BatchUploadPage.errors.loadFailed'), t('questionBankPage.BatchUploadPage.errors.loadGlobalStateFailed'));
       }
     }
   }, []);
@@ -478,7 +480,7 @@ const BatchUploadPage: React.FC = () => {
         const history = JSON.parse(savedHistory);
         setUploadHistory(history);
               } catch (error) {
-          showErrorRightSlide('加载失败', '加载历史记录失败');
+          showErrorRightSlide(t('questionBankPage.BatchUploadPage.errors.loadFailed'), t('questionBankPage.BatchUploadPage.errors.loadHistoryFailed'));
         }
     }
   }, []);
@@ -642,7 +644,10 @@ const BatchUploadPage: React.FC = () => {
     // 检查文件大小 (50MB限制)
     const maxFileSize = 50 * 1024 * 1024; // 50MB
     if (file.size > maxFileSize) {
-      showErrorRightSlide('文件过大', `文件大小不能超过 ${(maxFileSize / 1024 / 1024).toFixed(0)}MB，当前文件大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+      showErrorRightSlide(t('questionBankPage.BatchUploadPage.errors.fileTooLarge'), t('questionBankPage.BatchUploadPage.errors.fileSizeExceeded', { 
+        maxSize: (maxFileSize / 1024 / 1024).toFixed(0), 
+        currentSize: (file.size / 1024 / 1024).toFixed(2) 
+      }));
       return;
     }
 
@@ -722,7 +727,7 @@ const BatchUploadPage: React.FC = () => {
         throw new Error('不支持的文件类型，仅支持PDF和TeX文件');
       }
     } catch (error: any) {
-      showErrorRightSlide('处理失败', '文件处理失败，请重试');
+      showErrorRightSlide(t('questionBankPage.BatchUploadPage.errors.processingFailed'), t('questionBankPage.BatchUploadPage.errors.fileProcessingFailed'));
       updateDocumentProgress(newDocument.id, { 
         status: 'failed', 
         error: error.message || '文件处理失败'
@@ -1234,7 +1239,7 @@ const BatchUploadPage: React.FC = () => {
           validExtensions.some(ext => file.name.toLowerCase().endsWith(ext))) {
         handleFileUpload(file);
       } else {
-        showErrorRightSlide('文件类型错误', `不支持的文件类型: ${file.name}`);
+        showErrorRightSlide(t('questionBankPage.BatchUploadPage.errors.invalidFileType'), t('questionBankPage.BatchUploadPage.errors.unsupportedFileType', { fileName: file.name }));
       }
     });
   }, [handleFileUpload]);
@@ -1246,11 +1251,11 @@ const BatchUploadPage: React.FC = () => {
 
     const isProcessing = document.status === 'processing' || document.status === 'uploading';
     const confirmMessage = isProcessing 
-      ? '确定要取消这个文档的处理吗？' 
-      : '确定要删除这个文档吗？此操作不可撤销.';
+      ? t('questionBankPage.BatchUploadPage.confirm.cancelProcessing') 
+      : t('questionBankPage.BatchUploadPage.confirm.deleteDocument');
 
     showConfirm(
-      '确认操作',
+      t('questionBankPage.BatchUploadPage.confirm.title'),
       confirmMessage,
       async () => {
       try {
@@ -1317,7 +1322,7 @@ const BatchUploadPage: React.FC = () => {
 
     const retryCount = (document.retryCount || 0) + 1;
     if (retryCount > (document.maxRetries || 3)) {
-      showErrorRightSlide('重试失败', '已达到最大重试次数');
+      showErrorRightSlide(t('questionBankPage.BatchUploadPage.errors.retryFailed'), t('questionBankPage.BatchUploadPage.errors.maxRetriesReached'));
       return;
     }
 
@@ -1358,9 +1363,9 @@ const BatchUploadPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 dark:from-gray-100 to-blue-600 dark:to-blue-400 bg-clip-text text-transparent">
-                智能批量上传
+                {t('questionBankPage.BatchUploadPage.title')}
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">AI驱动的文档智能解析，支持PDF、TeX一键识别题目并批量导入题库</p>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">{t('questionBankPage.BatchUploadPage.subtitle')}</p>
             </div>
             <motion.div 
               className="flex items-center space-x-4"
@@ -1409,7 +1414,7 @@ const BatchUploadPage: React.FC = () => {
                         ease: "easeOut"
                       }}
                     >
-                      已上传: {documents.length} 个文档
+                      {t('questionBankPage.BatchUploadPage.stats.uploaded')}: {documents.length} {t('questionBankPage.BatchUploadPage.units.documents')}
                     </motion.span>
                   </motion.div>
                 </motion.div>
@@ -1452,7 +1457,7 @@ const BatchUploadPage: React.FC = () => {
                         ease: "easeOut"
                       }}
                     >
-                      识别题目: {allQuestions.length} 道
+                      {t('questionBankPage.BatchUploadPage.stats.recognizedQuestions')}: {allQuestions.length} {t('questionBankPage.BatchUploadPage.units.questions')}
                     </motion.span>
                   </motion.div>
                 </motion.div>
@@ -1472,7 +1477,7 @@ const BatchUploadPage: React.FC = () => {
                   className="flex items-center space-x-2"
                 >
                   <History className="h-4 w-4" />
-                  <span>历史记录</span>
+                  <span>{t('questionBankPage.BatchUploadPage.buttons.history')}</span>
                 </Button>
                 
                 <Button
@@ -1482,7 +1487,7 @@ const BatchUploadPage: React.FC = () => {
                   className="flex items-center space-x-2"
                 >
                   <Save className="h-4 w-4" />
-                  <span>草稿管理</span>
+                  <span>{t('questionBankPage.BatchUploadPage.buttons.draftManager')}</span>
                 </Button>
               </motion.div>
             </motion.div>
@@ -1506,7 +1511,7 @@ const BatchUploadPage: React.FC = () => {
                 <FileUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">已上传文档</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('questionBankPage.BatchUploadPage.statsCards.uploadedDocuments')}</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{documents.length}</p>
               </div>
             </div>
@@ -1518,7 +1523,7 @@ const BatchUploadPage: React.FC = () => {
                 <Target className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">识别题目</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('questionBankPage.BatchUploadPage.statsCards.recognizedQuestions')}</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{allQuestions.length}</p>
               </div>
             </div>
@@ -1530,7 +1535,7 @@ const BatchUploadPage: React.FC = () => {
                 <Brain className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">AI处理中</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('questionBankPage.BatchUploadPage.statsCards.aiProcessing')}</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {documents.filter(d => d.status === 'processing').length}
                 </p>
@@ -1544,7 +1549,7 @@ const BatchUploadPage: React.FC = () => {
                 <Database className="w-6 h-6 text-orange-600 dark:text-orange-400" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">题目集草稿</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('questionBankPage.BatchUploadPage.statsCards.questionDrafts')}</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{drafts.length}</p>
               </div>
             </div>
@@ -1567,8 +1572,8 @@ const BatchUploadPage: React.FC = () => {
               <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
                 <Upload className="h-10 w-10 text-white" />
               </div>
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">文档上传</h2>
-              <p className="text-gray-600 dark:text-gray-400">支持 PDF、TeX 格式，拖拽或点击上传</p>
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('questionBankPage.BatchUploadPage.upload.title')}</h2>
+              <p className="text-gray-600 dark:text-gray-400">{t('questionBankPage.BatchUploadPage.upload.subtitle')}</p>
             </div>
             
             <div
@@ -1585,10 +1590,10 @@ const BatchUploadPage: React.FC = () => {
               <div className="space-y-6">
                 <div>
                   <h3 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-3">
-                    {isDragging ? '释放文件开始上传' : '拖拽文件到这里或点击上传'}
+                    {isDragging ? t('questionBankPage.BatchUploadPage.upload.dropToUpload') : t('questionBankPage.BatchUploadPage.upload.dragOrClick')}
                   </h3>
                   <p className="text-gray-500 dark:text-gray-400">
-                    支持 PDF、TeX 格式，单文件最大 50MB
+                    {t('questionBankPage.BatchUploadPage.upload.supportedFormats')}
                   </p>
                 </div>
                 
@@ -1621,7 +1626,7 @@ const BatchUploadPage: React.FC = () => {
                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                 >
                   <Plus className="h-5 w-5 mr-2" />
-                  选择文件
+                  {t('questionBankPage.BatchUploadPage.upload.selectFiles')}
                 </Button>
               </div>
             </div>
@@ -1643,12 +1648,14 @@ const BatchUploadPage: React.FC = () => {
                   <div>
                     <h2 className="text-xl font-semibold flex items-center text-gray-900 dark:text-gray-100">
                       <FileText className="mr-2 h-5 w-5 text-blue-600 dark:text-blue-400" />
-                      文档管理
+                      {t('questionBankPage.BatchUploadPage.documentManagement.title')}
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      共 {documents.length} 个文档，
-                      {documents.filter(d => d.status === 'completed').length} 个已完成，
-                      {documents.filter(d => d.status === 'processing' || d.status === 'uploading').length} 个处理中
+                      {t('questionBankPage.BatchUploadPage.documentManagement.summary', {
+                        total: documents.length,
+                        completed: documents.filter(d => d.status === 'completed').length,
+                        processing: documents.filter(d => d.status === 'processing' || d.status === 'uploading').length
+                      })}
                     </p>
                   </div>
                   
@@ -1656,10 +1663,10 @@ const BatchUploadPage: React.FC = () => {
                   {globalProcessingStatus.isProcessing && (
                     <div className="flex items-center space-x-4">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        总进度: {globalProcessingStatus.completedDocuments}/{globalProcessingStatus.totalDocuments}
+                        {t('questionBankPage.BatchUploadPage.documentManagement.totalProgress')}: {globalProcessingStatus.completedDocuments}/{globalProcessingStatus.totalDocuments}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        预估剩余: {formatTime(globalProcessingStatus.estimatedTotalTime)}
+                        {t('questionBankPage.BatchUploadPage.documentManagement.estimatedRemaining')}: {formatTime(globalProcessingStatus.estimatedTotalTime)}
                       </div>
                     </div>
                   )}
@@ -1775,9 +1782,9 @@ const BatchUploadPage: React.FC = () => {
                     <div>
                       <h3 className="text-lg font-semibold flex items-center">
                         <History className="mr-2 h-5 w-5" />
-                        上传历史
+                        {t('questionBankPage.BatchUploadPage.history.title')}
                       </h3>
-                      <p className="text-sm opacity-90">共 {uploadHistory.length} 条记录</p>
+                      <p className="text-sm opacity-90">{t('questionBankPage.BatchUploadPage.history.totalRecords', { count: uploadHistory.length })}</p>
                     </div>
                     <Button
                       variant="outline"
@@ -1795,15 +1802,15 @@ const BatchUploadPage: React.FC = () => {
                   <div className="p-4 border-b bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        最近 {uploadHistory.length} 条记录
+                        {t('questionBankPage.BatchUploadPage.history.recentRecords', { count: uploadHistory.length })}
                       </span>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => {
                           showConfirm(
-                            '清空历史记录',
-                            '确定要清空所有历史记录和当前会话吗？这将清除所有上传的文件和题目.',
+                            t('questionBankPage.BatchUploadPage.confirm.clearHistory'),
+                            t('questionBankPage.BatchUploadPage.confirm.clearHistoryMessage'),
                             () => {
                               // 用户确认后才执行清空操作
                               clearHistory();
@@ -1815,7 +1822,7 @@ const BatchUploadPage: React.FC = () => {
                         className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
-                        清空全部
+                        {t('questionBankPage.BatchUploadPage.history.clearAll')}
                       </Button>
                     </div>
                   </div>
@@ -1826,9 +1833,9 @@ const BatchUploadPage: React.FC = () => {
                   {uploadHistory.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
                       <History className="h-16 w-16 mb-4 opacity-30" />
-                      <h4 className="text-lg font-medium mb-2">暂无历史记录</h4>
+                      <h4 className="text-lg font-medium mb-2">{t('questionBankPage.BatchUploadPage.history.noRecords')}</h4>
                       <p className="text-sm text-center px-4">
-                        上传并处理完成的文档会自动保存到这里
+                        {t('questionBankPage.BatchUploadPage.history.noRecordsDescription')}
                       </p>
                     </div>
                   ) : (
@@ -1859,7 +1866,7 @@ const BatchUploadPage: React.FC = () => {
                                     </div>
                                   </div>
                                   <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2">
-                                    {historyDoc.questions.length}题
+                                    {historyDoc.questions.length}{t('questionBankPage.BatchUploadPage.units.questions')}
                                   </span>
                                 </div>
                                 
@@ -1878,7 +1885,7 @@ const BatchUploadPage: React.FC = () => {
                                     className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-xs px-2 py-1"
                                   >
                                     <Plus className="h-3 w-3 mr-1" />
-                                    恢复
+                                    {t('questionBankPage.BatchUploadPage.history.restore')}
                                   </Button>
                                   
                                   <Button
@@ -1891,7 +1898,7 @@ const BatchUploadPage: React.FC = () => {
                                     className="text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs px-2 py-1"
                                   >
                                     <Eye className="h-3 w-3 mr-1" />
-                                    详情
+                                    {t('questionBankPage.BatchUploadPage.history.details')}
                                   </Button>
                                 </div>
                                 
@@ -1900,8 +1907,8 @@ const BatchUploadPage: React.FC = () => {
                                   size="sm"
                                   onClick={() => {
                                     showConfirm(
-                                      '删除历史记录',
-                                      `确定要删除历史记录 "${historyDoc.fileName}" 吗？`,
+                                      t('questionBankPage.BatchUploadPage.confirm.deleteHistoryRecord'),
+                                      t('questionBankPage.BatchUploadPage.confirm.deleteHistoryRecordMessage', { fileName: historyDoc.fileName }),
                                       () => {
                                         // 先关闭模态框
                                         closeConfirm();
@@ -1929,8 +1936,8 @@ const BatchUploadPage: React.FC = () => {
                 {/* 侧边栏底部 */}
                 <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                   <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                    <p>历史记录保存在本地存储中</p>
-                    <p>最多保留 50 条记录</p>
+                    <p>{t('questionBankPage.BatchUploadPage.history.storageInfo')}</p>
+                    <p>{t('questionBankPage.BatchUploadPage.history.maxRecords')}</p>
                   </div>
                 </div>
               </motion.div>

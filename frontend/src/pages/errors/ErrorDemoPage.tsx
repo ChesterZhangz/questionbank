@@ -15,40 +15,42 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/ui/Button';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const ErrorDemoPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [selectedError, setSelectedError] = useState<string | null>(null);
 
   const errorTypes = [
     {
       code: '400',
-      title: '请求错误',
-      description: '请求格式不正确或包含无效参数',
+      title: t('errors.demo.errorTypes.badRequest.title'),
+      description: t('errors.demo.errorTypes.badRequest.description'),
       icon: <AlertTriangle className="w-8 h-8" />,
       color: 'orange',
       path: '/400'
     },
     {
       code: '403',
-      title: '访问被拒绝',
-      description: '没有权限访问此页面',
+      title: t('errors.demo.errorTypes.forbidden.title'),
+      description: t('errors.demo.errorTypes.forbidden.description'),
       icon: <Shield className="w-8 h-8" />,
       color: 'red',
       path: '/403'
     },
     {
       code: '404',
-      title: '页面未找到',
-      description: '请求的页面不存在或已被移除',
+      title: t('errors.demo.errorTypes.notFound.title'),
+      description: t('errors.demo.errorTypes.notFound.description'),
       icon: <FileX className="w-8 h-8" />,
       color: 'blue',
       path: '/404'
     },
     {
       code: '500',
-      title: '服务器错误',
-      description: '服务器遇到意外错误',
+      title: t('errors.demo.errorTypes.serverError.title'),
+      description: t('errors.demo.errorTypes.serverError.description'),
       icon: <Server className="w-8 h-8" />,
       color: 'purple',
       path: '/500'
@@ -58,18 +60,18 @@ const ErrorDemoPage: React.FC = () => {
   const features = [
     {
       icon: <Code className="w-6 h-6" />,
-      title: '现代化设计',
-      description: '采用最新的UI设计理念，提供优雅的用户体验'
+      title: t('errors.demo.features.modernDesign.title'),
+      description: t('errors.demo.features.modernDesign.description')
     },
     {
       icon: <Palette className="w-6 h-6" />,
-      title: '响应式布局',
-      description: '完美适配各种设备尺寸，移动端友好'
+      title: t('errors.demo.features.responsiveLayout.title'),
+      description: t('errors.demo.features.responsiveLayout.description')
     },
     {
       icon: <Zap className="w-6 h-6" />,
-      title: '流畅动画',
-      description: '使用Framer Motion提供流畅的过渡动画效果'
+      title: t('errors.demo.features.smoothAnimation.title'),
+      description: t('errors.demo.features.smoothAnimation.description')
     }
   ];
 
@@ -83,14 +85,14 @@ const ErrorDemoPage: React.FC = () => {
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Code className="w-6 h-6 text-blue-600" />
               </div>
-              <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">错误页面演示</h1>
+              <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t('errors.demo.title')}</h1>
             </div>
             <Button
               onClick={() => navigate('/')}
               variant="outline"
               className="flex items-center"
             >
-              返回首页
+              {t('errors.returnHome')}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
@@ -105,11 +107,10 @@ const ErrorDemoPage: React.FC = () => {
           className="text-center mb-12"
         >
           <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-            错误页面系统
+            {t('errors.demo.systemTitle')}
           </h2>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            我们重新设计了错误页面系统，提供更好的用户体验和交互功能.
-            每个错误页面都包含小游戏，让用户在等待的同时也能享受乐趣.
+            {t('errors.demo.systemDescription')}
           </p>
         </motion.div>
 
@@ -151,7 +152,7 @@ const ErrorDemoPage: React.FC = () => {
           className="mb-8"
         >
           <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-8">
-            选择错误类型进行演示
+            {t('errors.demo.selectErrorType')}
           </h3>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -206,7 +207,7 @@ const ErrorDemoPage: React.FC = () => {
               variant="primary"
               className="px-8 py-4 text-lg font-semibold"
             >
-              查看 {selectedError} 错误页面演示
+              {t('errors.demo.viewDemo', { code: selectedError })}
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </motion.div>
@@ -220,7 +221,7 @@ const ErrorDemoPage: React.FC = () => {
           className="mt-16 bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-200 dark:border-gray-700"
         >
           <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">
-            内置小游戏功能
+            {t('errors.demo.builtInGames')}
           </h3>
            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="text-center">
@@ -229,8 +230,8 @@ const ErrorDemoPage: React.FC = () => {
                   <Calculator className="w-8 h-8 text-blue-600" />
                 </div>
               </div>
-              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">数学计算</h4>
-              <p className="text-gray-600 dark:text-gray-400">快速计算数学题目，提高计算能力</p>
+              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">{t('errors.games.math.title')}</h4>
+              <p className="text-gray-600 dark:text-gray-400">{t('errors.games.math.description')}</p>
             </div>
             <div className="text-center">
               <div className="flex justify-center mb-4">
@@ -238,8 +239,8 @@ const ErrorDemoPage: React.FC = () => {
                   <Brain className="w-8 h-8 text-green-600" />
                 </div>
               </div>
-              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">记忆游戏</h4>
-              <p className="text-gray-600 dark:text-gray-400">找到相同的数字配对，锻炼记忆力</p>
+              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">{t('errors.games.memory.title')}</h4>
+              <p className="text-gray-600 dark:text-gray-400">{t('errors.games.memory.description')}</p>
             </div>
                          <div className="text-center">
                <div className="flex justify-center mb-4">
@@ -247,8 +248,8 @@ const ErrorDemoPage: React.FC = () => {
                    <Target className="w-8 h-8 text-purple-600" />
                  </div>
                </div>
-               <h4 className="text-lg font-semibold text-gray-800 mb-2">数字拼图</h4>
-               <p className="text-gray-600">将数字按顺序排列，训练逻辑思维</p>
+               <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">{t('errors.games.puzzle.title')}</h4>
+               <p className="text-gray-600 dark:text-gray-400">{t('errors.games.puzzle.description')}</p>
              </div>
              <div className="text-center">
                <div className="flex justify-center mb-4">
@@ -256,8 +257,8 @@ const ErrorDemoPage: React.FC = () => {
                    <Zap className="w-8 h-8 text-orange-600" />
                  </div>
                </div>
-               <h4 className="text-lg font-semibold text-gray-800 mb-2">反应速度</h4>
-               <p className="text-gray-600">点击出现的圆圈，测试反应速度</p>
+               <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">{t('errors.games.reaction.title')}</h4>
+               <p className="text-gray-600 dark:text-gray-400">{t('errors.games.reaction.description')}</p>
              </div>
           </div>
         </motion.div>

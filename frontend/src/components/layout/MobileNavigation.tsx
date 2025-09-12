@@ -7,6 +7,7 @@ import {
   FileText
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface MobileNavItem {
   id: string;
@@ -16,10 +17,10 @@ interface MobileNavItem {
   requiresAdmin?: boolean;
 }
 
-const mobileNavItems: MobileNavItem[] = [
-  { id: 'dashboard', label: '仪表盘', icon: Home, path: '/dashboard' },
-  { id: 'question-banks', label: '题库', icon: BookOpen, path: '/question-banks' },
-  { id: 'questions', label: '题目', icon: FileText, path: '/questions' },
+const getMobileNavItems = (t: any): MobileNavItem[] => [
+  { id: 'dashboard', label: t('layout.mobileNavigation.home'), icon: Home, path: '/dashboard' },
+  { id: 'question-banks', label: t('layout.mobileNavigation.questionBank'), icon: BookOpen, path: '/question-banks' },
+  { id: 'questions', label: t('layout.mobileNavigation.questions'), icon: FileText, path: '/questions' },
 ];
 
 interface MobileNavigationProps {
@@ -27,9 +28,12 @@ interface MobileNavigationProps {
 }
 
 const MobileNavigation: React.FC<MobileNavigationProps> = ({ isVisible }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuthStore();
+  
+  const mobileNavItems = getMobileNavItems(t);
 
   // 检查用户权限
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';

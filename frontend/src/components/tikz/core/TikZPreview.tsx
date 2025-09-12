@@ -7,6 +7,7 @@ import { TikZFunctionRenderer } from '../features/plotting/TikZFunctionRenderer'
 import { TikZForeachUtils, type ForeachContext } from '../utils/TikZForeachUtils';
 import { TikZStyleParser } from '../utils/TikZStyleParser';
 import { TikZGeometryParser } from '../utils/TikZGeometryParser';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 
 export interface TikZPreviewProps {
@@ -1778,7 +1779,7 @@ export const TikZPreview: React.FC<TikZPreviewProps> = ({
   className = '',
   onRender
 }) => {
-
+  const { t } = useTranslation();
   const [previewUrl, setPreviewUrl] = useState<string>('');
 
   // 创建TikZ模拟器实例
@@ -1851,16 +1852,16 @@ export const TikZPreview: React.FC<TikZPreviewProps> = ({
               
               {/* 提示文字 */}
               <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
-                图形预览区域
+                {t('tikz.preview.title')}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                输入TikZ代码后自动渲染
+                {t('tikz.preview.description')}
               </p>
               <div className="flex items-center justify-center space-x-2 text-xs text-gray-400 dark:text-gray-500">
                 <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                <span>前端模拟渲染</span>
+                <span>{t('tikz.preview.frontendRender')}</span>
                 <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
-                <span>无需后端</span>
+                <span>{t('tikz.preview.noBackend')}</span>
               </div>
             </div>
           )}

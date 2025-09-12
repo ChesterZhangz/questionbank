@@ -8,6 +8,7 @@ import QuestionCard from '../question/QuestionCard';
 import LoadingPage from '../ui/LoadingPage';
 import type { Question } from '../../types';
 import { useModal } from '../../hooks/useModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface FavoritesModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface FavoriteQuestion extends Question {
 }
 
 const FavoritesModal: React.FC<FavoritesModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   // 弹窗状态管理
   const { showErrorRightSlide } = useModal();
 
@@ -41,11 +43,11 @@ const FavoritesModal: React.FC<FavoritesModalProps> = ({ isOpen, onClose }) => {
         setFavorites(response.data.data.favorites || []);
         setTotalPages(response.data.data.pagination?.totalPages || 1);
       } else {
-        setError(response.data.error || '获取收藏失败');
+        setError(response.data.error || t('social.getFavoritesFailed'));
       }
     } catch (error: any) {
       // 错误日志已清理
-      setError(error.response?.data?.error || '获取收藏失败');
+      setError(error.response?.data?.error || t('social.getFavoritesFailed'));
     } finally {
       setLoading(false);
     }
@@ -124,8 +126,8 @@ const FavoritesModal: React.FC<FavoritesModalProps> = ({ isOpen, onClose }) => {
                     <Heart className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">我的收藏</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">查看您收藏的题目</p>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('social.myFavorites')}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('social.viewFavoriteQuestions')}</p>
                   </div>
                 </div>
                 <button
@@ -142,7 +144,7 @@ const FavoritesModal: React.FC<FavoritesModalProps> = ({ isOpen, onClose }) => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1">
                   <Input
-                    placeholder="搜索收藏的题目..."
+                    placeholder={t('social.searchFavorites')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     icon={<Search className="w-4 h-4" />}
@@ -154,7 +156,7 @@ const FavoritesModal: React.FC<FavoritesModalProps> = ({ isOpen, onClose }) => {
                     onChange={(e) => setFilterType(e.target.value)}
                     className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   >
-                    <option value="all">全部类型</option>
+                    <option value="all">{t('social.allTypes')}</option>
                     {getQuestionTypes().map(type => (
                       <option key={type} value={type}>{type}</option>
                     ))}
@@ -175,14 +177,14 @@ const FavoritesModal: React.FC<FavoritesModalProps> = ({ isOpen, onClose }) => {
                     onClick={() => fetchFavorites(currentPage)}
                     className="mt-4"
                   >
-                    重试
+                    {t('social.retry')}
                   </Button>
                 </div>
               ) : filteredFavorites.length === 0 ? (
                 <div className="text-center py-12">
                   <Heart className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
                   <p className="text-gray-600 dark:text-gray-400">
-                    {searchTerm || filterType !== 'all' ? '没有找到匹配的收藏题目' : '您还没有收藏任何题目'}
+                    {searchTerm || filterType !== 'all' ? t('social.noMatchingFavorites') : t('social.noFavorites')}
                   </p>
                 </div>
               ) : (
@@ -206,7 +208,7 @@ const FavoritesModal: React.FC<FavoritesModalProps> = ({ isOpen, onClose }) => {
                             const url = `/question-banks/${targetQuestion.bid}/questions/${targetQuestion.qid}`;
                             window.open(url, '_blank');
                           } else {
-                            showErrorRightSlide('查看失败', '无法查看题目详情：缺少题库信息');
+                            showErrorRightSlide(t('social.viewFailed'), t('social.viewFailedMessage'));
                           }
                         }}
                         className="hover:shadow-lg transition-shadow"
@@ -222,7 +224,7 @@ const FavoritesModal: React.FC<FavoritesModalProps> = ({ isOpen, onClose }) => {
               <div className="p-6 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    共 {favorites.length} 个收藏
+                    {t('social.totalFavorites', { count: favorites.length })}
                   </p>
                   <div className="flex items-center gap-2">
                     <Button
@@ -237,7 +239,7 @@ const FavoritesModal: React.FC<FavoritesModalProps> = ({ isOpen, onClose }) => {
                       variant="outline"
                       size="sm"
                     >
-                      上一页
+                      {t('social.previousPage')}
                     </Button>
                     <span className="text-sm text-gray-600 dark:text-gray-400">
                       {currentPage} / {totalPages}
@@ -254,7 +256,7 @@ const FavoritesModal: React.FC<FavoritesModalProps> = ({ isOpen, onClose }) => {
                       variant="outline"
                       size="sm"
                     >
-                      下一页
+                      {t('social.nextPage')}
                     </Button>
                   </div>
                 </div>

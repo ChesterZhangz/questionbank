@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface UploadingSpinnerProps {
   isUploading: boolean;
@@ -17,6 +18,7 @@ export const UploadingSpinner: React.FC<UploadingSpinnerProps> = ({
   success,
   className = ''
 }) => {
+  const { t } = useTranslation();
   if (!isUploading && !error && !success) return null;
 
   return (
@@ -54,7 +56,7 @@ export const UploadingSpinner: React.FC<UploadingSpinnerProps> = ({
       {/* 状态文本 */}
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium">
-          {error ? '上传失败' : success ? '上传成功' : '正在上传...'}
+          {error ? t('ui.uploadingSpinner.uploadFailed') : success ? t('ui.uploadingSpinner.uploadSuccess') : t('ui.uploadingSpinner.uploading')}
         </div>
         {error && (
           <div className="text-xs opacity-80">{error}</div>

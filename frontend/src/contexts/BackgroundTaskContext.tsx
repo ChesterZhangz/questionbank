@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { Question } from '../types';
 import { useModal } from '../hooks/useModal';
+import { useTranslation } from '../hooks/useTranslation';
 
 // 后台任务状态接口
 export interface BackgroundTask {
@@ -33,6 +34,8 @@ interface BackgroundTaskContextType {
     pending: number;
   };
   showNotification: (title: string, message: string, type: 'success' | 'error' | 'info') => void;
+  getTaskStatusLabel: (status: BackgroundTask['status']) => string;
+  getTaskTypeLabel: (type: BackgroundTask['type']) => string;
 }
 
 const BackgroundTaskContext = createContext<BackgroundTaskContextType | undefined>(undefined);
@@ -54,6 +57,9 @@ export const BackgroundTaskProvider: React.FC<BackgroundTaskProviderProps> = ({ 
 
   // 弹窗状态管理
   const { showErrorRightSlide } = useModal();
+  
+  // 翻译功能
+  const { t } = useTranslation();
 
   // 从localStorage恢复任务状态
   useEffect(() => {
@@ -128,7 +134,17 @@ export const BackgroundTaskProvider: React.FC<BackgroundTaskProviderProps> = ({ 
     if (!('Notification' in window) || Notification.permission !== 'granted') {
       showErrorRightSlide(title, message);
     }
-  }, []);
+  }, [showErrorRightSlide]);
+
+  // 获取任务状态标签
+  const getTaskStatusLabel = useCallback((status: BackgroundTask['status']) => {
+    return t(`contexts.backgroundTask.status.${status}`);
+  }, [t]);
+
+  // 获取任务类型标签
+  const getTaskTypeLabel = useCallback((type: BackgroundTask['type']) => {
+    return t(`contexts.backgroundTask.types.${type}`);
+  }, [t]);
 
   // 监听任务完成状态变化，发送通知
   useEffect(() => {
@@ -136,8 +152,11 @@ export const BackgroundTaskProvider: React.FC<BackgroundTaskProviderProps> = ({ 
       if (task.status === 'completed' && !task.endTime) {
         // 任务刚完成，发送通知
         showNotification(
-          '任务完成',
-          `${task.fileName} 处理完成，识别到 ${task.result?.questions.length || 0} 道题目`,
+          t('contexts.backgroundTask.notifications.taskCompleted'),
+          t('contexts.backgroundTask.notifications.taskCompletedMessage', {
+            fileName: task.fileName,
+            count: task.result?.questions.length || 0
+          }),
           'success'
         );
         // 标记已通知
@@ -145,15 +164,18 @@ export const BackgroundTaskProvider: React.FC<BackgroundTaskProviderProps> = ({ 
       } else if (task.status === 'failed' && !task.endTime) {
         // 任务失败，发送通知
         showNotification(
-          '任务失败',
-          `${task.fileName} 处理失败: ${task.error || '未知错误'}`,
+          t('contexts.backgroundTask.notifications.taskFailed'),
+          t('contexts.backgroundTask.notifications.taskFailedMessage', {
+            fileName: task.fileName,
+            error: task.error || t('contexts.backgroundTask.notifications.unknownError')
+          }),
           'error'
         );
         // 标记已通知
         updateTask(task.id, { endTime: new Date() });
       }
     });
-  }, [tasks, showNotification, updateTask]);
+  }, [tasks, showNotification, updateTask, t]);
 
   const value: BackgroundTaskContextType = {
     tasks,
@@ -161,7 +183,9 @@ export const BackgroundTaskProvider: React.FC<BackgroundTaskProviderProps> = ({ 
     updateTask,
     removeTask,
     getTaskStats,
-    showNotification
+    showNotification,
+    getTaskStatusLabel,
+    getTaskTypeLabel
   };
 
   return (

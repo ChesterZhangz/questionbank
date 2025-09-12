@@ -2,6 +2,7 @@ import React from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import LaTeXPreview from './LaTeXPreview';
 import type { RenderConfig } from '../../../lib/latex/types';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface PreviewPanelProps {
   content: string;
@@ -19,9 +20,10 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
   onToggleVisibility,
   config = { mode: 'full' },
   className = '',
-  title = '渲染预览',
+  title,
   variant = 'default'
 }) => {
+  const { t } = useTranslation();
   return (
     <div className={`preview-panel ${className}`}>
       {/* 预览控制栏 */}
@@ -29,7 +31,7 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
             <div className="preview-panel-controls">
               <div className="preview-panel-title">
                 <Eye className="w-4 h-4" />
-                <span>{title}</span>
+                <span>{title || t('editor.preview.title')}</span>
               </div>
               <button
                 onClick={onToggleVisibility}
@@ -38,12 +40,12 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({
             {isVisible ? (
               <>
                 <EyeOff className="w-3 h-3" />
-                <span>隐藏预览</span>
+                <span>{t('editor.preview.hidePreview')}</span>
               </>
             ) : (
               <>
                 <Eye className="w-3 h-3" />
-                <span>显示预览</span>
+                <span>{t('editor.preview.showPreview')}</span>
               </>
             )}
           </button>

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Button from './Button';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface PageHeaderProps {
   title: string;
@@ -20,9 +21,10 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   icon: Icon,
   showBackButton = false,
   backPath,
-  backText = '返回',
+  backText,
   children
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const handleBack = () => {
@@ -49,7 +51,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
               className="flex items-center gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-gray-200 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-700 hover:border-blue-300 dark:hover:border-blue-400 transition-all duration-200"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>{backText}</span>
+              <span>{backText || t('ui.pageHeader.back')}</span>
             </Button>
           )}
           

@@ -3,9 +3,10 @@ import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-import { mathSymbolCategories } from '../../../lib/latex/symbols/MathSymbols';
-import { questionSymbolCategories } from '../../../lib/latex/symbols/QuestionSymbols';
+import { getMathSymbolCategories } from '../../../lib/latex/symbols/MathSymbols';
+import { getQuestionSymbolCategories } from '../../../lib/latex/symbols/QuestionSymbols';
 import type { SymbolDefinition } from '../../../lib/latex/types';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface SymbolPanelProps {
   type?: 'math' | 'question';
@@ -18,7 +19,8 @@ const SymbolPanel: React.FC<SymbolPanelProps> = ({
   onSymbolSelect,
   onClose
 }) => {
-  const categories = type === 'math' ? mathSymbolCategories : questionSymbolCategories;
+  const { t } = useTranslation();
+  const categories = type === 'math' ? getMathSymbolCategories(t) : getQuestionSymbolCategories(t);
 
   const renderSymbol = (symbol: SymbolDefinition) => {
     if (symbol.latex.startsWith('\\')) {
@@ -46,11 +48,12 @@ const SymbolPanel: React.FC<SymbolPanelProps> = ({
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
-          {type === 'math' ? '数学符号' : '题目符号'}
+          {type === 'math' ? t('editor.symbolPanel.mathSymbols') : t('editor.symbolPanel.questionSymbols')}
         </h3>
         <button
           onClick={onClose}
           className="p-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-800/50 rounded"
+          title={t('editor.symbolPanel.close')}
         >
           <X className="w-4 h-4" />
         </button>

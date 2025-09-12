@@ -15,10 +15,12 @@ import Card from '../../components/ui/Card';
 import { SimpleSelect } from '../../components/ui/menu';
 import LoadingPage from '../../components/ui/LoadingPage';
 import { getMathCategories } from '../../constants/questionCategories';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const EditQuestionBankPage: React.FC = () => {
   const { bid } = useParams<{ bid: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [questionBank, setQuestionBank] = useState<QuestionBank | null>(null);
   const [formData, setFormData] = useState<UpdateQuestionBankRequest>({
     name: '',
@@ -56,10 +58,10 @@ const EditQuestionBankPage: React.FC = () => {
           allowCollaboration: bank.allowCollaboration
         });
       } else {
-        setError(response.data.error || '获取题库信息失败');
+        setError(response.data.error || t('questionBankPage.EditQuestionBankPage.errors.loadFailed'));
       }
     } catch (error: any) {
-      setError(error.response?.data?.error || '获取题库信息失败');
+      setError(error.response?.data?.error || t('questionBankPage.EditQuestionBankPage.errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -96,7 +98,7 @@ const EditQuestionBankPage: React.FC = () => {
     e.preventDefault();
     
     if (!formData.name?.trim()) {
-      setError('题库名称不能为空');
+      setError(t('questionBankPage.EditQuestionBankPage.errors.nameRequired'));
       return;
     }
     
@@ -109,10 +111,10 @@ const EditQuestionBankPage: React.FC = () => {
       if (response.data.success) {
         navigate(`/question-banks/${bid}`);
       } else {
-        setError(response.data.error || '更新题库失败');
+        setError(response.data.error || t('questionBankPage.EditQuestionBankPage.errors.updateFailed'));
       }
     } catch (error: any) {
-      setError(error.response?.data?.error || '更新题库失败');
+      setError(error.response?.data?.error || t('questionBankPage.EditQuestionBankPage.errors.updateFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -127,10 +129,10 @@ const EditQuestionBankPage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">题库不存在</h1>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">{error || '无法加载题库信息'}</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('questionBankPage.EditQuestionBankPage.errors.notFound')}</h1>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">{error || t('questionBankPage.EditQuestionBankPage.errors.loadFailed')}</p>
             <Button onClick={() => navigate('/question-banks')}>
-              返回题库列表
+              {t('common.backToQuestionBanks')}
             </Button>
           </div>
         </div>
@@ -150,11 +152,11 @@ const EditQuestionBankPage: React.FC = () => {
               className="mr-4"
             >
               <ArrowLeft className="w-4 w-4 mr-2" />
-              返回
+              {t('questionBankPage.EditQuestionBankPage.buttons.back')}
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">编辑题库</h1>
-              <p className="text-gray-600 dark:text-gray-300">修改题库信息</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('questionBankPage.EditQuestionBankPage.title')}</h1>
+              <p className="text-gray-600 dark:text-gray-300">{t('questionBankPage.EditQuestionBankPage.description')}</p>
             </div>
           </div>
         </div>
@@ -187,14 +189,14 @@ const EditQuestionBankPage: React.FC = () => {
               >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    题库名称 *
+                    {t('questionBankPage.EditQuestionBankPage.form.name')} *
                   </label>
                   <Input
                     name="name"
                     type="text"
                     value={formData.name}
                     onChange={handleChange}
-                    placeholder="请输入题库名称"
+                    placeholder={t('questionBankPage.EditQuestionBankPage.placeholders.name')}
                     icon={<Calculator className="w-5 w-5" />}
                     required
                   />
@@ -209,7 +211,7 @@ const EditQuestionBankPage: React.FC = () => {
               >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    题库描述
+                    {t('questionBankPage.EditQuestionBankPage.form.description')}
                   </label>
                   <textarea
                     name="description"
@@ -217,7 +219,7 @@ const EditQuestionBankPage: React.FC = () => {
                     onChange={handleChange}
                     rows={4}
                     className="input w-full dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
-                    placeholder="请输入题库描述..."
+                    placeholder={t('questionBankPage.EditQuestionBankPage.placeholders.description')}
                   />
                 </div>
               </motion.div>
@@ -236,8 +238,8 @@ const EditQuestionBankPage: React.FC = () => {
                 }))}
                 value={formData.category || ''}
                 onChange={(value) => setFormData(prev => ({ ...prev, category: value as string }))}
-                placeholder="选择题库分类"
-                label="题库分类"
+                placeholder={t('questionBankPage.EditQuestionBankPage.placeholders.category')}
+                label={t('questionBankPage.EditQuestionBankPage.form.category')}
                 theme="blue"
                 variant="outline"
                 size="md"
@@ -253,7 +255,7 @@ const EditQuestionBankPage: React.FC = () => {
               >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    标签
+                    {t('questionBankPage.EditQuestionBankPage.form.tags')}
                   </label>
                   <div className="flex gap-2 mb-2">
                     <Input
@@ -261,7 +263,7 @@ const EditQuestionBankPage: React.FC = () => {
                       type="text"
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
-                      placeholder="输入标签"
+                      placeholder={t('questionBankPage.EditQuestionBankPage.placeholders.tags')}
                       icon={<Plus className="w-5 w-5" />}
                       onKeyPress={(e) => {
                         if (e.key === 'Enter') {
@@ -276,7 +278,7 @@ const EditQuestionBankPage: React.FC = () => {
                       variant="outline"
                       disabled={!tagInput.trim()}
                     >
-                      添加
+                      {t('questionBankPage.EditQuestionBankPage.buttons.add')}
                     </Button>
                   </div>
                   
@@ -319,7 +321,7 @@ const EditQuestionBankPage: React.FC = () => {
                       className="text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
                     />
                     <label className="ml-2 text-sm text-gray-700 dark:text-gray-200">
-                      公开题库（其他用户可以查看）
+                      {t('questionBankPage.EditQuestionBankPage.settings.isPublic')}
                     </label>
                   </div>
                   
@@ -332,7 +334,7 @@ const EditQuestionBankPage: React.FC = () => {
                       className="text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
                     />
                     <label className="ml-2 text-sm text-gray-700 dark:text-gray-200">
-                      允许协作（同企业邮箱用户可以参与）
+                      {t('questionBankPage.EditQuestionBankPage.settings.allowCollaboration')}
                     </label>
                   </div>
                 </div>
@@ -351,7 +353,7 @@ const EditQuestionBankPage: React.FC = () => {
                   onClick={() => navigate(`/question-banks/${bid}`)}
                   disabled={isSubmitting}
                 >
-                  取消
+                  {t('questionBankPage.EditQuestionBankPage.buttons.cancel')}
                 </Button>
                 <Button
                   type="submit"
@@ -360,7 +362,7 @@ const EditQuestionBankPage: React.FC = () => {
                   disabled={isSubmitting}
                 >
                   <Save className="w-4 w-4 mr-2" />
-                  保存修改
+                  {t('questionBankPage.EditQuestionBankPage.buttons.save')}
                 </Button>
               </motion.div>
             </form>

@@ -6,6 +6,7 @@ import {
   CheckCircle, 
   Brain
 } from 'lucide-react';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface QuestionPreviewStatsProps {
   totalQuestions: number;
@@ -18,9 +19,11 @@ const QuestionPreviewStats: React.FC<QuestionPreviewStatsProps> = ({
   selectedCount,
   analyzedCount
 }) => {
+  const { t } = useTranslation();
+  
   const stats = [
     {
-      title: '总题目数',
+      title: t('preview.questionPreviewStats.total'),
       value: totalQuestions,
       icon: FileText,
       color: 'blue',
@@ -31,7 +34,7 @@ const QuestionPreviewStats: React.FC<QuestionPreviewStatsProps> = ({
       iconColor: 'text-blue-700 dark:text-blue-300'
     },
     {
-      title: '已选择',
+      title: t('preview.questionPreviewStats.selected'),
       value: selectedCount,
       icon: CheckCircle,
       color: 'green',
@@ -42,7 +45,7 @@ const QuestionPreviewStats: React.FC<QuestionPreviewStatsProps> = ({
       iconColor: 'text-green-700 dark:text-green-300'
     },
     {
-      title: '已分析',
+      title: t('preview.questionPreviewStats.analyzed'),
       value: analyzedCount,
       icon: Brain,
       color: 'purple',

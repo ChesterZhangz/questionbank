@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, Clock, Users, Eye, Edit, Play, FileText } from 'lucide-react';
 import Button from '../../ui/Button';
 import Card from '../../ui/Card';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface PracticePaper {
   _id: string;
@@ -40,6 +41,7 @@ const PracticePaperCard: React.FC<PracticePaperCardProps> = ({
   onEdit, 
   onPreview 
 }) => {
+  const { t } = useTranslation();
   const canEdit = ['creator', 'manager', 'collaborator'].includes(paper.userRole);
   
   // 计算总题数
@@ -72,23 +74,23 @@ const PracticePaperCard: React.FC<PracticePaperCardProps> = ({
               <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
                 <p className="flex items-center space-x-1">
                   <FileText className="w-4 h-4" />
-                  <span>试卷集: {paper.bank?.name || '未知试卷集'}</span>
+                  <span>{t('paper.practicePaperCard.paperBank')}: {paper.bank?.name || t('paper.practicePaperCard.unknownPaperBank')}</span>
                 </p>
                 <p className="flex items-center space-x-1">
                   <Play className="w-4 h-4" />
-                  <span>{sectionCount}个部分 · {totalQuestions}道题</span>
+                  <span>{t('paper.practicePaperCard.sectionsAndQuestions', { sectionCount, totalQuestions })}</span>
                 </p>
               </div>
             </div>
             
             <div className="flex flex-col items-end space-y-2 ml-4">
               <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-                练习卷
+                {t('paper.practicePaperCard.practicePaper')}
               </span>
               <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
-                {paper.userRole === 'creator' ? '创建者' : 
-                 paper.userRole === 'manager' ? '管理员' : 
-                 paper.userRole === 'collaborator' ? '协作者' : '查看者'}
+                {paper.userRole === 'creator' ? t('paper.practicePaperCard.roles.creator') : 
+                 paper.userRole === 'manager' ? t('paper.practicePaperCard.roles.manager') : 
+                 paper.userRole === 'collaborator' ? t('paper.practicePaperCard.roles.collaborator') : t('paper.practicePaperCard.roles.viewer')}
               </span>
             </div>
           </div>
@@ -118,11 +120,11 @@ const PracticePaperCard: React.FC<PracticePaperCardProps> = ({
           <div className="grid grid-cols-2 gap-4 mb-4 text-sm text-gray-600 dark:text-gray-300">
             <div className="flex items-center space-x-1">
               <Clock className="w-4 h-4" />
-              <span>创建: {new Date(paper.createdAt).toLocaleDateString()}</span>
+              <span>{t('paper.practicePaperCard.created')} {new Date(paper.createdAt).toLocaleDateString()}</span>
             </div>
             <div className="flex items-center space-x-1">
               <Users className="w-4 h-4" />
-              <span>更新: {new Date(paper.updatedAt).toLocaleDateString()}</span>
+              <span>{t('paper.practicePaperCard.updated')} {new Date(paper.updatedAt).toLocaleDateString()}</span>
             </div>
           </div>
 
@@ -137,7 +139,7 @@ const PracticePaperCard: React.FC<PracticePaperCardProps> = ({
                   className="flex items-center space-x-1 text-green-600 hover:text-green-700 border-green-200 hover:border-green-300"
                 >
                   <Eye className="w-4 h-4" />
-                  <span>预览</span>
+                  <span>{t('paper.practicePaperCard.preview')}</span>
                 </Button>
                 
                 {canEdit && (
@@ -148,14 +150,14 @@ const PracticePaperCard: React.FC<PracticePaperCardProps> = ({
                     className="flex items-center space-x-1"
                   >
                     <Edit className="w-4 h-4" />
-                    <span>编辑</span>
+                    <span>{t('paper.practicePaperCard.edit')}</span>
                   </Button>
                 )}
               </div>
               
               <div className="text-right">
                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                  创建者: {paper.owner?.name || '未知用户'}
+                  {t('paper.practicePaperCard.creatorInfo', { creatorName: paper.owner?.name || t('paper.practicePaperCard.unknownUser') })}
                 </div>
               </div>
             </div>

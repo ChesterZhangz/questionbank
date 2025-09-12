@@ -7,6 +7,7 @@ import type { Paper } from './types';
 import { useModal } from '../../../hooks/useModal';
 import ConfirmModal from '../../ui/ConfirmModal';
 import RightSlideModal from '../../ui/RightSlideModal';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface OverleafLinkManagerProps {
   paper: Paper;
@@ -21,6 +22,7 @@ const OverleafLinkManager: React.FC<OverleafLinkManagerProps> = ({
   onRemoveLink,
   canEdit = true
 }) => {
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [editLink, setEditLink] = useState(paper.overleafEditLink || '');
   const [isLoading, setIsLoading] = useState(false);
@@ -47,19 +49,19 @@ const OverleafLinkManager: React.FC<OverleafLinkManagerProps> = ({
         onUpdateLink(editLink.trim());
         setIsEditing(false);
         showSuccessRightSlide(
-          '操作成功',
-          paper.overleafEditLink ? 'Overleaf链接更新成功' : 'Overleaf链接添加成功'
+          t('paper.overleafLinkManager.messages.operationSuccess'),
+          paper.overleafEditLink ? t('paper.overleafLinkManager.messages.linkUpdated') : t('paper.overleafLinkManager.messages.linkAdded')
         );
       } else {
         showErrorRightSlide(
-          '操作失败',
-          response.data.message || '更新Overleaf链接失败'
+          t('paper.overleafLinkManager.messages.operationFailed'),
+          response.data.message || t('paper.overleafLinkManager.messages.updateFailed')
         );
       }
     } catch (error: any) {
       showErrorRightSlide(
-        '操作失败',
-        error.response?.data?.error || error.message || '更新Overleaf链接失败'
+        t('paper.overleafLinkManager.messages.operationFailed'),
+        error.response?.data?.error || error.message || t('paper.overleafLinkManager.messages.updateFailed')
       );
     } finally {
       setIsLoading(false);
@@ -73,19 +75,19 @@ const OverleafLinkManager: React.FC<OverleafLinkManagerProps> = ({
 
   const handleRemoveClick = () => {
     showDanger(
-      '确认删除',
-      '确定要删除Overleaf编辑链接吗？删除后无法恢复。',
+      t('paper.overleafLinkManager.confirmDialog.title'),
+      t('paper.overleafLinkManager.confirmDialog.message'),
       handleRemove,
       {
-        confirmText: '删除',
-        cancelText: '取消',
+        confirmText: t('paper.overleafLinkManager.confirmDialog.delete'),
+        cancelText: t('paper.overleafLinkManager.confirmDialog.cancel'),
         confirmDanger: true
       }
     );
   };
 
   const handleRemove = async () => {
-    setConfirmLoading(true, '删除中...');
+    setConfirmLoading(true, t('paper.overleafLinkManager.confirmDialog.deleting'));
     try {
       const response = await paperAPI.updateOverleafLink(paper._id, '');
       if (response.data.success) {
@@ -93,21 +95,21 @@ const OverleafLinkManager: React.FC<OverleafLinkManagerProps> = ({
         setIsEditing(false);
         closeConfirm();
         showSuccessRightSlide(
-          '删除成功',
-          'Overleaf链接已删除'
+          t('paper.overleafLinkManager.messages.deleteSuccess'),
+          t('paper.overleafLinkManager.messages.linkDeleted')
         );
       } else {
         closeConfirm();
         showErrorRightSlide(
-          '删除失败',
-          response.data.message || '删除Overleaf链接失败'
+          t('paper.overleafLinkManager.messages.operationFailed'),
+          response.data.message || t('paper.overleafLinkManager.messages.updateFailed')
         );
       }
     } catch (error: any) {
       closeConfirm();
       showErrorRightSlide(
-        '删除失败',
-        error.response?.data?.error || error.message || '删除Overleaf链接失败'
+        t('paper.overleafLinkManager.messages.operationFailed'),
+        error.response?.data?.error || error.message || t('paper.overleafLinkManager.messages.updateFailed')
       );
     } finally {
       setConfirmLoading(false);

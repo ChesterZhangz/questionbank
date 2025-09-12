@@ -14,6 +14,7 @@ import Button from '../../ui/Button';
 import Card from '../../ui/Card';
 import { questionAnalysisAPI, questionAPI } from '../../../services/api';
 import QuestionEditor from './QuestionEditor';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface QuestionData {
   id: string;
@@ -48,6 +49,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
   selectedBankId,
   className = ""
 }) => {
+  const { t } = useTranslation();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -68,7 +70,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
   // 删除当前题目
   const handleDeleteQuestion = useCallback(() => {
     if (questions.length <= 1) {
-      setError('至少需要保留一道题目');
+      setError(t('editor.multiQuestionEditor.deleteConfirm'));
       return;
     }
 
@@ -80,9 +82,9 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
       setCurrentQuestionIndex(Math.max(0, newQuestions.length - 1));
     }
     
-    setSuccess('题目已删除');
+    setSuccess(t('editor.multiQuestionEditor.deleteSuccess'));
     setTimeout(() => setSuccess(''), 3000);
-  }, [questions, currentQuestionIndex, onQuestionsUpdate]);
+  }, [questions, currentQuestionIndex, onQuestionsUpdate, t]);
 
   // 切换到上一题
   const goToPrevious = () => {
@@ -156,13 +158,13 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
       // 完成进度条
       setAnalysisProgress(100);
       setTimeout(() => {
-        setSuccess(`成功分析 ${questions.length} 道题目`);
+        setSuccess(t('editor.multiQuestionEditor.analysisSuccess', { count: questions.length }));
         setTimeout(() => setSuccess(''), 5000);
       }, 500);
       
     } catch (err: any) {
       // 错误日志已清理
-      const errorMsg = err.response?.data?.error || err.message || '批量智能分析失败';
+      const errorMsg = err.response?.data?.error || err.message || t('editor.multiQuestionEditor.analysisFailed');
       setError(errorMsg);
     } finally {
       clearInterval(progressInterval);
@@ -252,18 +254,18 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
         // 完成进度条
         setSaveProgress(100);
         setTimeout(() => {
-          setSuccess(`成功保存所有 ${questions.length} 道题目`);
+          setSuccess(t('editor.multiQuestionEditor.saveSuccess', { count: questions.length }));
           // 保存成功后调用父组件的保存回调
           onSaveAll(questions);
           setTimeout(() => setSuccess(''), 5000);
         }, 500);
       } else {
-        setError(`保存完成：成功 ${successCount} 道，失败 ${failCount} 道`);
+        setError(t('editor.multiQuestionEditor.savePartial', { success: successCount, fail: failCount }));
       }
       
     } catch (err: any) {
       // 错误日志已清理
-      const errorMsg = err.response?.data?.error || err.message || '批量保存失败';
+      const errorMsg = err.response?.data?.error || err.message || t('editor.multiQuestionEditor.saveFailed');
       setError(errorMsg);
     } finally {
       clearInterval(progressInterval);
@@ -288,7 +290,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
           <div className="p-4 flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-500 dark:text-gray-400">
-                第 {currentQuestionIndex + 1} 题 / 共 {questions.length} 题
+                {t('editor.multiQuestionEditor.questionCount', { current: currentQuestionIndex + 1, total: questions.length })}
               </span>
             </div>
             
@@ -302,7 +304,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
                 className="border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 <Trash2 className="w-4 h-4 mr-1" />
-                删除
+                {t('editor.multiQuestionEditor.delete')}
               </Button>
               
               {/* 一键智能分析 */}
@@ -314,12 +316,12 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
                 {isAnalyzing ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                    分析中...
+                    {t('editor.multiQuestionEditor.analyzing')}
                   </>
                 ) : (
                   <>
                     <Brain className="w-4 h-4 mr-1" />
-                    一键智能分析
+                    {t('editor.multiQuestionEditor.batchAnalysis')}
                   </>
                 )}
               </Button>
@@ -333,12 +335,12 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
                 {isSaving ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                    保存中...
+                    {t('editor.multiQuestionEditor.saving')}
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-1" />
-                    批量保存
+                    {t('editor.multiQuestionEditor.batchSave')}
                   </>
                 )}
               </Button>
@@ -354,7 +356,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
             className="space-y-2"
           >
             <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-              <span>{isAnalyzing ? '正在智能分析...' : '正在保存...'}</span>
+              <span>{isAnalyzing ? t('editor.multiQuestionEditor.analyzing') : t('editor.multiQuestionEditor.saving')}</span>
               <span>{Math.round(isAnalyzing ? analysisProgress : saveProgress)}%</span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -400,7 +402,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
               className="border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <ChevronLeft className="w-4 h-4 mr-1" />
-              上一题
+              {t('editor.multiQuestionEditor.previous')}
             </Button>
             
             <div className="flex items-center space-x-2">
@@ -425,7 +427,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
               variant="outline"
               className="border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
-              下一题
+              {t('editor.multiQuestionEditor.next')}
               <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
@@ -453,7 +455,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
         <Card>
           <div className="p-4 flex items-center justify-between">
             <div className="text-sm text-gray-500 dark:text-gray-400">
-              {selectedBankId ? '已选择题库' : '请先选择题库'}
+              {selectedBankId ? t('editor.multiQuestionEditor.questionBankSelected') : t('editor.multiQuestionEditor.selectQuestionBank')}
             </div>
             
             <div className="flex items-center space-x-3">
@@ -465,7 +467,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
                 className="border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
-                上一题
+                {t('editor.multiQuestionEditor.previous')}
               </Button>
               
               <span className="text-sm text-gray-600 dark:text-gray-400">
@@ -479,7 +481,7 @@ const MultiQuestionEditor: React.FC<MultiQuestionEditorProps> = ({
                 size="sm"
                 className="border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
-                下一题
+                {t('editor.multiQuestionEditor.next')}
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </div>

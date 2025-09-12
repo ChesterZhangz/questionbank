@@ -1,6 +1,7 @@
 import React from 'react';
 import { User, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface AvatarProps {
   /** 用户头像URL */
@@ -47,6 +48,7 @@ const Avatar: React.FC<AvatarProps> = ({
   isOnline = false,
   shape = 'rounded'
 }) => {
+  const { t } = useTranslation();
   // 获取尺寸样式
   const getSizeClasses = () => {
     switch (size) {
@@ -143,7 +145,7 @@ const Avatar: React.FC<AvatarProps> = ({
 
   // 生成首字母头像
   const getInitials = (name: string) => {
-    if (!name) return '用';
+    if (!name) return t('ui.avatar.defaultInitials');
     
     return name
       .split(' ')
@@ -196,7 +198,7 @@ const Avatar: React.FC<AvatarProps> = ({
       return (
         <img
           src={src}
-          alt={name || '用户头像'}
+          alt={name || t('ui.avatar.defaultName')}
           className={`${getSizeClasses()} ${getShapeClasses()} object-cover`}
           onError={(e) => {
             // 如果图片加载失败，隐藏图片元素，显示默认头像

@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Image, Palette } from 'lucide-react';
 import TikZPreview from '../tikz/core/TikZPreview';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface TikZCode {
   id: string;
@@ -28,6 +29,7 @@ const MediaContentPreview: React.FC<MediaContentPreviewProps> = ({
   images = [],
   className = ''
 }) => {
+  const { t } = useTranslation();
   const hasMedia = tikzCodes.length > 0 || images.length > 0;
 
   if (!hasMedia) {
@@ -41,7 +43,7 @@ const MediaContentPreview: React.FC<MediaContentPreviewProps> = ({
           {images.length > 0 && <Image className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
           {tikzCodes.length > 0 && <Palette className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
         </div>
-        <h4 className="font-medium text-gray-900 dark:text-gray-100">题目媒体内容</h4>
+        <h4 className="font-medium text-gray-900 dark:text-gray-100">{t('question.mediaContentPreview.title')}</h4>
       </div>
 
       <div className="space-y-6">
@@ -50,7 +52,7 @@ const MediaContentPreview: React.FC<MediaContentPreviewProps> = ({
           <div>
             <div className="flex items-center space-x-2 mb-3">
               <Image className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <h5 className="text-sm font-medium text-gray-700 dark:text-gray-200">图片</h5>
+              <h5 className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('question.mediaContentPreview.images')}</h5>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {images.map((image, index) => (
@@ -62,7 +64,7 @@ const MediaContentPreview: React.FC<MediaContentPreviewProps> = ({
                   className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-600"
                 >
                   <div className="text-xs font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    图片 {index + 1}
+                    {t('question.mediaContentPreview.image')} {index + 1}
                   </div>
                   <img
                     src={image.url}
@@ -83,7 +85,7 @@ const MediaContentPreview: React.FC<MediaContentPreviewProps> = ({
           <div>
             <div className="flex items-center space-x-2 mb-3">
               <Palette className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-              <h5 className="text-sm font-medium text-gray-700 dark:text-gray-200">TikZ 图形</h5>
+              <h5 className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('question.mediaContentPreview.tikzGraphics')}</h5>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {tikzCodes.map((tikz, index) => (
@@ -95,7 +97,7 @@ const MediaContentPreview: React.FC<MediaContentPreviewProps> = ({
                   className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-600"
                 >
                   <div className="text-xs font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    图形 {index + 1}
+                    {t('question.mediaContentPreview.graphic')} {index + 1}
                   </div>
                   <div className="flex justify-center">
                     <TikZPreview

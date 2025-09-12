@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { LaTeXRenderer } from '../../../lib/latex/renderer/LaTeXRenderer';
 import type { RenderConfig, LaTeXRenderResult } from '../../../lib/latex/types';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { useTranslation } from '../../../hooks/useTranslation';
 // 样式现在统一由renderPreview.css提供
 
 interface LaTeXPreviewProps {
@@ -24,11 +25,12 @@ const LaTeXPreview: React.FC<LaTeXPreviewProps> = ({
   maxWidth = 'max-w-md',
   maxHeight = '', // 移除默认高度限制
   showTitle = false,
-  title = '预览',
+  title,
   variant = 'default',
   onRenderComplete,
   fullWidth = false // 新增：默认不占满宽度
 }) => {
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   const renderer = useMemo(() => new LaTeXRenderer(config), [config]);
 
@@ -63,7 +65,7 @@ const LaTeXPreview: React.FC<LaTeXPreviewProps> = ({
       <div className={`latex-preview-container ${variantClasses} ${widthClass} ${isDark ? 'dark' : ''}`}>
         {showTitle && (
           <div className="latex-preview-title">
-            {title}
+            {title || t('editor.preview.title')}
           </div>
         )}
         <div className="latex-preview-content">
@@ -82,7 +84,7 @@ const LaTeXPreview: React.FC<LaTeXPreviewProps> = ({
               }}
             />
           ) : (
-            <span className="text-gray-400 dark:text-gray-500">暂无内容</span>
+            <span className="text-gray-400 dark:text-gray-500">{t('editor.preview.noContent')}</span>
           )}
         </div>
         {renderResult.error && (
@@ -92,7 +94,7 @@ const LaTeXPreview: React.FC<LaTeXPreviewProps> = ({
         )}
         {renderResult.warnings && renderResult.warnings.length > 0 && (
           <div className="mt-2 p-2 bg-yellow-50 dark:bg-red-900/30 border border-yellow-200 dark:border-red-800 rounded text-xs text-yellow-600 dark:text-red-400">
-            {renderResult.warnings.join(', ')}
+            {t('editor.preview.warnings')}: {renderResult.warnings.join(', ')}
           </div>
         )}
       </div>

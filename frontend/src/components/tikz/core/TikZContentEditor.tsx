@@ -5,6 +5,7 @@ import TikZHighlightInput from './TikZHighlightInput';
 import TikZPreview from './TikZPreview';
 import Card from '../../ui/Card';
 import Button from '../../ui/Button';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface TikZCode {
   id: string;
@@ -24,6 +25,7 @@ const TikZContentEditor: React.FC<TikZContentEditorProps> = ({
   onTikzCodesChange,
   className = ''
 }) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
 
   // 添加新的 TikZ 代码
@@ -59,9 +61,9 @@ const TikZContentEditor: React.FC<TikZContentEditorProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Palette className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-            <h3 className="font-medium text-gray-900 dark:text-gray-100">TikZ 图形</h3>
+            <h3 className="font-medium text-gray-900 dark:text-gray-100">{t('tikz.contentEditor.title')}</h3>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              ({tikzCodes.length}/3)
+              {t('tikz.contentEditor.count', { count: tikzCodes.length })}
             </span>
           </div>
           
@@ -75,7 +77,7 @@ const TikZContentEditor: React.FC<TikZContentEditorProps> = ({
                     : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
                 }`}
               >
-                编辑
+                {t('tikz.contentEditor.edit')}
               </button>
               <button
                 onClick={() => setActiveTab('preview')}
@@ -85,7 +87,7 @@ const TikZContentEditor: React.FC<TikZContentEditorProps> = ({
                     : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
                 }`}
               >
-                预览
+                {t('tikz.contentEditor.preview')}
               </button>
             </div>
             
@@ -97,7 +99,7 @@ const TikZContentEditor: React.FC<TikZContentEditorProps> = ({
               className="flex items-center space-x-1"
             >
               <Plus className="w-4 h-4" />
-              <span>添加</span>
+              <span>{t('tikz.contentEditor.add')}</span>
             </Button>
           </div>
         </div>
@@ -108,7 +110,7 @@ const TikZContentEditor: React.FC<TikZContentEditorProps> = ({
           <div className="text-center py-8">
             <Palette className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
             <p className="text-gray-500 dark:text-gray-400 mb-4">
-              添加 TikZ 图形以增强题目表达
+              {t('tikz.contentEditor.addDescription')}
             </p>
             <Button
               variant="outline"
@@ -116,7 +118,7 @@ const TikZContentEditor: React.FC<TikZContentEditorProps> = ({
               className="flex items-center space-x-1 mx-auto"
             >
               <Plus className="w-4 h-4" />
-              <span>添加第一个图形</span>
+              <span>{t('tikz.contentEditor.addFirst')}</span>
             </Button>
           </div>
         ) : (
@@ -140,7 +142,7 @@ const TikZContentEditor: React.FC<TikZContentEditorProps> = ({
                   >
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-medium text-gray-900 dark:text-gray-100">
-                        图形 {index + 1}
+                        {t('tikz.contentEditor.graphNumber', { number: index + 1 })}
                       </h4>
                       <Button
                         variant="outline"
@@ -149,14 +151,14 @@ const TikZContentEditor: React.FC<TikZContentEditorProps> = ({
                         className="flex items-center space-x-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                       >
                         <Trash2 className="w-3 h-3" />
-                        <span>删除</span>
+                        <span>{t('tikz.contentEditor.delete')}</span>
                       </Button>
                     </div>
 
                     <TikZHighlightInput
                       value={tikz.code}
                       onChange={(code: string) => handleUpdateTikZCode(tikz.id, code)}
-                      placeholder="输入TikZ代码..."
+                      placeholder={t('tikz.contentEditor.placeholder')}
                       rows={6}
                       enableAutoComplete={true}
                       className="border border-gray-300 dark:border-gray-600 rounded-md"
@@ -186,7 +188,7 @@ const TikZContentEditor: React.FC<TikZContentEditorProps> = ({
                     className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
                   >
                     <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
-                      图形 {index + 1}
+                      {t('tikz.contentEditor.graphNumber', { number: index + 1 })}
                     </h4>
                     <div className="flex justify-center">
                       <TikZPreview

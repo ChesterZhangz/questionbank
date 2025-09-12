@@ -35,7 +35,6 @@ const LaTeXQuestionsGuide = lazy(() => import('./pages/guide/latex-questions'));
 const TikZBasicsGuide = lazy(() => import('./pages/guide/tikz-basics'));
 const TikZFunctionsGuide = lazy(() => import('./pages/guide/tikz-functions'));
 const TikZEffectsGuide = lazy(() => import('./pages/guide/tikz-effects'));
-const FunctionPlottingTestPage = lazy(() => import('./pages/FunctionPlottingTestPage'));
 const PaperBankListPage = lazy(() => import('./pages/paper-banks/PaperBankListPage'));
 const PaperBankDetailPage = lazy(() => import('./pages/paper-banks/PaperBankDetailPage'));
 const CreatePaperBankPage = lazy(() => import('./pages/paper-banks/CreatePaperBankPage'));
@@ -56,6 +55,7 @@ const PracticePaperViewPage = lazy(() => import('./components/paper/preview/Prac
 import { useAuthStore } from './stores/authStore';
 import { BackgroundTaskProvider } from './contexts/BackgroundTaskContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 // 错误处理组件
 import ErrorBoundary from './components/errors/ErrorBoundary';
@@ -124,8 +124,9 @@ const App: React.FC = () => {
       <NetworkErrorHandler>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
-            <BackgroundTaskProvider>
-              <Router>
+            <LanguageProvider>
+              <BackgroundTaskProvider>
+                <Router>
                 <div className="App min-h-screen bg-bg-primary dark:bg-gray-900">
               <Routes>
             <Route 
@@ -621,18 +622,6 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               } 
             />
-
-            <Route 
-              path="/FunctionPlottingTest" 
-              element={
-                <ProtectedRoute>
-                  <AppLayout>
-                    <FunctionPlottingTestPage />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            
             <Route path="/" element={<IntroductionPage />} />
             <Route path="/introduction" element={<IntroductionPage />} />
 
@@ -650,7 +639,8 @@ const App: React.FC = () => {
           </Routes>
         </div>
       </Router>
-            </BackgroundTaskProvider>
+              </BackgroundTaskProvider>
+            </LanguageProvider>
           </ThemeProvider>
         </QueryClientProvider>
       </NetworkErrorHandler>

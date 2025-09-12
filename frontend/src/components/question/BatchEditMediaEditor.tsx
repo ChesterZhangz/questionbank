@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Image, Palette, Plus, Trash2, Upload } from 'lucide-react';
 import TikZHighlightInput from '../tikz/core/TikZHighlightInput';
 import { useAuthStore } from '../../stores/authStore';
+import { useTranslation } from '../../hooks/useTranslation';
 
 import Button from '../ui/Button';
 
@@ -37,6 +38,7 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
   bid,
   className = ''
 }) => {
+  const { t } = useTranslation();
   const { token } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'images' | 'tikz'>('images');
   const [editingTikzId, setEditingTikzId] = useState<string | null>(null);
@@ -79,7 +81,7 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
   // 图片上传处理
   const handleImageUpload = async () => {
     if (!bid) {
-      alert('题库ID不存在，无法上传图片');
+      alert(t('question.batchEditMediaEditor.bankIdMissing'));
       return;
     }
 
@@ -104,7 +106,7 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
             
             // 检查文件大小（限制为5MB）
             if (file.size > 5 * 1024 * 1024) {
-              alert(`文件 ${file.name} 过大，请选择小于5MB的图片`);
+              alert(t('question.batchEditMediaEditor.fileTooLarge', { filename: file.name }));
               continue;
             }
             
@@ -124,7 +126,7 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
               });
 
               if (!response.ok) {
-                throw new Error('图片上传失败');
+                throw new Error(t('question.batchEditMediaEditor.uploadFailed'));
               }
 
               const uploadResult = await response.json();
@@ -139,11 +141,11 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
                 
                 newImages.push(newImage);
               } else {
-                throw new Error(uploadResult.error || '图片上传失败');
+                throw new Error(uploadResult.error || t('question.batchEditMediaEditor.uploadFailed'));
               }
             } catch (uploadError) {
               console.error('单个图片上传失败:', uploadError);
-              alert(`图片 ${file.name} 上传失败: ${uploadError}`);
+              alert(t('question.batchEditMediaEditor.singleUploadFailed', { filename: file.name, error: String(uploadError) }));
               continue;
             }
           }
@@ -155,7 +157,7 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
           }
         } catch (error) {
           console.error('图片上传失败:', error);
-          alert('图片上传失败，请重试');
+          alert(t('question.batchEditMediaEditor.uploadFailedRetry'));
         } finally {
           setIsUploading(false);
         }
@@ -180,7 +182,7 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
             <div className="flex items-center space-x-2">
               <Image className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                图片: {images.length}
+                {t('question.batchEditMediaEditor.images')}: {images.length}
               </span>
             </div>
             <div className="flex items-center space-x-2">
@@ -190,7 +192,7 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
               </span>
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-400">
-              总计: {totalMediaCount}/6
+              {t('question.batchEditMediaEditor.total')}: {totalMediaCount}/6
             </div>
           </div>
           
@@ -204,7 +206,7 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
               }`}
             >
               <Image className="w-4 h-4" />
-              <span>图片</span>
+              <span>{t('question.batchEditMediaEditor.images')}</span>
             </button>
             <button
               onClick={() => setActiveTab('tikz')}
@@ -234,7 +236,7 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
                 <div className="text-center py-12">
                   <Image className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
                   <p className="text-gray-500 dark:text-gray-400 mb-4">
-                    还没有添加图片
+                    {t('question.batchEditMediaEditor.noImagesAdded')}
                   </p>
                   <Button
                     variant="outline"
@@ -243,14 +245,14 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
                     className="flex items-center space-x-2 mx-auto"
                   >
                     <Upload className="w-4 h-4" />
-                    <span>{isUploading ? '上传中...' : '上传图片'}</span>
+                    <span>{isUploading ? t('question.batchEditMediaEditor.uploading') : t('question.batchEditMediaEditor.uploadImages')}</span>
                   </Button>
                 </div>
               ) : (
                 <div>
                   {/* 图片信息列表（仅显示文件名和操作按钮） */}
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                    已经上传的图片为：
+                    {t('question.batchEditMediaEditor.uploadedImages')}：
                   </h4>
                   <div className="space-y-3">
                     {images.map((image, index) => (
@@ -269,7 +271,7 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
                               {image.filename}
                             </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                              图片 {index + 1}
+                              {t('question.batchEditMediaEditor.image')} {index + 1}
                             </p>
                           </div>
                         </div>
@@ -294,8 +296,8 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
                         className="w-full p-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                       >
                         <Plus className="w-6 h-6 mb-2" />
-                        <span className="text-sm font-medium">上传更多图片</span>
-                        <span className="text-xs opacity-75">支持 JPG、PNG、GIF 格式</span>
+                        <span className="text-sm font-medium">{t('question.batchEditMediaEditor.uploadMoreImages')}</span>
+                        <span className="text-xs opacity-75">{t('question.batchEditMediaEditor.supportedFormats')}</span>
                       </motion.button>
                     )}
                   </div>
@@ -314,7 +316,7 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
                 <div className="text-center py-12">
                   <Palette className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
                   <p className="text-gray-500 dark:text-gray-400 mb-4">
-                    还没有添加 TikZ 图形
+                    {t('question.batchEditMediaEditor.noTikzAdded')}
                   </p>
                   <Button
                     variant="outline"
@@ -322,14 +324,14 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
                     className="flex items-center space-x-2 mx-auto"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>添加 TikZ 代码</span>
+                    <span>{t('question.batchEditMediaEditor.addTikzCode')}</span>
                   </Button>
                 </div>
               ) : (
                 <div>
                   {/* TikZ 代码列表（仅显示代码编辑器） */}
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                    TikZ 代码：
+                    {t('question.batchEditMediaEditor.tikzCode')}：
                   </h4>
                   <div className="space-y-4">
                     {tikzCodes.map((tikz, index) => (
@@ -341,7 +343,7 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
                       >
                         <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-600">
                           <h5 className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                            TikZ 图形 {index + 1}
+                            {t('question.batchEditMediaEditor.tikzGraphic')} {index + 1}
                           </h5>
                           <button
                             onClick={() => handleDeleteTikZ(tikz.id)}
@@ -354,7 +356,7 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
                           <TikZHighlightInput
                             value={tikz.code}
                             onChange={(code) => handleUpdateTikZCode(tikz.id, code)}
-                            placeholder="输入 TikZ 代码..."
+                            placeholder={t('question.batchEditMediaEditor.enterTikzCode')}
                             className="w-full"
                           />
                         </div>
@@ -369,8 +371,8 @@ const BatchEditMediaEditor: React.FC<BatchEditMediaEditorProps> = ({
                         className="w-full p-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:border-purple-400 dark:hover:border-purple-500 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
                       >
                         <Plus className="w-6 h-6 mb-2" />
-                        <span className="text-sm font-medium">添加更多 TikZ 代码</span>
-                        <span className="text-xs opacity-75">创建几何图形和数学图表</span>
+                        <span className="text-sm font-medium">{t('question.batchEditMediaEditor.addMoreTikzCode')}</span>
+                        <span className="text-xs opacity-75">{t('question.batchEditMediaEditor.createGraphics')}</span>
                       </motion.button>
                     )}
                   </div>

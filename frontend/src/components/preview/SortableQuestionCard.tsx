@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import type { Question } from '../../types';
 import './SortableQuestionCard.css';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface SortableQuestionCardProps {
   question: Question;
@@ -43,6 +44,7 @@ const SortableQuestionCard: React.FC<SortableQuestionCardProps> = ({
   isAnalyzing,
   isAnswerGenerating = false
 }) => {
+  const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
 
   const {
@@ -67,15 +69,15 @@ const SortableQuestionCard: React.FC<SortableQuestionCardProps> = ({
         const correctOptions = question.content?.options?.filter(option => option.isCorrect) || [];
         const isMultipleChoice = correctOptions.length > 1;
         return { 
-          name: isMultipleChoice ? '多选题' : '单选题', 
+          name: isMultipleChoice ? t('preview.sortableQuestionCard.questionType.multipleChoice') : t('preview.sortableQuestionCard.questionType.choice'), 
           color: isMultipleChoice ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700' 
         };
       case 'fill':
-        return { name: '填空题', color: 'bg-green-100 text-green-700' };
+        return { name: t('preview.sortableQuestionCard.questionType.fill'), color: 'bg-green-100 text-green-700' };
       case 'solution':
-        return { name: '解答题', color: 'bg-orange-100 text-orange-700' };
+        return { name: t('preview.sortableQuestionCard.questionType.solution'), color: 'bg-orange-100 text-orange-700' };
       default:
-        return { name: '未知', color: 'bg-gray-100 text-gray-700' };
+        return { name: t('preview.sortableQuestionCard.questionType.unknown'), color: 'bg-gray-100 text-gray-700' };
     }
   };
 
@@ -89,7 +91,13 @@ const SortableQuestionCard: React.FC<SortableQuestionCardProps> = ({
       'bg-orange-100 text-orange-700',
       'bg-red-100 text-red-700'
     ];
-    const names = ['简单', '较简单', '中等', '较难', '困难'];
+    const names = [
+      t('preview.sortableQuestionCard.difficulty.easy'),
+      t('preview.sortableQuestionCard.difficulty.mediumEasy'),
+      t('preview.sortableQuestionCard.difficulty.medium'),
+      t('preview.sortableQuestionCard.difficulty.mediumHard'),
+      t('preview.sortableQuestionCard.difficulty.hard')
+    ];
     return {
       name: names[difficulty - 1],
       color: colors[difficulty - 1]
@@ -135,7 +143,7 @@ const SortableQuestionCard: React.FC<SortableQuestionCardProps> = ({
 
               {/* 题目编号 */}
               <span className="question-number text-sm font-medium text-gray-600 dark:text-gray-400">
-                {`T${index + 1}`}
+                {t('preview.sortableQuestionCard.questionNumber', { number: index + 1 })}
               </span>
 
               {/* 选择状态 */}
@@ -176,7 +184,7 @@ const SortableQuestionCard: React.FC<SortableQuestionCardProps> = ({
                   size="sm"
                   onClick={onSplit}
                   className="action-button p-1 h-8 w-8 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                  title="分割题目"
+                  title={t('preview.sortableQuestionCard.actions.split')}
                 >
                   <Scissors className="h-4 w-4" />
                 </Button>
@@ -232,7 +240,7 @@ const SortableQuestionCard: React.FC<SortableQuestionCardProps> = ({
             {/* 填空题答案 */}
             {question.type === 'fill' && question.content?.fillAnswers && question.content.fillAnswers.length > 0 && (
               <div className="mt-3">
-                <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">答案：</div>
+                <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('preview.sortableQuestionCard.answer')}：</div>
                 <div className="space-y-1">
                   {question.content.fillAnswers.map((answer, answerIndex) => (
                     <div key={answerIndex} className="flex items-center space-x-2">
@@ -253,7 +261,7 @@ const SortableQuestionCard: React.FC<SortableQuestionCardProps> = ({
             {/* 解答题答案 */}
             {question.type === 'solution' && question.content?.solutionAnswers && question.content.solutionAnswers.length > 0 && (
               <div className="mt-3">
-                <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">答案：</div>
+                <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('preview.sortableQuestionCard.answer')}：</div>
                 <div className="space-y-1">
                   {question.content.solutionAnswers.map((answer, answerIndex) => (
                     <div key={answerIndex} className="flex items-center space-x-2">
@@ -274,7 +282,7 @@ const SortableQuestionCard: React.FC<SortableQuestionCardProps> = ({
             {/* 解答题解析 */}
             {question.type === 'solution' && question.content?.solution && (
               <div className="mt-3">
-                <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">解析：</div>
+                <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('preview.sortableQuestionCard.solution')}：</div>
                 <LaTeXPreview
                   content={question.content.solution}
                   variant="compact"
@@ -332,7 +340,7 @@ const SortableQuestionCard: React.FC<SortableQuestionCardProps> = ({
           {/* 来源信息 */}
           <div className="source-info flex items-center space-x-1 text-xs">
             <Target className="h-3 w-3" />
-            <span>{question.source || '未知来源'}</span>
+            <span>{question.source || t('preview.sortableQuestionCard.unknownSource')}</span>
             <span className="text-gray-400 dark:text-gray-500">·</span>
             <span className="font-medium">T{index + 1}</span>
           </div>

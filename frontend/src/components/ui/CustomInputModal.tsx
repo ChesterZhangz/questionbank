@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, AlertCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface CustomInputModalProps {
   isOpen: boolean;
@@ -23,15 +24,16 @@ export const CustomInputModal: React.FC<CustomInputModalProps> = ({
   onClose,
   onSubmit,
   title,
-  placeholder = '请输入...',
+  placeholder,
   defaultValue = '',
-  submitText = '确定',
-  cancelText = '取消',
+  submitText,
+  cancelText,
   maxLength = 50,
   required = false,
   className = '',
   isLoading = false
 }) => {
+  const { t } = useTranslation();
   const [inputValue, setInputValue] = useState(defaultValue);
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -69,12 +71,12 @@ export const CustomInputModal: React.FC<CustomInputModalProps> = ({
     const trimmedValue = inputValue.trim();
     
     if (required && !trimmedValue) {
-      setError('此项为必填项');
+      setError(t('ui.customInputModal.required'));
       return;
     }
     
     if (trimmedValue.length > maxLength) {
-      setError(`输入内容不能超过${maxLength}个字符`);
+      setError(t('ui.customInputModal.maxLength', { max: maxLength }));
       return;
     }
     
@@ -141,7 +143,7 @@ export const CustomInputModal: React.FC<CustomInputModalProps> = ({
                   type="text"
                   value={inputValue}
                   onChange={handleInputChange}
-                  placeholder={placeholder}
+                  placeholder={placeholder || t('ui.customInputModal.placeholder')}
                   maxLength={maxLength}
                   className={cn(
                     "w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200",
@@ -163,7 +165,7 @@ export const CustomInputModal: React.FC<CustomInputModalProps> = ({
                     )}
                   </span>
                   <span>
-                    {inputValue.length}/{maxLength}
+                    {inputValue.length}/{maxLength} {t('ui.customInputModal.characters')}
                   </span>
                 </div>
               </div>
@@ -174,7 +176,7 @@ export const CustomInputModal: React.FC<CustomInputModalProps> = ({
                   onClick={onClose}
                   className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                 >
-                  {cancelText}
+                  {cancelText || t('ui.customInputModal.cancelText')}
                 </button>
                 <button
                   onClick={handleSubmit}
@@ -184,12 +186,12 @@ export const CustomInputModal: React.FC<CustomInputModalProps> = ({
                   {isLoading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>保存中...</span>
+                      <span>{t('ui.customInputModal.saving')}</span>
                     </>
                   ) : (
                     <>
                       <Check className="w-4 h-4" />
-                      <span>{submitText}</span>
+                      <span>{submitText || t('ui.customInputModal.submitText')}</span>
                     </>
                   )}
                 </button>

@@ -18,6 +18,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '../../hooks/useTranslation';
 import Button from '../../components/ui/Button';
 import MathGame from '../../components/games/MathGame';
 import MemoryGame from '../../components/games/MemoryGame';
@@ -56,6 +57,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
   showNavigation = true
 }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // 弹窗状态管理
   const { 
@@ -150,7 +152,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
         setGameStatus({
           canPlay: false,
           dailyGameCount: 0,
-          reason: '用户未登录'
+          reason: t('errors.games.userNotLoggedIn')
         });
         return;
       }
@@ -163,7 +165,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
       setGameStatus({
         canPlay: false,
         dailyGameCount: 0,
-        reason: '无法获取游戏状态'
+        reason: t('errors.games.cannotGetGameStatus')
       });
     }
   };
@@ -185,7 +187,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
     }
     
     if (!token) {
-      showErrorRightSlide('登录提示', '请先登录后再使用游戏功能');
+      showErrorRightSlide(t('errors.games.loginPrompt'), t('errors.games.pleaseLoginFirst'));
       return;
     }
 
@@ -194,16 +196,16 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
     
     if (gameStatus && !gameStatus.canPlay) {
       // 游戏被禁用，显示提示
-      showErrorRightSlide('游戏禁用', gameStatus.message || gameStatus.reason || '游戏功能已被禁用');
+      showErrorRightSlide(t('errors.games.gameDisabledTitle'), gameStatus.message || gameStatus.reason || t('errors.games.gameDisabled'));
       return;
     }
     
     // 检查每日游戏次数警告
     if (gameStatus && gameStatus.dailyGameCount > 5) {
-      const warning = gameStatus.warningMessage || `今日已游戏${gameStatus.dailyGameCount}次，请注意！`;
+      const warning = gameStatus.warningMessage || t('errors.games.dailyGameCount', { count: gameStatus.dailyGameCount });
       showConfirm(
-        '游戏提醒',
-        warning + '\n\n是否继续游戏？',
+        t('errors.games.gameReminder'),
+        warning + '\n\n' + t('errors.games.continueGame'),
         () => {
           setIsGameStarted(true);
           setGameStates(prev => ({
@@ -250,26 +252,26 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
   // 游戏信息
   const gameInfo = {
     math: {
-      title: '数学计算',
-      description: '快速计算数学题目，提高计算能力',
+      title: t('errors.games.math.title'),
+      description: t('errors.games.math.description'),
       icon: <Calculator className="w-6 h-6" />,
       color: 'blue'
     },
     memory: {
-      title: '记忆游戏',
-      description: '找到相同的数字配对，锻炼记忆力',
+      title: t('errors.games.memory.title'),
+      description: t('errors.games.memory.description'),
       icon: <Brain className="w-6 h-6" />,
       color: 'green'
     },
     puzzle: {
-      title: '数字拼图',
-      description: '将数字按顺序排列，训练逻辑思维',
+      title: t('errors.games.puzzle.title'),
+      description: t('errors.games.puzzle.description'),
       icon: <Target className="w-6 h-6" />,
       color: 'purple'
     },
     reaction: {
-      title: '反应速度',
-      description: '点击出现的圆圈，测试反应速度',
+      title: t('errors.games.reaction.title'),
+      description: t('errors.games.reaction.description'),
       icon: <Zap className="w-6 h-6" />,
       color: 'orange'
     }
@@ -347,7 +349,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                 className="flex items-center justify-center px-6 py-3"
             >
                 <Home className="w-5 h-5 mr-2" />
-                返回首页
+                {t('errors.returnHome')}
             </Button>
               
             <Button
@@ -356,7 +358,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                 className="flex items-center justify-center px-6 py-3"
             >
                 <RefreshCw className="w-5 h-5 mr-2" />
-                刷新页面
+                {t('errors.refreshPage')}
             </Button>
             </motion.div>
         </motion.div>
@@ -374,7 +376,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <Gamepad2 className="w-8 h-8" />
-                    <h2 className="text-2xl font-bold">小游戏</h2>
+                    <h2 className="text-2xl font-bold">{t('errors.games.title')}</h2>
             </div>
                   <div className="flex items-center space-x-2">
                     <button
@@ -416,7 +418,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                       </div>
                     )}
                     <div className="text-center text-sm opacity-90">
-                      今日游戏次数: {gameStatus.dailyGameCount}
+                      {t('errors.games.todayGameCount')}: {gameStatus.dailyGameCount}
                     </div>
               </div>
             )}
@@ -426,12 +428,12 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                   <div className="flex items-center space-x-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold">{totalScore}</div>
-                      <div className="text-sm opacity-90">总分</div>
+                      <div className="text-sm opacity-90">{t('errors.games.totalScore')}</div>
                     </div>
                     <div className="h-8 w-px bg-white bg-opacity-30"></div>
                     <div className="flex items-center space-x-2">
                       <Trophy className="w-5 h-5 text-yellow-300" />
-                      <span className="text-sm">挑战自己</span>
+                      <span className="text-sm">{t('errors.games.challengeYourself')}</span>
                     </div>
                   </div>
                 </div>
@@ -447,7 +449,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                     className="bg-blue-50 dark:bg-blue-900/30 border-b border-blue-200 dark:border-blue-600 p-4"
                   >
                     <div className="text-sm text-blue-800 dark:text-blue-200">
-                      <strong>游戏说明：</strong>
+                      <strong>{t('errors.games.gameInfo')}</strong>
                       {gameInfo[currentGame].description}
                   </div>
                 </motion.div>
@@ -495,20 +497,20 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                       <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Play className="w-10 h-10 text-white" />
                       </div>
-                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">准备开始游戏</h3>
-                      <p className="text-gray-600 dark:text-gray-300 mb-6">选择游戏类型，点击开始按钮开始挑战</p>
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">{t('errors.games.prepareToStart')}</h3>
+                      <p className="text-gray-600 dark:text-gray-300 mb-6">{t('errors.games.selectGameType')}</p>
                       
                       {/* 游戏状态信息 */}
                       {gameStatus && (
                         <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 rounded-lg border border-blue-200 dark:border-blue-600">
                           <div className="text-sm text-gray-700 dark:text-gray-200">
                             <div className="flex items-center justify-center space-x-4">
-                              <span>今日游戏次数: {gameStatus.dailyGameCount}/15</span>
+                              <span>{t('errors.games.dailyGameCount', { count: gameStatus.dailyGameCount })}/15</span>
                               {gameStatus.dailyGameCount > 5 && (
-                                <span className="text-orange-600 dark:text-orange-400 font-medium">注意工作</span>
+                                <span className="text-orange-600 dark:text-orange-400 font-medium">{t('errors.games.attentionWork')}</span>
                               )}
                               {gameStatus.dailyGameCount >= 15 && (
-                                <span className="text-red-600 dark:text-red-400 font-medium">已达上限</span>
+                                <span className="text-red-600 dark:text-red-400 font-medium">{t('errors.games.reachedLimit')}</span>
                               )}
                             </div>
                             {gameStatus.warningMessage && (
@@ -531,12 +533,12 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                       {gameStatus && !gameStatus.canPlay ? (
                         <>
                           <AlertTriangle className="w-5 h-5 mr-2" />
-                          游戏已禁用
+                          {t('errors.games.gameDisabled')}
                         </>
                       ) : (
                         <>
                           <Play className="w-5 h-5 mr-2" />
-                          开始游戏
+                          {t('errors.games.startGame')}
                         </>
                       )}
                         </Button>
@@ -551,8 +553,8 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                       <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Trophy className="w-10 h-10 text-white" />
                       </div>
-                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">本次游戏已结束</h3>
-                      <p className="text-gray-600 dark:text-gray-300 mb-6">所有游戏都已结束，点击重新开始按钮重新挑战</p>
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">{t('errors.games.gameEnded')}</h3>
+                      <p className="text-gray-600 dark:text-gray-300 mb-6">{t('errors.games.allGamesEnded')}</p>
                     </div>
                     <Button
                       onClick={handleRestartAllGames}
@@ -560,7 +562,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                       className="px-8 py-3 text-lg font-semibold"
                     >
                       <RotateCcw className="w-5 h-5 mr-2" />
-                      点击重新开始
+                      {t('errors.games.clickToRestart')}
                     </Button>
                   </motion.div>
                 ) : (
@@ -653,7 +655,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
             className="mt-8 text-center"
           >
             <p className="text-sm text-gray-500">
-              玩把再走？放松放松（Chester 亲传的摸鱼技能！）
+              {t('errors.games.playAgain')}
             </p>
               </motion.div>
             )}

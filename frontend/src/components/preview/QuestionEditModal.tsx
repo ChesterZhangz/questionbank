@@ -11,6 +11,7 @@ import RightSlideModal from '../ui/RightSlideModal';
 import { BatchEditMediaEditor, SimpleMediaPreview } from '../question';
 import type { Question, QuestionBank } from '../../types';
 import { useModal } from '../../hooks/useModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface QuestionEditModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
   onClose,
   onSave
 }) => {
+  const { t } = useTranslation();
   // 弹窗状态管理
   const { showErrorRightSlide, rightSlideModal, closeRightSlide } = useModal();
 
@@ -95,7 +97,7 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
     
     // 验证题干
     if (!editedQuestion.content?.stem?.trim()) {
-      errors.push('题干不能为空');
+      errors.push(t('preview.questionEditModal.validation.stemRequired'));
     }
     
     // 根据题目类型验证
@@ -104,58 +106,58 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
     if (questionType === 'choice') {
       // 选择题验证
       if (!editedQuestion.content?.options || editedQuestion.content.options.length < 2) {
-        errors.push('选择题至少需要2个选项');
+        errors.push(t('preview.questionEditModal.validation.minOptions'));
       }
       
       const hasCorrectOption = editedQuestion.content?.options?.some(option => option.isCorrect);
       if (!hasCorrectOption) {
-        errors.push('选择题至少需要选择一个正确答案');
+        errors.push(t('preview.questionEditModal.validation.correctOptionRequired'));
       }
       
       const emptyOptions = editedQuestion.content?.options?.some(option => !option.text.trim());
       if (emptyOptions) {
-        errors.push('选择题选项不能为空');
+        errors.push(t('preview.questionEditModal.validation.emptyOptions'));
       }
     }
     
     if (questionType === 'fill') {
       // 填空题验证
       if (!editedQuestion.content?.fillAnswers || editedQuestion.content.fillAnswers.length === 0) {
-        errors.push('填空题至少需要一个答案');
+        errors.push(t('preview.questionEditModal.validation.minFillAnswers'));
       }
       
       const emptyAnswers = editedQuestion.content?.fillAnswers?.some(answer => !answer.trim());
       if (emptyAnswers) {
-        errors.push('填空题答案不能为空');
+        errors.push(t('preview.questionEditModal.validation.emptyFillAnswers'));
       }
     }
     
     if (questionType === 'solution') {
       // 解答题验证
       if (!editedQuestion.content?.solutionAnswers || editedQuestion.content.solutionAnswers.length === 0) {
-        errors.push('解答题至少需要一个解答步骤');
+        errors.push(t('preview.questionEditModal.validation.minSolutionAnswers'));
       }
       
       const emptyAnswers = editedQuestion.content?.solutionAnswers?.some(answer => !answer.trim());
       if (emptyAnswers) {
-        errors.push('解答题答案不能为空');
+        errors.push(t('preview.questionEditModal.validation.emptySolutionAnswers'));
       }
     }
     
     // 验证分类和标签
     if (editedQuestion.category && Array.isArray(editedQuestion.category)) {
       if (editedQuestion.category.length > 3) {
-        errors.push('小题型分类最多3个');
+        errors.push(t('preview.questionEditModal.validation.maxCategory'));
       }
     }
     
     if (editedQuestion.tags && editedQuestion.tags.length > 5) {
-      errors.push('知识点标签最多5个');
+      errors.push(t('preview.questionEditModal.validation.maxTags'));
     }
     
     // 如果有错误，显示错误信息
     if (errors.length > 0) {
-      showErrorRightSlide('验证失败', '请修正以下错误：\n' + errors.join('\n'));
+      showErrorRightSlide(t('preview.questionEditModal.validation.title'), t('preview.questionEditModal.validation.message') + '\n' + errors.join('\n'));
       return;
     }
     
@@ -254,25 +256,25 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
 
   // 题目类型选项
   const questionTypeOptions = [
-    { value: 'choice', label: '选择题', icon: CheckCircle },
-    { value: 'fill', label: '填空题', icon: Type },
-    { value: 'solution', label: '解答题', icon: FileText }
+    { value: 'choice', label: t('preview.questionEditModal.questionTypeLabel'), icon: CheckCircle },
+    { value: 'fill', label: t('preview.questionEditModal.questionTypeLabel'), icon: Type },
+    { value: 'solution', label: t('preview.questionEditModal.questionTypeLabel'), icon: FileText }
   ];
 
   // 难度等级选项
   const difficultyOptions = [
-    { value: 1, label: '简单' },
-    { value: 2, label: '较简单' },
-    { value: 3, label: '中等' },
-    { value: 4, label: '较难' },
-    { value: 5, label: '困难' }
+    { value: 1, label: t('preview.sortableQuestionCard.difficulty.easy') },
+    { value: 2, label: t('preview.sortableQuestionCard.difficulty.mediumEasy') },
+    { value: 3, label: t('preview.sortableQuestionCard.difficulty.medium') },
+    { value: 4, label: t('preview.sortableQuestionCard.difficulty.mediumHard') },
+    { value: 5, label: t('preview.sortableQuestionCard.difficulty.hard') }
   ];
 
   // 获取题目类型显示名称（根据选项自动判断单选/多选）
   const getQuestionTypeDisplayName = (type: string) => {
     if (type === 'choice') {
       const correctOptions = editedQuestion.content?.options?.filter(option => option.isCorrect) || [];
-      return correctOptions.length === 1 ? '单选题' : '多选题';
+      return correctOptions.length === 1 ? t('preview.sortableQuestionCard.questionType.choice') : t('preview.sortableQuestionCard.questionType.multipleChoice');
     }
     return questionTypeOptions.find(option => option.value === type)?.label || type;
   };
@@ -302,12 +304,12 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
   // 获取难度文本（参考QuestionCard）
   const getDifficultyText = (difficulty: number) => {
     switch (difficulty) {
-      case 1: return '非常简单';
-      case 2: return '简单';
-      case 3: return '中等';
-      case 4: return '困难';
-      case 5: return '非常困难';
-      default: return '未知';
+      case 1: return t('preview.sortableQuestionCard.difficulty.easy');
+      case 2: return t('preview.sortableQuestionCard.difficulty.mediumEasy');
+      case 3: return t('preview.sortableQuestionCard.difficulty.medium');
+      case 4: return t('preview.sortableQuestionCard.difficulty.mediumHard');
+      case 5: return t('preview.sortableQuestionCard.difficulty.hard');
+      default: return t('preview.sortableQuestionCard.questionType.unknown');
     }
   };
 
@@ -411,7 +413,7 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
             {/* 模态框头部 */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30">
               <div className="flex items-center space-x-3">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">编辑题目</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('preview.questionEditModal.title')}</h2>
                 <div className="flex items-center space-x-2">
                   <Button
                     variant="outline"
@@ -420,7 +422,7 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
                     className="flex items-center space-x-1"
                   >
                     {showPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    <span>{showPreview ? '隐藏预览' : '显示预览'}</span>
+                    <span>{showPreview ? t('preview.questionEditModal.hidePreview') : t('preview.questionEditModal.showPreview')}</span>
                   </Button>
                 </div>
               </div>
@@ -1113,7 +1115,7 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
                 variant="outline"
                 onClick={handleCancel}
               >
-                取消
+                {t('preview.questionEditModal.cancel')}
               </Button>
               <Button
                 variant="primary"
@@ -1121,7 +1123,7 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
                 className="flex items-center space-x-1"
               >
                 <Save className="h-4 w-4" />
-                <span>保存</span>
+                <span>{t('preview.questionEditModal.save')}</span>
               </Button>
             </div>
           </motion.div>

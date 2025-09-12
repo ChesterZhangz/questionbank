@@ -12,6 +12,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import GameAPIService, { type LeaderboardEntry } from '../../services/gameAPI';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface LeaderboardProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
   currentUserScore,
   gameType
 }) => {
+  const { t } = useTranslation();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [currentUserRank, setCurrentUserRank] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,7 +50,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
       
     } catch (error) {
       // 错误日志已清理
-      setError('获取排行榜失败，请稍后重试');
+      setError(t('games.leaderboard.error'));
     } finally {
       setIsLoading(false);
     }
@@ -63,11 +65,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
 
   const getGameTitle = (type: string) => {
     switch (type) {
-      case 'math': return '数学计算';
-      case 'memory': return '记忆游戏';
-      case 'puzzle': return '数字拼图';
-      case 'reaction': return '反应速度';
-      default: return '小游戏';
+      case 'math': return t('games.leaderboard.gameTypes.math');
+      case 'memory': return t('games.leaderboard.gameTypes.memory');
+      case 'puzzle': return t('games.leaderboard.gameTypes.puzzle');
+      case 'reaction': return t('games.leaderboard.gameTypes.reaction');
+      default: return t('games.leaderboard.gameTypes.default');
     }
   };
 
@@ -114,7 +116,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                     <Trophy className="w-6 h-6" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold">排行榜</h2>
+                    <h2 className="text-xl font-bold">{t('games.leaderboard.title')}</h2>
                     <p className="text-sm opacity-90">{getGameTitle(gameType)}</p>
                   </div>
                 </div>
@@ -142,11 +144,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">你的排名</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('games.leaderboard.yourRank')}</span>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold text-green-600 dark:text-green-400">第 {currentUserRank} 名</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">{currentUserScore} 分</div>
+                    <div className="text-lg font-bold text-green-600 dark:text-green-400">{t('games.leaderboard.rank', { rank: currentUserRank })}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">{currentUserScore} {t('games.leaderboard.score')}</div>
                   </div>
                 </div>
               </div>
@@ -157,7 +159,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
               {isLoading ? (
                 <div className="flex items-center justify-center py-4">
                   <RefreshCw className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin" />
-                  <span className="ml-3 text-gray-600 dark:text-gray-300">加载排行榜...</span>
+                  <span className="ml-3 text-gray-600 dark:text-gray-300">{t('games.leaderboard.loading')}</span>
                 </div>
               ) : error ? (
                 <div className="text-center py-12">
@@ -169,14 +171,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                     onClick={fetchLeaderboard}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
-                    重试
+                    {t('games.leaderboard.retry')}
                   </button>
                 </div>
               ) : leaderboard.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-gray-500 mb-4">
                     <Trophy className="w-12 h-12 mx-auto mb-2" />
-                    <p className="text-sm">暂无排行榜数据</p>
+                    <p className="text-sm">{t('games.leaderboard.noData')}</p>
                   </div>
                 </div>
               ) : (
@@ -219,7 +221,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-bold text-gray-800 dark:text-gray-100">{entry.score}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">分</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{t('games.leaderboard.score')}</div>
                       </div>
                     </motion.div>
                   ))}
@@ -230,8 +232,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
             {/* 底部 */}
             <div className="p-6 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
               <div className="text-center text-sm text-gray-600 dark:text-gray-300">
-                <p>排行榜实时更新</p>
-                <p className="mt-1">挑战自己，创造新纪录！</p>
+                <p>{t('games.leaderboard.realTime')}</p>
+                <p className="mt-1">{t('games.leaderboard.challenge')}</p>
               </div>
             </div>
           </motion.div>

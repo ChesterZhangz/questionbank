@@ -18,6 +18,7 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { useModal } from '../../hooks/useModal';
+import { useTranslation } from '../../hooks/useTranslation';
 import type { Enterprise } from '../../services/enterpriseService';
 
 interface EnterpriseWithStats extends Enterprise {
@@ -27,6 +28,7 @@ interface EnterpriseWithStats extends Enterprise {
 
 const EnterpriseManagementPage: React.FC = () => {
   const { user } = useAuthStore();
+  const { t } = useTranslation();
   
   // 弹窗状态管理
   const { 
@@ -81,7 +83,7 @@ const EnterpriseManagementPage: React.FC = () => {
   // 检查权限
   useEffect(() => {
     if (user?.role !== 'superadmin') {
-      setError('权限不足，仅超级管理员可访问此页面');
+      setError(t('enterpriseManagement.insufficientPermissions'));
       setLoading(false);
       return;
     }
@@ -96,11 +98,11 @@ const EnterpriseManagementPage: React.FC = () => {
       if (response.data.success) {
         setEnterprises(response.data.enterprises);
       } else {
-        setError('获取企业列表失败');
+        setError(t('enterpriseManagement.fetchListFailed'));
       }
     } catch (error: any) {
       // 错误日志已清理
-      setError(error.response?.data?.error || '获取企业列表失败');
+      setError(error.response?.data?.error || t('enterpriseManagement.fetchListFailed'));
     } finally {
       setLoading(false);
     }
@@ -122,16 +124,16 @@ const EnterpriseManagementPage: React.FC = () => {
 
       const response = await enterpriseService.createEnterprise(formattedData);
       if (response.data.success) {
-        showSuccessRightSlide('创建成功', '企业创建成功，第一个注册该企业邮箱后缀的用户将自动成为企业管理员');
+        showSuccessRightSlide(t('enterpriseManagement.createSuccess'), t('enterpriseManagement.createSuccessMessage'));
         setShowCreateModal(false);
         resetCreateForm();
         fetchEnterprises();
       } else {
-        showErrorRightSlide('创建失败', '企业创建失败');
+        showErrorRightSlide(t('enterpriseManagement.createFailed'), t('enterpriseManagement.createFailedMessage'));
       }
     } catch (error: any) {
       // 错误日志已清理
-      showErrorRightSlide('创建失败', error.response?.data?.error || '企业创建失败');
+      showErrorRightSlide(t('enterpriseManagement.createFailed'), error.response?.data?.error || t('enterpriseManagement.createFailedMessage'));
     }
   };
 
@@ -175,15 +177,15 @@ const EnterpriseManagementPage: React.FC = () => {
 
       const response = await enterpriseService.updateEnterprise(selectedEnterprise._id, formattedData);
       if (response.data.success) {
-        showSuccessRightSlide('更新成功', '企业信息更新成功');
+        showSuccessRightSlide(t('enterpriseManagement.updateSuccess'), t('enterpriseManagement.updateSuccessMessage'));
         setShowEditModal(false);
         fetchEnterprises();
       } else {
-        showErrorRightSlide('更新失败', '企业信息更新失败');
+        showErrorRightSlide(t('enterpriseManagement.updateFailed'), t('enterpriseManagement.updateFailedMessage'));
       }
     } catch (error: any) {
       // 错误日志已清理
-      showErrorRightSlide('更新失败', error.response?.data?.error || '企业信息更新失败');
+      showErrorRightSlide(t('enterpriseManagement.updateFailed'), error.response?.data?.error || t('enterpriseManagement.updateFailedMessage'));
     }
   };
 
@@ -197,15 +199,15 @@ const EnterpriseManagementPage: React.FC = () => {
     try {
       const response = await enterpriseService.deleteEnterprise(deleteEnterpriseId);
       if (response.data.success) {
-        showSuccessRightSlide('删除成功', '企业删除成功');
+        showSuccessRightSlide(t('enterpriseManagement.deleteSuccess'), t('enterpriseManagement.deleteSuccessMessage'));
         setShowDeleteModal(false);
         fetchEnterprises();
       } else {
-        showErrorRightSlide('删除失败', '企业删除失败');
+        showErrorRightSlide(t('enterpriseManagement.deleteFailed'), t('enterpriseManagement.deleteFailedMessage'));
       }
     } catch (error: any) {
       // 错误日志已清理
-      showErrorRightSlide('删除失败', error.response?.data?.error || '企业删除失败');
+      showErrorRightSlide(t('enterpriseManagement.deleteFailed'), error.response?.data?.error || t('enterpriseManagement.deleteFailedMessage'));
     }
   };
 
@@ -245,13 +247,13 @@ const EnterpriseManagementPage: React.FC = () => {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'active':
-        return '已激活';
+        return t('enterpriseManagement.status.active');
       case 'inactive':
-        return '已禁用';
+        return t('enterpriseManagement.status.inactive');
       case 'pending':
-        return '待审核';
+        return t('enterpriseManagement.status.pending');
       default:
-        return '未知状态';
+        return t('enterpriseManagement.status.unknown');
     }
   };
 
@@ -259,15 +261,15 @@ const EnterpriseManagementPage: React.FC = () => {
   const getSizeText = (size: string) => {
     switch (size) {
       case 'small':
-        return '小型企业';
+        return t('enterpriseManagement.size.small');
       case 'medium':
-        return '中型企业';
+        return t('enterpriseManagement.size.medium');
       case 'large':
-        return '大型企业';
+        return t('enterpriseManagement.size.large');
       case 'enterprise':
-        return '超大型企业';
+        return t('enterpriseManagement.size.enterprise');
       default:
-        return '中型企业';
+        return t('enterpriseManagement.size.medium');
     }
   };
 
@@ -283,7 +285,7 @@ const EnterpriseManagementPage: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-blue-900/20 dark:to-indigo-900/20 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">加载中...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">{t('enterpriseManagement.loading')}</p>
         </div>
       </div>
     );
@@ -296,7 +298,7 @@ const EnterpriseManagementPage: React.FC = () => {
           <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">访问被拒绝</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('enterpriseManagement.accessDenied')}</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
         </div>
       </div>
@@ -317,8 +319,8 @@ const EnterpriseManagementPage: React.FC = () => {
               <Building2 className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">企业管理</h1>
-              <p className="text-gray-600 dark:text-gray-400">管理系统中的所有企业</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('enterpriseManagement.title')}</h1>
+              <p className="text-gray-600 dark:text-gray-400">{t('enterpriseManagement.subtitle')}</p>
             </div>
           </div>
 
@@ -332,7 +334,7 @@ const EnterpriseManagementPage: React.FC = () => {
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                   {enterprises.length}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">企业总数</p>
+                <p className="text-gray-600 dark:text-gray-400">{t('enterpriseManagement.totalEnterprises')}</p>
               </div>
             </Card>
 
@@ -344,7 +346,7 @@ const EnterpriseManagementPage: React.FC = () => {
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                   {enterprises.filter(e => e.status === 'active').length}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">已激活</p>
+                <p className="text-gray-600 dark:text-gray-400">{t('enterpriseManagement.active')}</p>
               </div>
             </Card>
 
@@ -356,7 +358,7 @@ const EnterpriseManagementPage: React.FC = () => {
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                   {enterprises.filter(e => e.status === 'pending').length}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">待审核</p>
+                <p className="text-gray-600 dark:text-gray-400">{t('enterpriseManagement.pending')}</p>
               </div>
             </Card>
 
@@ -368,7 +370,7 @@ const EnterpriseManagementPage: React.FC = () => {
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                   {enterprises.reduce((sum, e) => sum + e.currentMembers, 0)}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">总成员数</p>
+                <p className="text-gray-600 dark:text-gray-400">{t('enterpriseManagement.totalMembers')}</p>
               </div>
             </Card>
           </div>
@@ -386,7 +388,7 @@ const EnterpriseManagementPage: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
                 <div className="flex-1 max-w-md">
                   <Input
-                    placeholder="搜索企业名称、邮箱后缀或信用代码..."
+                    placeholder={t('enterpriseManagement.searchPlaceholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     icon={<Search className="w-4 h-4" />}
@@ -397,7 +399,7 @@ const EnterpriseManagementPage: React.FC = () => {
                   onClick={() => setShowCreateModal(true)}
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  创建企业
+                  {t('enterpriseManagement.createEnterprise')}
                 </Button>
               </div>
             </div>
@@ -436,24 +438,24 @@ const EnterpriseManagementPage: React.FC = () => {
                   {/* 企业信息 */}
                   <div className="space-y-3 mb-4">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">信用代码:</span>
+                      <span className="text-gray-500 dark:text-gray-400">{t('enterpriseManagement.creditCode')}:</span>
                       <span className="font-medium text-gray-900 dark:text-gray-100">{enterprise.creditCode}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">成员数量:</span>
+                      <span className="text-gray-500 dark:text-gray-400">{t('enterpriseManagement.memberCount')}:</span>
                       <span className="font-medium text-gray-900 dark:text-gray-100">
                         {enterprise.currentMembers}/{enterprise.maxMembers}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">企业规模:</span>
+                      <span className="text-gray-500 dark:text-gray-400">{t('enterpriseManagement.enterpriseSize')}:</span>
                                               <span className="font-medium text-gray-900 dark:text-gray-100">
                           {getSizeText(enterprise.size || 'medium')}
                         </span>
                     </div>
                     {enterprise.industry && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">所属行业:</span>
+                        <span className="text-gray-500 dark:text-gray-400">{t('enterpriseManagement.industry')}:</span>
                         <span className="font-medium text-gray-900 dark:text-gray-100">{enterprise.industry}</span>
                       </div>
                     )}
@@ -462,18 +464,18 @@ const EnterpriseManagementPage: React.FC = () => {
                   {/* 企业信息 */}
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mb-4">
                     <div className="text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">企业状态: </span>
+                      <span className="text-gray-500 dark:text-gray-400">{t('enterpriseManagement.enterpriseStatus')}: </span>
                       <span className={`font-medium px-2 py-1 rounded-full text-xs ${
                         enterprise.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
                         enterprise.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
                         'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                       }`}>
-                        {enterprise.status === 'active' ? '活跃' : 
-                         enterprise.status === 'pending' ? '待审核' : '停用'}
+                        {enterprise.status === 'active' ? t('enterpriseManagement.status.active') : 
+                         enterprise.status === 'pending' ? t('enterpriseManagement.status.pending') : t('enterpriseManagement.status.inactive')}
                       </span>
                     </div>
                     <div className="text-sm mt-1">
-                      <span className="text-gray-500 dark:text-gray-400">成员数量: </span>
+                      <span className="text-gray-500 dark:text-gray-400">{t('enterpriseManagement.memberCount')}: </span>
                       <span className="font-medium text-gray-900 dark:text-gray-100">
                         {enterprise.currentMembers} / {enterprise.maxMembers}
                       </span>
@@ -488,7 +490,7 @@ const EnterpriseManagementPage: React.FC = () => {
                       onClick={() => handleViewDetail(enterprise)}
                     >
                       <Eye className="w-4 h-4 mr-1" />
-                      查看详情
+                      {t('enterpriseManagement.viewDetails')}
                     </Button>
                     <Button 
                       size="sm" 
@@ -496,7 +498,7 @@ const EnterpriseManagementPage: React.FC = () => {
                       onClick={() => handleEdit(enterprise)}
                     >
                       <Edit3 className="w-4 h-4 mr-1" />
-                      编辑
+                      {t('enterpriseManagement.edit')}
                     </Button>
                     <Button 
                       size="sm" 
@@ -505,7 +507,7 @@ const EnterpriseManagementPage: React.FC = () => {
                       onClick={() => handleDelete(enterprise._id)}
                     >
                       <Trash2 className="w-4 h-4 mr-1" />
-                      删除
+                      {t('enterpriseManagement.delete')}
                     </Button>
                   </div>
                 </div>
@@ -519,14 +521,14 @@ const EnterpriseManagementPage: React.FC = () => {
                 <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Building2 className="w-8 h-8 text-gray-600 dark:text-gray-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">暂无企业</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('enterpriseManagement.noEnterprises')}</h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  {searchTerm ? '没有找到匹配的企业' : '还没有创建任何企业'}
+                  {searchTerm ? t('enterpriseManagement.noMatchingEnterprises') : t('enterpriseManagement.noEnterprisesCreated')}
                 </p>
                 {!searchTerm && (
                   <Button onClick={() => setShowCreateModal(true)}>
                     <Plus className="w-4 h-4 mr-2" />
-                    创建第一个企业
+                    {t('enterpriseManagement.createFirstEnterprise')}
                   </Button>
                 )}
               </div>
@@ -551,12 +553,12 @@ const EnterpriseManagementPage: React.FC = () => {
               >
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">创建新企业</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('enterpriseManagement.createNewEnterprise')}</h2>
                     <button
                       onClick={() => setShowCreateModal(false)}
                       className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                     >
-                      <span className="sr-only">关闭</span>
+                      <span className="sr-only">{t('enterpriseManagement.close')}</span>
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
@@ -567,17 +569,17 @@ const EnterpriseManagementPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          企业名称 *
+                          {t('enterpriseManagement.enterpriseName')} *
                         </label>
                         <Input
                           value={createForm.name}
                           onChange={(e) => setCreateForm(prev => ({ ...prev, name: e.target.value }))}
-                          placeholder="请输入企业名称"
+                          placeholder={t('enterpriseManagement.enterpriseNamePlaceholder')}
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          邮箱后缀 *
+                          {t('enterpriseManagement.emailSuffix')} *
                         </label>
                         <Input
                           value={createForm.emailSuffix}
@@ -590,17 +592,17 @@ const EnterpriseManagementPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          信用代码 *
+                          {t('enterpriseManagement.creditCode')} *
                         </label>
                         <Input
                           value={createForm.creditCode}
                           onChange={(e) => setCreateForm(prev => ({ ...prev, creditCode: e.target.value }))}
-                          placeholder="请输入企业信用代码"
+                          placeholder={t('enterpriseManagement.creditCodePlaceholder')}
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          最大成员数 *
+                          {t('enterpriseManagement.maxMembers')} *
                         </label>
                         <Input
                           type="number"
@@ -615,7 +617,7 @@ const EnterpriseManagementPage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                         <span className="text-sm text-blue-700 dark:text-blue-300">
-                          提示：第一个注册该企业邮箱后缀的用户将自动成为企业管理员
+                          {t('enterpriseManagement.createSuccessMessage')}
                         </span>
                       </div>
                     </div>
@@ -623,39 +625,39 @@ const EnterpriseManagementPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          所属行业
+                          {t('enterpriseManagement.industry')}
                         </label>
                         <Input
                           value={createForm.industry}
                           onChange={(e) => setCreateForm(prev => ({ ...prev, industry: e.target.value }))}
-                          placeholder="如：科技、教育、金融等"
+                          placeholder={t('enterpriseManagement.industryPlaceholder')}
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          企业规模
+                          {t('enterpriseManagement.enterpriseSize')}
                         </label>
                         <select
                           value={createForm.size}
                           onChange={(e) => setCreateForm(prev => ({ ...prev, size: e.target.value as any }))}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                         >
-                          <option value="small">小型企业</option>
-                          <option value="medium">中型企业</option>
-                          <option value="large">大型企业</option>
-                          <option value="enterprise">超大型企业</option>
+                          <option value="small">{t('enterpriseManagement.size.small')}</option>
+                          <option value="medium">{t('enterpriseManagement.size.medium')}</option>
+                          <option value="large">{t('enterpriseManagement.size.large')}</option>
+                          <option value="enterprise">{t('enterpriseManagement.size.enterprise')}</option>
                         </select>
                       </div>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        企业描述
+                        {t('enterpriseManagement.enterpriseDescription')}
                       </label>
                       <textarea
                         value={createForm.description}
                         onChange={(e) => setCreateForm(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="请输入企业描述"
+                        placeholder={t('enterpriseManagement.enterpriseDescriptionPlaceholder')}
                         rows={3}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none"
                       />
@@ -667,14 +669,14 @@ const EnterpriseManagementPage: React.FC = () => {
                       onClick={handleCreateEnterprise}
                       className="flex-1 bg-blue-600 hover:bg-blue-700"
                     >
-                      创建企业
+                      {t('enterpriseManagement.createEnterprise')}
                     </Button>
                     <Button
                       onClick={() => setShowCreateModal(false)}
                       variant="outline"
                       className="flex-1"
                     >
-                      取消
+                      {t('enterpriseManagement.cancel')}
                     </Button>
                   </div>
                 </div>
@@ -713,7 +715,7 @@ const EnterpriseManagementPage: React.FC = () => {
                       onClick={() => setShowDetailModal(false)}
                       className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                     >
-                      <span className="sr-only">关闭</span>
+                      <span className="sr-only">{t('enterpriseManagement.close')}</span>
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
@@ -726,35 +728,35 @@ const EnterpriseManagementPage: React.FC = () => {
                       <div className="p-4">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                           <Building2 className="w-5 h-5" />
-                          基础信息
+                          {t('enterpriseManagement.basicInfo')}
                         </h3>
                         <div className="space-y-3">
                           <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">企业名称:</span>
+                            <span className="text-gray-600 dark:text-gray-400">{t('enterpriseManagement.enterpriseNameLabel')}</span>
                             <span className="font-medium text-gray-900 dark:text-gray-100">{selectedEnterprise.name}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">邮箱后缀:</span>
+                            <span className="text-gray-600 dark:text-gray-400">{t('enterpriseManagement.emailSuffixLabel')}</span>
                             <span className="font-medium text-gray-900 dark:text-gray-100">{selectedEnterprise.emailSuffix}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">信用代码:</span>
+                            <span className="text-gray-600 dark:text-gray-400">{t('enterpriseManagement.creditCodeLabel')}</span>
                             <span className="font-medium text-gray-900 dark:text-gray-100">{selectedEnterprise.creditCode}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">企业状态:</span>
+                            <span className="text-gray-600 dark:text-gray-400">{t('enterpriseManagement.enterpriseStatusLabel')}</span>
                             <span className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
                               {getStatusIcon(selectedEnterprise.status)}
                               {getStatusText(selectedEnterprise.status)}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">企业规模:</span>
+                            <span className="text-gray-600 dark:text-gray-400">{t('enterpriseManagement.enterpriseSizeLabel')}</span>
                             <span className="font-medium text-gray-900 dark:text-gray-100">{getSizeText(selectedEnterprise.size || 'medium')}</span>
                           </div>
                           {selectedEnterprise.industry && (
                             <div className="flex justify-between">
-                              <span className="text-gray-600 dark:text-gray-400">所属行业:</span>
+                              <span className="text-gray-600 dark:text-gray-400">{t('enterpriseManagement.industryLabel')}</span>
                               <span className="font-medium text-gray-900 dark:text-gray-100">{selectedEnterprise.industry}</span>
                             </div>
                           )}
@@ -874,7 +876,7 @@ const EnterpriseManagementPage: React.FC = () => {
                       onClick={() => setShowEditModal(false)}
                       className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                     >
-                      <span className="sr-only">关闭</span>
+                      <span className="sr-only">{t('enterpriseManagement.close')}</span>
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
@@ -885,12 +887,12 @@ const EnterpriseManagementPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          企业名称 *
+                          {t('enterpriseManagement.enterpriseName')} *
                         </label>
                         <Input
                           value={editForm.name}
                           onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                          placeholder="请输入企业名称"
+                          placeholder={t('enterpriseManagement.enterpriseNamePlaceholder')}
                         />
                       </div>
                       <div>
@@ -918,7 +920,7 @@ const EnterpriseManagementPage: React.FC = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          最大成员数 *
+                          {t('enterpriseManagement.maxMembers')} *
                         </label>
                         <Input
                           type="number"
@@ -932,27 +934,27 @@ const EnterpriseManagementPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          所属行业
+                          {t('enterpriseManagement.industry')}
                         </label>
                         <Input
                           value={editForm.industry}
                           onChange={(e) => setEditForm(prev => ({ ...prev, industry: e.target.value }))}
-                          placeholder="如：科技、教育、金融等"
+                          placeholder={t('enterpriseManagement.industryPlaceholder')}
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          企业规模
+                          {t('enterpriseManagement.enterpriseSize')}
                         </label>
                         <select
                           value={editForm.size}
                           onChange={(e) => setEditForm(prev => ({ ...prev, size: e.target.value as any }))}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                         >
-                          <option value="small">小型企业</option>
-                          <option value="medium">中型企业</option>
-                          <option value="large">大型企业</option>
-                          <option value="enterprise">超大型企业</option>
+                          <option value="small">{t('enterpriseManagement.size.small')}</option>
+                          <option value="medium">{t('enterpriseManagement.size.medium')}</option>
+                          <option value="large">{t('enterpriseManagement.size.large')}</option>
+                          <option value="enterprise">{t('enterpriseManagement.size.enterprise')}</option>
                         </select>
                       </div>
                     </div>
@@ -993,12 +995,12 @@ const EnterpriseManagementPage: React.FC = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        企业描述
+                        {t('enterpriseManagement.enterpriseDescription')}
                       </label>
                       <textarea
                         value={editForm.description}
                         onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="请输入企业描述"
+                        placeholder={t('enterpriseManagement.enterpriseDescriptionPlaceholder')}
                         rows={3}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none"
                       />
@@ -1017,7 +1019,7 @@ const EnterpriseManagementPage: React.FC = () => {
                       variant="outline"
                       className="flex-1"
                     >
-                      取消
+                      {t('enterpriseManagement.cancel')}
                     </Button>
                   </div>
                 </div>
@@ -1066,7 +1068,7 @@ const EnterpriseManagementPage: React.FC = () => {
                       variant="outline"
                       className="flex-1"
                     >
-                      取消
+                      {t('enterpriseManagement.cancel')}
                     </Button>
                   </div>
                 </div>

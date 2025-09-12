@@ -10,6 +10,9 @@ export interface PasswordValidationResult {
   score: number; // 0-100
 }
 
+// 翻译函数类型
+export type TranslationFunction = (key: string, params?: Record<string, any>) => string;
+
 /**
  * 密码强度评估和验证
  */
@@ -18,43 +21,49 @@ export class PasswordValidator {
   /**
    * 验证密码是否符合所有安全规则
    */
-  static validate(password: string, username?: string, email?: string): PasswordValidationResult {
+  static validate(password: string, username?: string, email?: string, t?: TranslationFunction): PasswordValidationResult {
     const errors: string[] = [];
     let score = 0;
 
     // 1. 长度检查 (8-20位)
     if (password.length < 8) {
-      errors.push('密码长度不能少于8位');
+      const message = t ? t('utils.passwordValidator.errors.tooShort') : '密码长度不能少于8位';
+      errors.push(message);
     } else if (password.length > 20) {
-      errors.push('密码长度不能超过20位');
+      const message = t ? t('utils.passwordValidator.errors.tooLong') : '密码长度不能超过20位';
+      errors.push(message);
     } else {
       score += 20; // 基础分数
     }
 
     // 2. 不允许与用户名相关
     if (username && this.isRelatedToUsername(password, username)) {
-      errors.push('密码不能包含用户名相关内容');
+      const message = t ? t('utils.passwordValidator.errors.containsUsername') : '密码不能包含用户名相关内容';
+      errors.push(message);
     } else if (username) {
       score += 15;
     }
 
     // 3. 不允许与邮箱相关
     if (email && this.isRelatedToEmail(password, email)) {
-      errors.push('密码不能包含邮箱相关内容');
+      const message = t ? t('utils.passwordValidator.errors.containsEmail') : '密码不能包含邮箱相关内容';
+      errors.push(message);
     } else if (email) {
       score += 15;
     }
 
     // 4. 不允许出现生日日期模式
     if (this.containsBirthDatePattern(password)) {
-      errors.push('密码不能包含生日日期格式（如：19990101、1999/01/01等）');
+      const message = t ? t('utils.passwordValidator.errors.containsBirthDate') : '密码不能包含生日日期格式（如：19990101、1999/01/01等）';
+      errors.push(message);
     } else {
       score += 15;
     }
 
     // 5. 不允许连续三位字符/数字重复
     if (this.hasConsecutiveRepeats(password)) {
-      errors.push('密码不能包含连续三位相同的字符或数字');
+      const message = t ? t('utils.passwordValidator.errors.consecutiveRepeats') : '密码不能包含连续三位相同的字符或数字';
+      errors.push(message);
     } else {
       score += 10;
     }
@@ -65,7 +74,8 @@ export class PasswordValidator {
 
     // 7. 常见弱密码检查
     if (this.isCommonWeakPassword(password)) {
-      errors.push('密码过于简单，请使用更复杂的密码');
+      const message = t ? t('utils.passwordValidator.errors.tooSimple') : '密码过于简单，请使用更复杂的密码';
+      errors.push(message);
       score = Math.min(score, 30);
     }
 
@@ -303,7 +313,12 @@ export class PasswordValidator {
   /**
    * 获取密码强度文本
    */
-  static getStrengthText(strength: 'weak' | 'medium' | 'strong'): string {
+  static getStrengthText(strength: 'weak' | 'medium' | 'strong', t?: TranslationFunction): string {
+    if (t) {
+      return t(`utils.passwordValidator.strength.${strength}`);
+    }
+    
+    // 默认中文文本
     switch (strength) {
       case 'weak':
         return '弱';

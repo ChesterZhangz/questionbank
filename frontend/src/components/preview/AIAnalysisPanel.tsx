@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import { X, Brain, Sparkles, AlertTriangle } from 'lucide-react';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface AIAnalysisPanelProps {
   onClose: () => void;
@@ -17,6 +18,7 @@ const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
   selectedCount,
   isAnalyzing
 }) => {
+  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -36,7 +38,7 @@ const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <Brain className="h-5 w-5 text-purple-600" />
-              <h3 className="text-lg font-semibold text-gray-900">AI智能分析</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('preview.aiAnalysisPanel.title')}</h3>
             </div>
             <Button
               variant="ghost"
@@ -50,7 +52,7 @@ const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
 
           <div className="space-y-4">
             <div className="text-sm text-gray-600">
-              将对选中的 {selectedCount} 道题目进行AI智能分析，包括：
+              {t('preview.aiAnalysisPanel.subtitle')} {t('preview.aiAnalysisPanel.selectedCount', { count: selectedCount })}
             </div>
 
             <div className="space-y-2">
@@ -90,7 +92,7 @@ const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
                 onClick={onClose}
                 disabled={isAnalyzing}
               >
-                取消
+                {t('preview.common.cancel')}
               </Button>
               <Button
                 onClick={onAnalyze}
@@ -98,7 +100,7 @@ const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
                 className="flex items-center space-x-1 bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"
               >
                 <Brain className={`h-4 w-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
-                <span>{isAnalyzing ? '分析中...' : '开始分析'}</span>
+                <span>{isAnalyzing ? t('preview.aiAnalysisPanel.analyzing') : t('preview.aiAnalysisPanel.analyzeButton')}</span>
               </Button>
             </div>
           </div>

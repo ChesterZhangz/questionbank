@@ -6,6 +6,7 @@ import {
   Home
 } from 'lucide-react';
 import Button from '../ui/Button';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface ErrorFallbackProps {
   error?: Error;
@@ -13,6 +14,8 @@ interface ErrorFallbackProps {
 }
 
 const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, errorInfo }) => {
+  const { t } = useTranslation();
+  
   const handleRefresh = () => {
     window.location.reload();
   };
@@ -45,7 +48,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, errorInfo }) => {
           transition={{ delay: 0.3 }}
           className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2"
         >
-          应用程序错误
+          {t('errors.errorFallback.title')}
         </motion.h1>
 
         {/* 错误消息 */}
@@ -55,7 +58,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, errorInfo }) => {
           transition={{ delay: 0.4 }}
           className="text-gray-600 dark:text-gray-300 mb-6"
         >
-          抱歉，应用程序遇到了一个意外错误.我们的技术团队已经收到这个错误报告.
+          {t('errors.errorFallback.message')}
         </motion.p>
 
         {/* 错误详情（仅在开发环境显示） */}
@@ -66,12 +69,12 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, errorInfo }) => {
             transition={{ delay: 0.5 }}
             className="mb-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg text-left"
           >
-            <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">错误详情：</h3>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">{t('errors.errorFallback.errorDetails')}</h3>
             <p className="text-sm text-red-600 dark:text-red-400 mb-2">{error.message}</p>
             {errorInfo && (
               <details className="text-xs text-gray-600 dark:text-gray-400">
                 <summary className="cursor-pointer hover:text-gray-800 dark:hover:text-gray-200">
-                  查看堆栈跟踪
+                  {t('errors.errorFallback.viewStackTrace')}
                 </summary>
                 <pre className="mt-2 whitespace-pre-wrap">
                   {errorInfo.componentStack}
@@ -94,7 +97,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, errorInfo }) => {
             className="flex-1"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
-            刷新页面
+            {t('errors.errorFallback.refreshPage')}
           </Button>
           
           <Button
@@ -103,7 +106,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, errorInfo }) => {
             className="flex-1"
           >
             <Home className="w-4 h-4 mr-2" />
-            返回首页
+            {t('errors.errorFallback.returnHome')}
           </Button>
         </motion.div>
 
@@ -114,7 +117,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, errorInfo }) => {
           transition={{ delay: 0.7 }}
           className="text-xs text-gray-500 dark:text-gray-400 mt-6"
         >
-          如果问题持续存在，请联系技术支持
+          {t('errors.errorFallback.contactSupport')}
         </motion.p>
       </motion.div>
     </div>

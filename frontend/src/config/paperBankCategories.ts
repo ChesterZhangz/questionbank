@@ -24,7 +24,6 @@ import {
   Plus,
   Equal
 } from 'lucide-react';
-
 // 试卷集分类配置
 export interface PaperBankCategory {
   value: string;
@@ -39,62 +38,116 @@ export interface PaperBankSubcategory {
   icon: any;
 }
 
+// 默认分类配置（向后兼容）
 export const paperBankCategories: PaperBankCategory[] = [
   {
     value: 'mathematics',
-    label: '数学',
+    label: 'Mathematics',
     icon: Calculator,
     subcategories: [
       // 按教育阶段分类
-      { value: 'primary-math', label: '小学数学', icon: Plus },
-      { value: 'junior-math', label: '初中数学', icon: Target },
-      { value: 'senior-math', label: '高中数学', icon: Hash },
+      { value: 'primary-math', label: 'Primary Mathematics', icon: Plus },
+      { value: 'junior-math', label: 'Junior Mathematics', icon: Target },
+      { value: 'senior-math', label: 'Senior Mathematics', icon: Hash },
       // 大学数学课程
-      { value: 'calculus', label: '微积分', icon: TrendingUp },
-      { value: 'linear-algebra', label: '线性代数', icon: Grid3X3 },
-      { value: 'mathematical-analysis', label: '数学分析', icon: Pi },
-      { value: 'probability-statistics', label: '概率论与数理统计', icon: Dice6 },
-      { value: 'discrete-mathematics', label: '离散数学', icon: Network },
-      { value: 'differential-equations', label: '微分方程', icon: Equal },
-      { value: 'complex-analysis', label: '复变函数', icon: Infinity },
-      { value: 'real-analysis', label: '实变函数', icon: Square },
-      { value: 'abstract-algebra', label: '抽象代数', icon: Divide },
-      { value: 'topology', label: '拓扑学', icon: CircleDot },
-      { value: 'functional-analysis', label: '泛函分析', icon: TrendingUp },
-      { value: 'numerical-analysis', label: '数值分析', icon: BarChart3 }
+      { value: 'calculus', label: 'Calculus', icon: TrendingUp },
+      { value: 'linear-algebra', label: 'Linear Algebra', icon: Grid3X3 },
+      { value: 'mathematical-analysis', label: 'Mathematical Analysis', icon: Pi },
+      { value: 'probability-statistics', label: 'Probability and Statistics', icon: Dice6 },
+      { value: 'discrete-mathematics', label: 'Discrete Mathematics', icon: Network },
+      { value: 'differential-equations', label: 'Differential Equations', icon: Equal },
+      { value: 'complex-analysis', label: 'Complex Analysis', icon: Infinity },
+      { value: 'real-analysis', label: 'Real Analysis', icon: Square },
+      { value: 'abstract-algebra', label: 'Abstract Algebra', icon: Divide },
+      { value: 'topology', label: 'Topology', icon: CircleDot },
+      { value: 'functional-analysis', label: 'Functional Analysis', icon: TrendingUp },
+      { value: 'numerical-analysis', label: 'Numerical Analysis', icon: BarChart3 }
     ]
   },
   {
     value: 'physics',
-    label: '物理',
+    label: 'Physics',
     icon: Atom,
     subcategories: [
       // 按教育阶段分类
-      { value: 'junior-physics', label: '初中物理', icon: Zap },
-      { value: 'senior-physics', label: '高中物理', icon: Telescope },
-      { value: 'mechanics', label: '力学', icon: Zap },
-      { value: 'thermodynamics', label: '热力学', icon: Thermometer },
-      { value: 'electromagnetism', label: '电磁学', icon: Magnet },
-      { value: 'optics', label: '光学', icon: Eye },
-      { value: 'quantum', label: '量子物理', icon: Atom },
-      { value: 'relativity', label: '相对论', icon: Clock },
-      { value: 'nuclear', label: '核物理', icon: Radiation },
-      { value: 'particle', label: '粒子物理', icon: CircleDot },
-      { value: 'astrophysics', label: '天体物理', icon: Telescope },
-      { value: 'condensed-matter', label: '凝聚态物理', icon: Box },
-      { value: 'wave-physics', label: '波动学', icon: TrendingUp },
-      { value: 'acoustics', label: '声学', icon: TrendingUp },
-      { value: 'fluid-mechanics', label: '流体力学', icon: TrendingUp },
-      { value: 'solid-mechanics', label: '固体力学', icon: Box }
+      { value: 'junior-physics', label: 'Junior Physics', icon: Zap },
+      { value: 'senior-physics', label: 'Senior Physics', icon: Telescope },
+      { value: 'mechanics', label: 'Mechanics', icon: Zap },
+      { value: 'thermodynamics', label: 'Thermodynamics', icon: Thermometer },
+      { value: 'electromagnetism', label: 'Electromagnetism', icon: Magnet },
+      { value: 'optics', label: 'Optics', icon: Eye },
+      { value: 'quantum', label: 'Quantum Physics', icon: Atom },
+      { value: 'relativity', label: 'Relativity', icon: Clock },
+      { value: 'nuclear', label: 'Nuclear Physics', icon: Radiation },
+      { value: 'particle', label: 'Particle Physics', icon: CircleDot },
+      { value: 'astrophysics', label: 'Astrophysics', icon: Telescope },
+      { value: 'condensed-matter', label: 'Condensed Matter Physics', icon: Box },
+      { value: 'wave-physics', label: 'Wave Physics', icon: TrendingUp },
+      { value: 'acoustics', label: 'Acoustics', icon: TrendingUp },
+      { value: 'fluid-mechanics', label: 'Fluid Mechanics', icon: TrendingUp },
+      { value: 'solid-mechanics', label: 'Solid Mechanics', icon: Box }
+    ]
+  }
+];
+
+// 获取翻译后的分类配置
+export const getPaperBankCategories = (t: (key: string) => string): PaperBankCategory[] => [
+  {
+    value: 'mathematics',
+    label: t('config.paperBankCategories.categories.mathematics.label'),
+    icon: Calculator,
+    subcategories: [
+      // 按教育阶段分类
+      { value: 'primary-math', label: t('config.paperBankCategories.categories.mathematics.subcategories.primary-math'), icon: Plus },
+      { value: 'junior-math', label: t('config.paperBankCategories.categories.mathematics.subcategories.junior-math'), icon: Target },
+      { value: 'senior-math', label: t('config.paperBankCategories.categories.mathematics.subcategories.senior-math'), icon: Hash },
+      // 大学数学课程
+      { value: 'calculus', label: t('config.paperBankCategories.categories.mathematics.subcategories.calculus'), icon: TrendingUp },
+      { value: 'linear-algebra', label: t('config.paperBankCategories.categories.mathematics.subcategories.linear-algebra'), icon: Grid3X3 },
+      { value: 'mathematical-analysis', label: t('config.paperBankCategories.categories.mathematics.subcategories.mathematical-analysis'), icon: Pi },
+      { value: 'probability-statistics', label: t('config.paperBankCategories.categories.mathematics.subcategories.probability-statistics'), icon: Dice6 },
+      { value: 'discrete-mathematics', label: t('config.paperBankCategories.categories.mathematics.subcategories.discrete-mathematics'), icon: Network },
+      { value: 'differential-equations', label: t('config.paperBankCategories.categories.mathematics.subcategories.differential-equations'), icon: Equal },
+      { value: 'complex-analysis', label: t('config.paperBankCategories.categories.mathematics.subcategories.complex-analysis'), icon: Infinity },
+      { value: 'real-analysis', label: t('config.paperBankCategories.categories.mathematics.subcategories.real-analysis'), icon: Square },
+      { value: 'abstract-algebra', label: t('config.paperBankCategories.categories.mathematics.subcategories.abstract-algebra'), icon: Divide },
+      { value: 'topology', label: t('config.paperBankCategories.categories.mathematics.subcategories.topology'), icon: CircleDot },
+      { value: 'functional-analysis', label: t('config.paperBankCategories.categories.mathematics.subcategories.functional-analysis'), icon: TrendingUp },
+      { value: 'numerical-analysis', label: t('config.paperBankCategories.categories.mathematics.subcategories.numerical-analysis'), icon: BarChart3 }
+    ]
+  },
+  {
+    value: 'physics',
+    label: t('config.paperBankCategories.categories.physics.label'),
+    icon: Atom,
+    subcategories: [
+      // 按教育阶段分类
+      { value: 'junior-physics', label: t('config.paperBankCategories.categories.physics.subcategories.junior-physics'), icon: Zap },
+      { value: 'senior-physics', label: t('config.paperBankCategories.categories.physics.subcategories.senior-physics'), icon: Telescope },
+      { value: 'mechanics', label: t('config.paperBankCategories.categories.physics.subcategories.mechanics'), icon: Zap },
+      { value: 'thermodynamics', label: t('config.paperBankCategories.categories.physics.subcategories.thermodynamics'), icon: Thermometer },
+      { value: 'electromagnetism', label: t('config.paperBankCategories.categories.physics.subcategories.electromagnetism'), icon: Magnet },
+      { value: 'optics', label: t('config.paperBankCategories.categories.physics.subcategories.optics'), icon: Eye },
+      { value: 'quantum', label: t('config.paperBankCategories.categories.physics.subcategories.quantum'), icon: Atom },
+      { value: 'relativity', label: t('config.paperBankCategories.categories.physics.subcategories.relativity'), icon: Clock },
+      { value: 'nuclear', label: t('config.paperBankCategories.categories.physics.subcategories.nuclear'), icon: Radiation },
+      { value: 'particle', label: t('config.paperBankCategories.categories.physics.subcategories.particle'), icon: CircleDot },
+      { value: 'astrophysics', label: t('config.paperBankCategories.categories.physics.subcategories.astrophysics'), icon: Telescope },
+      { value: 'condensed-matter', label: t('config.paperBankCategories.categories.physics.subcategories.condensed-matter'), icon: Box },
+      { value: 'wave-physics', label: t('config.paperBankCategories.categories.physics.subcategories.wave-physics'), icon: TrendingUp },
+      { value: 'acoustics', label: t('config.paperBankCategories.categories.physics.subcategories.acoustics'), icon: TrendingUp },
+      { value: 'fluid-mechanics', label: t('config.paperBankCategories.categories.physics.subcategories.fluid-mechanics'), icon: TrendingUp },
+      { value: 'solid-mechanics', label: t('config.paperBankCategories.categories.physics.subcategories.solid-mechanics'), icon: Box }
     ]
   }
 ];
 
 // 获取所有分类选项（用于筛选器）
-export const getCategoryOptions = () => {
+export const getCategoryOptions = (t: (key: string) => string) => {
+  const categories = getPaperBankCategories(t);
   return [
-    { value: 'all', label: '全部分类', icon: Grid3X3 },
-    ...paperBankCategories.map(cat => ({
+    { value: 'all', label: t('config.paperBankCategories.allCategories'), icon: Grid3X3 },
+    ...categories.map(cat => ({
       value: cat.value,
       label: cat.label,
       icon: cat.icon
@@ -103,14 +156,15 @@ export const getCategoryOptions = () => {
 };
 
 // 获取指定分类的子分类选项
-export const getSubcategoryOptions = (categoryValue: string) => {
-  const category = paperBankCategories.find(cat => cat.value === categoryValue);
+export const getSubcategoryOptions = (categoryValue: string, t: (key: string) => string) => {
+  const categories = getPaperBankCategories(t);
+  const category = categories.find(cat => cat.value === categoryValue);
   if (!category || !category.subcategories) {
     return [];
   }
   
   return [
-    { value: 'all', label: '全部子分类', icon: Grid3X3 },
+    { value: 'all', label: t('config.paperBankCategories.allSubcategories'), icon: Grid3X3 },
     ...category.subcategories.map(sub => ({
       value: sub.value,
       label: sub.label,
@@ -120,13 +174,14 @@ export const getSubcategoryOptions = (categoryValue: string) => {
 };
 
 // 根据分类值获取分类信息
-export const getCategoryInfo = (categoryValue: string) => {
-  return paperBankCategories.find(cat => cat.value === categoryValue);
+export const getCategoryInfo = (categoryValue: string, t: (key: string) => string) => {
+  const categories = getPaperBankCategories(t);
+  return categories.find(cat => cat.value === categoryValue);
 };
 
 // 根据子分类值获取子分类信息
-export const getSubcategoryInfo = (categoryValue: string, subcategoryValue: string) => {
-  const category = getCategoryInfo(categoryValue);
+export const getSubcategoryInfo = (categoryValue: string, subcategoryValue: string, t: (key: string) => string) => {
+  const category = getCategoryInfo(categoryValue, t);
   if (!category || !category.subcategories) {
     return null;
   }

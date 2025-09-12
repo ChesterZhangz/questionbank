@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, X } from 'lucide-react';
 import TikZPreview from '../tikz/core/TikZPreview';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface TikZCode {
   id: string;
@@ -28,6 +29,7 @@ const SimpleMediaPreview: React.FC<SimpleMediaPreviewProps> = ({
   images = [],
   className = ''
 }) => {
+  const { t } = useTranslation();
   const [showMedia, setShowMedia] = useState(true);
   const [previewMedia, setPreviewMedia] = useState<{ 
     type: 'image' | 'tikz'; 
@@ -54,7 +56,7 @@ const SimpleMediaPreview: React.FC<SimpleMediaPreviewProps> = ({
       {/* 控制按钮 */}
       <div className="flex items-center justify-between mb-3">
         <h5 className="text-sm font-medium text-gray-700 dark:text-gray-200">
-          题目图形 ({allMediaItems.length})
+          {t('question.simpleMediaPreview.title', { count: allMediaItems.length })}
         </h5>
         <button
           onClick={() => setShowMedia(!showMedia)}
@@ -63,12 +65,12 @@ const SimpleMediaPreview: React.FC<SimpleMediaPreviewProps> = ({
           {showMedia ? (
             <>
               <EyeOff className="w-3 h-3" />
-              <span>隐藏</span>
+              <span>{t('question.simpleMediaPreview.hide')}</span>
             </>
           ) : (
             <>
               <Eye className="w-3 h-3" />
-              <span>显示</span>
+              <span>{t('question.simpleMediaPreview.show')}</span>
             </>
           )}
         </button>
@@ -165,7 +167,7 @@ const SimpleMediaPreview: React.FC<SimpleMediaPreviewProps> = ({
               {/* 标题 */}
               <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                  {previewMedia.type === 'image' ? previewMedia.filename : 'TikZ 图形'}
+                  {previewMedia.type === 'image' ? previewMedia.filename : t('question.simpleMediaPreview.tikzGraphic')}
                 </span>
               </div>
               

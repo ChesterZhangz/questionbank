@@ -4,6 +4,7 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import { X, Target, Check } from 'lucide-react';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface SourceSettingPanelProps {
   onClose: () => void;
@@ -16,6 +17,7 @@ const SourceSettingPanel: React.FC<SourceSettingPanelProps> = ({
   onConfirm,
   selectedCount
 }) => {
+  const { t } = useTranslation();
   const [source, setSource] = useState('');
 
   const handleConfirm = () => {
@@ -43,7 +45,7 @@ const SourceSettingPanel: React.FC<SourceSettingPanelProps> = ({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">批量设置来源</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('preview.sourceSettingPanel.title')}</h3>
             </div>
             <Button
               variant="ghost"
@@ -58,11 +60,11 @@ const SourceSettingPanel: React.FC<SourceSettingPanelProps> = ({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                题目来源
+                {t('preview.sourceSettingPanel.source')}
               </label>
               <Input
                 type="text"
-                placeholder="请输入题目来源，如：2024年高考数学试卷"
+                placeholder={t('preview.sourceSettingPanel.sourcePlaceholder')}
                 value={source}
                 onChange={(e) => setSource(e.target.value)}
                 className="w-full"
@@ -70,7 +72,7 @@ const SourceSettingPanel: React.FC<SourceSettingPanelProps> = ({
             </div>
 
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              将为选中的 {selectedCount} 道题目统一设置来源信息
+              {t('preview.sourceSettingPanel.selectedCount', { count: selectedCount })}
             </div>
 
             <div className="flex items-center justify-end space-x-3 pt-4">
@@ -78,7 +80,7 @@ const SourceSettingPanel: React.FC<SourceSettingPanelProps> = ({
                 variant="outline"
                 onClick={onClose}
               >
-                取消
+                {t('preview.common.cancel')}
               </Button>
               <Button
                 onClick={handleConfirm}
@@ -86,7 +88,7 @@ const SourceSettingPanel: React.FC<SourceSettingPanelProps> = ({
                 className="flex items-center space-x-1"
               >
                 <Check className="h-4 w-4" />
-                <span>确认设置</span>
+                <span>{t('preview.common.save')}</span>
               </Button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { recognizeImage, processPDF, processWord } from '../services/mathpixService';
+import { useTranslation } from './useTranslation';
 
 interface UseMathpixUploadOptions {
   onSuccess?: (result: any) => void;
@@ -10,6 +11,7 @@ export const useMathpixUpload = (options?: UseMathpixUploadOptions) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<any>(null);
+  const { t } = useTranslation();
 
   // 处理图片上传
   const handleImageUpload = async (file: File) => {
@@ -22,9 +24,9 @@ export const useMathpixUpload = (options?: UseMathpixUploadOptions) => {
       options?.onSuccess?.(response);
       return response;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || err.message || '图片识别失败';
+      const errorMessage = err.response?.data?.error || err.message || t('hooks.mathpixUpload.errors.imageRecognitionFailed');
       setError(errorMessage);
-      console.error('图片识别失败:', errorMessage);
+      console.error(t('hooks.mathpixUpload.console.imageRecognitionFailed'), errorMessage);
       options?.onError?.(err);
       throw err;
     } finally {
@@ -43,9 +45,9 @@ export const useMathpixUpload = (options?: UseMathpixUploadOptions) => {
       options?.onSuccess?.(response);
       return response;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || err.message || 'PDF处理失败';
+      const errorMessage = err.response?.data?.error || err.message || t('hooks.mathpixUpload.errors.pdfProcessingFailed');
       setError(errorMessage);
-      console.error('PDF处理失败:', errorMessage);
+      console.error(t('hooks.mathpixUpload.console.pdfProcessingFailed'), errorMessage);
       options?.onError?.(err);
       throw err;
     } finally {
@@ -64,9 +66,9 @@ export const useMathpixUpload = (options?: UseMathpixUploadOptions) => {
       options?.onSuccess?.(response);
       return response;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || err.message || 'Word处理失败';
+      const errorMessage = err.response?.data?.error || err.message || t('hooks.mathpixUpload.errors.wordProcessingFailed');
       setError(errorMessage);
-      console.error('Word处理失败:', errorMessage);
+      console.error(t('hooks.mathpixUpload.console.wordProcessingFailed'), errorMessage);
       options?.onError?.(err);
       throw err;
     } finally {
@@ -85,9 +87,9 @@ export const useMathpixUpload = (options?: UseMathpixUploadOptions) => {
     } else if (fileType.includes('word') || fileType.includes('docx') || fileType.includes('doc')) {
       return handleWordUpload(file);
     } else {
-      const errorMessage = '不支持的文件类型';
+      const errorMessage = t('hooks.mathpixUpload.errors.unsupportedFileType');
       setError(errorMessage);
-      console.error('不支持的文件类型');
+      console.error(t('hooks.mathpixUpload.console.unsupportedFileType'));
       throw new Error(errorMessage);
     }
   };

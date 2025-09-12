@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface Question {
   _id: string;
@@ -113,14 +114,16 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
   onClose, 
   historyDoc 
 }) => {
+  const { t } = useTranslation();
+  
   if (!historyDoc) return null;
 
   const getQuestionTypeText = (type: string) => {
     switch (type) {
-      case 'choice': return '选择题';
-      case 'fill': return '填空题';
-      case 'solution': return '解答题';
-      default: return '未知类型';
+      case 'choice': return t('preview.paperHistoryDetail.questionTypes.choice');
+      case 'fill': return t('preview.paperHistoryDetail.questionTypes.fill');
+      case 'solution': return t('preview.paperHistoryDetail.questionTypes.solution');
+      default: return t('preview.paperHistoryDetail.questionTypes.unknown');
     }
   };
 
@@ -171,14 +174,14 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'completed': return '处理完成';
-      case 'failed': return '处理失败';
-      case 'processing': return '处理中';
-      case 'uploading': return '上传中';
-      case 'waiting': return '等待中';
-      case 'paused': return '已暂停';
-      case 'retrying': return '重试中';
-      default: return '未知状态';
+      case 'completed': return t('preview.paperHistoryDetail.statusTypes.completed');
+      case 'failed': return t('preview.paperHistoryDetail.statusTypes.failed');
+      case 'processing': return t('preview.paperHistoryDetail.statusTypes.processing');
+      case 'uploading': return t('preview.paperHistoryDetail.statusTypes.uploading');
+      case 'waiting': return t('preview.paperHistoryDetail.statusTypes.waiting');
+      case 'paused': return t('preview.paperHistoryDetail.statusTypes.paused');
+      case 'retrying': return t('preview.paperHistoryDetail.statusTypes.retrying');
+      default: return t('preview.paperHistoryDetail.statusTypes.unknown');
     }
   };
 
@@ -218,8 +221,8 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
                       <FileText className="h-6 w-6" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-semibold">文档处理详情</h2>
-                      <p className="text-sm opacity-90">查看上传文档的详细处理信息</p>
+                      <h2 className="text-xl font-semibold">{t('preview.paperHistoryDetail.title')}</h2>
+                      <p className="text-sm opacity-90">{t('preview.paperHistoryDetail.subtitle')}</p>
                     </div>
                   </div>
                   <Button
@@ -243,32 +246,32 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
                       <div className="flex items-center space-x-3 mb-4">
                         <div className="text-2xl">{getFileTypeIcon(historyDoc.fileType)}</div>
                         <div>
-                          <h3 className="font-semibold text-blue-900 dark:text-blue-100">文件信息</h3>
-                          <p className="text-sm text-blue-700 dark:text-blue-300">Document Information</p>
+                          <h3 className="font-semibold text-blue-900 dark:text-blue-100">{t('preview.paperHistoryDetail.fileInfo')}</h3>
+                          <p className="text-sm text-blue-700 dark:text-blue-300">{t('preview.paperHistoryDetail.fileInfoEn')}</p>
                         </div>
                       </div>
                       
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-blue-700 dark:text-blue-300">文件名</span>
+                          <span className="text-sm text-blue-700 dark:text-blue-300">{t('preview.paperHistoryDetail.fileName')}</span>
                           <span className="text-sm font-medium text-blue-900 dark:text-blue-100 truncate max-w-32" title={historyDoc.fileName}>
                             {historyDoc.fileName}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-blue-700 dark:text-blue-300">文件类型</span>
+                          <span className="text-sm text-blue-700 dark:text-blue-300">{t('preview.paperHistoryDetail.fileType')}</span>
                           <span className={`text-sm font-medium ${getFileTypeColor(historyDoc.fileType)}`}>
                             {historyDoc.fileType.toUpperCase()}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-blue-700 dark:text-blue-300">文件大小</span>
+                          <span className="text-sm text-blue-700 dark:text-blue-300">{t('preview.paperHistoryDetail.fileSize')}</span>
                           <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
                             {formatFileSize(historyDoc.fileSize)}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-blue-700 dark:text-blue-300">处理状态</span>
+                          <span className="text-sm text-blue-700 dark:text-blue-300">{t('preview.paperHistoryDetail.processStatus')}</span>
                           <span className={`text-sm font-medium ${getStatusColor(historyDoc.status)}`}>
                             {getStatusText(historyDoc.status)}
                           </span>
@@ -281,21 +284,21 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
                       <div className="flex items-center space-x-3 mb-4">
                         <Clock className="h-5 w-5 text-green-600 dark:text-green-400" />
                         <div>
-                          <h3 className="font-semibold text-green-900 dark:text-green-100">时间信息</h3>
-                          <p className="text-sm text-green-700 dark:text-green-300">Time Information</p>
+                          <h3 className="font-semibold text-green-900 dark:text-green-100">{t('preview.paperHistoryDetail.timeInfo')}</h3>
+                          <p className="text-sm text-green-700 dark:text-green-300">{t('preview.paperHistoryDetail.timeInfoEn')}</p>
                         </div>
                       </div>
                       
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-green-700 dark:text-green-300">上传时间</span>
+                          <span className="text-sm text-green-700 dark:text-green-300">{t('preview.paperHistoryDetail.uploadTime')}</span>
                           <span className="text-sm font-medium text-green-900 dark:text-green-100">
                             {new Date(historyDoc.uploadTime).toLocaleString()}
                           </span>
                         </div>
                         {historyDoc.processTime && (
                           <div className="flex items-center justify-between">
-                            <span className="text-sm text-green-700 dark:text-green-300">处理完成</span>
+                            <span className="text-sm text-green-700 dark:text-green-300">{t('preview.paperHistoryDetail.processComplete')}</span>
                             <span className="text-sm font-medium text-green-900 dark:text-green-100">
                               {new Date(historyDoc.processTime).toLocaleString()}
                             </span>
@@ -303,9 +306,9 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
                         )}
                         {historyDoc.processTime && (
                           <div className="flex items-center justify-between">
-                            <span className="text-sm text-green-700 dark:text-green-300">处理耗时</span>
+                            <span className="text-sm text-green-700 dark:text-green-300">{t('preview.paperHistoryDetail.processTime')}</span>
                             <span className="text-sm font-medium text-green-900 dark:text-green-100">
-                              {Math.round((new Date(historyDoc.processTime).getTime() - new Date(historyDoc.uploadTime).getTime()) / 1000)}秒
+                              {Math.round((new Date(historyDoc.processTime).getTime() - new Date(historyDoc.uploadTime).getTime()) / 1000)}{t('preview.paperHistoryDetail.processTimeUnit')}
                             </span>
                           </div>
                         )}
@@ -320,23 +323,23 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
                       <div className="flex items-center space-x-3 mb-6">
                         <BarChart3 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                         <div>
-                          <h3 className="text-lg font-semibold text-purple-900 dark:text-purple-100">处理结果概览</h3>
-                          <p className="text-sm text-purple-700 dark:text-purple-300">Processing Results Overview</p>
+                          <h3 className="text-lg font-semibold text-purple-900 dark:text-purple-100">{t('preview.paperHistoryDetail.resultsOverview')}</h3>
+                          <p className="text-sm text-purple-700 dark:text-purple-300">{t('preview.paperHistoryDetail.resultsOverviewEn')}</p>
                         </div>
                       </div>
                       
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="text-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-purple-200 dark:border-purple-600">
                           <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{totalQuestions}</div>
-                          <div className="text-sm text-purple-700 dark:text-purple-300">总题目数</div>
+                          <div className="text-sm text-purple-700 dark:text-purple-300">{t('preview.paperHistoryDetail.totalQuestions')}</div>
                         </div>
                         <div className="text-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-purple-200 dark:border-purple-600">
                           <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{avgConfidence}%</div>
-                          <div className="text-sm text-purple-700 dark:text-purple-300">平均置信度</div>
+                          <div className="text-sm text-purple-700 dark:text-purple-300">{t('preview.paperHistoryDetail.avgConfidence')}</div>
                         </div>
                         <div className="text-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-purple-200 dark:border-purple-600">
                           <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{historyDoc.fileType.toUpperCase()}</div>
-                          <div className="text-sm text-purple-700 dark:text-purple-300">文件格式</div>
+                          <div className="text-sm text-purple-700 dark:text-purple-300">{t('preview.paperHistoryDetail.fileFormat')}</div>
                         </div>
                         <div className="text-center p-3 bg-white dark:bg-gray-700 rounded-lg border border-purple-200 dark:border-purple-600">
                           <div className="flex justify-center mb-2">
@@ -346,7 +349,7 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
                               <Clock2 className="h-8 w-8 text-blue-500 dark:text-blue-400" />
                             )}
                           </div>
-                          <div className="text-sm font-medium text-purple-700 dark:text-purple-300">处理状态</div>
+                          <div className="text-sm font-medium text-purple-700 dark:text-purple-300">{t('preview.paperHistoryDetail.processStatusLabel')}</div>
                         </div>
                       </div>
                     </Card>
@@ -356,8 +359,8 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
                       <div className="flex items-center space-x-3 mb-6">
                         <TrendingUp className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                         <div>
-                          <h3 className="text-lg font-semibold text-orange-900 dark:text-orange-100">题目类型分布</h3>
-                          <p className="text-sm text-orange-700 dark:text-orange-300">Question Type Distribution</p>
+                          <h3 className="text-lg font-semibold text-orange-900 dark:text-orange-100">{t('preview.paperHistoryDetail.typeDistribution')}</h3>
+                          <p className="text-sm text-orange-700 dark:text-orange-300">{t('preview.paperHistoryDetail.typeDistributionEn')}</p>
                         </div>
                       </div>
                       
@@ -369,7 +372,7 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
                                 {getQuestionTypeText(type)}
                               </span>
                               <span className="text-sm text-orange-700 dark:text-orange-300">
-                                {count} 道题目
+                                {count} {t('preview.paperHistoryDetail.questions')}
                               </span>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -397,8 +400,8 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
                       <div className="flex items-center space-x-3 mb-6">
                         <Database className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
                         <div>
-                          <h3 className="text-lg font-semibold text-indigo-900 dark:text-indigo-100">处理步骤详情</h3>
-                          <p className="text-sm text-indigo-700 dark:text-indigo-300">Processing Steps Details</p>
+                          <h3 className="text-lg font-semibold text-indigo-900 dark:text-indigo-100">{t('preview.paperHistoryDetail.processingSteps')}</h3>
+                          <p className="text-sm text-indigo-700 dark:text-indigo-300">{t('preview.paperHistoryDetail.processingStepsEn')}</p>
                         </div>
                       </div>
                       
@@ -452,9 +455,9 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
                                   step.status === 'failed' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
                                   'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                                 }`}>
-                                  {step.status === 'completed' ? '完成' :
-                                   step.status === 'processing' ? '处理中' :
-                                   step.status === 'failed' ? '失败' : '等待'}
+                                  {step.status === 'completed' ? t('preview.paperHistoryDetail.completed') :
+                                   step.status === 'processing' ? t('preview.paperHistoryDetail.processing') :
+                                   step.status === 'failed' ? t('preview.paperHistoryDetail.failed') : t('preview.paperHistoryDetail.waiting')}
                                 </div>
                                 
                                 {/* 错误信息 */}
@@ -477,7 +480,7 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
               <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    文档ID: {historyDoc.id}
+                    {t('preview.paperHistoryDetail.documentId', { id: historyDoc.id })}
                   </div>
                   <div className="flex items-center space-x-3">
                     <Button
@@ -489,7 +492,7 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
                       className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      导出
+                      {t('preview.paperHistoryDetail.export')}
                     </Button>
                     <Button
                       variant="outline"
@@ -500,13 +503,13 @@ const PaperHistoryDetail: React.FC<PaperHistoryDetailProps> = ({
                       className="text-green-600 dark:text-green-400 border-green-200 dark:border-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
                     >
                       <Share2 className="h-4 w-4 mr-2" />
-                      分享
+                      {t('preview.paperHistoryDetail.share')}
                     </Button>
                     <Button
                       onClick={onClose}
                       className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
                     >
-                      关闭
+                      {t('preview.paperHistoryDetail.close')}
                     </Button>
                   </div>
                 </div>

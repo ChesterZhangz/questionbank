@@ -5,7 +5,8 @@ import CopyButton from './CopyButton';
 import CopyModeSelector from './CopyModeSelector';
 import OverleafLinkManager from './OverleafLinkManager';
 import type { Paper, CopyConfig } from './types';
-import { defaultCopyConfig } from './copyUtils';
+import { defaultCopyConfig, setTranslationFunction } from './copyUtils';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface PaperCopyManagerProps {
   paper: Paper;
@@ -44,9 +45,15 @@ const PaperCopyManager: React.FC<PaperCopyManagerProps> = ({
   onSelectiveCopyConfigUpdate,
   currentUserId
 }) => {
+  const { t } = useTranslation();
   const [config, setConfig] = useState<CopyConfig>(defaultCopyConfig);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+
+  // 设置 copyUtils 的翻译函数
+  React.useEffect(() => {
+    setTranslationFunction(t);
+  }, [t]);
 
   // 检查是否可以编辑Overleaf链接
   // 只有添加链接的人和试卷集所有者可以编辑/删除链接
@@ -76,7 +83,7 @@ const PaperCopyManager: React.FC<PaperCopyManagerProps> = ({
       {canEdit && (
         <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
           <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
-            Overleaf编辑链接
+            {t('paper.paperCopyManager.overleafEditLink')}
           </h3>
           <OverleafLinkManager
             paper={paper}
@@ -120,12 +127,12 @@ const PaperCopyManager: React.FC<PaperCopyManagerProps> = ({
             {copySuccess ? (
               <>
                 <Check className="w-4 h-4 mr-2" />
-                已复制
+                {t('paper.copyButton.states.copied')}
               </>
             ) : (
               <>
                 <Copy className="w-4 h-4 mr-2" />
-                复制{selectedQuestions.length}道题的LaTeX
+                {t('paper.paperCopyManager.copySelected')} {selectedQuestions.length} {t('paper.practicePaperCard.questions')} LaTeX
               </>
             )}
           </Button>
@@ -147,7 +154,7 @@ const PaperCopyManager: React.FC<PaperCopyManagerProps> = ({
             className="flex items-center space-x-1"
           >
             <Settings className="w-4 h-4" />
-            <span>设置</span>
+            <span>{t('paper.paperCopyManager.settings')}</span>
             {showAdvancedSettings ? (
               <ChevronUp className="w-4 h-4" />
             ) : (
@@ -163,7 +170,7 @@ const PaperCopyManager: React.FC<PaperCopyManagerProps> = ({
           {isSelectMode ? (
             // 选择模式下的设置
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-gray-900 dark:text-white">选择复制设置</h4>
+              <h4 className="text-sm font-medium text-gray-900 dark:text-white">{t('paper.paperCopyManager.selectiveCopy')}</h4>
               <div className="space-y-3">
                 <label className="flex items-center space-x-2">
                   <input

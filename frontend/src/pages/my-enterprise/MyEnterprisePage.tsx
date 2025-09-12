@@ -27,6 +27,7 @@ import { FuzzySelect, MultiSelect } from '../../components/ui/menu';
 
 import Avatar from '../../components/ui/Avatar';
 import LoadingPage from '../../components/ui/LoadingPage';
+import { useTranslation } from '../../hooks/useTranslation';
 
 
 // 后端返回的企业信息接口
@@ -142,6 +143,7 @@ interface MessageData {
 
 const MyEnterprisePage: React.FC = () => {
   // const { user } = useAuthStore();
+  const { t } = useTranslation();
   
   // 弹窗状态管理
   const { 
@@ -276,11 +278,11 @@ const MyEnterprisePage: React.FC = () => {
           // 错误日志已清理
         }
       } else {
-        setError('获取企业信息失败');
+        setError(t('myEnterprise.errors.fetchEnterpriseFailed'));
       }
     } catch (error: any) {
       // 错误日志已清理
-      setError(error.response?.data?.error || '获取企业信息失败');
+      setError(error.response?.data?.error || t('myEnterprise.errors.fetchEnterpriseFailed'));
     }
   };
 
@@ -376,17 +378,17 @@ const MyEnterprisePage: React.FC = () => {
   const handleCreateDepartment = async () => {
     try {
       // 设置创建中状态
-      setConfirmLoading(true, '创建中...');
+      setConfirmLoading(true, t('myEnterprise.departmentManagement.create') + '...');
       const response = await enterpriseService.createDepartment(createDepartmentForm);
       if (response.data.success) {
         setShowCreateDepartmentModal(false);
         setCreateDepartmentForm({ name: '', code: '', description: '' });
         fetchDepartments(true);
-        showSuccessRightSlide('创建成功', '部门已成功创建');
+        showSuccessRightSlide(t('myEnterprise.departmentManagement.createSuccess'), t('myEnterprise.departmentManagement.createSuccessMessage'));
       }
     } catch (error: any) {
       // 错误日志已清理
-      showErrorRightSlide('创建失败', error.response?.data?.error || '创建部门失败');
+      showErrorRightSlide(t('myEnterprise.departmentManagement.createFailed'), error.response?.data?.error || t('myEnterprise.departmentManagement.createFailed'));
     } finally {
       setConfirmLoading(false);
     }
@@ -396,7 +398,7 @@ const MyEnterprisePage: React.FC = () => {
   const handleEditDepartment = async () => {
     try {
       // 设置保存中状态
-      setConfirmLoading(true, '保存中...');
+      setConfirmLoading(true, t('myEnterprise.actions.save') + '...');
       const response = await enterpriseService.updateDepartment(editDepartmentForm._id, {
         name: editDepartmentForm.name,
         description: editDepartmentForm.description
@@ -404,11 +406,11 @@ const MyEnterprisePage: React.FC = () => {
       if (response.data.success) {
         setShowEditDepartmentModal(false);
         fetchDepartments(true);
-        showSuccessRightSlide('更新成功', '部门信息已成功更新');
+        showSuccessRightSlide(t('myEnterprise.departmentManagement.updateSuccess'), t('myEnterprise.departmentManagement.updateSuccessMessage'));
       }
     } catch (error: any) {
       // 错误日志已清理
-      showErrorRightSlide('更新失败', error.response?.data?.error || '更新部门失败');
+      showErrorRightSlide(t('myEnterprise.departmentManagement.updateFailed'), error.response?.data?.error || t('myEnterprise.departmentManagement.updateFailed'));
     } finally {
       setConfirmLoading(false);
     }
@@ -418,14 +420,14 @@ const MyEnterprisePage: React.FC = () => {
   const handleDeleteDepartment = async (departmentId: string) => {
     // 使用 ConfirmModal 替代 window.confirm
     showConfirm(
-      '删除部门',
-      '确定要删除这个部门吗？此操作不可撤销.',
+      t('myEnterprise.departmentManagement.confirmDelete'),
+      t('myEnterprise.departmentManagement.deleteConfirmMessage'),
       async () => {
         try {
-          setConfirmLoading(true, '删除中...');
+          setConfirmLoading(true, t('myEnterprise.actions.delete') + '...');
           const response = await enterpriseService.deleteDepartment(departmentId);
           if (response.data.success) {
-            showSuccessRightSlide('删除成功', '部门已成功删除');
+            showSuccessRightSlide(t('myEnterprise.departmentManagement.deleteSuccess'), t('myEnterprise.departmentManagement.deleteSuccessMessage'));
             // 刷新部门列表
             fetchDepartments(true);
             // 删除成功后自动关闭确认弹窗
@@ -433,15 +435,15 @@ const MyEnterprisePage: React.FC = () => {
           }
         } catch (error: any) {
           // 错误日志已清理
-          showErrorRightSlide('删除失败', error.response?.data?.error || '删除部门失败');
+          showErrorRightSlide(t('myEnterprise.departmentManagement.deleteFailed'), error.response?.data?.error || t('myEnterprise.departmentManagement.deleteFailed'));
         } finally {
           setConfirmLoading(false);
         }
       },
       {
         type: 'danger',
-        confirmText: '删除',
-        cancelText: '取消',
+        confirmText: t('myEnterprise.actions.delete'),
+        cancelText: t('myEnterprise.actions.cancel'),
         confirmDanger: true
       }
     );
@@ -452,23 +454,23 @@ const MyEnterprisePage: React.FC = () => {
     try {
       // 验证表单
       if (!sendMessageForm.content.trim()) {
-        showErrorRightSlide('输入错误', '请输入消息内容');
+        showErrorRightSlide(t('myEnterprise.messageSystem.inputError'), t('myEnterprise.messageSystem.contentRequired'));
         return;
       }
 
       if (sendMessageForm.type === 'department' && !sendMessageForm.departmentId) {
-        showErrorRightSlide('输入错误', '请选择部门');
+        showErrorRightSlide(t('myEnterprise.messageSystem.inputError'), t('myEnterprise.messageSystem.departmentRequired'));
         return;
       }
 
       if (sendMessageForm.type === 'general' && sendMessageForm.recipients.length === 0) {
-        showErrorRightSlide('输入错误', '请选择消息接收者');
+        showErrorRightSlide(t('myEnterprise.messageSystem.inputError'), t('myEnterprise.messageSystem.recipientRequired'));
         return;
       }
 
       // 检查是否给自己发消息
       if (sendMessageForm.type === 'general' && sendMessageForm.recipients.includes(currentUserId)) {
-        showErrorRightSlide('输入错误', '不能给自己发消息');
+        showErrorRightSlide(t('myEnterprise.messageSystem.inputError'), t('myEnterprise.messageSystem.cannotSendToSelf'));
         return;
       }
 
@@ -482,7 +484,7 @@ const MyEnterprisePage: React.FC = () => {
         type: sendMessageForm.type,
         sender: {
           _id: currentUserId,
-          name: enterpriseInfo?.currentUser?.name || '我',
+          name: enterpriseInfo?.currentUser?.name || t('myEnterprise.enterpriseInfo.name'),
           avatar: enterpriseInfo?.currentUser?.avatar
         },
         recipients: sendMessageForm.recipients.map(id => ({ _id: id, name: '', avatar: undefined })),
@@ -511,7 +513,7 @@ const MyEnterprisePage: React.FC = () => {
       // 异步发送消息
       enterpriseService.sendMessage(sendMessageForm).then((response) => {
         if (response.data.success) {
-          showSuccessRightSlide('发送成功', '消息已发送');
+          showSuccessRightSlide(t('myEnterprise.messageSystem.sendSuccess'), t('myEnterprise.messageSystem.sendSuccessMessage'));
           // 更新乐观更新的消息为真实消息
           setMessages(prev => prev.map(m => 
             m._id === optimisticMessage._id 
@@ -519,13 +521,13 @@ const MyEnterprisePage: React.FC = () => {
               : m
           ));
         } else {
-          showErrorRightSlide('发送失败', response.data.message || '发送失败');
+          showErrorRightSlide(t('myEnterprise.messageSystem.sendFailed'), response.data.message || t('myEnterprise.messageSystem.sendFailed'));
           // 移除乐观更新的消息
           setMessages(prev => prev.filter(m => m._id !== optimisticMessage._id));
         }
       }).catch((error) => {
         // 错误日志已清理
-        showErrorRightSlide('发送失败', error.response?.data?.error || '发送失败');
+        showErrorRightSlide(t('myEnterprise.messageSystem.sendFailed'), error.response?.data?.error || t('myEnterprise.messageSystem.sendFailed'));
         // 移除乐观更新的消息
         setMessages(prev => prev.filter(m => m._id !== optimisticMessage._id));
       }).finally(() => {
@@ -533,7 +535,7 @@ const MyEnterprisePage: React.FC = () => {
       });
     } catch (error: any) {
       // 错误日志已清理
-      showErrorRightSlide('发送失败', error.response?.data?.error || '发送失败');
+      showErrorRightSlide(t('myEnterprise.messageSystem.sendFailed'), error.response?.data?.error || t('myEnterprise.messageSystem.sendFailed'));
       setSendingMessage(false);
     }
   };
@@ -545,12 +547,12 @@ const MyEnterprisePage: React.FC = () => {
       const memberToEdit = members.find(m => m.enterpriseMemberId === editMemberForm._id);
       
       if (!memberToEdit) {
-        showErrorRightSlide('错误', '找不到要编辑的成员');
+        showErrorRightSlide(t('myEnterprise.enterpriseInfo.error'), t('myEnterprise.memberManagement.memberNotFound'));
         return;
       }
 
       // 设置加载状态
-      setConfirmLoading(true, '更新中...');
+      setConfirmLoading(true, t('myEnterprise.actions.update') + '...');
       
       // 发送API请求
       const response = await enterpriseService.setAdminRole(editMemberForm._id, {
@@ -561,14 +563,14 @@ const MyEnterprisePage: React.FC = () => {
       
       if (response.data.success) {
         setShowEditMemberModal(false);
-        showSuccessRightSlide('更新成功', '成员职位更新成功');
+        showSuccessRightSlide(t('myEnterprise.memberManagement.updateSuccess'), t('myEnterprise.memberManagement.updateSuccessMessage'));
         
         // 刷新数据
         fetchMembers();
       }
       
     } catch (error: any) {
-      showErrorRightSlide('更新失败', error.response?.data?.error || '更新成员职位失败');
+      showErrorRightSlide(t('myEnterprise.memberManagement.updateFailed'), error.response?.data?.error || t('myEnterprise.memberManagement.updateFailed'));
     } finally {
       setConfirmLoading(false);
     }
@@ -578,7 +580,7 @@ const MyEnterprisePage: React.FC = () => {
   const handleReplyMessage = async () => {
     try {
       if (!replyForm.content.trim()) {
-        showErrorRightSlide('输入错误', '请输入回复内容');
+        showErrorRightSlide(t('myEnterprise.messageSystem.inputError'), t('myEnterprise.messageSystem.replyContentRequired'));
         return;
       }
 
@@ -590,7 +592,7 @@ const MyEnterprisePage: React.FC = () => {
       };
 
       // 设置发送中状态
-      setConfirmLoading(true, '发送中...');
+      setConfirmLoading(true, t('myEnterprise.messageSystem.send') + '...');
       const response = await enterpriseService.sendMessage(messageData);
       if (response.data.success) {
         setReplyingToMessage(null); // 关闭回复输入框
@@ -599,11 +601,11 @@ const MyEnterprisePage: React.FC = () => {
           replyTo: ''
         });
         fetchMessages();
-        showSuccessRightSlide('发送成功', '回复已成功发送');
+        showSuccessRightSlide(t('myEnterprise.messageSystem.sendSuccess'), t('myEnterprise.messageSystem.replySuccessMessage'));
       }
     } catch (error: any) {
       // 错误日志已清理
-      showErrorRightSlide('回复失败', error.response?.data?.error || error.message);
+      showErrorRightSlide(t('myEnterprise.messageSystem.replyFailed'), error.response?.data?.error || error.message);
     } finally {
       setConfirmLoading(false);
     }
@@ -613,7 +615,7 @@ const MyEnterprisePage: React.FC = () => {
   const handleTransferSuperAdmin = async () => {
     try {
       // 设置处理中状态
-      setConfirmLoading(true, '转让中...');
+      setConfirmLoading(true, t('myEnterprise.actions.transfer') + '...');
       const response = await enterpriseService.transferSuperAdmin(transferSuperAdminForm.newSuperAdminId);
       
       if (response.data.success) {
@@ -622,8 +624,8 @@ const MyEnterprisePage: React.FC = () => {
         
         // 显示成功消息
         showSuccess(
-          '转让成功',
-          '超级管理员身份转让成功！您将被重定向到登录页面.',
+          t('myEnterprise.actions.transferSuccess'),
+          t('myEnterprise.actions.transferSuccessMessage'),
           {
             onConfirm: () => {
               // 转让成功后重定向到登录页面，因为当前用户身份已改变
@@ -637,14 +639,14 @@ const MyEnterprisePage: React.FC = () => {
       // 错误日志已清理
       
       // 显示详细的错误信息
-      let errorMessage = '转让失败';
+      let errorMessage = t('myEnterprise.actions.transferFailed');
       if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
       } else if (error.message) {
         errorMessage = error.message;
       }
       
-      showErrorRightSlide('转让失败', errorMessage);
+      showErrorRightSlide(t('myEnterprise.actions.transferFailed'), errorMessage);
     } finally {
       setConfirmLoading(false);
     }
@@ -705,16 +707,16 @@ const MyEnterprisePage: React.FC = () => {
           return newMessages;
         });
         
-        showSuccessRightSlide('删除成功', '消息已成功删除');
+        showSuccessRightSlide(t('myEnterprise.messageSystem.deleteSuccess'), t('myEnterprise.messageSystem.deleteSuccessMessage'));
         // 强制刷新消息列表，确保数据同步
         fetchMessages(true);
       } else {
-        showErrorRightSlide('删除失败', response.data.message || '删除失败');
+        showErrorRightSlide(t('myEnterprise.messageSystem.deleteFailed'), response.data.message || t('myEnterprise.messageSystem.deleteFailed'));
       }
     } catch (error: any) {
       // 错误日志已清理
-      const errorMessage = error.response?.data?.error || '删除消息失败';
-      showErrorRightSlide('删除失败', errorMessage);
+      const errorMessage = error.response?.data?.error || t('myEnterprise.messageSystem.deleteFailed');
+      showErrorRightSlide(t('myEnterprise.messageSystem.deleteFailed'), errorMessage);
     } finally {
       setDeletingMessage(false);
       setShowDeleteMessageModal(false);
@@ -737,7 +739,7 @@ const MyEnterprisePage: React.FC = () => {
   const openEditMemberModal = (member: EnterpriseMemberData) => {
     // 超级管理员不能被编辑
     if (member.role === 'superAdmin') {
-      showErrorRightSlide('权限不足', '超级管理员身份不能通过此界面修改，请使用身份转让功能');
+      showErrorRightSlide(t('myEnterprise.errors.insufficientPermissions'), t('myEnterprise.errors.superAdminCannotEdit'));
       return;
     }
     
@@ -792,19 +794,19 @@ const MyEnterprisePage: React.FC = () => {
     }
   };
 
-  // 获取消息类型中文名称
+  // 获取消息类型名称
   const getMessageTypeName = (type: string) => {
     switch (type) {
       case 'general':
-        return '普通消息';
+        return t('myEnterprise.messageTypes.general');
       case 'announcement':
-        return '公告';
+        return t('myEnterprise.messageTypes.announcement');
       case 'department':
-        return '部门消息';
+        return t('myEnterprise.messageTypes.department');
       case 'group':
-        return '群聊消息';
+        return t('myEnterprise.messageTypes.group');
       default:
-        return '未知类型';
+        return t('myEnterprise.messageTypes.unknown');
     }
   };
 
@@ -839,7 +841,7 @@ const MyEnterprisePage: React.FC = () => {
                   ...(msg.isRead || []), 
                   {
                     _id: currentUserId,
-                    name: enterpriseInfo?.currentUser?.name || '当前用户',
+                    name: enterpriseInfo?.currentUser?.name || t('myEnterprise.enterpriseInfo.currentUser'),
                     avatar: enterpriseInfo?.currentUser?.avatar
                   }
                 ]
@@ -866,8 +868,8 @@ const MyEnterprisePage: React.FC = () => {
       <LoadingPage
         type="loading"
         animation="shimmer"
-        title="正在加载企业信息"
-        description="正在连接企业服务，请稍候..."
+        title={t('myEnterprise.loading.title')}
+        description={t('myEnterprise.loading.description')}
         fullScreen={true}
       />
     );
@@ -880,9 +882,9 @@ const MyEnterprisePage: React.FC = () => {
           <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <Building2 className="w-8 h-8 text-red-600 dark:text-red-400" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">加载失败</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('myEnterprise.errors.loadFailed')}</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-          <Button onClick={fetchEnterpriseInfo}>重试</Button>
+          <Button onClick={fetchEnterpriseInfo}>{t('myEnterprise.actions.retry')}</Button>
         </div>
       </div>
     );
@@ -895,8 +897,8 @@ const MyEnterprisePage: React.FC = () => {
           <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
             <Building2 className="w-8 h-8 text-gray-600 dark:text-gray-400" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">未加入企业</h2>
-          <p className="text-gray-600 dark:text-gray-400">您尚未加入任何企业</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('myEnterprise.errors.notJoined')}</h2>
+          <p className="text-gray-600 dark:text-gray-400">{t('myEnterprise.errors.notJoinedMessage')}</p>
         </div>
       </div>
     );
@@ -918,8 +920,8 @@ const MyEnterprisePage: React.FC = () => {
               <Building2 className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{enterprise?.name || '企业'}</h1>
-              <p className="text-gray-600 dark:text-gray-400">企业管理中心</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{enterprise?.name || t('myEnterprise.enterpriseInfo.enterprise')}</h1>
+              <p className="text-gray-600 dark:text-gray-400">{t('myEnterprise.enterpriseInfo.managementCenter')}</p>
             </div>
           </div>
 
@@ -936,40 +938,40 @@ const MyEnterprisePage: React.FC = () => {
                 <div className="flex-1">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">基本信息</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('myEnterprise.overview.basicInfo')}</h3>
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-500 dark:text-gray-400">邮箱后缀:</span>
+                          <span className="text-gray-500 dark:text-gray-400">{t('myEnterprise.overview.emailSuffix')}:</span>
                           <span className="font-medium">{enterprise?.emailSuffix || 'N/A'}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-500 dark:text-gray-400">信用代码:</span>
+                          <span className="text-gray-500 dark:text-gray-400">{t('myEnterprise.overview.creditCode')}:</span>
                           <span className="font-medium">{enterprise?.creditCode || 'N/A'}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-500 dark:text-gray-400">成员数量:</span>
+                          <span className="text-gray-500 dark:text-gray-400">{t('myEnterprise.overview.memberCount')}:</span>
                           <span className="font-medium">{enterprise?.currentMembers || 0}/{enterprise?.maxMembers || 0}</span>
                         </div>
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">详细信息</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('myEnterprise.overview.detailedInfo')}</h3>
                       <div className="space-y-2 text-sm">
                         {enterprise?.description && (
                           <div className="flex items-center gap-2">
-                            <span className="text-gray-500 dark:text-gray-400">描述:</span>
+                            <span className="text-gray-500 dark:text-gray-400">{t('myEnterprise.overview.description')}:</span>
                             <span className="font-medium">{enterprise.description}</span>
                           </div>
                         )}
                         {enterprise?.address && (
                           <div className="flex items-center gap-2">
-                            <span className="text-gray-500 dark:text-gray-400">地址:</span>
+                            <span className="text-gray-500 dark:text-gray-400">{t('myEnterprise.overview.address')}:</span>
                             <span className="font-medium">{enterprise.address}</span>
                           </div>
                         )}
                         {enterprise?.industry && (
                           <div className="flex items-center gap-2">
-                            <span className="text-gray-500 dark:text-gray-400">行业:</span>
+                            <span className="text-gray-500 dark:text-gray-400">{t('myEnterprise.overview.industry')}:</span>
                             <span className="font-medium">{enterprise.industry}</span>
                           </div>
                         )}
@@ -991,10 +993,10 @@ const MyEnterprisePage: React.FC = () => {
         >
           <div className="flex space-x-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-1 shadow-lg">
             {[
-              { id: 'overview', label: '概览', icon: Building2 },
-              { id: 'members', label: '成员', icon: Users },
-              { id: 'departments', label: '部门', icon: Settings },
-              { id: 'messages', label: '消息', icon: MessageSquare }
+              { id: 'overview', label: t('myEnterprise.tabs.overview'), icon: Building2 },
+              { id: 'members', label: t('myEnterprise.tabs.members'), icon: Users },
+              { id: 'departments', label: t('myEnterprise.tabs.departments'), icon: Settings },
+              { id: 'messages', label: t('myEnterprise.tabs.messages'), icon: MessageSquare }
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -1035,7 +1037,7 @@ const MyEnterprisePage: React.FC = () => {
                     <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                       {enterprise?.currentMembers || 0}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400">企业成员</p>
+                    <p className="text-gray-600 dark:text-gray-400">{t('myEnterprise.overview.enterpriseMembers')}</p>
                   </div>
                 </Card>
 
@@ -1047,7 +1049,7 @@ const MyEnterprisePage: React.FC = () => {
                     <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                       {departments?.length || 0}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400">部门数量</p>
+                    <p className="text-gray-600 dark:text-gray-400">{t('myEnterprise.overview.departmentCount')}</p>
                   </div>
                 </Card>
 
@@ -1059,7 +1061,7 @@ const MyEnterprisePage: React.FC = () => {
                     <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                       {messages?.length || 0}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400">消息数量</p>
+                    <p className="text-gray-600 dark:text-gray-400">{t('myEnterprise.overview.messageCount')}</p>
                   </div>
                 </Card>
               </div>
@@ -1072,7 +1074,7 @@ const MyEnterprisePage: React.FC = () => {
                   <div className="flex flex-col sm:flex-row gap-4 mb-6">
                     <div className="flex-1">
                       <Input
-                        placeholder="搜索成员姓名、邮箱或部门..."
+                        placeholder={t('myEnterprise.memberManagement.searchPlaceholder')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -1085,12 +1087,12 @@ const MyEnterprisePage: React.FC = () => {
                         onChange={(e) => handleDepartmentFilter(e.target.value)}
                         className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       >
-                        <option value="">所有部门</option>
+                        <option value="">{t('myEnterprise.memberManagement.allDepartments')}</option>
                         {departments?.map(dept => (
                           <option key={dept._id} value={dept._id}>{dept.name}</option>
                         )) || []}
                       </select>
-                      <Button onClick={handleSearch}>搜索</Button>
+                      <Button onClick={handleSearch}>{t('myEnterprise.actions.search')}</Button>
                     </div>
                   </div>
 
@@ -1113,12 +1115,12 @@ const MyEnterprisePage: React.FC = () => {
                           shape="circle"
                         />
                         <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 dark:text-gray-100">{member.name || '未知用户'}</h4>
+                          <h4 className="font-semibold text-gray-900 dark:text-gray-100">{member.name || t('myEnterprise.enterpriseInfo.unknownUser')}</h4>
                           <p className="text-sm text-gray-600 dark:text-gray-400">{member.email || 'N/A'}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full flex items-center gap-1">
                               {getRoleIcon(member.role)}
-                              {member.role === 'superAdmin' ? '超级管理员' : member.role === 'admin' ? '管理员' : '成员'}
+                              {member.role === 'superAdmin' ? t('myEnterprise.roles.superAdmin') : member.role === 'admin' ? t('myEnterprise.roles.admin') : t('myEnterprise.roles.member')}
                             </span>
                             {member.position && (
                               <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
@@ -1127,7 +1129,7 @@ const MyEnterprisePage: React.FC = () => {
                             )}
                             {member.departmentId && (
                               <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
-                                {department?.name || '未知部门'}
+                                {department?.name || t('myEnterprise.departmentManagement.unknownDepartment')}
                               </span>
                             )}
                             {member.enterpriseName && (
@@ -1139,8 +1141,8 @@ const MyEnterprisePage: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-right text-sm text-gray-500 dark:text-gray-400">
-                            <div>最后登录</div>
-                            <div>{member.lastLogin ? new Date(member.lastLogin).toLocaleDateString() : '从未登录'}</div>
+                            <div>{t('myEnterprise.memberManagement.lastLogin')}</div>
+                            <div>{member.lastLogin ? new Date(member.lastLogin).toLocaleDateString() : t('myEnterprise.memberManagement.neverLoggedIn')}</div>
                           </div>
                           <div className="flex gap-2">
                             {/* 超级管理员转让按钮 */}
@@ -1154,10 +1156,10 @@ const MyEnterprisePage: React.FC = () => {
           setTransferSuperAdminForm({ newSuperAdminId: member.enterpriseMemberId });
           setShowTransferSuperAdminModal(true);
         } else {
-          showErrorRightSlide('获取失败', '无法获取成员信息，请刷新页面重试');
+          showErrorRightSlide(t('myEnterprise.errors.fetchFailed'), t('myEnterprise.errors.memberInfoNotFound'));
         }
                                 }}
-                                title="转让超级管理员身份"
+                                title={t('myEnterprise.actions.transferSuperAdmin')}
                               >
                                 <Crown className="w-4 h-4" />
                               </Button>
@@ -1208,14 +1210,14 @@ const MyEnterprisePage: React.FC = () => {
               <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl">
                 <div className="p-6">
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">部门管理</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('myEnterprise.departmentManagement.title')}</h3>
                     {(userRole?.isSuperAdmin || userRole?.isAdmin) && (
                       <Button 
                         className="bg-blue-600 hover:bg-blue-700"
                         onClick={() => setShowCreateDepartmentModal(true)}
                       >
                         <Plus className="w-4 h-4 mr-2" />
-                        创建部门
+                        {t('myEnterprise.departmentManagement.createDepartment')}
                       </Button>
                     )}
                   </div>
@@ -1231,7 +1233,7 @@ const MyEnterprisePage: React.FC = () => {
                             <Settings className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                           </div>
                           <div>
-                            <h4 className="font-semibold text-gray-900 dark:text-gray-100">{dept.name || '未命名部门'}</h4>
+                            <h4 className="font-semibold text-gray-900 dark:text-gray-100">{dept.name || t('myEnterprise.departmentManagement.unnamedDepartment')}</h4>
                             <p className="text-sm text-gray-600 dark:text-gray-400">{dept.code || 'N/A'}</p>
                             {dept.description && (
                               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{dept.description}</p>
@@ -1240,7 +1242,7 @@ const MyEnterprisePage: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-right text-sm text-gray-500 dark:text-gray-400">
-                            <div>成员数量</div>
+                            <div>{t('myEnterprise.departmentManagement.memberCount')}</div>
                             <div className="font-semibold">{memberCount}</div>
                           </div>
                           {(userRole?.isSuperAdmin || userRole?.isAdmin) && (
@@ -1275,7 +1277,7 @@ const MyEnterprisePage: React.FC = () => {
               <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl">
                 <div className="p-6">
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">企业消息</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('myEnterprise.messageSystem.title')}</h3>
                     <motion.div
                       whileHover={{ scale: 1.05, y: -2 }}
                       whileTap={{ scale: 0.95 }}
@@ -1317,7 +1319,7 @@ const MyEnterprisePage: React.FC = () => {
                         </motion.div>
                         
                         {/* 文字 */}
-                        <span className="relative z-10">发送消息</span>
+                        <span className="relative z-10">{t('myEnterprise.messageSystem.sendMessage')}</span>
                       </Button>
                     </motion.div>
                   </div>
@@ -1356,7 +1358,7 @@ const MyEnterprisePage: React.FC = () => {
                           <div className="flex-1" onClick={() => handleMessageClick(msg._id, msg.isRead?.some(r => r._id === currentUserId) || false)}>
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
-                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{msg.sender?.name || '未知用户'}</h4>
+                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{msg.sender?.name || t('myEnterprise.enterpriseInfo.unknownUser')}</h4>
                                 <motion.span 
                                   className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full"
                                   whileHover={{ scale: 1.1, rotate: 5 }}
@@ -1368,7 +1370,7 @@ const MyEnterprisePage: React.FC = () => {
                                   {getMessageTypeName(msg.type)}
                                 </motion.span>
                                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  {msg.createdAt ? new Date(msg.createdAt).toLocaleString() : '未知时间'}
+                                  {msg.createdAt ? new Date(msg.createdAt).toLocaleString() : t('myEnterprise.enterpriseInfo.unknownTime')}
                                 </span>
                                 {/* 已读状态显示 - 只有发送者能看到 */}
                                 {msg.isRead && msg.isRead.length > 0 && msg.sender?._id === currentUserId && (
@@ -1380,17 +1382,17 @@ const MyEnterprisePage: React.FC = () => {
                                       animate={{ scale: 1, opacity: 1 }}
                                       transition={{ duration: 0.3, delay: 0.1 }}
                                     >
-                                      已读 ({msg.isRead.length})
+                                      {t('myEnterprise.messageSystem.read')} ({msg.isRead.length})
                                     </motion.span>
                                     {/* 发送者可以看到具体已读的人 */}
                                     <div className="flex items-center gap-1">
-                                      <span className="text-xs text-gray-500 dark:text-gray-400">已读:</span>
+                                      <span className="text-xs text-gray-500 dark:text-gray-400">{t('myEnterprise.messageSystem.readBy')}:</span>
                                       {msg.isRead.map((reader, index) => (
                                         <span 
                                           key={reader._id || `reader-${index}`} 
                                           className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full"
                                         >
-                                          {reader.name || '未知用户'}
+                                          {reader.name || t('myEnterprise.enterpriseInfo.unknownUser')}
                                         </span>
                                       ))}
                                     </div>
@@ -1404,13 +1406,13 @@ const MyEnterprisePage: React.FC = () => {
                                   variant="outline"
                                   onClick={() => openDeleteMessageModal(msg._id)}
                                   className="text-red-600 hover:text-red-700"
-                                  title="删除消息"
+                                  title={t('myEnterprise.actions.deleteMessage')}
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
                               )}
                             </div>
-                            <p className="text-gray-700 dark:text-gray-300">{msg.content || '无内容'}</p>
+                            <p className="text-gray-700 dark:text-gray-300">{msg.content || t('myEnterprise.messageSystem.noContent')}</p>
                             
                             {(msg.mentionedUsers?.length > 0 || msg.mentionedDepartments?.length > 0) && (
                               <div className="flex items-center gap-2 mt-2">
@@ -1425,7 +1427,7 @@ const MyEnterprisePage: React.FC = () => {
                                       animate={{ scale: 1, opacity: 1, y: 0 }}
                                       transition={{ duration: 0.3, delay: index * 0.1 }}
                                     >
-                                      @{user?.name || '未知用户'}
+                                      @{user?.name || t('myEnterprise.enterpriseInfo.unknownUser')}
                                     </motion.span>
                                   )) || []}
                                   {msg.mentionedDepartments?.map((dept, index) => (
@@ -1437,7 +1439,7 @@ const MyEnterprisePage: React.FC = () => {
                                       animate={{ scale: 1, opacity: 1, y: 0 }}
                                       transition={{ duration: 0.3, delay: index * 0.1 }}
                                     >
-                                      @{dept.name || '未知部门'}
+                                      @{dept.name || t('myEnterprise.departmentManagement.unknownDepartment')}
                                     </motion.span>
                                   )) || []}
                                 </div>
@@ -1462,7 +1464,7 @@ const MyEnterprisePage: React.FC = () => {
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                     </svg>
                                   </motion.div>
-                                  <span>{expandedReplies.has(msg._id) ? '收起回复' : `展开回复 (${msg.replies.length})`}</span>
+                                  <span>{expandedReplies.has(msg._id) ? t('myEnterprise.messageSystem.collapseReplies') : t('myEnterprise.messageSystem.expandRepliesWithCount', { count: msg.replies.length })}</span>
                                   <motion.div
                                     animate={{ scale: [1, 1.2, 1] }}
                                     transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2 }}
@@ -1487,9 +1489,9 @@ const MyEnterprisePage: React.FC = () => {
                                       <div className="flex-1">
                                         <div className="flex items-center justify-between mb-1">
                                           <div className="flex items-center gap-2">
-                                            <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100">{reply.sender?.name || '未知用户'}</h5>
+                                            <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100">{reply.sender?.name || t('myEnterprise.enterpriseInfo.unknownUser')}</h5>
                                             <span className="text-xs text-gray-500 dark:text-gray-400">
-                                              {reply.createdAt ? new Date(reply.createdAt).toLocaleString() : '未知时间'}
+                                              {reply.createdAt ? new Date(reply.createdAt).toLocaleString() : t('myEnterprise.enterpriseInfo.unknownTime')}
                                             </span>
                                           </div>
                                           {/* 删除回复按钮 - 只有发送者可以删除 */}
@@ -1499,7 +1501,7 @@ const MyEnterprisePage: React.FC = () => {
                                               variant="outline"
                                               onClick={() => openDeleteMessageModal(reply._id)}
                                               className="text-red-600 hover:text-red-700"
-                                              title="删除回复"
+                                              title={t('myEnterprise.actions.deleteReply')}
                                             >
                                               <Trash2 className="w-3 h-3" />
                                             </Button>
@@ -1535,7 +1537,7 @@ const MyEnterprisePage: React.FC = () => {
                                   className="text-blue-600/80 hover:text-blue-700 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all duration-200 backdrop-blur-sm"
                                 >
                                   <MessageSquare className="w-4 h-4 mr-1" />
-                                  回复
+                                  {t('myEnterprise.messageSystem.reply')}
                                 </Button>
                               </motion.div>
                             </motion.div>
@@ -1548,7 +1550,7 @@ const MyEnterprisePage: React.FC = () => {
                                     <textarea
                                       value={replyForm.content}
                                       onChange={(e) => setReplyForm({ ...replyForm, content: e.target.value })}
-                                      placeholder="输入回复内容..."
+                                      placeholder={t('myEnterprise.messageSystem.replyPlaceholder')}
                                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
                                       rows={2}
                                       autoFocus
@@ -1561,7 +1563,7 @@ const MyEnterprisePage: React.FC = () => {
                                       disabled={!replyForm.content.trim() || confirmModal.confirmLoading}
                                       className="bg-blue-600 hover:bg-blue-700 text-white"
                                     >
-                                      {confirmModal.confirmLoading ? confirmModal.loadingText : '发送'}
+                                      {confirmModal.confirmLoading ? confirmModal.loadingText : t('myEnterprise.messageSystem.send')}
                                     </Button>
                                     <Button
                                       size="sm"
@@ -1569,7 +1571,7 @@ const MyEnterprisePage: React.FC = () => {
                                       onClick={cancelReply}
                                       className="text-gray-600 hover:text-gray-700"
                                     >
-                                      取消
+                                      {t('myEnterprise.actions.cancel')}
                                     </Button>
                                   </div>
                                 </div>
@@ -1593,7 +1595,7 @@ const MyEnterprisePage: React.FC = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">创建部门</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('myEnterprise.departmentManagement.createDepartment')}</h3>
                 <button
                   onClick={() => setShowCreateDepartmentModal(false)}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -1604,32 +1606,32 @@ const MyEnterprisePage: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    部门名称
+                    {t('myEnterprise.departmentManagement.departmentName')}
                   </label>
                   <Input
                     value={createDepartmentForm.name}
                     onChange={(e) => setCreateDepartmentForm({ ...createDepartmentForm, name: e.target.value })}
-                    placeholder="请输入部门名称"
+                    placeholder={t('myEnterprise.departmentManagement.departmentNamePlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    部门代码
+                    {t('myEnterprise.departmentManagement.departmentCode')}
                   </label>
                   <Input
                     value={createDepartmentForm.code}
                     onChange={(e) => setCreateDepartmentForm({ ...createDepartmentForm, code: e.target.value })}
-                    placeholder="请输入部门代码"
+                    placeholder={t('myEnterprise.departmentManagement.departmentCodePlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    部门描述
+                    {t('myEnterprise.departmentManagement.departmentDescription')}
                   </label>
                   <textarea
                     value={createDepartmentForm.description}
                     onChange={(e) => setCreateDepartmentForm({ ...createDepartmentForm, description: e.target.value })}
-                    placeholder="请输入部门描述（可选）"
+                    placeholder={t('myEnterprise.departmentManagement.departmentDescriptionPlaceholder')}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     rows={3}
                   />
@@ -1640,13 +1642,13 @@ const MyEnterprisePage: React.FC = () => {
                   variant="outline"
                   onClick={() => setShowCreateDepartmentModal(false)}
                 >
-                  取消
+                  {t('myEnterprise.actions.cancel')}
                 </Button>
                 <Button 
                   onClick={handleCreateDepartment}
                   disabled={confirmModal.confirmLoading}
                 >
-                  {confirmModal.confirmLoading ? confirmModal.loadingText : '创建'}
+                  {confirmModal.confirmLoading ? confirmModal.loadingText : t('myEnterprise.actions.create')}
                 </Button>
               </div>
             </div>
@@ -1658,7 +1660,7 @@ const MyEnterprisePage: React.FC = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">编辑部门</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('myEnterprise.departmentManagement.editDepartment')}</h3>
                 <button
                   onClick={() => setShowEditDepartmentModal(false)}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -1669,17 +1671,17 @@ const MyEnterprisePage: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    部门名称
+                    {t('myEnterprise.departmentManagement.departmentName')}
                   </label>
                   <Input
                     value={editDepartmentForm.name}
                     onChange={(e) => setEditDepartmentForm({ ...editDepartmentForm, name: e.target.value })}
-                    placeholder="请输入部门名称"
+                    placeholder={t('myEnterprise.departmentManagement.departmentNamePlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    部门代码
+                    {t('myEnterprise.departmentManagement.departmentCode')}
                   </label>
                   <Input
                     value={editDepartmentForm.code}
@@ -1689,12 +1691,12 @@ const MyEnterprisePage: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    部门描述
+                    {t('myEnterprise.departmentManagement.departmentDescription')}
                   </label>
                   <textarea
                     value={editDepartmentForm.description}
                     onChange={(e) => setEditDepartmentForm({ ...editDepartmentForm, description: e.target.value })}
-                    placeholder="请输入部门描述（可选）"
+                    placeholder={t('myEnterprise.departmentManagement.departmentDescriptionPlaceholder')}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     rows={3}
                   />
@@ -1705,13 +1707,13 @@ const MyEnterprisePage: React.FC = () => {
                   variant="outline"
                   onClick={() => setShowEditDepartmentModal(false)}
                 >
-                  取消
+                  {t('myEnterprise.actions.cancel')}
                 </Button>
                 <Button 
                   onClick={handleEditDepartment}
                   disabled={confirmModal.confirmLoading}
                 >
-                  {confirmModal.confirmLoading ? confirmModal.loadingText : '保存'}
+                  {confirmModal.confirmLoading ? confirmModal.loadingText : t('myEnterprise.actions.save')}
                 </Button>
               </div>
             </div>
@@ -1723,7 +1725,7 @@ const MyEnterprisePage: React.FC = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-lg">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">发送消息</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('myEnterprise.messageSystem.sendMessage')}</h3>
                 <button
                   onClick={() => setShowSendMessageModal(false)}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -1734,13 +1736,13 @@ const MyEnterprisePage: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    消息类型
+{t('myEnterprise.messageSystem.messageType')}
                   </label>
                   <FuzzySelect
                     options={[
-                      { value: 'general', label: '普通消息' },
-                      { value: 'department', label: '部门消息' },
-                      ...(userRole?.isAdmin || userRole?.isSuperAdmin ? [{ value: 'announcement', label: '公告（发送给所有成员）' }] : [])
+                      { value: 'general', label: t('myEnterprise.messageTypes.general') },
+                      { value: 'department', label: t('myEnterprise.messageTypes.department') },
+                      ...(userRole?.isAdmin || userRole?.isSuperAdmin ? [{ value: 'announcement', label: t('myEnterprise.messageTypes.announcement') + '（' + t('myEnterprise.messageSystem.sendToAllMembers') + '）' }] : [])
                     ]}
                     value={sendMessageForm.type}
                     onChange={(value) => {
@@ -1753,7 +1755,7 @@ const MyEnterprisePage: React.FC = () => {
                         departmentId: newType === 'department' ? sendMessageForm.departmentId : undefined
                       });
                     }}
-                    placeholder="选择消息类型"
+                    placeholder={t('myEnterprise.messageSystem.selectMessageType')}
                     className="w-full"
                   />
                 </div>
@@ -1762,7 +1764,7 @@ const MyEnterprisePage: React.FC = () => {
                 {sendMessageForm.type === 'department' && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      选择部门
+{t('myEnterprise.messageSystem.selectDepartment')}
                     </label>
                     <FuzzySelect
                       options={departments?.map(dept => ({
@@ -1771,7 +1773,7 @@ const MyEnterprisePage: React.FC = () => {
                       })) || []}
                       value={sendMessageForm.departmentId || ''}
                       onChange={(value) => setSendMessageForm({ ...sendMessageForm, departmentId: String(value) })}
-                      placeholder="请选择部门"
+                      placeholder={t('myEnterprise.messageSystem.selectDepartmentPlaceholder')}
                       className="w-full"
                     />
                   </div>
@@ -1781,7 +1783,7 @@ const MyEnterprisePage: React.FC = () => {
                 {sendMessageForm.type === 'general' && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      选择接收者
+{t('myEnterprise.messageSystem.selectRecipient')}
                     </label>
                     
                     {/* 快速选择按钮 */}
@@ -1796,7 +1798,7 @@ const MyEnterprisePage: React.FC = () => {
                         }}
                         className="text-xs"
                       >
-                        全选成员
+{t('myEnterprise.messageSystem.selectAllMembers')}
                       </Button>
                       <Button
                         type="button"
@@ -1808,7 +1810,7 @@ const MyEnterprisePage: React.FC = () => {
                         }}
                         className="text-xs"
                       >
-                        选择管理员
+{t('myEnterprise.messageSystem.selectAdmins')}
                       </Button>
                       <Button
                         type="button"
@@ -1819,19 +1821,19 @@ const MyEnterprisePage: React.FC = () => {
                         }}
                         className="text-xs"
                       >
-                        清空选择
+{t('myEnterprise.messageSystem.clearSelection')}
                       </Button>
                     </div>
                     
                     <MultiSelect
-                      label="选择接收者"
+                      label={t('myEnterprise.messageSystem.selectRecipient')}
                       options={members?.map(member => ({
                         value: member._id,
-                        label: `${member.name}${member.role === 'superAdmin' ? ' (超级管理员)' : member.role === 'admin' ? ' (管理员)' : ''}`
+                        label: `${member.name}${member.role === 'superAdmin' ? ' (' + t('myEnterprise.roles.superAdmin') + ')' : member.role === 'admin' ? ' (' + t('myEnterprise.roles.admin') + ')' : ''}`
                       })).filter(option => option.value !== currentUserId) || []}
                       value={sendMessageForm.recipients}
                       onChange={(value) => setSendMessageForm({ ...sendMessageForm, recipients: value.map(v => String(v)) })}
-                      placeholder="选择接收者（可多选）"
+                      placeholder={t('myEnterprise.messageSystem.selectRecipientPlaceholder')}
                       className="w-full"
                     />
                     
@@ -1839,7 +1841,7 @@ const MyEnterprisePage: React.FC = () => {
                     {sendMessageForm.recipients.length > 0 && (
                       <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                         <p className="text-xs text-blue-700 dark:text-blue-300">
-                          已选择 {sendMessageForm.recipients.length} 个接收者
+{t('myEnterprise.messageSystem.selectedRecipients', { count: sendMessageForm.recipients.length })}
                         </p>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {sendMessageForm.recipients.map(recipientId => {
@@ -1865,24 +1867,24 @@ const MyEnterprisePage: React.FC = () => {
                     )}
                     
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      可以选择多个用户作为接收者，支持快速选择功能
+{t('myEnterprise.messageSystem.multiSelectHelp')}
                     </p>
                   </div>
                 )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    消息内容
+{t('myEnterprise.messageSystem.messageContent')}
                   </label>
                   <textarea
                     value={sendMessageForm.content}
                     onChange={(e) => setSendMessageForm({ ...sendMessageForm, content: e.target.value })}
-                    placeholder="请输入消息内容"
+                    placeholder={t('myEnterprise.messageSystem.messageContentPlaceholder')}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     rows={4}
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    请输入您的消息内容
+{t('myEnterprise.messageSystem.messageContentHelp')}
                   </p>
                 </div>
               </div>
@@ -1891,10 +1893,10 @@ const MyEnterprisePage: React.FC = () => {
                   variant="outline"
                   onClick={() => setShowSendMessageModal(false)}
                 >
-                  取消
+                  {t('myEnterprise.actions.cancel')}
                 </Button>
                 <Button onClick={handleSendMessage} disabled={sendingMessage}>
-                  发送
+{t('myEnterprise.messageSystem.send')}
                 </Button>
               </div>
             </div>
@@ -1944,7 +1946,7 @@ const MyEnterprisePage: React.FC = () => {
                 }}
               >
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">编辑成员职位</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('myEnterprise.memberManagement.editMemberPosition')}</h3>
                 <button
                   onClick={() => setShowEditMemberModal(false)}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -1959,7 +1961,7 @@ const MyEnterprisePage: React.FC = () => {
                   transition={{ delay: 0.1, duration: 0.1, ease: "easeOut" }}
                 >
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    成员姓名
+{t('myEnterprise.memberManagement.memberName')}
                   </label>
                   <Input
                     value={editMemberForm.name}
@@ -1975,15 +1977,15 @@ const MyEnterprisePage: React.FC = () => {
                     transition={{ delay: 0.13, duration: 0.1, ease: "easeOut" }}
                   >
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      企业角色
+{t('myEnterprise.memberManagement.enterpriseRole')}
                     </label>
                     <select
                       value={editMemberForm.role}
                       onChange={(e) => setEditMemberForm({ ...editMemberForm, role: e.target.value as any })}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     >
-                      <option value="member">普通成员</option>
-                      <option value="admin">管理员</option>
+                      <option value="member">{t('myEnterprise.roles.member')}</option>
+                      <option value="admin">{t('myEnterprise.roles.admin')}</option>
                     </select>
                   </motion.div>
                 )}
@@ -1993,12 +1995,12 @@ const MyEnterprisePage: React.FC = () => {
                   transition={{ delay: 0.18, duration: 0.1, ease: "easeOut" }}
                 >
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    职位描述
+{t('myEnterprise.memberManagement.positionDescription')}
                   </label>
                   <Input
                     value={editMemberForm.position}
                     onChange={(e) => setEditMemberForm({ ...editMemberForm, position: e.target.value })}
-                    placeholder="请输入职位描述（可选）"
+                    placeholder={t('myEnterprise.memberManagement.positionDescriptionPlaceholder')}
                   />
                 </motion.div>
                 {/* 部门选择：管理员不能编辑其他管理员的部门 */}
@@ -2008,14 +2010,14 @@ const MyEnterprisePage: React.FC = () => {
                   transition={{ delay: 0.24, duration: 0.1, ease: "easeOut" }}
                 >
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    所属部门
+{t('myEnterprise.memberManagement.department')}
                   </label>
                   {userRole?.isAdmin && !userRole?.isSuperAdmin && editMemberForm.role === 'admin' ? (
                     // 管理员编辑其他管理员时，部门选择被禁用
                     <div className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400">
                       {editMemberForm.departmentId ? 
-                        departments?.find(d => d._id === editMemberForm.departmentId)?.name || '未知部门' : 
-                        '无部门'
+                        departments?.find(d => d._id === editMemberForm.departmentId)?.name || t('myEnterprise.departmentManagement.unknownDepartment') : 
+                        t('myEnterprise.memberManagement.noDepartment')
                       }
                     </div>
                   ) : (
@@ -2027,7 +2029,7 @@ const MyEnterprisePage: React.FC = () => {
                       })}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     >
-                      <option value="">无部门</option>
+                      <option value="">{t('myEnterprise.memberManagement.noDepartment')}</option>
                       {departments?.map(dept => (
                         <option key={dept._id} value={dept._id}>{dept.name}</option>
                       )) || []}
@@ -2035,7 +2037,7 @@ const MyEnterprisePage: React.FC = () => {
                   )}
                   {userRole?.isAdmin && !userRole?.isSuperAdmin && editMemberForm.role === 'admin' && (
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      管理员不能修改其他管理员的部门
+{t('myEnterprise.memberManagement.adminCannotEditOtherAdmin')}
                     </p>
                   )}
                 </motion.div>
@@ -2057,7 +2059,7 @@ const MyEnterprisePage: React.FC = () => {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.2 }}
                   >
-                    取消
+                    {t('myEnterprise.actions.cancel')}
                   </motion.span>
                 </Button>
                 <Button 
@@ -2077,7 +2079,7 @@ const MyEnterprisePage: React.FC = () => {
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                       />
-                      <span>保存中...</span>
+                      <span>{t('myEnterprise.memberManagement.saving')}</span>
                     </motion.div>
                   ) : (
                     <motion.span
@@ -2085,7 +2087,7 @@ const MyEnterprisePage: React.FC = () => {
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.2 }}
                     >
-                      保存
+{t('myEnterprise.memberManagement.save')}
                     </motion.span>
                   )}
                 </Button>
@@ -2102,7 +2104,7 @@ const MyEnterprisePage: React.FC = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">转让超级管理员身份</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('myEnterprise.actions.transferSuperAdminTitle')}</h3>
                 <button
                   onClick={() => setShowTransferSuperAdminModal(false)}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -2114,24 +2116,24 @@ const MyEnterprisePage: React.FC = () => {
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                   <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
                     <Crown className="w-5 h-5" />
-                    <span className="font-medium">重要提示</span>
+                    <span className="font-medium">{t('myEnterprise.actions.importantNotice')}</span>
                   </div>
                   <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-2">
-                    转让超级管理员身份后，您将降级为普通成员，失去所有管理权限.此操作不可撤销，请谨慎操作.
+{t('myEnterprise.actions.transferWarning')}
                   </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    选择新超级管理员
+{t('myEnterprise.actions.selectNewSuperAdmin')}
                   </label>
                   <FuzzySelect
                     options={members?.filter(member => member.role !== 'superAdmin' && member.enterpriseMemberId).map(member => ({
                       value: member.enterpriseMemberId!,
-                      label: `${member.name} (${member.role === 'admin' ? '管理员' : '成员'})`
+                      label: `${member.name} (${member.role === 'admin' ? t('myEnterprise.roles.admin') : t('myEnterprise.roles.member')})`
                     })) || []}
                     value={transferSuperAdminForm.newSuperAdminId}
                     onChange={(value) => setTransferSuperAdminForm({ newSuperAdminId: String(value) })}
-                    placeholder="请选择新超级管理员"
+                    placeholder={t('myEnterprise.actions.selectNewSuperAdminPlaceholder')}
                     className="w-full"
                   />
                 </div>
@@ -2141,14 +2143,14 @@ const MyEnterprisePage: React.FC = () => {
                   variant="outline"
                   onClick={() => setShowTransferSuperAdminModal(false)}
                 >
-                  取消
+                  {t('myEnterprise.actions.cancel')}
                 </Button>
                 <Button 
                   onClick={handleTransferSuperAdmin}
                   className="bg-yellow-600 hover:bg-yellow-700"
                   disabled={!transferSuperAdminForm.newSuperAdminId || confirmModal.confirmLoading}
                 >
-                  {confirmModal.confirmLoading ? confirmModal.loadingText : '确认转让'}
+{confirmModal.confirmLoading ? confirmModal.loadingText : t('myEnterprise.actions.confirmTransfer')}
                 </Button>
               </div>
             </div>
@@ -2158,11 +2160,11 @@ const MyEnterprisePage: React.FC = () => {
         {/* 删除消息确认模态框 */}
         <ConfirmModal
           isOpen={showDeleteMessageModal}
-          title="删除消息"
-          message="确定要删除这条消息吗？删除后无法恢复."
+          title={t('myEnterprise.messageSystem.deleteMessage')}
+          message={t('myEnterprise.messageSystem.deleteMessageConfirm')}
           type="delete"
-          confirmText="删除"
-          cancelText="取消"
+          confirmText={t('myEnterprise.actions.delete')}
+          cancelText={t('myEnterprise.actions.cancel')}
           onConfirm={confirmDeleteMessage}
           onCancel={() => {
             setShowDeleteMessageModal(false);
@@ -2172,7 +2174,7 @@ const MyEnterprisePage: React.FC = () => {
           theme="glass"
           position="center"
           confirmLoading={deletingMessage}
-          loadingText="删除中..."
+          loadingText={t('myEnterprise.messageSystem.deleteMessageLoading')}
         />
 
         {/* 确认模态框 */}

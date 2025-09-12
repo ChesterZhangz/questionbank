@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
 import { motion } from 'framer-motion';
 import type { TikZSymbol } from '../../../lib/tikz/symbols';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface TikZAutoCompleteProps {
   suggestions: TikZSymbol[];
@@ -15,6 +16,7 @@ const TikZAutoComplete = forwardRef<HTMLDivElement, TikZAutoCompleteProps>(({
   position,
   onSelect
 }, ref) => {
+  const { t } = useTranslation();
   // 直接使用传入的位置，不做边界调整
   const adjustedPosition = position;
   
@@ -44,7 +46,7 @@ const TikZAutoComplete = forwardRef<HTMLDivElement, TikZAutoCompleteProps>(({
             <span className="text-gray-500 dark:text-gray-400 text-xs">{suggestion.description}</span>
             {suggestion.completeExample && (
               <span className="text-xs px-2 py-1 rounded bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300">
-                完整示例
+                {t('tikz.autoComplete.completeExample')}
               </span>
             )}
           </div>
@@ -60,15 +62,15 @@ const TikZAutoComplete = forwardRef<HTMLDivElement, TikZAutoCompleteProps>(({
             suggestion.category === 'arrow' ? 'bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300' :
             'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
           }`}>
-            {suggestion.category === 'draw' ? '绘制' :
-             suggestion.category === 'shape' ? '图形' :
-             suggestion.category === 'node' ? '节点' :
-             suggestion.category === 'style' ? '样式' :
-             suggestion.category === 'transform' ? '变换' :
-             suggestion.category === 'math' ? '数学' :
-             suggestion.category === 'greek' ? '希腊' :
-             suggestion.category === 'symbol' ? '符号' :
-             suggestion.category === 'arrow' ? '箭头' :
+            {suggestion.category === 'draw' ? t('tikz.autoComplete.categories.draw') :
+             suggestion.category === 'shape' ? t('tikz.autoComplete.categories.shape') :
+             suggestion.category === 'node' ? t('tikz.autoComplete.categories.node') :
+             suggestion.category === 'style' ? t('tikz.autoComplete.categories.style') :
+             suggestion.category === 'transform' ? t('tikz.autoComplete.categories.transform') :
+             suggestion.category === 'math' ? t('tikz.autoComplete.categories.math') :
+             suggestion.category === 'greek' ? t('tikz.autoComplete.categories.greek') :
+             suggestion.category === 'symbol' ? t('tikz.autoComplete.categories.symbol') :
+             suggestion.category === 'arrow' ? t('tikz.autoComplete.categories.arrow') :
              suggestion.category}
           </span>
         </button>

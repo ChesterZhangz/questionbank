@@ -1,5 +1,6 @@
 import React from 'react';
 import LaTeXPreview from '../editor/preview/LaTeXPreview';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface CodeExampleProps {
   title: string;
@@ -14,6 +15,8 @@ const CodeExample: React.FC<CodeExampleProps> = ({
   description, 
   className = "" 
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <div className={`bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 ${className}`}>
       <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">{title}</h4>
@@ -23,14 +26,14 @@ const CodeExample: React.FC<CodeExampleProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* 左侧：代码 */}
         <div>
-          <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">LaTeX代码：</h5>
+          <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('guide.codeExample.title')}：</h5>
           <pre className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg text-xs font-mono text-gray-800 dark:text-gray-200 overflow-x-auto whitespace-pre-wrap break-words">
             {code}
           </pre>
         </div>
         {/* 右侧：渲染结果 */}
         <div>
-          <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">渲染结果：</h5>
+          <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('guide.codeExample.viewOutput')}：</h5>
           <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg min-h-[60px] flex items-center">
             <LaTeXPreview 
               content={code} 

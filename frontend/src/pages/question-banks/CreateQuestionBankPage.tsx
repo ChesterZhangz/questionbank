@@ -9,9 +9,11 @@ import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
 import { SimpleSelect } from '../../components/ui/menu';
 import { getMathCategories } from '../../constants/questionCategories';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const CreateQuestionBankPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<CreateQuestionBankRequest>({
     name: '',
     description: '',
@@ -60,15 +62,15 @@ const CreateQuestionBankPage: React.FC = () => {
     const newErrors: Record<string, string> = {};
     
     if (!formData.name.trim()) {
-      newErrors.name = '请输入题库名称';
+      newErrors.name = t('questionBankPage.CreateQuestionBankPage.errors.nameRequired');
     }
     
     if (formData.name.length > 50) {
-      newErrors.name = '题库名称不能超过50个字符';
+      newErrors.name = t('questionBankPage.CreateQuestionBankPage.errors.nameTooLong');
     }
     
     if (formData.description && formData.description.length > 500) {
-      newErrors.description = '题库描述不能超过500个字符';
+      newErrors.description = t('questionBankPage.CreateQuestionBankPage.errors.descriptionTooLong');
     }
     
     setErrors(newErrors);
@@ -88,10 +90,10 @@ const CreateQuestionBankPage: React.FC = () => {
       if (response.data.success) {
         navigate('/question-banks');
       } else {
-        setErrors({ general: response.data.error || '创建题库失败' });
+        setErrors({ general: response.data.error || t('questionBankPage.CreateQuestionBankPage.errors.createFailed') });
       }
     } catch (error: any) {
-      setErrors({ general: error.response?.data?.error || '创建题库失败' });
+      setErrors({ general: error.response?.data?.error || t('questionBankPage.CreateQuestionBankPage.errors.createFailed') });
     } finally {
       setIsSubmitting(false);
     }
@@ -109,11 +111,11 @@ const CreateQuestionBankPage: React.FC = () => {
               className="mr-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              返回
+              {t('questionBankPage.CreateQuestionBankPage.buttons.back')}
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">创建题库</h1>
-              <p className="text-gray-600 dark:text-gray-300">创建新的数学题库</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('questionBankPage.CreateQuestionBankPage.title')}</h1>
+              <p className="text-gray-600 dark:text-gray-300">{t('questionBankPage.CreateQuestionBankPage.description')}</p>
             </div>
           </div>
         </div>
@@ -145,13 +147,13 @@ const CreateQuestionBankPage: React.FC = () => {
                 transition={{ delay: 0.1 }}
               >
                 <Input
-                  label="题库名称"
+                  label={t('questionBankPage.CreateQuestionBankPage.form.name')}
                   name="name"
                   type="text"
                   value={formData.name}
                   onChange={handleChange}
                   error={errors.name}
-                  placeholder="请输入题库名称"
+                  placeholder={t('questionBankPage.CreateQuestionBankPage.placeholders.name')}
                   required
                   icon={<Calculator className="w-5 h-5" />}
                 />
@@ -165,7 +167,7 @@ const CreateQuestionBankPage: React.FC = () => {
               >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                    题库描述
+                    {t('questionBankPage.CreateQuestionBankPage.form.description')}
                   </label>
                   <textarea
                     name="description"
@@ -173,7 +175,7 @@ const CreateQuestionBankPage: React.FC = () => {
                     onChange={handleChange}
                     rows={4}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    placeholder="请输入题库描述（可选）"
+                    placeholder={t('questionBankPage.CreateQuestionBankPage.placeholders.description')}
                   />
                   {errors.description && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.description}</p>
@@ -195,8 +197,8 @@ const CreateQuestionBankPage: React.FC = () => {
                   }))}
                   value={formData.category || ''}
                   onChange={(value) => setFormData(prev => ({ ...prev, category: value as string }))}
-                  placeholder="选择题库分类"
-                  label="题库分类"
+                  placeholder={t('questionBankPage.CreateQuestionBankPage.placeholders.category')}
+                  label={t('questionBankPage.CreateQuestionBankPage.form.category')}
                   theme="blue"
                   variant="outline"
                   size="md"
@@ -212,7 +214,7 @@ const CreateQuestionBankPage: React.FC = () => {
               >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                    题库标签
+                    {t('questionBankPage.CreateQuestionBankPage.form.tags')}
                   </label>
                   <div className="flex gap-2 mb-2">
                     <Input
@@ -220,7 +222,7 @@ const CreateQuestionBankPage: React.FC = () => {
                       type="text"
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
-                      placeholder="输入标签"
+                      placeholder={t('questionBankPage.CreateQuestionBankPage.placeholders.tags')}
                       icon={<Tag className="w-5 h-5" />}
                       onKeyPress={(e) => {
                         if (e.key === 'Enter') {
@@ -235,7 +237,7 @@ const CreateQuestionBankPage: React.FC = () => {
                       variant="outline"
                       disabled={!tagInput.trim()}
                     >
-                      添加
+                      {t('questionBankPage.CreateQuestionBankPage.buttons.add')}
                     </Button>
                   </div>
                   
@@ -269,7 +271,7 @@ const CreateQuestionBankPage: React.FC = () => {
                 transition={{ delay: 0.5 }}
                 className="space-y-4"
               >
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">题库设置</h3>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{t('questionBankPage.CreateQuestionBankPage.settings.title')}</h3>
                 
                 <div className="space-y-3">
                   <label className="flex items-center">
@@ -280,7 +282,7 @@ const CreateQuestionBankPage: React.FC = () => {
                       onChange={handleChange}
                       className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-700"
                     />
-                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">公开题库</span>
+                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">{t('questionBankPage.CreateQuestionBankPage.settings.isPublic')}</span>
                   </label>
                   
                   <label className="flex items-center">
@@ -291,7 +293,7 @@ const CreateQuestionBankPage: React.FC = () => {
                       onChange={handleChange}
                       className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-700"
                     />
-                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">允许协作</span>
+                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">{t('questionBankPage.CreateQuestionBankPage.settings.allowCollaboration')}</span>
                   </label>
                 </div>
               </motion.div>
@@ -309,7 +311,7 @@ const CreateQuestionBankPage: React.FC = () => {
                   onClick={() => navigate('/question-banks')}
                   disabled={isSubmitting}
                 >
-                  取消
+                  {t('questionBankPage.CreateQuestionBankPage.buttons.cancel')}
                 </Button>
                 <Button
                   type="submit"
@@ -318,7 +320,7 @@ const CreateQuestionBankPage: React.FC = () => {
                   disabled={isSubmitting}
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  创建题库
+                  {t('questionBankPage.CreateQuestionBankPage.buttons.create')}
                 </Button>
               </motion.div>
             </form>

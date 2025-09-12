@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, Shield, HelpCircle } from 'lucide-react';
 import { PasswordValidator } from '../../utils/passwordValidator';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface PasswordStrengthIndicatorProps {
   password: string;
@@ -21,6 +22,7 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
   compact = false,
   className = ''
 }) => {
+  const { t } = useTranslation();
   const [showTooltip, setShowTooltip] = useState(false);
   const validation = PasswordValidator.validate(password, username, email);
 
@@ -67,7 +69,7 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
           <div className="flex-1 space-y-1">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                密码强度
+                {t('ui.passwordStrength.strength')}
               </span>
               <span className={`text-sm font-medium ${getStrengthTextColor(validation.strength)}`}>
                 {PasswordValidator.getStrengthText(validation.strength)}
@@ -106,7 +108,7 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
                   className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 z-50"
                 >
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                    密码安全要求
+                    {t('ui.passwordStrength.requirements')}
                   </h4>
                   
                   <div className="space-y-2">
@@ -117,31 +119,31 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
                       // 必需要求
                       if (password.length < 8 || password.length > 20) {
                         failedRequirements.push(
-                          <ValidationRule key="length" passed={false} text="密码长度8-20位" />
+                          <ValidationRule key="length" passed={false} text={t('ui.passwordStrength.length')} />
                         );
                       }
                       
                       if (username && PasswordValidator.isRelatedToUsername(password, username)) {
                         failedRequirements.push(
-                          <ValidationRule key="username" passed={false} text="不包含用户名相关内容" />
+                          <ValidationRule key="username" passed={false} text={t('ui.passwordStrength.noUsername')} />
                         );
                       }
                       
                       if (email && PasswordValidator.isRelatedToEmail(password, email)) {
                         failedRequirements.push(
-                          <ValidationRule key="email" passed={false} text="不包含邮箱相关内容" />
+                          <ValidationRule key="email" passed={false} text={t('ui.passwordStrength.noEmail')} />
                         );
                       }
                       
                       if (PasswordValidator.containsBirthDatePattern(password)) {
                         failedRequirements.push(
-                          <ValidationRule key="birthdate" passed={false} text="不包含生日日期格式" />
+                          <ValidationRule key="birthdate" passed={false} text={t('ui.passwordStrength.noBirthdate')} />
                         );
                       }
                       
                       if (PasswordValidator.hasConsecutiveRepeats(password)) {
                         failedRequirements.push(
-                          <ValidationRule key="repeats" passed={false} text="无连续三位相同字符" />
+                          <ValidationRule key="repeats" passed={false} text={t('ui.passwordStrength.noRepeats')} />
                         );
                       }
                       
@@ -149,22 +151,22 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
                       const complexityFailed = [];
                       if (!/[a-z]/.test(password)) {
                         complexityFailed.push(
-                          <ValidationRule key="lowercase" passed={false} text="小写字母" />
+                          <ValidationRule key="lowercase" passed={false} text={t('ui.passwordStrength.noLowercase')} />
                         );
                       }
                       if (!/[A-Z]/.test(password)) {
                         complexityFailed.push(
-                          <ValidationRule key="uppercase" passed={false} text="大写字母" />
+                          <ValidationRule key="uppercase" passed={false} text={t('ui.passwordStrength.noUppercase')} />
                         );
                       }
                       if (!/\d/.test(password)) {
                         complexityFailed.push(
-                          <ValidationRule key="digit" passed={false} text="数字" />
+                          <ValidationRule key="digit" passed={false} text={t('ui.passwordStrength.noDigit')} />
                         );
                       }
                       if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
                         complexityFailed.push(
-                          <ValidationRule key="special" passed={false} text="特殊字符" />
+                          <ValidationRule key="special" passed={false} text={t('ui.passwordStrength.noSpecial')} />
                         );
                       }
                       
@@ -174,7 +176,7 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
                           <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                             <CheckCircle className="w-4 h-4 text-green-500" />
                             <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-                              密码符合所有安全要求！
+                              {t('ui.passwordStrength.allRequirementsMet')}
                             </p>
                           </div>
                         );
@@ -186,7 +188,7 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
                           {failedRequirements}
                           {complexityFailed.length > 0 && (
                             <div className="border-t border-gray-200 dark:border-gray-600 pt-2 mt-3">
-                              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">建议包含：</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{t('ui.passwordStrength.suggestInclude')}</p>
                               {complexityFailed}
                             </div>
                           )}
@@ -208,7 +210,7 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
                           ))}
                           {validation.errors.length > 2 && (
                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                              还有 {validation.errors.length - 2} 个问题...
+                              {t('ui.passwordStrength.moreIssues', { count: validation.errors.length - 2 })}
                             </p>
                           )}
                         </div>
@@ -231,7 +233,7 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            密码强度
+            {t('ui.passwordStrength.strength')}
           </span>
           <span className={`text-sm font-medium ${getStrengthTextColor(validation.strength)}`}>
             {PasswordValidator.getStrengthText(validation.strength)} ({validation.score}/100)
@@ -262,39 +264,39 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
             <div className="grid grid-cols-1 gap-2">
               <ValidationRule
                 passed={password.length >= 8 && password.length <= 20}
-                text="密码长度8-20位"
+                text={t('ui.passwordStrength.length')}
               />
               <ValidationRule
                 passed={!username || !PasswordValidator.isRelatedToUsername(password, username)}
-                text="不包含用户名相关内容"
+                text={t('ui.passwordStrength.noUsername')}
               />
               <ValidationRule
                 passed={!email || !PasswordValidator.isRelatedToEmail(password, email)}
-                text="不包含邮箱相关内容"
+                text={t('ui.passwordStrength.noEmail')}
               />
               <ValidationRule
                 passed={!PasswordValidator.containsBirthDatePattern(password)}
-                text="不包含生日日期格式"
+                text={t('ui.passwordStrength.noBirthdate')}
               />
               <ValidationRule
                 passed={!PasswordValidator.hasConsecutiveRepeats(password)}
-                text="无连续三位相同字符"
+                text={t('ui.passwordStrength.noRepeats')}
               />
               <ValidationRule
                 passed={/[a-z]/.test(password)}
-                text="包含小写字母"
+                text={t('ui.passwordStrength.hasLowercase')}
               />
               <ValidationRule
                 passed={/[A-Z]/.test(password)}
-                text="包含大写字母"
+                text={t('ui.passwordStrength.hasUppercase')}
               />
               <ValidationRule
                 passed={/\d/.test(password)}
-                text="包含数字"
+                text={t('ui.passwordStrength.hasDigit')}
               />
               <ValidationRule
                 passed={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)}
-                text="包含特殊字符"
+                text={t('ui.passwordStrength.hasSpecial')}
               />
             </div>
 
@@ -328,7 +330,7 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
                 <div className="flex items-center gap-2">
                   <Shield className="w-4 h-4 text-green-500" />
                   <p className="text-sm text-green-600 dark:text-green-400">
-                    密码符合安全要求！
+                    {t('ui.passwordStrength.passwordSecure')}
                   </p>
                 </div>
               </motion.div>

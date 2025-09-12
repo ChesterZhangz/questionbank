@@ -6,12 +6,13 @@ import {
   searchTikZSymbols, 
   getContextualParameters,
   filterSuggestions,
-  COLOR_VALUES,
-  LINE_WIDTH_VALUES,
-  LINE_STYLE_VALUES,
-  OPACITY_VALUES
+  getColorValues,
+  getLineWidthValues,
+  getLineStyleValues,
+  getOpacityValues
 } from '../../../lib/tikz/symbols';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { useTranslation } from '../../../hooks/useTranslation';
 import './TikZHighlighter.css';
 
 interface TikZHighlightInputProps {
@@ -41,6 +42,7 @@ const TikZHighlightInput: React.FC<TikZHighlightInputProps> = ({
   rows = 4,
   onCursorPositionChange
 }) => {
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
   const [cursorPosition, setCursorPosition] = useState(0);
@@ -149,21 +151,21 @@ const TikZHighlightInput: React.FC<TikZHighlightInputProps> = ({
       if (query === '') {
         const commonCommands = [
           // 基础绘图命令
-          { latex: '\\draw', name: '绘制路径', description: '绘制路径或图形', category: 'draw' },
-          { latex: '\\fill', name: '填充图形', description: '填充封闭图形', category: 'draw' },
-          { latex: '\\node', name: '节点', description: '创建文本或图形节点', category: 'node' },
-          { latex: '\\path', name: '路径命令', description: '定义路径但不绘制', category: 'draw' },
-          { latex: '\\clip', name: '裁剪区域', description: '裁剪后续绘制内容', category: 'draw' },
+          { latex: '\\draw', name: t('tikz.highlightInput.commonCommands.draw'), description: '绘制路径或图形', category: 'draw' },
+          { latex: '\\fill', name: t('tikz.highlightInput.commonCommands.fill'), description: '填充封闭图形', category: 'draw' },
+          { latex: '\\node', name: t('tikz.highlightInput.commonCommands.node'), description: '创建文本或图形节点', category: 'node' },
+          { latex: '\\path', name: t('tikz.highlightInput.commonCommands.path'), description: '定义路径但不绘制', category: 'draw' },
+          { latex: '\\clip', name: t('tikz.highlightInput.commonCommands.clip'), description: '裁剪后续绘制内容', category: 'draw' },
           
           // 常用图形
-          { latex: '\\draw (0,0) rectangle (2,2);', name: '矩形', description: '绘制矩形', category: 'shape', completeExample: '\\draw (0,0) rectangle (2,2);' },
-          { latex: '\\draw (0,0) circle (1cm);', name: '圆形', description: '绘制圆形', category: 'shape', completeExample: '\\draw (0,0) circle (1cm);' },
-          { latex: '\\draw (0,0) ellipse (2cm and 1cm);', name: '椭圆', description: '绘制椭圆', category: 'shape', completeExample: '\\draw (0,0) ellipse (2cm and 1cm);' },
+          { latex: '\\draw (0,0) rectangle (2,2);', name: t('tikz.highlightInput.commonCommands.rectangle'), description: '绘制矩形', category: 'shape', completeExample: '\\draw (0,0) rectangle (2,2);' },
+          { latex: '\\draw (0,0) circle (1cm);', name: t('tikz.highlightInput.commonCommands.circle'), description: '绘制圆形', category: 'shape', completeExample: '\\draw (0,0) circle (1cm);' },
+          { latex: '\\draw (0,0) ellipse (2cm and 1cm);', name: t('tikz.highlightInput.commonCommands.ellipse'), description: '绘制椭圆', category: 'shape', completeExample: '\\draw (0,0) ellipse (2cm and 1cm);' },
           
           // 常用函数
-          { latex: '\\draw plot {sin(x)};', name: '正弦函数', description: '绘制正弦函数', category: 'math', completeExample: '\\draw[red, thick] plot[domain=0:6.28, samples=100] {sin(x)};' },
-          { latex: '\\draw plot {x^2};', name: '二次函数', description: '绘制二次函数', category: 'math', completeExample: '\\draw[blue, thick] plot[domain=-2:2, samples=100] {x^2};' },
-          { latex: '\\draw plot {x^3};', name: '三次函数', description: '绘制三次函数', category: 'math', completeExample: '\\draw[green, thick] plot[domain=-2:2, samples=100] {x^3};' }
+          { latex: '\\draw plot {sin(x)};', name: t('tikz.highlightInput.commonCommands.sinFunction'), description: '绘制正弦函数', category: 'math', completeExample: '\\draw[red, thick] plot[domain=0:6.28, samples=100] {sin(x)};' },
+          { latex: '\\draw plot {x^2};', name: t('tikz.highlightInput.commonCommands.quadFunction'), description: '绘制二次函数', category: 'math', completeExample: '\\draw[blue, thick] plot[domain=-2:2, samples=100] {x^2};' },
+          { latex: '\\draw plot {x^3};', name: t('tikz.highlightInput.commonCommands.cubicFunction'), description: '绘制三次函数', category: 'math', completeExample: '\\draw[green, thick] plot[domain=-2:2, samples=100] {x^3};' }
         ];
         setAutoCompleteSuggestions(commonCommands);
         setShowAutoComplete(true);
@@ -173,7 +175,7 @@ const TikZHighlightInput: React.FC<TikZHighlightInputProps> = ({
       }
       
       // 如果有具体查询内容，进行正常搜索和筛选
-      const suggestions = searchTikZSymbols(query);
+      const suggestions = searchTikZSymbols(query, t);
       const filteredSuggestions = filterSuggestions(suggestions, query);
       
       if (filteredSuggestions.length > 0) {
@@ -198,7 +200,7 @@ const TikZHighlightInput: React.FC<TikZHighlightInputProps> = ({
       const currentInput = paramParts[paramParts.length - 1].trim();
       
       // 根据命令类型和当前输入获取上下文相关建议
-      const suggestions = getContextualParameters(command, currentInput);
+      const suggestions = getContextualParameters(command, currentInput, t);
       
       if (suggestions.length > 0) {
         setAutoCompleteSuggestions(suggestions);
@@ -223,7 +225,7 @@ const TikZHighlightInput: React.FC<TikZHighlightInputProps> = ({
       
       if (!isInParamValue) {
         // 不在参数值中，提供该命令的专用参数建议
-        const suggestions = getContextualParameters(command, currentInput);
+        const suggestions = getContextualParameters(command, currentInput, t);
         
         if (suggestions.length > 0) {
           setAutoCompleteSuggestions(suggestions);
@@ -246,7 +248,7 @@ const TikZHighlightInput: React.FC<TikZHighlightInputProps> = ({
       const commandInLineMatch = beforeCursor.match(/\\(draw|node|fill|path|shade|clip)\s*\[[^\]]*$/);
       if (commandInLineMatch) {
         const command = commandInLineMatch[1];
-        const suggestions = getContextualParameters(command, currentInput);
+        const suggestions = getContextualParameters(command, currentInput, t);
         
         if (suggestions.length > 0) {
           setAutoCompleteSuggestions(suggestions);
@@ -270,16 +272,16 @@ const TikZHighlightInput: React.FC<TikZHighlightInputProps> = ({
       
       // 根据样式名称提供相应的建议并应用筛选
       if (styleName === 'color' || styleName === 'fill' || styleName === 'draw') {
-        suggestions = filterSuggestions(COLOR_VALUES, currentValue);
+        suggestions = filterSuggestions(getColorValues(t), currentValue);
       } else if (styleName === 'line width' || styleName.includes('thick') || styleName.includes('thin')) {
-        suggestions = filterSuggestions(LINE_WIDTH_VALUES, currentValue);
+        suggestions = filterSuggestions(getLineWidthValues(t), currentValue);
       } else if (styleName.includes('dash') || styleName.includes('dotted')) {
-        suggestions = filterSuggestions(LINE_STYLE_VALUES, currentValue);
+        suggestions = filterSuggestions(getLineStyleValues(t), currentValue);
       } else if (styleName === 'opacity') {
-        suggestions = filterSuggestions(OPACITY_VALUES, currentValue);
+        suggestions = filterSuggestions(getOpacityValues(t), currentValue);
       } else if (styleName.includes('color')) {
         // 处理复合颜色属性如 "left color", "right color"
-        suggestions = filterSuggestions(COLOR_VALUES, currentValue);
+        suggestions = filterSuggestions(getColorValues(t), currentValue);
       }
       
       if (suggestions.length > 0) {
@@ -302,7 +304,7 @@ const TikZHighlightInput: React.FC<TikZHighlightInputProps> = ({
       const commandMatch = beforeCursor.match(/\\(draw|node|fill|path|shade|clip)\s*\[[^\]]*$/);
       if (commandMatch) {
         const command = commandMatch[1];
-        const suggestions = getContextualParameters(command, currentInput);
+        const suggestions = getContextualParameters(command, currentInput, t);
         
         if (suggestions.length > 0) {
           setAutoCompleteSuggestions(suggestions);

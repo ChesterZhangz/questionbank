@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Copy, Check, ExternalLink } from 'lucide-react';
 import Button from '../../ui/Button';
 import type { Paper, CopyConfig } from './types';
-import { convertPaperToLaTeX, copyToClipboard, openInOverleaf, defaultCopyConfig } from './copyUtils';
+import { convertPaperToLaTeX, copyToClipboard, openInOverleaf, defaultCopyConfig, setTranslationFunction } from './copyUtils';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface CopyButtonProps {
   paper: Paper;
@@ -23,8 +24,14 @@ const CopyButton: React.FC<CopyButtonProps> = ({
   showOverleafButton = false,
   showHint = false
 }) => {
+  const { t } = useTranslation();
   const [copySuccess, setCopySuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // 设置 copyUtils 的翻译函数
+  React.useEffect(() => {
+    setTranslationFunction(t);
+  }, [t]);
 
   const handleCopy = async () => {
     if (isLoading) return;
@@ -47,7 +54,7 @@ const CopyButton: React.FC<CopyButtonProps> = ({
         }
       }
     } catch (error) {
-      console.error('操作失败:', error);
+      console.error(t('paper.copyButton.errors.operationFailed'), error);
     } finally {
       setIsLoading(false);
     }
@@ -77,10 +84,10 @@ const CopyButton: React.FC<CopyButtonProps> = ({
             )}
             <span>
               {isLoading 
-                ? (config.copyMethod === 'overleaf' ? '打开中...' : '复制中...') 
+                ? (config.copyMethod === 'overleaf' ? t('paper.copyButton.states.opening') : t('paper.copyButton.states.copying')) 
                 : copySuccess 
-                  ? (config.copyMethod === 'overleaf' ? '已打开' : '已复制') 
-                  : (config.copyMethod === 'overleaf' ? '用Overleaf打开' : '复制LaTeX')
+                  ? (config.copyMethod === 'overleaf' ? t('paper.copyButton.states.opened') : t('paper.copyButton.states.copied')) 
+                  : (config.copyMethod === 'overleaf' ? t('paper.copyButton.states.openInOverleaf') : t('paper.copyButton.states.copyLaTeX'))
               }
             </span>
           </Button>
@@ -92,13 +99,13 @@ const CopyButton: React.FC<CopyButtonProps> = ({
             className="flex items-center space-x-2"
           >
             <ExternalLink className="w-4 h-4" />
-            <span>用Overleaf打开</span>
+            <span>{t('paper.copyButton.states.openInOverleaf')}</span>
           </Button>
         </div>
         
         {showHint && (
           <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-            默认状态下全部复制
+            {t('paper.copyButton.hint')}
           </p>
         )}
       </div>
@@ -123,17 +130,17 @@ const CopyButton: React.FC<CopyButtonProps> = ({
         )}
         <span>
           {isLoading 
-            ? (config.copyMethod === 'overleaf' ? '打开中...' : '复制中...') 
+            ? (config.copyMethod === 'overleaf' ? t('paper.copyButton.states.opening') : t('paper.copyButton.states.copying')) 
             : copySuccess 
-              ? (config.copyMethod === 'overleaf' ? '已打开' : '已复制') 
-              : (config.copyMethod === 'overleaf' ? '用Overleaf打开' : '复制LaTeX')
+              ? (config.copyMethod === 'overleaf' ? t('paper.copyButton.states.opened') : t('paper.copyButton.states.copied')) 
+              : (config.copyMethod === 'overleaf' ? t('paper.copyButton.states.openInOverleaf') : t('paper.copyButton.states.copyLaTeX'))
           }
         </span>
       </Button>
       
       {showHint && (
         <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-          默认状态下全部复制
+          {t('paper.copyButton.hint')}
         </p>
       )}
     </div>

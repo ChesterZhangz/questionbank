@@ -5,6 +5,7 @@ import TikZHighlightInput from './TikZHighlightInput';
 import TikZPreview from './TikZPreview';
 import Card from '../../ui/Card';
 import Button from '../../ui/Button';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface TikZCode {
   id: string;
@@ -24,6 +25,7 @@ const TikZEditorPanel: React.FC<TikZEditorPanelProps> = ({
   onTikzCodesChange,
   className = ''
 }) => {
+  const { t } = useTranslation();
   const [selectedTikZ, setSelectedTikZ] = useState<TikZCode | null>(null);
   const [showPreview, setShowPreview] = useState(true);
   const [previewSize, setPreviewSize] = useState<'small' | 'medium' | 'large'>('medium');
@@ -115,9 +117,9 @@ const TikZEditorPanel: React.FC<TikZEditorPanelProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Palette className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-            <h3 className="font-medium text-gray-900 dark:text-gray-100">TikZ 图形编辑器</h3>
+            <h3 className="font-medium text-gray-900 dark:text-gray-100">{t('tikz.editorPanel.title')}</h3>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              ({tikzCodes.length}/3)
+              {t('tikz.editorPanel.count', { count: tikzCodes.length })}
             </span>
           </div>
           <div className="flex items-center space-x-2">
@@ -128,7 +130,7 @@ const TikZEditorPanel: React.FC<TikZEditorPanelProps> = ({
               className="flex items-center space-x-1"
             >
               {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              <span>{showPreview ? '隐藏预览' : '显示预览'}</span>
+              <span>{showPreview ? t('tikz.editorPanel.hidePreview') : t('tikz.editorPanel.showPreview')}</span>
             </Button>
             <Button
               variant="outline"
@@ -138,7 +140,7 @@ const TikZEditorPanel: React.FC<TikZEditorPanelProps> = ({
               className="flex items-center space-x-1"
             >
               <Plus className="w-4 h-4" />
-              <span>添加图形</span>
+              <span>{t('tikz.editorPanel.addGraph')}</span>
             </Button>
           </div>
         </div>
@@ -149,7 +151,7 @@ const TikZEditorPanel: React.FC<TikZEditorPanelProps> = ({
           <div className="text-center py-8">
             <Palette className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
             <p className="text-gray-500 dark:text-gray-400 mb-4">
-              还没有添加 TikZ 图形
+              {t('tikz.editorPanel.noTikZ')}
             </p>
             <Button
               variant="outline"
@@ -157,7 +159,7 @@ const TikZEditorPanel: React.FC<TikZEditorPanelProps> = ({
               className="flex items-center space-x-1 mx-auto"
             >
               <Plus className="w-4 h-4" />
-              <span>添加第一个图形</span>
+              <span>{t('tikz.editorPanel.addFirst')}</span>
             </Button>
           </div>
         ) : (
@@ -179,15 +181,15 @@ const TikZEditorPanel: React.FC<TikZEditorPanelProps> = ({
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                        图形 {index + 1}
+                        {t('tikz.editorPanel.graphNumber', { number: index + 1 })}
                       </span>
                       <select
                         value={tikz.format}
                         onChange={(e) => handleUpdateTikZFormat(tikz.id, e.target.value as 'svg' | 'png')}
                         className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200"
                       >
-                        <option value="svg">SVG</option>
-                        <option value="png">PNG</option>
+                        <option value="svg">{t('tikz.editor.svg')}</option>
+                        <option value="png">{t('tikz.editor.png')}</option>
                       </select>
                     </div>
                     <div className="flex items-center space-x-1">
@@ -201,7 +203,7 @@ const TikZEditorPanel: React.FC<TikZEditorPanelProps> = ({
                             : ''
                         }`}
                       >
-                        编辑
+                        {t('tikz.editorPanel.edit')}
                       </Button>
                       <Button
                         variant="outline"
@@ -227,7 +229,7 @@ const TikZEditorPanel: React.FC<TikZEditorPanelProps> = ({
                         onClick={() => handleDeleteTikZ(tikz.id)}
                         className="px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30"
                       >
-                        删除
+                        {t('tikz.editorPanel.delete')}
                       </Button>
                     </div>
                   </div>
@@ -250,7 +252,7 @@ const TikZEditorPanel: React.FC<TikZEditorPanelProps> = ({
               >
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium text-gray-900 dark:text-gray-100">
-                    编辑图形 {tikzCodes.findIndex(t => t.id === selectedTikZ.id) + 1}
+                    {t('tikz.editorPanel.editGraph', { number: tikzCodes.findIndex(t => t.id === selectedTikZ.id) + 1 })}
                   </h4>
                   <div className="flex items-center space-x-2">
                     <select
@@ -258,9 +260,9 @@ const TikZEditorPanel: React.FC<TikZEditorPanelProps> = ({
                       onChange={(e) => setPreviewSize(e.target.value as 'small' | 'medium' | 'large')}
                       className="text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200"
                     >
-                      <option value="small">小</option>
-                      <option value="medium">中</option>
-                      <option value="large">大</option>
+                      <option value="small">{t('tikz.editorPanel.size.small')}</option>
+                      <option value="medium">{t('tikz.editorPanel.size.medium')}</option>
+                      <option value="large">{t('tikz.editorPanel.size.large')}</option>
                     </select>
                   </div>
                 </div>
@@ -269,12 +271,12 @@ const TikZEditorPanel: React.FC<TikZEditorPanelProps> = ({
                   {/* 代码编辑区域 */}
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      TikZ 代码
+                      {t('tikz.editorPanel.tikzCode')}
                     </label>
                     <TikZHighlightInput
                       value={selectedTikZ.code}
                       onChange={(code: string) => handleUpdateTikZCode(selectedTikZ.id, code)}
-                      placeholder="输入TikZ代码..."
+                      placeholder={t('tikz.contentEditor.placeholder')}
                       rows={12}
                       enableAutoComplete={true}
                       className="border border-gray-300 dark:border-gray-600 rounded-md"
@@ -290,7 +292,7 @@ const TikZEditorPanel: React.FC<TikZEditorPanelProps> = ({
                   {showPreview && (
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        实时预览
+                        {t('tikz.editorPanel.realtimePreview')}
                       </label>
                       <div className="border border-gray-200 dark:border-gray-600 rounded-md overflow-hidden">
                         <TikZPreview

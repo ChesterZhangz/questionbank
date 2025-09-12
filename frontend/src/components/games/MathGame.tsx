@@ -4,6 +4,7 @@ import { Calculator, Target, Trophy } from 'lucide-react';
 import Button from '../ui/Button';
 import GameAPIService from '../../services/gameAPI';
 import { LaTeXRenderer } from '../../lib/latex/renderer/LaTeXRenderer';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface MathGameProps {
   onScoreUpdate: (score: number) => void;
@@ -28,6 +29,7 @@ const MathGame: React.FC<MathGameProps> = ({
   difficulty, 
   timeLimit 
 }) => {
+  const { t } = useTranslation();
   const [currentProblem, setCurrentProblem] = useState<MathProblem | null>(null);
   const [userAnswer, setUserAnswer] = useState('');
   const [score, setScore] = useState(0);
@@ -308,35 +310,35 @@ const MathGame: React.FC<MathGameProps> = ({
           whileHover={{ scale: 1.05 }}
         >
           <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{score}</div>
-          <div className="text-xs text-blue-500 dark:text-blue-300 font-medium">总分</div>
+          <div className="text-xs text-blue-500 dark:text-blue-300 font-medium">{t('games.mathGame.totalScore')}</div>
         </motion.div>
         <motion.div 
           className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-xl border border-green-200 dark:border-green-700"
           whileHover={{ scale: 1.05 }}
         >
           <div className="text-2xl font-bold text-green-600 dark:text-green-400">{streak}</div>
-          <div className="text-xs text-green-500 dark:text-green-300 font-medium">连胜</div>
+          <div className="text-xs text-green-500 dark:text-green-300 font-medium">{t('games.mathGame.streak')}</div>
         </motion.div>
         <motion.div 
           className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl border border-purple-200 dark:border-purple-700"
           whileHover={{ scale: 1.05 }}
         >
           <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{accuracy}%</div>
-          <div className="text-xs text-purple-500 dark:text-purple-300 font-medium">准确率</div>
+          <div className="text-xs text-purple-500 dark:text-purple-300 font-medium">{t('games.mathGame.accuracy')}</div>
         </motion.div>
         <motion.div 
           className="text-center p-3 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-xl border border-orange-200 dark:border-orange-700"
           whileHover={{ scale: 1.05 }}
         >
           <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{Math.max(0, Math.ceil(timeLeft))}</div>
-          <div className="text-xs text-orange-500 dark:text-orange-300 font-medium">剩余时间</div>
+          <div className="text-xs text-orange-500 dark:text-orange-300 font-medium">{t('games.mathGame.timeLeft')}</div>
         </motion.div>
       </div>
 
       {/* 进度条 */}
       <div className="mb-6">
         <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300 mb-2">
-          <span>时间进度</span>
+          <span>{t('games.mathGame.timeProgress')}</span>
           <span>{Math.round(((timeLimit - timeLeft) / timeLimit) * 100)}%</span>
         </div>
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -360,7 +362,7 @@ const MathGame: React.FC<MathGameProps> = ({
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl p-8 border border-gray-200 dark:border-gray-600">
           <div className="flex items-center justify-center mb-4">
             <Calculator className="w-8 h-8 text-blue-600 dark:text-blue-400 mr-3" />
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">数学计算</h3>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t('games.mathGame.title')}</h3>
           </div>
           
           <div className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-6">
@@ -398,7 +400,7 @@ const MathGame: React.FC<MathGameProps> = ({
               disabled={!userAnswer.trim() || !isGameActive}
               className="px-6 py-3 text-lg font-semibold"
             >
-              确认
+              {t('games.mathGame.confirm')}
             </Button>
           </div>
         </div>
@@ -420,12 +422,12 @@ const MathGame: React.FC<MathGameProps> = ({
             {feedback === 'correct' ? (
               <div className="flex items-center justify-center">
                 <Trophy className="w-6 h-6 mr-2" />
-                <span>正确！+{Math.floor((difficulty === 'easy' ? 10 : difficulty === 'medium' ? 15 : 35) * (1 + streak * 0.1))}分</span>
+                <span>{t('games.mathGame.correct', { points: Math.floor((difficulty === 'easy' ? 10 : difficulty === 'medium' ? 15 : 35) * (1 + streak * 0.1)) })}</span>
               </div>
             ) : (
               <div className="flex items-center justify-center">
                 <Target className="w-6 h-6 mr-2" />
-                <span>错误，再试一次</span>
+                <span>{t('games.mathGame.incorrect')}</span>
               </div>
             )}
           </motion.div>

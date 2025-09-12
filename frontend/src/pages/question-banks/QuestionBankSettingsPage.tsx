@@ -24,6 +24,7 @@ import LoadingPage from '../../components/ui/LoadingPage';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import RightSlideModal from '../../components/ui/RightSlideModal';
 import { useModal } from '../../hooks/useModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 import { EXPORT_TEMPLATES } from '../../constants/questionBankOptions';
 import { getMathCategories } from '../../constants/questionCategories';
@@ -51,6 +52,7 @@ const QuestionBankSettingsPage: React.FC = () => {
   const { bid } = useParams<{ bid: string }>();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { t } = useTranslation();
 
   // 弹窗状态管理
   const { 
@@ -111,10 +113,10 @@ const QuestionBankSettingsPage: React.FC = () => {
           cardColor: (bank as any).cardColor || '#4f46e5' // Default to #4f46e5 if not set
         });
       } else {
-        setError(response.data.error || '获取题库信息失败');
+        setError(response.data.error || t('questionBankPage.QuestionBankSettingsPage.errors.loadFailed'));
       }
     } catch (error: any) {
-      setError(error.response?.data?.error || '获取题库信息失败');
+      setError(error.response?.data?.error || t('questionBankPage.QuestionBankSettingsPage.errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -137,7 +139,7 @@ const QuestionBankSettingsPage: React.FC = () => {
 
   const handleSave = async () => {
     if (!(userRole === 'creator' || userRole === 'manager')) {
-      showErrorRightSlide('权限不足', '只有创建者和管理者可以修改题库设置');
+      showErrorRightSlide(t('questionBankPage.QuestionBankSettingsPage.errors.insufficientPermissions'), t('questionBankPage.QuestionBankSettingsPage.errors.insufficientPermissionsMessage'));
       return;
     }
 
@@ -156,7 +158,7 @@ const QuestionBankSettingsPage: React.FC = () => {
       });
 
       if (!basicResponse.data.success) {
-        throw new Error(basicResponse.data.error || '保存基本信息失败');
+        throw new Error(basicResponse.data.error || t('questionBankPage.QuestionBankSettingsPage.errors.saveBasicFailed'));
       }
 
       // 保存高级设置
@@ -166,13 +168,13 @@ const QuestionBankSettingsPage: React.FC = () => {
       });
 
       if (!advancedResponse.data.success) {
-        throw new Error(advancedResponse.data.error || '保存高级设置失败');
+        throw new Error(advancedResponse.data.error || t('questionBankPage.QuestionBankSettingsPage.errors.saveAdvancedFailed'));
       }
 
-      showSuccessRightSlide('保存成功', '设置保存成功');
+      showSuccessRightSlide(t('questionBankPage.QuestionBankSettingsPage.success.saved'), t('questionBankPage.QuestionBankSettingsPage.success.settingsSaved'));
       navigate(`/question-banks/${bid}`);
     } catch (error: any) {
-      showErrorRightSlide('保存失败', error.message || error.response?.data?.error || '保存失败');
+      showErrorRightSlide(t('questionBankPage.QuestionBankSettingsPage.errors.saveFailed'), error.message || error.response?.data?.error || t('questionBankPage.QuestionBankSettingsPage.errors.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -201,8 +203,8 @@ const QuestionBankSettingsPage: React.FC = () => {
     return (
       <LoadingPage
         type="loading"
-        title="加载题库设置中..."
-        description="正在获取题库配置信息，请稍候"
+        title={t('questionBankPage.QuestionBankSettingsPage.loading.title')}
+        description={t('questionBankPage.QuestionBankSettingsPage.loading.description')}
         animation="spinner"
       />
     );
@@ -212,9 +214,9 @@ const QuestionBankSettingsPage: React.FC = () => {
     return (
       <LoadingPage
         type="error"
-        title="加载失败"
-        description={error || '无法加载题库信息'}
-        backText="返回题库列表"
+        title={t('questionBankPage.QuestionBankSettingsPage.errors.loadFailed')}
+        description={error || t('questionBankPage.QuestionBankSettingsPage.errors.loadFailed')}
+        backText={t('questionBankPage.QuestionBankSettingsPage.buttons.backToList')}
         onBack={() => navigate('/question-banks')}
       />
     );
@@ -234,10 +236,10 @@ const QuestionBankSettingsPage: React.FC = () => {
                 className="flex items-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
-                返回
+                {t('questionBankPage.QuestionBankSettingsPage.buttons.back')}
               </Button>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">题库设置</h1>
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('questionBankPage.QuestionBankSettingsPage.title')}</h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{questionBank.name}</p>
               </div>
             </div>
@@ -249,7 +251,7 @@ const QuestionBankSettingsPage: React.FC = () => {
                 className="flex items-center gap-2"
               >
                 <Save className="w-4 h-4" />
-                {saving ? '保存中...' : '保存设置'}
+                {saving ? t('questionBankPage.QuestionBankSettingsPage.buttons.saving') : t('questionBankPage.QuestionBankSettingsPage.buttons.save')}
               </Button>
             )}
           </div>
@@ -267,8 +269,8 @@ const QuestionBankSettingsPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
               <p className="text-yellow-800 dark:text-yellow-200">
-                您当前的角色是 <span className="font-medium">{userRole === 'collaborator' ? '协作者' : '查看者'}</span>，
-                只有创建者和管理者可以修改题库设置.
+                {t('questionBankPage.QuestionBankSettingsPage.permissionSettings.currentRole', { role: userRole === 'collaborator' ? t('questionBankPage.QuestionBankSettingsPage.roles.collaborator') : t('questionBankPage.QuestionBankSettingsPage.roles.viewer') })}
+                {t('questionBankPage.QuestionBankSettingsPage.permissionSettings.onlyCreatorsAndManagers')}
               </p>
             </div>
           </motion.div>
@@ -285,7 +287,7 @@ const QuestionBankSettingsPage: React.FC = () => {
             }`}
           >
             <Settings className="w-4 h-4 inline mr-2" />
-            基本信息
+            {t('questionBankPage.QuestionBankSettingsPage.tabs.basic')}
           </button>
           <button
             onClick={() => setActiveTab('permissions')}
@@ -296,7 +298,7 @@ const QuestionBankSettingsPage: React.FC = () => {
             }`}
           >
             <Lock className="w-4 h-4 inline mr-2" />
-            权限设置
+            {t('questionBankPage.QuestionBankSettingsPage.tabs.permissions')}
           </button>
           <button
             onClick={() => setActiveTab('advanced')}
@@ -307,7 +309,7 @@ const QuestionBankSettingsPage: React.FC = () => {
             }`}
           >
             <Database className="w-4 h-4 inline mr-2" />
-            高级设置
+            {t('questionBankPage.QuestionBankSettingsPage.tabs.advanced')}
           </button>
         </div>
 
@@ -323,46 +325,46 @@ const QuestionBankSettingsPage: React.FC = () => {
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                     <Settings className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                    基本信息
+                    {t('questionBankPage.QuestionBankSettingsPage.basicInfo.title')}
                   </h3>
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        题库名称 *
+                        {t('questionBankPage.QuestionBankSettingsPage.basicInfo.name')} *
                       </label>
                       <Input
                         value={formData.name}
                         onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="输入题库名称"
+                        placeholder={t('questionBankPage.QuestionBankSettingsPage.basicInfo.namePlaceholder')}
                         disabled={!canEdit}
                         maxLength={50}
                       />
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {formData.name.length}/50 字符
+                        {t('questionBankPage.QuestionBankSettingsPage.basicInfo.characterCount', { current: formData.name.length, max: 50 })}
                       </p>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        题库描述
+                        {t('questionBankPage.QuestionBankSettingsPage.basicInfo.description')}
                       </label>
                       <textarea
                         value={formData.description}
                         onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="输入题库描述"
+                        placeholder={t('questionBankPage.QuestionBankSettingsPage.basicInfo.descriptionPlaceholder')}
                         disabled={!canEdit}
                         maxLength={500}
                         rows={3}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {formData.description.length}/500 字符
+                        {t('questionBankPage.QuestionBankSettingsPage.basicInfo.characterCount', { current: formData.description.length, max: 500 })}
                       </p>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        题库分类
+                        {t('questionBankPage.QuestionBankSettingsPage.basicInfo.category')}
                       </label>
                       <SimpleSelect
                         options={getMathCategories().map(category => ({
@@ -372,7 +374,7 @@ const QuestionBankSettingsPage: React.FC = () => {
                         }))}
                         value={formData.category || ''}
                         onChange={(value) => setFormData(prev => ({ ...prev, category: value as string }))}
-                        placeholder="选择题库分类"
+                        placeholder={t('questionBankPage.QuestionBankSettingsPage.basicInfo.categoryPlaceholder')}
                         theme="blue"
                         variant="outline"
                         size="md"
@@ -388,18 +390,18 @@ const QuestionBankSettingsPage: React.FC = () => {
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                     <Tag className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    标签管理
+                    {t('questionBankPage.QuestionBankSettingsPage.tags.title')}
                   </h3>
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        添加标签
+                        {t('questionBankPage.QuestionBankSettingsPage.tags.addTag')}
                       </label>
                       <div className="flex gap-2 mb-2">
                         <Input
                           value={tagInput}
                           onChange={(e) => setTagInput(e.target.value)}
-                          placeholder="输入标签"
+                          placeholder={t('questionBankPage.QuestionBankSettingsPage.tags.addTagPlaceholder')}
                           disabled={!canEdit}
                           onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
                         />
@@ -408,14 +410,14 @@ const QuestionBankSettingsPage: React.FC = () => {
                           disabled={!canEdit || !tagInput.trim()}
                           size="sm"
                         >
-                          添加
+                          {t('questionBankPage.QuestionBankSettingsPage.tags.add')}
                         </Button>
                       </div>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        当前标签 ({formData.tags.length})
+                        {t('questionBankPage.QuestionBankSettingsPage.tags.currentTags', { count: formData.tags.length })}
                       </label>
                       <div className="flex flex-wrap gap-2 min-h-[60px] p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                         {formData.tags.length > 0 ? (
@@ -437,7 +439,7 @@ const QuestionBankSettingsPage: React.FC = () => {
                             </span>
                           ))
                         ) : (
-                          <span className="text-gray-400 dark:text-gray-500 text-sm">暂无标签</span>
+                          <span className="text-gray-400 dark:text-gray-500 text-sm">{t('questionBankPage.QuestionBankSettingsPage.tags.noTags')}</span>
                         )}
                       </div>
                     </div>
@@ -450,7 +452,7 @@ const QuestionBankSettingsPage: React.FC = () => {
               <div className="p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                   <Image className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                  卡片颜色设置
+                  {t('questionBankPage.QuestionBankSettingsPage.cardColor.title')}
                 </h3>
                 <div className="flex items-center gap-6">
                   <div className="flex-shrink-0">
@@ -462,14 +464,14 @@ const QuestionBankSettingsPage: React.FC = () => {
                         {questionBank?.name?.charAt(0) || 'Q'}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                        预览效果
+                        {t('questionBankPage.QuestionBankSettingsPage.cardColor.preview')}
                       </div>
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">题库卡片颜色</h4>
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">{t('questionBankPage.QuestionBankSettingsPage.cardColor.cardColor')}</h4>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                      自定义题库名称、图标和标签的颜色，让您的题库更加个性化
+                      {t('questionBankPage.QuestionBankSettingsPage.cardColor.description')}
                     </p>
                     <div className="flex gap-3 items-center">
                       <input
@@ -492,11 +494,11 @@ const QuestionBankSettingsPage: React.FC = () => {
                         onClick={() => setFormData(prev => ({ ...prev, cardColor: '#4f46e5' }))}
                         disabled={!canEdit}
                       >
-                        重置
+                        {t('questionBankPage.QuestionBankSettingsPage.cardColor.reset')}
                       </Button>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                      支持十六进制颜色值，例如 #4f46e5、#ff6b6b 等
+                      {t('questionBankPage.QuestionBankSettingsPage.cardColor.colorFormat')}
                     </p>
                   </div>
                 </div>

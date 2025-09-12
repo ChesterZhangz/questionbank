@@ -7,6 +7,7 @@ import { QuestionImageManager } from './QuestionImageManager';
 import { useAuthStore } from '../../stores/authStore';
 // 移除了CustomInputModal import，现在直接上传
 import { useModal } from '../../hooks/useModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 import Button from '../ui/Button';
 
@@ -46,6 +47,7 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
   onImagesChange: _onImagesChange = () => {},
   className = ''
 }) => {
+  const { t } = useTranslation();
   const { token } = useAuthStore();
   const { showSuccessRightSlide, showErrorRightSlide } = useModal();
   const [activeTab, setActiveTab] = useState<'images' | 'tikz'>('images');
@@ -90,7 +92,7 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
   // 图片上传处理 - 直接上传
   const handleImageUpload = () => {
     if (!bid) {
-      alert('题库ID不存在，无法上传图片');
+      alert(t('question.integratedMediaEditor.bankIdMissing'));
       return;
     }
 
@@ -129,7 +131,7 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
       try {
         // 检查文件大小（限制为5MB）
         if (file.size > 5 * 1024 * 1024) {
-          showErrorRightSlide('文件过大', `文件 ${file.name} 过大，请选择小于5MB的图片`);
+          showErrorRightSlide(t('question.integratedMediaEditor.fileTooLarge'), t('question.integratedMediaEditor.fileTooLargeMessage', { filename: file.name }));
           continue;
         }
 
@@ -149,7 +151,7 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
         });
 
         if (!response.ok) {
-          throw new Error(`图片 ${file.name} 上传失败`);
+          throw new Error(t('question.integratedMediaEditor.uploadFailed', { filename: file.name }));
         }
 
         const uploadResult = await response.json();
@@ -172,19 +174,19 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
           _onImagesChange(updatedImages);
           successCount++;
         } else {
-          throw new Error(uploadResult.error || `图片 ${file.name} 上传失败`);
+          throw new Error(uploadResult.error || t('question.integratedMediaEditor.uploadFailed', { filename: file.name }));
         }
       } catch (error) {
         console.error(`图片 ${file.name} 上传失败:`, error);
-        showErrorRightSlide('上传失败', error instanceof Error ? error.message : `图片 ${file.name} 上传失败`);
+        showErrorRightSlide(t('question.integratedMediaEditor.uploadFailedTitle'), error instanceof Error ? error.message : t('question.integratedMediaEditor.uploadFailed', { filename: file.name }));
       }
     }
     
     // 显示最终结果
     if (successCount === totalFiles) {
-      showSuccessRightSlide('上传完成', `成功上传 ${successCount} 张图片`);
+      showSuccessRightSlide(t('question.integratedMediaEditor.uploadComplete'), t('question.integratedMediaEditor.uploadSuccessMessage', { count: successCount }));
     } else if (successCount > 0) {
-      showSuccessRightSlide('部分成功', `成功上传 ${successCount}/${totalFiles} 张图片`);
+      showSuccessRightSlide(t('question.integratedMediaEditor.partialSuccess'), t('question.integratedMediaEditor.partialSuccessMessage', { success: successCount, total: totalFiles }));
     }
     
     setIsUploading(false);
@@ -201,7 +203,7 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
             <div className="flex items-center space-x-2">
               <Image className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                图片: {images.length}
+                {t('question.integratedMediaEditor.images')}: {images.length}
               </span>
             </div>
             <div className="flex items-center space-x-2">
@@ -211,7 +213,7 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
               </span>
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-400">
-              总计: {totalMediaCount}/6
+              {t('question.integratedMediaEditor.total')}: {totalMediaCount}/6
             </div>
           </div>
           
@@ -225,7 +227,7 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
               }`}
             >
               <Image className="w-4 h-4" />
-              <span>图片</span>
+              <span>{t('question.integratedMediaEditor.images')}</span>
             </button>
             <button
               onClick={() => setActiveTab('tikz')}
@@ -255,7 +257,7 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
                 <div className="text-center py-12">
                   <Image className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
                   <p className="text-gray-500 dark:text-gray-400 mb-4">
-                    还没有添加图片
+                    {t('question.integratedMediaEditor.noImagesAdded')}
                   </p>
                   <Button
                     variant="outline"
@@ -264,7 +266,7 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
                     className="flex items-center space-x-2 mx-auto"
                   >
                     <Upload className="w-4 h-4" />
-                    <span>{isUploading ? '上传中...' : '上传图片'}</span>
+                    <span>{isUploading ? t('question.integratedMediaEditor.uploading') : t('question.integratedMediaEditor.uploadImages')}</span>
                   </Button>
                 </div>
               ) : (
@@ -289,7 +291,7 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
                 <div className="text-center py-12">
                   <Palette className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
                   <p className="text-gray-500 dark:text-gray-400 mb-4">
-                    还没有添加 TikZ 图形
+                    {t('question.integratedMediaEditor.noTikzAdded')}
                   </p>
                   <Button
                     variant="outline"
@@ -297,7 +299,7 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
                     className="flex items-center space-x-2 mx-auto"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>添加 TikZ 图形</span>
+                    <span>{t('question.integratedMediaEditor.addTikzGraphic')}</span>
                   </Button>
                 </div>
               ) : (
@@ -316,7 +318,7 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
                     >
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="font-medium text-gray-900 dark:text-gray-100">
-                          图形 {index + 1}
+                          {t('question.integratedMediaEditor.graphic')} {index + 1}
                         </h4>
                         <div className="flex items-center space-x-2">
                           <Button
@@ -334,12 +336,12 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
                         {/* 左侧：代码编辑 */}
                         <div className="space-y-3">
                           <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            TikZ 代码：
+                            {t('question.integratedMediaEditor.tikzCode')}：
                           </h5>
                           <TikZHighlightInput
                             value={tikz.code}
                             onChange={(code: string) => handleUpdateTikZCode(tikz.id, code)}
-                            placeholder="输入TikZ代码..."
+                            placeholder={t('question.integratedMediaEditor.enterTikzCode')}
                             rows={12}
                             enableAutoComplete={true}
                             className="w-full"
@@ -354,7 +356,7 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
                         {/* 右侧：实时预览 - 与编辑区域对齐 */}
                         <div className="space-y-3">
                           <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            图形预览：
+                            {t('question.integratedMediaEditor.graphicPreview')}：
                           </h5>
                           <div className="flex justify-center items-start h-full">
                             <TikZPreview
@@ -385,7 +387,7 @@ const IntegratedMediaEditor: React.FC<IntegratedMediaEditorProps> = ({
                         className="flex items-center space-x-2"
                       >
                         <Plus className="w-4 h-4" />
-                        <span>添加 TikZ 图形</span>
+                        <span>{t('question.integratedMediaEditor.addTikzGraphic')}</span>
                       </Button>
                     </motion.div>
                   )}

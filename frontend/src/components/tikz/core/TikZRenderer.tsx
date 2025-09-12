@@ -8,6 +8,7 @@ import {
   Clock
 } from 'lucide-react';
 import { cn } from '../../../lib/utils';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 export interface TikZCode {
   id: string;
@@ -33,6 +34,7 @@ export const TikZRenderer: React.FC<TikZRendererProps> = ({
   showControls = true,
   onRegenerate
 }) => {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -240,7 +242,7 @@ export const TikZRenderer: React.FC<TikZRendererProps> = ({
       return (
         <div className="flex items-center space-x-2 text-blue-600">
           <Clock className="w-4 h-4" />
-          <span className="text-sm">渲染中...</span>
+          <span className="text-sm">{t('tikz.renderer.rendering')}</span>
         </div>
       );
     }
@@ -258,7 +260,7 @@ export const TikZRenderer: React.FC<TikZRendererProps> = ({
       return (
         <div className="flex items-center space-x-2 text-green-600">
           <CheckCircle className="w-4 h-4" />
-          <span className="text-sm">渲染完成</span>
+          <span className="text-sm">{t('tikz.renderer.renderComplete')}</span>
         </div>
       );
     }
@@ -266,7 +268,7 @@ export const TikZRenderer: React.FC<TikZRendererProps> = ({
     return (
       <div className="flex items-center space-x-2 text-gray-500">
         <Code className="w-4 h-4" />
-        <span className="text-sm">等待渲染</span>
+        <span className="text-sm">{t('tikz.renderer.waitingRender')}</span>
       </div>
     );
   };
@@ -288,10 +290,10 @@ export const TikZRenderer: React.FC<TikZRendererProps> = ({
           <div className="flex items-center justify-between p-3 bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-600">
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium text-gray-700">
-                TikZ #{tikzCode.order + 1}
+                {t('tikz.renderer.tikzNumber', { number: tikzCode.order + 1 })}
               </span>
               <span className="text-xs text-gray-500">
-                {tikzCode.format.toUpperCase()} 格式
+                {t('tikz.renderer.format', { format: tikzCode.format.toUpperCase() })}
               </span>
             </div>
             
@@ -301,9 +303,9 @@ export const TikZRenderer: React.FC<TikZRendererProps> = ({
                 onClick={handleSimulateRender}
                 disabled={isLoading}
                 className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 disabled:opacity-50"
-                title="模拟渲染"
+                title={t('tikz.renderer.simulateRender')}
               >
-                模拟渲染
+                {t('tikz.renderer.simulateRender')}
               </button>
               
               {/* 真实渲染按钮 */}
@@ -312,9 +314,9 @@ export const TikZRenderer: React.FC<TikZRendererProps> = ({
                   onClick={handleRealRender}
                   disabled={isLoading}
                   className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 disabled:opacity-50"
-                  title="真实渲染"
+                  title={t('tikz.renderer.realRender')}
                 >
-                  真实渲染
+                  {t('tikz.renderer.realRender')}
                 </button>
               )}
               
@@ -323,7 +325,7 @@ export const TikZRenderer: React.FC<TikZRendererProps> = ({
                 <button
                   onClick={handleDownload}
                   className="p-1 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
-                  title="下载图片"
+                  title={t('tikz.renderer.download')}
                 >
                   <Download className="w-4 h-4" />
                 </button>
@@ -333,7 +335,7 @@ export const TikZRenderer: React.FC<TikZRendererProps> = ({
               <button
                 onClick={toggleFullscreen}
                 className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
-                title={isFullscreen ? "退出全屏" : "全屏显示"}
+                title={isFullscreen ? t('tikz.renderer.exitFullscreen') : t('tikz.renderer.fullscreen')}
               >
                 <Maximize2 className="w-4 h-4" />
               </button>
@@ -366,16 +368,16 @@ export const TikZRenderer: React.FC<TikZRendererProps> = ({
                   <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-indigo-400 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
                 </div>
                 <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  等待渲染
+                  {t('tikz.renderer.waitingRender')}
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                  点击渲染按钮生成图形
+                  {t('tikz.renderer.waitingRenderDescription')}
                 </p>
                 <div className="flex items-center justify-center space-x-2 text-xs text-gray-400 dark:text-gray-500">
                   <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                  <span>模拟渲染</span>
+                  <span>{t('tikz.renderer.simulateRenderDescription')}</span>
                   <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
-                  <span>真实渲染</span>
+                  <span>{t('tikz.renderer.realRenderDescription')}</span>
                 </div>
               </div>
             </div>
@@ -399,10 +401,10 @@ export const TikZRenderer: React.FC<TikZRendererProps> = ({
       {showControls && (
         <div className="mt-3 text-xs text-gray-500">
           <p>
-            <span className="font-medium">模拟渲染:</span> 基于代码分析生成模拟图形，无需后端支持
+            <span className="font-medium">{t('tikz.renderer.simulateRender')}:</span> {t('tikz.renderer.simulateDescription')}
           </p>
           <p>
-            <span className="font-medium">真实渲染:</span> 调用后端LaTeX编译，生成真实的TikZ图形
+            <span className="font-medium">{t('tikz.renderer.realRender')}:</span> {t('tikz.renderer.realDescription')}
           </p>
         </div>
       )}
